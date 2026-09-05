@@ -5,6 +5,7 @@ import { progress } from "../engine/progress";
 import type { Persisted, UnitState } from "../engine/storage";
 import { READINGS, readingFor, readingProgress } from "../content/readings";
 import "../design/study-pages.css";
+import { OverallProgress } from "../components/OverallProgress";
 
 export const rate = (correct: number, total: number) => total ? `${Math.round(correct / total * 100)}%` : "—";
 
@@ -40,6 +41,7 @@ export function Lessons({ data, onStart, onOriginal }: { data: Persisted; onStar
   const filteredThemes = THEMES.filter(theme => `${String(theme.order).padStart(2, "0")} ${theme.name} ${theme.learn}`.toLowerCase().includes(search.trim().toLowerCase()));
   return <main className="page study-page" id="main" tabIndex={-1}><div className="page-title"><div><h1>学習する</h1></div><span className="page-count">{complete}<small> / {basics.length} 基礎コース完了</small></span></div>
     <StudyStart data={data} onStart={onStart} />
+    <OverallProgress data={data} />
     <div className="section-heading"><h2>Chapter 一覧</h2><label className="study-search">章を検索<input type="search" placeholder="章番号・テーマ・キーワード" value={search} onChange={event => setSearch(event.target.value)} /></label></div>
     <p className="study-count" role="status">{filteredThemes.length} / {THEMES.length} 章{search.trim() && " · 検索結果"}</p>
     <div className="chapter-list">{filteredThemes.map(theme => {

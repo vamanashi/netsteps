@@ -133,3 +133,24 @@
   .study-reading-row strong { grid-column: 1 / -1; }
   .study-page .metrics > div { padding: 16px 12px; }
 }
+.overall-progress { margin: 0 0 28px; padding: 20px 0; border-top: 1px solid var(--study-border); border-bottom: 1px solid var(--study-border); font-variant-numeric: tabular-nums; }
+.overall-heading, .overall-count, .overall-status, .overall-exams { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.overall-heading h2 { margin: 0 0 14px; }
+.overall-progress a { color: var(--study-teal); text-underline-offset: 3px; }
+.overall-count { margin-bottom: 8px; }
+.overall-count strong { font-size: 28px; }
+.overall-count b { color: var(--study-teal); font-size: 20px; }
+.overall-progress progress { display: block; appearance: none; width: 100%; height: 10px; border: 0; border-radius: 8px; overflow: hidden; background: #dce4df; accent-color: var(--study-teal); }
+.overall-progress progress::-webkit-progress-bar { background: #dce4df; border-radius: 8px; }
+.overall-progress progress::-webkit-progress-value { background: var(--study-teal); border-radius: 8px; }
+.overall-progress progress::-moz-progress-bar { background: var(--study-teal); border-radius: 8px; }
+.overall-status { margin-top: 8px; color: #53685d; font-size: 13px; }
+.overall-breakdown { margin: 18px 0 12px; }
+.overall-row { display: grid; grid-template-columns: 140px minmax(40px, 1fr) 110px; gap: 16px; align-items: center; padding: 7px 0; }
+.overall-row > span:last-child { text-align: right; }
+.overall-row progress { height: 5px; }
+.overall-exams { padding-top: 12px; border-top: 1px solid var(--study-border); }
+.overall-notes { margin-top: 12px; color: #53685d; font-size: 12px; }
+.overall-notes summary { cursor: pointer; width: fit-content; padding: 6px 0; }
+.overall-notes p { margin: 6px 0; }
+@media (max-width: 640px) { .overall-row { grid-template-columns: 112px minmax(24px, 1fr) 94px; gap: 8px; font-size: 13px; } .overall-count { font-size: 12px; } .overall-count strong { font-size: 26px; } }
