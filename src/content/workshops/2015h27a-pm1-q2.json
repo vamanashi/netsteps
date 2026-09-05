@@ -1,0 +1,1485 @@
+{
+  "examKey": "2015h27a/pm1/2",
+  "title": "FWを増やす前に、経路と故障時の余力を読む",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "capacity",
+      "title": "通信量と処理回数は違う",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "太い回線だけでは速くならない",
+          "body": "LB（Load Balancer、負荷分散装置）が1秒に転送できるデータ量をスループットと呼びます。一方、1秒に処理できるパケット数にも上限があるので、短いパケットが多いとデータ量が小さくても限界になります。原問の性能見積りはこの二つを区別して読みます。",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "小さいパケットの例",
+                "parts": [
+                  {
+                    "t": "ヘッダ",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "データ",
+                    "w": 1,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "大きいパケットの例",
+                "parts": [
+                  {
+                    "t": "ヘッダ",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "データ",
+                    "w": 4,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用の比率：どちらもパケット処理は1回"
+          },
+          "id": "capacity-1",
+          "format": "読む",
+          "theme": "通信量と処理回数は違う",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "1秒に100万パケットまで処理できる装置。小さいパケットが増えると？",
+          "choices": [
+            {
+              "text": "処理回数は変わらない",
+              "explain": "同じデータ量を細かく分ければ個数が増えます。"
+            },
+            {
+              "text": "処理回数上限に先に達することがある",
+              "ok": true,
+              "explain": "データ量が同じでもパケット数が増えるためです。"
+            }
+          ],
+          "id": "capacity-2",
+          "format": "選択",
+          "theme": "通信量と処理回数は違う",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "最大スループットの公称値だけで判断しない理由は？",
+          "choices": [
+            {
+              "text": "測定時と運用時でパケット長の分布が違うから",
+              "ok": true,
+              "explain": "パケット処理上限の影響が変わります。"
+            },
+            {
+              "text": "IPアドレスの文字数が増えるから",
+              "explain": "表記の文字数でIPヘッダ長は増えません。"
+            }
+          ],
+          "id": "capacity-3",
+          "format": "選択",
+          "theme": "通信量と処理回数は違う",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "単位を入れて説明する",
+          "template": "1秒当たりの転送データ量は{a}。1秒当たりの{b}数の上限も確認する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "スループット",
+                  "ok": true,
+                  "explain": "ビット毎秒などの量です。"
+                },
+                {
+                  "text": "遅延",
+                  "explain": "1回の通信に要する時間です。"
+                }
+              ],
+              "why": "ビット毎秒などの量です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "パケット",
+                  "ok": true,
+                  "explain": "装置はパケットごとに処理します。"
+                },
+                {
+                  "text": "利用者",
+                  "explain": "利用者数だけでは処理回数を決められません。"
+                }
+              ],
+              "why": "装置はパケットごとに処理します。"
+            }
+          ],
+          "id": "capacity-4",
+          "format": "穴埋め",
+          "theme": "通信量と処理回数は違う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "実運用の性能を判断する",
+          "lead": "測定条件から装置を選ぶ順序です。",
+          "lines": [
+            {
+              "code": "実運用のパケット長と通信量を見積もる"
+            },
+            {
+              "code": "似たトラフィックでLBの処理性能を測定する"
+            },
+            {
+              "code": "必要なスループットを満たすか比較する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "原問ではインターネット通信を模擬した測定値を使います。",
+          "ngExplain": "測定条件を無視してカタログ上の最大値だけと比較しないでください。",
+          "id": "capacity-5",
+          "format": "並べ替え",
+          "theme": "通信量と処理回数は違う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：毎秒1000個まで、各100バイト。ヘッダ等を無視した上限は？",
+          "choices": [
+            {
+              "text": "毎秒1000バイト",
+              "explain": "パケット数をそのままバイト数にしてはいけません。"
+            },
+            {
+              "text": "毎秒100,000バイト",
+              "ok": true,
+              "explain": "個数×1個の長さ＝1000×100です。"
+            }
+          ],
+          "id": "capacity-6",
+          "format": "選択",
+          "theme": "通信量と処理回数は違う",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "ip-mac",
+      "title": "最終宛先と次の受渡し先",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "二つの宛先を見る",
+          "body": "IP（Internet Protocol）の宛先は通信の最終相手を表し、MAC（Media Access Control）の宛先はLAN内の受渡し先を表します。FW（Firewall、ファイアウォール）が中継するだけなら、最終相手のIPをFWのIPへ置き換えることはできません。原問の透過型LBはMACの宛先を変えてFWを選びます。",
+          "fig": {
+            "kind": "topo",
+            "height": 170,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "機器a",
+                "icon": "pc",
+                "x": 60,
+                "y": 85
+              },
+              {
+                "id": "node1",
+                "label": "中継するFW",
+                "icon": "fw",
+                "x": 165,
+                "y": 85
+              },
+              {
+                "id": "node2",
+                "label": "機器b",
+                "icon": "server",
+                "x": 270,
+                "y": 85
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：終端a・bと途中のFW"
+          },
+          "id": "ip-mac-1",
+          "format": "読む",
+          "theme": "最終宛先と次の受渡し先",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "機器aが別ネットワークの機器bへ送る。宛先IPは？",
+          "choices": [
+            {
+              "text": "途中のFWのIP",
+              "explain": "FW自体への要求ではありません。"
+            },
+            {
+              "text": "機器bのIP",
+              "ok": true,
+              "explain": "最終的に通信を受け取る相手です。"
+            }
+          ],
+          "id": "ip-mac-2",
+          "format": "選択",
+          "theme": "最終宛先と次の受渡し先",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "この透過型LBがFWを選ぶときに宛先IPを変えられない理由は？",
+          "choices": [
+            {
+              "text": "FWはセッションの終端ではないから",
+              "ok": true,
+              "explain": "相手bへの通信として通過させる必要があります。"
+            },
+            {
+              "text": "MACもIPも絶対に変えられないから",
+              "explain": "本文のLBは宛先MACを変えて振り分けます。"
+            }
+          ],
+          "id": "ip-mac-3",
+          "format": "選択",
+          "theme": "最終宛先と次の受渡し先",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "層ごとの役割を残す",
+          "template": "透過型LBは宛先{a}を振り分け先FWへ変更し、宛先{b}は機器bのままにする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "MACアドレス",
+                  "ok": true,
+                  "explain": "LAN内の次の受渡し先を選びます。"
+                },
+                {
+                  "text": "IPアドレス",
+                  "explain": "最終相手を変えてしまいます。"
+                }
+              ],
+              "why": "LAN内の次の受渡し先を選びます。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "IPアドレス",
+                  "ok": true,
+                  "explain": "中継後も通信終端はbです。"
+                },
+                {
+                  "text": "MACアドレス",
+                  "explain": "FW選択に応じて変更します。"
+                }
+              ],
+              "why": "中継後も通信終端はbです。"
+            }
+          ],
+          "id": "ip-mac-4",
+          "format": "穴埋め",
+          "theme": "最終宛先と次の受渡し先",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "透過型の制約を説明する",
+          "lead": "条件から許される操作へ並べてください。",
+          "lines": [
+            {
+              "code": "FWは途中の中継機器である"
+            },
+            {
+              "code": "宛先IPは通信相手bのまま保持する"
+            },
+            {
+              "code": "宛先MACを変更してFWを選ぶ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "サーバ負荷分散の宛先IP変換をそのまま当てはめないことが要点です。",
+          "ngExplain": "最終相手と次ホップを取り違えないでください。",
+          "id": "ip-mac-5",
+          "format": "並べ替え",
+          "theme": "最終宛先と次の受渡し先",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：FW2からFW3へ振り分けを変える",
+          "choices": [
+            {
+              "text": "宛先IPをFW3へ変える",
+              "explain": "通信の終端をFW3に変える誤りです。"
+            },
+            {
+              "text": "宛先IPはbのまま、宛先MACをFW3へ変える",
+              "ok": true,
+              "explain": "中継する検査役だけが変わります。"
+            }
+          ],
+          "id": "ip-mac-6",
+          "format": "選択",
+          "theme": "最終宛先と次の受渡し先",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "symmetry",
+      "title": "往路と復路で同じ検査記録を使う",
+      "targets": [
+        "s2-3",
+        "s1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "返事にも通信の履歴が必要",
+          "body": "動的フィルタリングは、開始した通信の状態を記録して応答を許可します。原問の両側LBが同じセッションを別々のFWへ送ると、復路のFWに往路の記録がありません。障害時のセッション維持と、通常時の往復一致は分けて考えます。",
+          "id": "symmetry-1",
+          "format": "読む",
+          "theme": "往路と復路で同じ検査記録を使う",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "往路はFW1、復路は記録を共有しないFW2。何が問題？",
+          "choices": [
+            {
+              "text": "IPの宛先が自動的に消える",
+              "explain": "原因は状態記録の不一致で、IPヘッダの消失ではありません。"
+            },
+            {
+              "text": "FW2が正しい応答だと確認できない",
+              "ok": true,
+              "explain": "FW1に作られた状態がFW2にはありません。"
+            }
+          ],
+          "id": "symmetry-2",
+          "format": "選択",
+          "theme": "往路と復路で同じ検査記録を使う",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "パケットごとの交互振り分けでは不十分な理由は？",
+          "choices": [
+            {
+              "text": "一つのセッションを同じFWへ揃える必要がある",
+              "ok": true,
+              "explain": "同じ通信の往復をまとめて扱います。"
+            },
+            {
+              "text": "2台のLBの台数が違うから",
+              "explain": "台数ではなくセッションとFWの対応関係が論点です。"
+            }
+          ],
+          "id": "symmetry-3",
+          "format": "選択",
+          "theme": "往路と復路で同じ検査記録を使う",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "両側LBの条件を組む",
+          "template": "{a}単位に、二つのLBが{b}FWを選択する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "セッション",
+                  "ok": true,
+                  "explain": "通信の開始から終了までのまとまりです。"
+                },
+                {
+                  "text": "個々のパケット",
+                  "explain": "同一通信が複数FWに分かれ得ます。"
+                }
+              ],
+              "why": "通信の開始から終了までのまとまりです。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "同じ",
+                  "ok": true,
+                  "explain": "状態を持つ検査役へ往復を通します。"
+                },
+                {
+                  "text": "必ず異なる",
+                  "explain": "記録が共有されない条件では復路が失敗し得ます。"
+                }
+              ],
+              "why": "状態を持つ検査役へ往復を通します。"
+            }
+          ],
+          "id": "symmetry-4",
+          "format": "穴埋め",
+          "theme": "往路と復路で同じ検査記録を使う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "復路も通る理由を組み立てる",
+          "lead": "状態の作成から応答の検査へ。",
+          "lines": [
+            {
+              "code": "往路をFW2へ転送し状態を作る"
+            },
+            {
+              "code": "復路も同じセッションと識別する"
+            },
+            {
+              "code": "反対側LBもFW2へ転送する"
+            },
+            {
+              "code": "FW2が記録と照合して応答を通す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "通信の方向が逆でも、同じセッションとして対応付けます。",
+          "ngExplain": "方向ごとに独立したランダム選択をしてはいけません。",
+          "id": "symmetry-5",
+          "format": "並べ替え",
+          "theme": "往路と復路で同じ検査記録を使う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：FWを切り替えても新FWへ状態は引き継がれない",
+          "choices": [
+            {
+              "text": "配線があれば必ずセッション維持できる",
+              "explain": "物理的な経路と検査状態は別です。"
+            },
+            {
+              "text": "既存セッションを維持できないおそれがある",
+              "ok": true,
+              "explain": "装置が動いていても、その通信の状態がありません。"
+            }
+          ],
+          "id": "symmetry-6",
+          "format": "選択",
+          "theme": "往路と復路で同じ検査記録を使う",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "redundancy",
+      "title": "故障しても足りる台数を選ぶ",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "通常時の合計だけを見ない",
+          "body": "Active-Standbyは稼働系と待機系、Active-Activeは複数台が同時処理する構成です。2台で通常時に足りても、1台故障後の残り1台では性能不足になり得ます。原問の必要能力1.4倍と3台構成の理由を、残る能力から判断します。",
+          "id": "redundancy-1",
+          "format": "読む",
+          "theme": "故障しても足りる台数を選ぶ",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用：1台の能力を1、必要量1.4。2台稼働から1台故障すると？",
+          "choices": [
+            {
+              "text": "通常時の合計2が残る",
+              "explain": "故障機の処理能力は利用できません。"
+            },
+            {
+              "text": "残り能力1で不足する",
+              "ok": true,
+              "explain": "必要量1.4より小さいので処理を継続しきれません。"
+            }
+          ],
+          "id": "redundancy-2",
+          "format": "選択",
+          "theme": "故障しても足りる台数を選ぶ",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "同能力のFWを3台にする主目的は？",
+          "choices": [
+            {
+              "text": "1台故障後も2台分で必要量を満たす",
+              "ok": true,
+              "explain": "正常時だけでなく障害時の余力を確保します。"
+            },
+            {
+              "text": "3台ならどんな負荷でも耐える",
+              "explain": "必要量が残存能力を超えれば不足します。"
+            }
+          ],
+          "id": "redundancy-3",
+          "format": "選択",
+          "theme": "故障しても足りる台数を選ぶ",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "原問の目的を短くする",
+          "template": "FWを3台にするのは、{a}の性能を{b}ためである。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "故障発生時",
+                  "ok": true,
+                  "explain": "1台喪失した条件で評価します。"
+                },
+                {
+                  "text": "ログ取得停止時",
+                  "explain": "原問の追加台数の理由ではありません。"
+                }
+              ],
+              "why": "1台喪失した条件で評価します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "不足させない",
+                  "ok": true,
+                  "explain": "必要量を残る装置で処理します。"
+                },
+                {
+                  "text": "全く見積もらなくてよくする",
+                  "explain": "台数を増やしても能力の比較は必要です。"
+                }
+              ],
+              "why": "必要量を残る装置で処理します。"
+            }
+          ],
+          "id": "redundancy-4",
+          "format": "穴埋め",
+          "theme": "故障しても足りる台数を選ぶ",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "必要台数を決める",
+          "lead": "同じ能力のFWを想定します。",
+          "lines": [
+            {
+              "code": "必要な処理能力を見積もる"
+            },
+            {
+              "code": "故障後に残る台数の合計能力を求める"
+            },
+            {
+              "code": "残る能力が必要能力以上になる台数を選ぶ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "冗長化と容量設計を一緒に検討します。",
+          "ngExplain": "通常時の能力だけで判定すると故障時に不足します。",
+          "id": "redundancy-5",
+          "format": "並べ替え",
+          "theme": "故障しても足りる台数を選ぶ",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：必要量が2.2へ増加、1台故障を許容する",
+          "choices": [
+            {
+              "text": "以前と同じ3台でよい",
+              "explain": "故障後2台分では2.2を満たしません。"
+            },
+            {
+              "text": "1台能力1なら少なくとも4台",
+              "ok": true,
+              "explain": "故障後3台分の能力3が必要量2.2を満たします。"
+            }
+          ],
+          "id": "redundancy-6",
+          "format": "選択",
+          "theme": "故障しても足りる台数を選ぶ",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "original-address",
+      "title": "原図で変更前と変更後を追う",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "矢印の位置を基準にする",
+          "body": "機器aからbへ向かう要求でも、LBの手前と後ろでは宛先MACが違います。ルータのゲートウェイ設定とLBの振り分け先を別に読みます。ここから原図を使い、設問2(1)の四つの欄を一つずつ組み立てます。",
+          "id": "original-address-1",
+          "format": "読む",
+          "theme": "原図で変更前と変更後を追う",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "原図：ルータaのゲートウェイはFW1。位置(A)の宛先MACは？",
+          "choices": [
+            {
+              "text": "FW2",
+              "explain": "FW2へのMAC変更はLBa通過後の(B)です。"
+            },
+            {
+              "text": "機器b",
+              "explain": "bは別サブネットの最終相手で、直接の受渡し先ではありません。"
+            },
+            {
+              "text": "FW1",
+              "ok": true,
+              "explain": "ルータaが指定ゲートウェイへ渡す段階です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 8,
+            "top": 0.38,
+            "bottom": 0.625,
+            "label": "IPA原図2：経路、(A)(B)、ゲートウェイ設定"
+          },
+          "id": "original-address-2",
+          "format": "選択",
+          "theme": "原図で変更前と変更後を追う",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "位置(B)はFW2へ向かう。それでも宛先IPがbなのはなぜ？",
+          "choices": [
+            {
+              "text": "FW2はbへの要求を中継するから",
+              "ok": true,
+              "explain": "LBは検査を担当する途中の機器を変更しただけです。"
+            },
+            {
+              "text": "FW2とbは必ず同じIPだから",
+              "explain": "異なる機器のIPが同じという条件はありません。"
+            }
+          ],
+          "id": "original-address-3",
+          "format": "選択",
+          "theme": "原図で変更前と変更後を追う",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "四つの宛先を完成",
+          "template": "(A)の宛先IP={a}、宛先MAC={b}。(B)の宛先IP={c}、宛先MAC={d}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "機器b",
+                  "ok": true,
+                  "explain": "最終相手は変わりません。"
+                },
+                {
+                  "text": "FW1",
+                  "explain": "IPの終端ではありません。"
+                }
+              ],
+              "why": "最終相手は変わりません。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "FW1",
+                  "ok": true,
+                  "explain": "ルータaのゲートウェイ設定によります。"
+                },
+                {
+                  "text": "FW2",
+                  "explain": "この段階ではLBによる変更前です。"
+                }
+              ],
+              "why": "ルータaのゲートウェイ設定によります。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "機器b",
+                  "ok": true,
+                  "explain": "LBは宛先IPを変更しません。"
+                },
+                {
+                  "text": "FW2",
+                  "explain": "MACとIPを混同しています。"
+                }
+              ],
+              "why": "LBは宛先IPを変更しません。"
+            },
+            {
+              "key": "d",
+              "label": "空欄4",
+              "choices": [
+                {
+                  "text": "FW2",
+                  "ok": true,
+                  "explain": "LBaの選んだ実際の中継先です。"
+                },
+                {
+                  "text": "FW1",
+                  "explain": "LBの変更前の値です。"
+                }
+              ],
+              "why": "LBaの選んだ実際の中継先です。"
+            }
+          ],
+          "id": "original-address-4",
+          "format": "穴埋め",
+          "theme": "原図で変更前と変更後を追う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "図の読取り手順",
+          "lead": "番号を覚えるのでなく、条件からたどります。",
+          "lines": [
+            {
+              "code": "最終宛先が機器bであると確認する"
+            },
+            {
+              "code": "ルータaのゲートウェイFW1を読む"
+            },
+            {
+              "code": "(A)をLB手前と確認する"
+            },
+            {
+              "code": "(B)を振り分け後のFW2宛てと確認する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "最終相手・経路設定・観測位置を分ければ四つの欄を埋められます。",
+          "ngExplain": "(A)と(B)の位置を逆にしないでください。",
+          "id": "original-address-5",
+          "format": "並べ替え",
+          "theme": "原図で変更前と変更後を追う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：ルータaのゲートウェイもFW2だった場合",
+          "choices": [
+            {
+              "text": "宛先IPもFW2になる",
+              "explain": "ゲートウェイ設定は最終宛先IPの置換ではありません。"
+            },
+            {
+              "text": "(A)(B)とも宛先MACはFW2、宛先IPはb",
+              "ok": true,
+              "explain": "この条件ではMACの値は同じでも役割は変わりません。"
+            }
+          ],
+          "id": "original-address-6",
+          "format": "選択",
+          "theme": "原図で変更前と変更後を追う",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "traffic",
+      "title": "同じLBを何回通るか数える",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "通信区間と装置通過回数",
+          "body": "Proxy（プロキシ）は利用者に代わって外部へアクセスします。原問では社内LBがProxyへの負荷分散とFWへの負荷分散を兼ねるため、社内から外への通信で同じLBを2回通ります。FWの通信量合計をそのまま各LBの通信量にしないことが重要です。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "練習用：PC → 社内LB → Proxy",
+              "練習用：Proxy → 社内LB → FW → 外部",
+              "同じ社内LBへの転送負荷を2回数える"
+            ],
+            "caption": "説明用：二つの役割を兼ねるLBの通過回数"
+          },
+          "id": "traffic-1",
+          "format": "読む",
+          "theme": "同じLBを何回通るか数える",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "原図3で、社内NWと外部の通信がLB4を2回通る理由は？",
+          "choices": [
+            {
+              "text": "全ての通信量を無条件に2倍する規則だから",
+              "explain": "LB3やLB5まで同じ倍率にはなりません。"
+            },
+            {
+              "text": "Proxyへの分散とFWへの分散をLB4が兼ねる",
+              "ok": true,
+              "explain": "別の処理段階で同じLBを通ります。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.57,
+            "bottom": 0.83,
+            "label": "IPA原図3：LB3・LB4・LB5とProxyの配置"
+          },
+          "id": "traffic-2",
+          "format": "選択",
+          "theme": "同じLBを何回通るか数える",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "原問条件：外部↔社内89、外部↔DMZ10、社内↔DMZ1。LB3の式は？",
+          "choices": [
+            {
+              "text": "89＋10",
+              "ok": true,
+              "explain": "外部に出る2種類を各1回数えます。"
+            },
+            {
+              "text": "89＋10＋1",
+              "explain": "社内とDMZだけの通信は外部側LB3を通りません。"
+            }
+          ],
+          "id": "traffic-3",
+          "format": "選択",
+          "theme": "同じLBを何回通るか数える",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "通過回数から値を選ぶ",
+          "template": "LB3は89＋10={a}。LB4は(89＋1)×2={b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "99",
+                  "ok": true,
+                  "explain": "外部と関わる二つの量の合計です。"
+                },
+                {
+                  "text": "100",
+                  "explain": "社内↔DMZを加える誤りです。"
+                }
+              ],
+              "why": "外部と関わる二つの量の合計です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "180",
+                  "ok": true,
+                  "explain": "社内に関わる90をProxy側とFW側で2回数えます。"
+                },
+                {
+                  "text": "90",
+                  "explain": "LB4の片方の役割しか数えていません。"
+                },
+                {
+                  "text": "200",
+                  "explain": "全体100を無条件に2倍してはいけません。"
+                }
+              ],
+              "why": "社内に関わる90をProxy側とFW側で2回数えます。"
+            }
+          ],
+          "id": "traffic-4",
+          "format": "穴埋め",
+          "theme": "同じLBを何回通るか数える",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "LBごとに負荷を組み立てる",
+          "lead": "値を入れる前に経路を整理してください。",
+          "lines": [
+            {
+              "code": "通信区間ごとの量を取り出す"
+            },
+            {
+              "code": "各区間が対象LBを通る回数を数える"
+            },
+            {
+              "code": "通信量と通過回数を掛ける"
+            },
+            {
+              "code": "区間ごとの積を合計する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "LB5も同じ方法で10＋1＝11と確認できます。",
+          "ngExplain": "ネットワーク全体の通信量と各装置の転送量は等しいとは限りません。",
+          "id": "traffic-5",
+          "format": "並べ替え",
+          "theme": "同じLBを何回通るか数える",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：外部↔社内60、外部↔DMZ20、社内↔DMZ5。同じ構成のLB4は？",
+          "choices": [
+            {
+              "text": "65",
+              "explain": "通過を1回分しか数えていません。"
+            },
+            {
+              "text": "130",
+              "ok": true,
+              "explain": "社内に関わる(60＋5)を2回数えます。"
+            },
+            {
+              "text": "85",
+              "explain": "全FWの通信量を足しただけでLB4の経路を反映していません。"
+            }
+          ],
+          "id": "traffic-6",
+          "format": "選択",
+          "theme": "同じLBを何回通るか数える",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "health",
+      "title": "装置の生存と経路の正常を分ける",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "返事をもらう場所を変える",
+          "body": "FW自身からの応答があっても、その先のリンクが壊れている可能性があります。対向LBへFW経由で検査パケットを送れば、そのFWを通るLB間の経路を調べられます。原問では経由するFWを変え、経路ごとに検査します。",
+          "fig": {
+            "kind": "topo",
+            "height": 170,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "LB左",
+                "icon": "l3sw",
+                "x": 60,
+                "y": 85
+              },
+              {
+                "id": "node1",
+                "label": "FW経由",
+                "icon": "fw",
+                "x": 165,
+                "y": 85
+              },
+              {
+                "id": "node2",
+                "label": "LB右",
+                "icon": "l3sw",
+                "x": 270,
+                "y": 85
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：FW経由で両LB間を検査"
+          },
+          "id": "health-1",
+          "format": "読む",
+          "theme": "装置の生存と経路の正常を分ける",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "FWには応答するがFWの反対側リンクが断線。対向LBへは？",
+          "choices": [
+            {
+              "text": "FWが生きているので必ず応答する",
+              "explain": "対向LBまでの経路が必要です。"
+            },
+            {
+              "text": "応答が戻らず経路異常を検出できる",
+              "ok": true,
+              "explain": "検査が障害区間も通るためです。"
+            }
+          ],
+          "id": "health-2",
+          "format": "選択",
+          "theme": "装置の生存と経路の正常を分ける",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "FW単体への検査と比べて増える検出範囲は？",
+          "choices": [
+            {
+              "text": "FWを通るLB間の経路",
+              "ok": true,
+              "explain": "FWの両側の接続も含めた疎通を調べます。"
+            },
+            {
+              "text": "全Webアプリの機能",
+              "explain": "ヘルスチェックの到達だけではアプリの正しさまで保証しません。"
+            }
+          ],
+          "id": "health-3",
+          "format": "選択",
+          "theme": "装置の生存と経路の正常を分ける",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "利点を組む",
+          "template": "FWを{a}する{b}間の経路の障害を検出する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "経由",
+                  "ok": true,
+                  "explain": "検査パケットを対象経路に通します。"
+                },
+                {
+                  "text": "迂回",
+                  "explain": "問題のFW側の障害を見逃します。"
+                }
+              ],
+              "why": "検査パケットを対象経路に通します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "LB",
+                  "ok": true,
+                  "explain": "両端のLB間の疎通を確認します。"
+                },
+                {
+                  "text": "利用者と全Webサービス",
+                  "explain": "この検査の範囲を超えています。"
+                }
+              ],
+              "why": "両端のLB間の疎通を確認します。"
+            }
+          ],
+          "id": "health-4",
+          "format": "穴埋め",
+          "theme": "装置の生存と経路の正常を分ける",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "経路別のヘルスチェック",
+          "lead": "複数FWを持つ構成です。",
+          "lines": [
+            {
+              "code": "検査対象のFWを一つ選ぶ"
+            },
+            {
+              "code": "そのFW経由で対向LBへ検査を送る"
+            },
+            {
+              "code": "応答の有無から経路を判定する"
+            },
+            {
+              "code": "別のFWでも繰り返す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "一つの健康な経路だけを調べても他のFW側の障害は分かりません。",
+          "ngExplain": "経路を指定せず迂回した応答で正常と判断しないでください。",
+          "id": "health-5",
+          "format": "並べ替え",
+          "theme": "装置の生存と経路の正常を分ける",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：検査は成功したがWebアプリだけ停止",
+          "choices": [
+            {
+              "text": "経路検査が成功したので利用者の報告は誤り",
+              "explain": "検査対象外の障害はあり得ます。"
+            },
+            {
+              "text": "経路検査とは別にアプリ層の確認が必要",
+              "ok": true,
+              "explain": "疎通正常とサービス機能正常は別です。"
+            }
+          ],
+          "id": "health-6",
+          "format": "選択",
+          "theme": "装置の生存と経路の正常を分ける",
+          "stage": "transfer",
+          "scaffold": 0
+        },
+        {
+          "type": "info",
+          "title": "次は原問を補助なしで解く",
+          "body": "この教材での操作はここまでです。次は既存の原問画面を開き、解説・選択肢・解答例を見ずに、大問全体へ取り組んでください。複数の空欄や指定された回答の個数も自分で確認します。原問の答案は教材の回答とは別に保存されます。",
+          "id": "reset-original-ready",
+          "format": "読む",
+          "theme": "切断を早く知らせて再接続へ進む",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "reset",
+      "title": "切断を早く知らせて再接続へ進む",
+      "targets": [
+        "s1",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "無言の故障は待ち時間になる",
+          "body": "TCP（Transmission Control Protocol）は応答がないと再送を繰り返し、上限まで待って失敗を判断します。RST（Reset）を受け取ると、そのコネクションの切断を速やかに認識できます。原問の構成ではFW故障時にセッションを維持できないため、両側LBがこの通知を送ります。",
+          "id": "reset-1",
+          "format": "読む",
+          "theme": "切断を早く知らせて再接続へ進む",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "故障後に何も知らせない場合、端末が待つ可能性があるのは？",
+          "choices": [
+            {
+              "text": "必ず即時の正常終了",
+              "explain": "故障による無応答は正常終了通知ではありません。"
+            },
+            {
+              "text": "再送を続けてリトライアウトになるまで",
+              "ok": true,
+              "explain": "無応答だけでは失敗の判断に時間が掛かります。"
+            }
+          ],
+          "id": "reset-2",
+          "format": "選択",
+          "theme": "切断を早く知らせて再接続へ進む",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "両端へRSTを送る利点は？",
+          "choices": [
+            {
+              "text": "リトライアウトを待たず切断を検知できる",
+              "ok": true,
+              "explain": "通信を諦めて次の処理へ進む判断を早めます。"
+            },
+            {
+              "text": "元のセッションが無停止で引き継がれる",
+              "explain": "RSTは切断を知らせ、維持や状態複製はしません。"
+            }
+          ],
+          "id": "reset-3",
+          "format": "選択",
+          "theme": "切断を早く知らせて再接続へ進む",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "できないことと軽減策を区別",
+          "template": "新構成では故障時にセッションの{a}ができないので、RSTにより{b}を早める。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "維持",
+                  "ok": true,
+                  "explain": "状態が失われた通信をそのまま続けられません。"
+                },
+                {
+                  "text": "新規作成",
+                  "explain": "健全なFWでの新たな接続まで禁止する条件ではありません。"
+                }
+              ],
+              "why": "状態が失われた通信をそのまま続けられません。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "切断の検知",
+                  "ok": true,
+                  "explain": "両端の待ち時間を軽減します。"
+                },
+                {
+                  "text": "失われたデータの復元",
+                  "explain": "RSTはデータ回復機能ではありません。"
+                }
+              ],
+              "why": "両端の待ち時間を軽減します。"
+            }
+          ],
+          "id": "reset-4",
+          "format": "穴埋め",
+          "theme": "切断を早く知らせて再接続へ進む",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "故障後の影響軽減を説明する",
+          "lead": "故障から端末の判断まで並べます。",
+          "lines": [
+            {
+              "code": "LBがFW故障を検出する"
+            },
+            {
+              "code": "両側LBが該当TCP接続の両端へRSTを送る"
+            },
+            {
+              "code": "両端が再送上限を待たずに切断を認識する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "早まるのは失敗の検知であり、処理の成功保証ではありません。",
+          "ngExplain": "RSTを通信の継続・確認応答と考えないでください。",
+          "id": "reset-5",
+          "format": "並べ替え",
+          "theme": "切断を早く知らせて再接続へ進む",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：RST受信後もアプリが自動再接続を実装していない",
+          "choices": [
+            {
+              "text": "RSTだけで新しいセッションが必ずできる",
+              "explain": "RST自体は新規接続要求ではありません。"
+            },
+            {
+              "text": "切断は分かるが、自動復旧するとは限らない",
+              "ok": true,
+              "explain": "再接続は端末アプリなどの別の処理です。"
+            }
+          ],
+          "id": "reset-6",
+          "format": "選択",
+          "theme": "切断を早く知らせて再接続へ進む",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    }
+  ]
+}

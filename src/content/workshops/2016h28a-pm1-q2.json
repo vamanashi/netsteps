@@ -1,0 +1,1494 @@
+{
+  "examKey": "2016h28a/pm1/2",
+  "title": "モバイル接続を段階ごとに守る",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "radio",
+      "title": "見えない名前と暗号化は別",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "radio-1",
+          "format": "読む",
+          "theme": "見えない名前と暗号化は別",
+          "scaffold": 5,
+          "type": "info",
+          "title": "電波は周囲にも届く",
+          "body": "無線LANでは近くの第三者も電波を受信できます。SSID（Service Set Identifier）は無線ネットワークの識別名、MAC（Media Access Control）アドレスは端末などの識別に使います。名前を隠すことや登録MACだけを許すことは、通信内容の暗号化の代わりにはなりません。設問2ではこの境界を説明します。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 160,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "タブレット",
+                "x": 55,
+                "y": 70,
+                "icon": "pc"
+              },
+              {
+                "id": "node1",
+                "label": "Wi-Fiルータ",
+                "x": 165,
+                "y": 70,
+                "icon": "ap"
+              },
+              {
+                "id": "node2",
+                "label": "通信相手",
+                "x": 275,
+                "y": 70,
+                "icon": "server"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：暗号化して守る区間はまず端末とWi-Fiルータの間"
+          }
+        },
+        {
+          "id": "radio-2",
+          "format": "選択",
+          "theme": "見えない名前と暗号化は別",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "SSIDを一覧に出さないと、第三者が電波を受信できなくなる？",
+          "choices": [
+            {
+              "text": "電波そのものが消える",
+              "explain": "それなら正規端末との通信もできなくなります。",
+              "ok": false
+            },
+            {
+              "text": "受信できなくなるわけではない",
+              "explain": "名前の表示制御であり電波の到達を止める機能ではありません。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "radio-3",
+          "format": "選択",
+          "theme": "見えない名前と暗号化は別",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "MACフィルタだけで十分ではない理由は？",
+          "choices": [
+            {
+              "text": "MACアドレスは利用者の秘密鍵だから",
+              "explain": "MACアドレスは暗号鍵ではありません。",
+              "ok": false
+            },
+            {
+              "text": "MACアドレスは無線上で傍受され、なりすましの手掛かりになる",
+              "explain": "通信データの暗号化と、配送に必要な識別情報の可視性は別です。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "radio-4",
+          "format": "穴埋め",
+          "theme": "見えない名前と暗号化は別",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "弱点を二つの情報で表す",
+          "template": "{a}や{b}は、原問で想定する無線通信では暗号化で隠せず傍受され得る。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ネットワーク名",
+              "why": "SSIDを秘密情報として認証に頼れません。",
+              "choices": [
+                {
+                  "text": "本文のパスワード",
+                  "explain": "適切な暗号化で守るべき通信内容と混同しています。",
+                  "ok": false
+                },
+                {
+                  "text": "SSID",
+                  "explain": "無線網を識別する情報です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "識別アドレス",
+              "why": "MACフィルタの判定材料です。",
+              "choices": [
+                {
+                  "text": "TLSの秘密鍵",
+                  "explain": "秘密鍵が無線上に平文で送られるという意味ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "MACアドレス",
+                  "explain": "フレームの識別情報から知り得ます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "radio-5",
+          "format": "並べ替え",
+          "theme": "見えない名前と暗号化は別",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "対策不足の理由を組み立てる",
+          "lead": "原因から結論へ並べよう。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "無線LANの電波は周辺の第三者も受信できる"
+            },
+            {
+              "code": "SSIDやMACアドレスは傍受によって取得され得る"
+            },
+            {
+              "code": "ステルスとMACフィルタだけに頼らず暗号化と認証を使う"
+            }
+          ],
+          "shuffled": [
+            2,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "取得できる情報を秘密の資格情報のようには扱えません。",
+          "ngExplain": "『SSIDが見えないから安全』は傍受という別経路を見落とします。"
+        },
+        {
+          "id": "radio-6",
+          "format": "選択",
+          "theme": "見えない名前と暗号化は別",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：SSIDだけを毎月変え、弱い共有パスフレーズを使い続ける。改善すべきなのは？",
+          "choices": [
+            {
+              "text": "SSIDの文字色",
+              "explain": "表示上の変更は暗号化や認証強度を上げません。",
+              "ok": false
+            },
+            {
+              "text": "十分に長く複雑な認証用パスフレーズ",
+              "explain": "ネットワーク名より認証の秘密情報を強くすることが重要です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "wpa",
+      "title": "共有鍵で無線区間を守る",
+      "targets": [
+        "s1",
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "wpa-1",
+          "format": "読む",
+          "theme": "共有鍵で無線区間を守る",
+          "scaffold": 5,
+          "type": "info",
+          "title": "方式・アルゴリズム・鍵を分ける",
+          "body": "WPA2（Wi-Fi Protected Access 2）ではAES（Advanced Encryption Standard）を使った暗号化を利用します。本問では両端へ同じパスフレーズを事前設定するPSK（Pre-Shared Key：事前共有鍵）認証です。ステルス機能について公式解答例は『定期的に送信するビーコン信号を停止する』としていますが、一般の非表示SSID実装すべての挙動と同一視せず、この問題の想定として扱います。",
+          "stage": "concept"
+        },
+        {
+          "id": "wpa-2",
+          "format": "選択",
+          "theme": "共有鍵で無線区間を守る",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "暗号化アルゴリズムの名称はどれ？",
+          "choices": [
+            {
+              "text": "SSID",
+              "explain": "無線ネットワークの識別名であって暗号アルゴリズムではありません。",
+              "ok": false
+            },
+            {
+              "text": "AES",
+              "explain": "WPA2で採用される暗号アルゴリズムです。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "wpa-3",
+          "format": "選択",
+          "theme": "共有鍵で無線区間を守る",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "端末とルータへ同じ秘密を事前設定する認証が事前共有鍵と呼ばれる理由は？",
+          "choices": [
+            {
+              "text": "誰でもSSIDを見るだけで鍵を得られるため",
+              "explain": "SSIDと秘密のパスフレーズは別の情報です。",
+              "ok": false
+            },
+            {
+              "text": "接続前に両者が共通の秘密を持つため",
+              "explain": "PSKの事前・共有という語が構成を表しています。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "wpa-4",
+          "format": "穴埋め",
+          "theme": "共有鍵で無線区間を守る",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "原問の用語を役割に戻す",
+          "template": "暗号化アルゴリズムは{a}、同じパスフレーズを事前設定するのは{b}認証。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ア",
+              "why": "方式名ではなくアルゴリズムです。",
+              "choices": [
+                {
+                  "text": "NAPT",
+                  "explain": "アドレスとポートを変換する機能です。",
+                  "ok": false
+                },
+                {
+                  "text": "AES",
+                  "explain": "暗号処理を担います。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "イ",
+              "why": "秘密を双方に設定します。",
+              "choices": [
+                {
+                  "text": "プロキシ",
+                  "explain": "Web中継で利用者を確かめる別の段階です。",
+                  "ok": false
+                },
+                {
+                  "text": "事前共有鍵",
+                  "explain": "PSK認証です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "wpa-5",
+          "format": "並べ替え",
+          "theme": "共有鍵で無線区間を守る",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "ステルス機能の原問答案を作る",
+          "lead": "公式解答例が想定する動作を、対象→動作の順で。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "定期的に送信する"
+            },
+            {
+              "code": "ビーコン信号を"
+            },
+            {
+              "code": "停止する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "停止対象を『ビーコン信号』と具体化するのが本問の解答例です。実機一般の断定には使いません。",
+          "ngExplain": "LAN全通信や暗号化そのものを停止する意味ではありません。"
+        },
+        {
+          "id": "wpa-6",
+          "format": "選択",
+          "theme": "共有鍵で無線区間を守る",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：非表示SSIDでもビーコンは送る実機を調査した。本問の解答例をそのまま仕様説明に使える？",
+          "choices": [
+            {
+              "text": "必ず使える。全機種でビーコンを止める",
+              "explain": "非表示SSIDの実現方法を無条件に同一視してはいけません。",
+              "ok": false
+            },
+            {
+              "text": "使えない。実機の非表示動作を別途確認する",
+              "explain": "試験の想定と実装の一般化を区別します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "lte",
+      "title": "携帯回線とアドレス変換",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "lte-1",
+          "format": "読む",
+          "theme": "携帯回線とアドレス変換",
+          "scaffold": 5,
+          "type": "info",
+          "title": "通信事業者へ出る三つの役割",
+          "body": "LTE（Long Term Evolution）の接続では、SIM（Subscriber Identity Module）カードが契約者識別情報を持ち、APN（Access Point Name）が接続先ネットワークへの入口を指定します。原問はルータにグローバルIPが割り当てられ、端末の私設IPとポートをNAPTで変換する構成です。一般の携帯網が必ずこの構成になるという意味ではありません。",
+          "stage": "concept",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "端末 192.168.8.2:41000",
+              "ルータ外側 203.0.113.8:52000",
+              "対応表で戻り先を端末へ復元"
+            ],
+            "caption": "説明用：練習用アドレス：IPとポートを組にして変換"
+          }
+        },
+        {
+          "id": "lte-2",
+          "format": "選択",
+          "theme": "携帯回線とアドレス変換",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "契約者の識別情報を記録するものは？",
+          "choices": [
+            {
+              "text": "APN",
+              "explain": "接続先ネットワークを指定する情報でありカードではありません。",
+              "ok": false
+            },
+            {
+              "text": "SIMカード",
+              "explain": "通信事業者との契約者識別に使います。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "lte-3",
+          "format": "選択",
+          "theme": "携帯回線とアドレス変換",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "NAPTでポートも変換する利点は？",
+          "choices": [
+            {
+              "text": "全通信の本文を暗号化できる",
+              "explain": "アドレス変換は暗号化ではありません。",
+              "ok": false
+            },
+            {
+              "text": "複数端末の通信を同じ外側IPでも区別できる",
+              "explain": "IPとポートの対応表で戻りの通信を振り分けられます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "lte-4",
+          "format": "穴埋め",
+          "theme": "携帯回線とアドレス変換",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "原問のウ・エ・オを結ぶ",
+          "template": "契約識別は{a}、ネットワークの入口指定は{b}、IPとポートの変換は{c}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ウ",
+              "why": "記録媒体です。",
+              "choices": [
+                {
+                  "text": "SSID",
+                  "explain": "無線LANの名前です。",
+                  "ok": false
+                },
+                {
+                  "text": "SIMカード",
+                  "explain": "契約識別情報を持ちます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "エ",
+              "why": "LTEの接続先指定です。",
+              "choices": [
+                {
+                  "text": "MX",
+                  "explain": "メール受信先を指定します。",
+                  "ok": false
+                },
+                {
+                  "text": "APN",
+                  "explain": "Access Point Nameです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "オ",
+              "why": "ポートまで変換します。",
+              "choices": [
+                {
+                  "text": "AES",
+                  "explain": "暗号アルゴリズムであって変換表ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "NAPT",
+                  "explain": "Network Address Port Translationです。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lte-5",
+          "format": "並べ替え",
+          "theme": "携帯回線とアドレス変換",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "端末が外部へ接続する順序",
+          "lead": "この原問の構成に沿って並べよう。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "SIM情報とAPNなどでルータがLTEへ接続する"
+            },
+            {
+              "code": "ルータ外側へグローバルIPが割り当てられる"
+            },
+            {
+              "code": "端末の私設IPとポートをNAPTで変換する"
+            },
+            {
+              "code": "外部からの応答を対応表で端末へ返す"
+            }
+          ],
+          "shuffled": [
+            1,
+            3,
+            0,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "携帯回線の接続と、LAN端末の多重化は別段階です。",
+          "ngExplain": "APNをメール宛先やLAN端末のMACと混同しないようにします。"
+        },
+        {
+          "id": "lte-6",
+          "format": "選択",
+          "theme": "携帯回線とアドレス変換",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：端末を2台に増やした。外側IPが一つでも通信を分けられる理由は？",
+          "choices": [
+            {
+              "text": "SIMカードが端末ごとに必ず複製される",
+              "explain": "SIM複製はNAPTの仕組みではありません。",
+              "ok": false
+            },
+            {
+              "text": "異なるポートとの対応をNAPTが管理する",
+              "explain": "外側IPの数だけで端末数は決まりません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "vpn-address",
+      "title": "VPNの内側と外側を区別する",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "vpn-address-1",
+          "format": "読む",
+          "theme": "VPNの内側と外側を区別する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "端末に二つのネットワークが見える",
+          "body": "VPN（Virtual Private Network）は別のネットワークへの仮想的な接続です。端末は手元の無線LANに加えて、VPN内部のネットワークにも接続します。手元LANとVPN内部のアドレス範囲が同じだと、同じ宛先をどちらへ送るか区別しにくくなります。設問2(3)は接続の内側の範囲を探します。",
+          "stage": "concept",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "VPN内側",
+                "parts": [
+                  {
+                    "t": "内部宛先IP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "業務通信",
+                    "w": 2,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "外側",
+                "parts": [
+                  {
+                    "t": "VPN終端宛て",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "保護された内側通信",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：VPNの内側の宛先と外側の終端は別"
+          }
+        },
+        {
+          "id": "vpn-address-2",
+          "format": "選択",
+          "theme": "VPNの内側と外側を区別する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "手元LANとVPN内部が同じ192.168.8.0/24。192.168.8.10への経路で問題になるのは？",
+          "choices": [
+            {
+              "text": "暗号文の長さが必ず0になる",
+              "explain": "経路の曖昧さと暗号文の長さは別の問題です。",
+              "ok": false
+            },
+            {
+              "text": "近くの端末かVPN内の端末かをアドレスだけで区別しにくい",
+              "explain": "接続先ネットワークが重複しています。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "vpn-address-3",
+          "format": "選択",
+          "theme": "VPNの内側と外側を区別する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "外側のグローバルIPを変えるだけで内部の重複が解決しないのは？",
+          "choices": [
+            {
+              "text": "VPNはIPアドレスを一切使わないから",
+              "explain": "内側も外側もIP通信を利用します。",
+              "ok": false
+            },
+            {
+              "text": "重なっているのは手元LANとVPN内側の宛先範囲だから",
+              "explain": "暗号化トンネルの外側アドレスを変えても内側範囲は残ります。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "vpn-address-4",
+          "format": "穴埋め",
+          "theme": "VPNの内側と外側を区別する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "重複を避ける二つの面",
+          "template": "無線LANの配布範囲と{a}の範囲を分ける。原問でVPN側はセグメント{b}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "比較相手",
+              "why": "VPN接続後に割り当てる範囲です。",
+              "choices": [
+                {
+                  "text": "LTE外側だけ",
+                  "explain": "グローバル側だけを見ても内部の重複は検出できません。",
+                  "ok": false
+                },
+                {
+                  "text": "VPN内側",
+                  "explain": "内部宛先への経路と重なるためです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "記号",
+              "why": "VPNサーバはEから配布します。",
+              "choices": [
+                {
+                  "text": "B",
+                  "explain": "LTE回線の側であり内部配布範囲ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "E",
+                  "explain": "VPN内側のサーバ群がある側です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "vpn-address-5",
+          "format": "並べ替え",
+          "theme": "VPNの内側と外側を区別する",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "重複検査を行う",
+          "lead": "アドレス設計の確認順。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "無線LANで端末に配布する範囲を確認する"
+            },
+            {
+              "code": "VPN接続後に端末へ配布する内部範囲を確認する"
+            },
+            {
+              "code": "両者が重ならないように設計する"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "接続前後に端末が使う二つの範囲を比較します。",
+          "ngExplain": "外部DNSのアドレスだけを比較しても設問の問題は解決しません。"
+        },
+        {
+          "id": "vpn-address-6",
+          "format": "選択",
+          "theme": "VPNの内側と外側を区別する",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原図と『VPNはEから配布』という条件から、無線LANと重複を避ける対象は？",
+          "choices": [
+            {
+              "text": "A",
+              "explain": "Aは比較の出発点である手元の無線LAN自身です。",
+              "ok": false
+            },
+            {
+              "text": "E",
+              "explain": "VPNで接続する内側の範囲です。",
+              "ok": true
+            },
+            {
+              "text": "D",
+              "explain": "VPN外側とFWが接続される側であり配布範囲ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 7,
+            "top": 0.425,
+            "bottom": 0.61,
+            "label": "図1のセグメントA〜E（IPA原図・問題本文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "least",
+      "title": "紛失時の遮断と最小権限",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "least-1",
+          "format": "読む",
+          "theme": "紛失時の遮断と最小権限",
+          "scaffold": 5,
+          "type": "info",
+          "title": "通れる相手を必要最小限にする",
+          "body": "原問ではVPN接続前はVPNサーバと外部DNSだけに接続できます。接続後はプロキシ経由で業務通信を行い、内部DNSで名前解決します。端末とワンタイムパスワード用トークンを紛失したら、本人のVPN利用者IDを停止し、拾得者のログインを止めます。設問3は接続前後と対処対象を分けて考えます。",
+          "stage": "concept"
+        },
+        {
+          "id": "least-2",
+          "format": "選択",
+          "theme": "紛失時の遮断と最小権限",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "端末・ルータ・トークンを紛失したと報告された。管理者が止めるものは？",
+          "choices": [
+            {
+              "text": "全社員の内部DNS",
+              "explain": "名前解決を全面停止することは過大で、該当IDの認証を直接止めません。",
+              "ok": false
+            },
+            {
+              "text": "該当するVPN接続の利用者ID",
+              "explain": "紛失した認証手段によるVPN利用をサーバ側で拒否できます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "least-3",
+          "format": "選択",
+          "theme": "紛失時の遮断と最小権限",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "VPN接続後、販売管理サーバへの直接通信を許可しない理由は？",
+          "choices": [
+            {
+              "text": "販売管理サーバが全く不要だから",
+              "explain": "必要ですがアクセス経路がプロキシ経由と指定されています。",
+              "ok": false
+            },
+            {
+              "text": "本問では業務通信をプロキシ経由に限定するから",
+              "explain": "プロキシを通してログと通信制限を適用する構成です。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "least-4",
+          "format": "穴埋め",
+          "theme": "紛失時の遮断と最小権限",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "最小限の許可先を二つ選ぶ",
+          "template": "VPN接続後に端末が直接通信できるのは{a}と{b}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "中継先",
+              "why": "業務通信を集約します。",
+              "choices": [
+                {
+                  "text": "全ての社内サーバ",
+                  "explain": "業務に不要な到達範囲まで広げます。",
+                  "ok": false
+                },
+                {
+                  "text": "プロキシサーバ",
+                  "explain": "販売管理や外部Webへここから中継します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "名前解決",
+              "why": "接続後は内部側を使います。",
+              "choices": [
+                {
+                  "text": "外部DNSサーバのみ",
+                  "explain": "VPN接続前の名前解決条件と混同しています。",
+                  "ok": false
+                },
+                {
+                  "text": "内部DNSサーバ",
+                  "explain": "端末が利用する名前解決先です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "least-5",
+          "format": "並べ替え",
+          "theme": "紛失時の遮断と最小権限",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "紛失の影響を抑える",
+          "lead": "報告から防御へ並べよう。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "営業員から紛失した機器と利用者を確認する"
+            },
+            {
+              "code": "該当VPN利用者IDを停止する"
+            },
+            {
+              "code": "拾得した機器やトークンによる新たなVPN利用を拒否する"
+            }
+          ],
+          "shuffled": [
+            2,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "端末の暗号化だけに頼らず、サーバ側の利用資格を失効させます。",
+          "ngExplain": "トークンも紛失しているので、ワンタイムパスワードだから安全とは言えません。"
+        },
+        {
+          "id": "least-6",
+          "format": "選択",
+          "theme": "紛失時の遮断と最小権限",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原文の紛失条件で、LTE回線だけを止めればVPN IDは有効のままでよい？",
+          "choices": [
+            {
+              "text": "よい。VPNはそのSIMだけで認証される",
+              "explain": "原問のVPN認証は利用者IDなどを使い、SIMだけに固定されていません。",
+              "ok": false
+            },
+            {
+              "text": "よくない。VPN利用者IDも停止する",
+              "explain": "別のインターネット接続経路から資格情報を悪用される可能性を残します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.535,
+            "bottom": 0.655,
+            "label": "紛失報告とVPNで許可する通信（IPA原図・問題本文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "identity",
+      "title": "ログを人と結び付ける",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "identity-1",
+          "format": "読む",
+          "theme": "ログを人と結び付ける",
+          "scaffold": 5,
+          "type": "info",
+          "title": "IPだけでは人を特定しにくい",
+          "body": "アドレスが再割当されたり、複数の人が同じ出口を共有したりすると、接続元IPだけでは誰の操作かを決めにくくなります。プロキシ認証を使い、営業員ごとに別の利用者IDを登録してログに結び付けます。設問4(1)は機能名と設定内容の両方が必要です。",
+          "stage": "concept"
+        },
+        {
+          "id": "identity-2",
+          "format": "選択",
+          "theme": "ログを人と結び付ける",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "社員別の行動をログに記録したい。適切な機能は？",
+          "choices": [
+            {
+              "text": "MACフィルタだけ",
+              "explain": "無線接続の制御であり、プロキシの利用者ログを直接作りません。",
+              "ok": false
+            },
+            {
+              "text": "プロキシ認証",
+              "explain": "Web中継の利用者を確かめて記録できます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "identity-3",
+          "format": "選択",
+          "theme": "ログを人と結び付ける",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "全営業員で同じプロキシIDを使うと目的を満たせない理由は？",
+          "choices": [
+            {
+              "text": "共有するとTLSの暗号化が必ず停止する",
+              "explain": "ID共有の主問題は識別性でありTLSの強制停止ではありません。",
+              "ok": false
+            },
+            {
+              "text": "ログに同じIDが残り営業員を区別できない",
+              "explain": "認証があってもIDが共有なら個人の識別につながりません。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "identity-4",
+          "format": "穴埋め",
+          "theme": "ログを人と結び付ける",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "機能と設定をセットにする",
+          "template": "{a}を使い、{b}に利用者IDを登録する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "機能名",
+              "why": "ログの本人識別に必要です。",
+              "choices": [
+                {
+                  "text": "SPF",
+                  "explain": "メール送信ドメインの仕組みです。",
+                  "ok": false
+                },
+                {
+                  "text": "プロキシ認証",
+                  "explain": "中継を使う人を認証します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "登録単位",
+              "why": "複数人を一つにしません。",
+              "choices": [
+                {
+                  "text": "営業所全員で一つ",
+                  "explain": "営業所までは分かっても個人を特定できません。",
+                  "ok": false
+                },
+                {
+                  "text": "営業員ごと",
+                  "explain": "個人とログを結び付けます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "identity-5",
+          "format": "並べ替え",
+          "theme": "ログを人と結び付ける",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "設定から効果を説明する",
+          "lead": "誰の通信か分かるまで。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "営業員ごとに異なる利用者IDを登録する"
+            },
+            {
+              "code": "プロキシ認証で各営業員のIDを確認する"
+            },
+            {
+              "code": "通信ログに認証済みIDを残す"
+            },
+            {
+              "code": "ログから営業員を特定する"
+            }
+          ],
+          "shuffled": [
+            1,
+            0,
+            2,
+            3
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "機能名だけでなく、個別登録という条件が効果につながります。",
+          "ngExplain": "共有IDのままでは最後の個人特定へ進めません。"
+        },
+        {
+          "id": "identity-6",
+          "format": "選択",
+          "theme": "ログを人と結び付ける",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：タブレットのIPが毎日変わるが個別IDで認証する。識別の軸にするのは？",
+          "choices": [
+            {
+              "text": "当日のIPだけを永久的な社員番号として使う",
+              "explain": "IPの再割当で別の社員と取り違えます。",
+              "ok": false
+            },
+            {
+              "text": "認証された営業員ごとのID",
+              "explain": "アドレス変化とは独立して利用者を識別します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "connect",
+      "title": "暗号化トンネルの入口で分かること",
+      "targets": [
+        "s1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "connect-1",
+          "format": "読む",
+          "theme": "暗号化トンネルの入口で分かること",
+          "scaffold": 5,
+          "type": "info",
+          "title": "CONNECTは中継トンネルの依頼",
+          "body": "HTTP（Hypertext Transfer Protocol）のCONNECTメソッドで『このホストのこのポートへ接続して』とプロキシへ依頼します。HTTPSではその後のTLS通信がトンネルを通ります。本問のプロキシはTLSを復号しないので、Request-URIから分かる接続先ホスト名・ポートと、暗号化されたページ内容を区別します。",
+          "stage": "concept",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "CONNECT sales.example.test:443 HTTP/1.1",
+              "200 Connection Established",
+              "以後はTLSの暗号化データを中継"
+            ],
+            "caption": "説明用：練習用：接続要求のホスト名とポートだけを読む"
+          }
+        },
+        {
+          "id": "connect-2",
+          "format": "選択",
+          "theme": "暗号化トンネルの入口で分かること",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "HTTPSの中継トンネルを作る要求は？",
+          "choices": [
+            {
+              "text": "MAIL FROM",
+              "explain": "SMTPの送信者指定でありWebプロキシの要求ではありません。",
+              "ok": false
+            },
+            {
+              "text": "CONNECT",
+              "explain": "ホスト名とポート番号を指定して接続を依頼します。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "connect-3",
+          "format": "選択",
+          "theme": "暗号化トンネルの入口で分かること",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "本問のHTTPSプロキシがページのパスをログに取れない理由は？",
+          "choices": [
+            {
+              "text": "プロキシは接続先ホストも一切受け取らないから",
+              "explain": "CONNECT要求に接続先ホスト名とポートが含まれます。",
+              "ok": false
+            },
+            {
+              "text": "CONNECT後のHTTP要求はTLS内で暗号化されているから",
+              "explain": "復号しないトンネル中継なのでURLのパスや内容は読めません。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "connect-4",
+          "format": "穴埋め",
+          "theme": "暗号化トンネルの入口で分かること",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "要求行で見える二つ",
+          "template": "CONNECT sales.example.test:443 から、{a}と{b}を取得できる。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "項目1",
+              "why": "コロンより前の接続先です。",
+              "choices": [
+                {
+                  "text": "閲覧ページの本文",
+                  "explain": "TLS内のため見えません。",
+                  "ok": false
+                },
+                {
+                  "text": "接続先ホスト名",
+                  "explain": "sales.example.testが該当します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "項目2",
+              "why": "コロンの後の接続先です。",
+              "choices": [
+                {
+                  "text": "利用者の入力フォーム内容",
+                  "explain": "これもTLS内のアプリケーションデータです。",
+                  "ok": false
+                },
+                {
+                  "text": "接続先ポート番号",
+                  "explain": "443が該当します。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "connect-5",
+          "format": "並べ替え",
+          "theme": "暗号化トンネルの入口で分かること",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "HTTPS中継の順番",
+          "lead": "原問の復号しないプロキシの動作。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "端末がホスト名とポートをCONNECTで指定する"
+            },
+            {
+              "code": "プロキシが指定先への接続を用意する"
+            },
+            {
+              "code": "端末と接続先の間でTLS通信を開始する"
+            },
+            {
+              "code": "プロキシは暗号化されたデータをそのまま転送する"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            1,
+            3
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "中継先は知っても通信本文まで知るとは限りません。",
+          "ngExplain": "プロキシでTLSを必ず復号するという前提は本問にはありません。"
+        },
+        {
+          "id": "connect-6",
+          "format": "選択",
+          "theme": "暗号化トンネルの入口で分かること",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：CONNECT archive.example.test:8443。ログで得られる組合せは？",
+          "choices": [
+            {
+              "text": "archive.example.test と必ず443",
+              "explain": "HTTPSでよく使う既定値と実際の指定値を混同しています。",
+              "ok": false
+            },
+            {
+              "text": "archive.example.test と 8443",
+              "explain": "指定ポートは443固定ではなく要求に書かれた値です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "finish",
+      "title": "接続段階ごとに答案を組み立てる",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2",
+        "s2-3",
+        "s3-1",
+        "s3-2",
+        "s4-1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "finish-1",
+          "format": "読む",
+          "theme": "接続段階ごとに答案を組み立てる",
+          "scaffold": 5,
+          "type": "info",
+          "title": "段階が変わると許可先も変わる",
+          "body": "無線LAN、LTE、VPN、プロキシは同じ安全対策ではありません。無線の秘密を守り、携帯網へ接続し、VPNで必要な相手へ到達し、個別認証付きのプロキシで業務を行うという順です。最後はヒントなしの選択で、対象と理由を自分で結び付けます。",
+          "stage": "concept"
+        },
+        {
+          "id": "finish-2",
+          "format": "選択",
+          "theme": "接続段階ごとに答案を組み立てる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "原問でVPN接続前に外部DNSだけ許可しVPNサーバを禁止すると？",
+          "choices": [
+            {
+              "text": "名前解決だけでVPNが確立する",
+              "explain": "DNS応答はVPN認証やトンネル確立を代行しません。",
+              "ok": false
+            },
+            {
+              "text": "名前は調べられてもVPNを確立できない",
+              "explain": "名前解決とVPN接続の両方に到達性が必要です。",
+              "ok": true
+            }
+          ],
+          "stage": "apply"
+        },
+        {
+          "id": "finish-3",
+          "format": "選択",
+          "theme": "接続段階ごとに答案を組み立てる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "無線は暗号化済み、でも全員がプロキシ共有ID。この構成で残る問題は？",
+          "choices": [
+            {
+              "text": "APNが自動で削除される",
+              "explain": "認証IDの共有がLTE接続設定を削除することはありません。",
+              "ok": false
+            },
+            {
+              "text": "ログから営業員を個別に特定できない",
+              "explain": "無線の盗聴対策と利用者追跡は別の要件です。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "finish-4",
+          "format": "穴埋め",
+          "theme": "接続段階ごとに答案を組み立てる",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "設計理由を短くまとめる",
+          "template": "アドレス重複はVPN内側の{a}と避け、VPN後はプロキシと{b}だけへ許可する。ログ識別は{c}のIDで行う。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "原図の記号",
+              "why": "内側配布範囲です。",
+              "choices": [
+                {
+                  "text": "C",
+                  "explain": "インターネット側であり内側配布範囲ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "E",
+                  "explain": "手元LANと区別すべき範囲です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "名前解決先",
+              "why": "接続後の名前解決です。",
+              "choices": [
+                {
+                  "text": "全外部Webサーバ",
+                  "explain": "プロキシを迂回する許可を与えます。",
+                  "ok": false
+                },
+                {
+                  "text": "内部DNS",
+                  "explain": "本問の接続後の指定先です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "登録粒度",
+              "why": "人を識別します。",
+              "choices": [
+                {
+                  "text": "全員共有",
+                  "explain": "ログが同じIDになり識別できません。",
+                  "ok": false
+                },
+                {
+                  "text": "営業員ごと",
+                  "explain": "プロキシログと個人を結び付けます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "finish-5",
+          "format": "並べ替え",
+          "theme": "接続段階ごとに答案を組み立てる",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "安全な業務接続を組み立てる",
+          "lead": "通信の進行に沿って並べよう。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "AESと事前共有鍵で無線接続を保護する"
+            },
+            {
+              "code": "SIMとAPNで接続したLTE側へNAPTで通信を出す"
+            },
+            {
+              "code": "VPN認証後はプロキシと内部DNSへの通信に限定する"
+            },
+            {
+              "code": "個別プロキシ認証を行いCONNECTでHTTPSを中継する"
+            }
+          ],
+          "shuffled": [
+            3,
+            0,
+            1,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "各層が別の役割を担い、どれか一つで全てを代替しません。",
+          "ngExplain": "VPN前とVPN後の許可先、無線認証とプロキシ認証を取り違えないようにします。"
+        },
+        {
+          "id": "finish-6",
+          "format": "選択",
+          "theme": "接続段階ごとに答案を組み立てる",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "補助なし確認：接続ログのURIに接続先とポートはあるが閲覧パスはない。本問の構成なら？",
+          "choices": [
+            {
+              "text": "SSIDステルスが原因でログが欠落した",
+              "explain": "無線SSIDの表示制御とHTTPS要求の暗号化は別の問題です。",
+              "ok": false
+            },
+            {
+              "text": "復号しないHTTPS中継として想定どおり",
+              "explain": "CONNECTの接続先は分かり、TLS内のパスは見えません。",
+              "ok": true
+            },
+            {
+              "text": "営業員別IDを設定すればパスも復号できる",
+              "explain": "認証IDは人物識別用でTLS復号機能ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2265 @@
+{
+  "examKey": "2021r03h/pm2/1",
+  "title": "冗長な社内ネットワークを止めずに移行する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm2_ans.pdf",
+    "https://www.rfc-editor.org/rfc/rfc2131"
+  ],
+  "sections": [
+    {
+      "id": "dns-vrrp",
+      "title": "DNSとVRRPの役割を特定する",
+      "targets": [
+        "s1-1",
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "id": "dns-vrrp-1",
+          "format": "読む",
+          "theme": "DNSとVRRPの役割を特定する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "同じ機器が複数の役割を持つ",
+          "body": "内部DNSサーバは社内名の権威サーバです。社外名はISPのフルサービスリゾルバへ転送します。さらにDHCP機能を持ち、PCへ名前解決先として自分のIPを通知します。VRRPはVirtual Router Redundancy Protocolです。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "機能",
+              "対象"
+            ],
+            "rows": [
+              [
+                "権威応答",
+                "社内ドメイン"
+              ],
+              [
+                "DNSフォワーダ",
+                "社外名をISPへ転送"
+              ],
+              [
+                "DHCP通知",
+                "内部DNSサーバのIPをPCへ通知"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "dns-vrrp-2",
+          "format": "選択",
+          "theme": "DNSとVRRPの役割を特定する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "社外ドメインの問合せを上流リゾルバへ転送するDNSの役割はどれか。",
+          "choices": [
+            {
+              "text": "フォワーダ",
+              "ok": true,
+              "explain": "問合せを指定した上流へ転送します。"
+            },
+            {
+              "text": "DHCPリレー",
+              "ok": false,
+              "explain": "IP設定要求を別サブネットのDHCPへ中継します。"
+            },
+            {
+              "text": "VRRPマスタ",
+              "ok": false,
+              "explain": "デフォルトゲートウェイを冗長化する役割です。"
+            }
+          ]
+        },
+        {
+          "id": "dns-vrrp-3",
+          "format": "選択",
+          "theme": "DNSとVRRPの役割を特定する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "VRRPでL3SW1をマスタにするため大きく設定する値はどれか。",
+          "choices": [
+            {
+              "text": "STPのブリッジプライオリティ値",
+              "ok": false,
+              "explain": "STPでは小さい値をルート選出で優先します。"
+            },
+            {
+              "text": "DNSのTTL",
+              "ok": false,
+              "explain": "DNSキャッシュの有効期間です。"
+            },
+            {
+              "text": "プライオリティ値",
+              "ok": true,
+              "explain": "同じVRRPグループ内で大きい値を優先します。"
+            }
+          ]
+        },
+        {
+          "id": "dns-vrrp-4",
+          "format": "穴埋め",
+          "theme": "DNSとVRRPの役割を特定する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "空欄と通知先を補え。",
+          "template": "内部DNSサーバはDNS{a}である。DHCPでPCへ通知する名前解決要求先は{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "NAT",
+                  "ok": false,
+                  "explain": "アドレス変換機能です。"
+                },
+                {
+                  "text": "フォワーダ",
+                  "ok": true,
+                  "explain": "社外名をISPのリゾルバへ転送します。"
+                },
+                {
+                  "text": "ルートブリッジ",
+                  "ok": false,
+                  "explain": "STPの最上位スイッチです。"
+                }
+              ],
+              "why": "社外名をISPのリゾルバへ転送します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "FW1",
+                  "ok": false,
+                  "explain": "パケットを検査・中継しますが名前解決先ではありません。"
+                },
+                {
+                  "text": "内部DNSサーバ",
+                  "ok": true,
+                  "explain": "PCの名前解決要求を受ける機器です。"
+                },
+                {
+                  "text": "外部DNSサーバ",
+                  "ok": false,
+                  "explain": "インターネットからDMZ名への問合せに応答します。"
+                }
+              ],
+              "why": "PCの名前解決要求を受ける機器です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.12,
+            "bottom": 0.83,
+            "label": "DNS、VRRP、DHCPの概要（IPA原典）"
+          }
+        },
+        {
+          "id": "dns-vrrp-5",
+          "format": "並べ替え",
+          "theme": "DNSとVRRPの役割を特定する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "PCの社外名問合せを並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "PCが内部DNSサーバへ問合せる"
+            },
+            {
+              "code": "内部DNSサーバがフォワーダとしてISPへ転送する"
+            },
+            {
+              "code": "得た応答を内部DNSサーバがPCへ返す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "PCが直接ISPへ問い合わせる構成ではありません。",
+          "ngExplain": "PCが直接ISPへ問い合わせる構成ではありません。"
+        },
+        {
+          "id": "dns-vrrp-6",
+          "format": "選択",
+          "theme": "DNSとVRRPの役割を特定する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "内部DNSサーバを新しいIPへ変更した。PCに直すべき通知内容はどれか。",
+          "choices": [
+            {
+              "text": "VRRPのブリッジID",
+              "ok": false,
+              "explain": "DNS変更とSTP識別子は別です。"
+            },
+            {
+              "text": "外部DNSのゾーンだけ",
+              "ok": false,
+              "explain": "PCの問合せ先設定も必要です。"
+            },
+            {
+              "text": "DHCPの名前解決要求先",
+              "ok": true,
+              "explain": "PCが問い合わせるDNSのIPを新しくします。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stp-election",
+      "title": "ルートブリッジと分断範囲を読む",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "stp-election-1",
+          "format": "読む",
+          "theme": "ルートブリッジと分断範囲を読む",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "小さいブリッジIDがルートになる",
+          "body": "STPはSpanning Tree Protocolです。ブリッジIDはプライオリティ値とMACアドレスで比較します。原問では全機器のプライオリティを同じにした条件です。L2SW3がルートになると、その位置を基準に木を作ります。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "比較順",
+              "条件"
+            ],
+            "rows": [
+              [
+                "プライオリティ",
+                "全機器で同じ"
+              ],
+              [
+                "MACアドレス",
+                "最小の機器を選ぶ"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "stp-election-2",
+          "format": "選択",
+          "theme": "ルートブリッジと分断範囲を読む",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "全スイッチのブリッジプライオリティが同じ。次に比較するものはどれか。",
+          "choices": [
+            {
+              "text": "IPアドレスのサブネット長",
+              "ok": false,
+              "explain": "STPのルート選出には使いません。"
+            },
+            {
+              "text": "VRRPの仮想IP",
+              "ok": false,
+              "explain": "STPのブリッジIDではありません。"
+            },
+            {
+              "text": "MACアドレス",
+              "ok": true,
+              "explain": "ブリッジIDの残りの要素で決まります。"
+            }
+          ]
+        },
+        {
+          "id": "stp-election-3",
+          "format": "選択",
+          "theme": "ルートブリッジと分断範囲を読む",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "L2SW3がルートになり、L3SW1とL3SW2間のトランクが遮断側になった。VRRP交換に影響する範囲はどれか。",
+          "choices": [
+            {
+              "text": "DMZだけ",
+              "ok": false,
+              "explain": "DMZは別のL2SW1・2側です。"
+            },
+            {
+              "text": "VLAN10とVLAN11",
+              "ok": true,
+              "explain": "両L3SWがVRRPを構成するFW側と内部サーバ側です。"
+            },
+            {
+              "text": "VLAN101だけ",
+              "ok": false,
+              "explain": "PC収容VLANは101〜103あり、設問の指定範囲とは異なります。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 2,
+            "top": 0.34,
+            "bottom": 0.84,
+            "label": "図1の内部NWとサブネット（IPA原典）"
+          }
+        },
+        {
+          "id": "stp-election-4",
+          "format": "穴埋め",
+          "theme": "ルートブリッジと分断範囲を読む",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "比較対象とサブネット名を補え。",
+          "template": "同じプライオリティなら{a}を比較する。交換できなくなるのは{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "MACアドレス",
+                  "ok": true,
+                  "explain": "ブリッジIDを一意に決める要素です。"
+                },
+                {
+                  "text": "DNS名",
+                  "ok": false,
+                  "explain": "STP選出には使いません。"
+                },
+                {
+                  "text": "コストだけ",
+                  "ok": false,
+                  "explain": "ルート選出後の経路選択には使いますが、同値のID比較ではありません。"
+                }
+              ],
+              "why": "ブリッジIDを一意に決める要素です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "FW-L3SW間、内部サーバ収容",
+                  "ok": true,
+                  "explain": "VLAN10と11がL3SW間トランクを必要とします。"
+                },
+                {
+                  "text": "PC収容1だけ",
+                  "ok": false,
+                  "explain": "原問で答える二つのサブネットを欠きます。"
+                },
+                {
+                  "text": "DMZサーバ収容だけ",
+                  "ok": false,
+                  "explain": "L3SW間のVRRP交換対象ではありません。"
+                }
+              ],
+              "why": "VLAN10と11がL3SW間トランクを必要とします。"
+            }
+          ]
+        },
+        {
+          "id": "stp-election-5",
+          "format": "並べ替え",
+          "theme": "ルートブリッジと分断範囲を読む",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "影響範囲の求め方を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "L2SW3がルートのSTPツリーを考える"
+            },
+            {
+              "code": "L3SW間トランクでVRRPを交換するVLANを確認する"
+            },
+            {
+              "code": "VLAN10と11に対応する二つのサブネット名を答える"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "機器名だけでなく、影響するVLANと原図のサブネット名を対応させます。",
+          "ngExplain": "機器名だけでなく、影響するVLANと原図のサブネット名を対応させます。"
+        },
+        {
+          "id": "stp-election-6",
+          "format": "選択",
+          "theme": "ルートブリッジと分断範囲を読む",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "プライオリティをL3SW1だけ小さく戻した。ルート選出はどうなるか。",
+          "choices": [
+            {
+              "text": "VRRPプライオリティで決まる",
+              "ok": false,
+              "explain": "STPとVRRPの値を混同しています。"
+            },
+            {
+              "text": "L3SW1がMAC比較前に優先される",
+              "ok": true,
+              "explain": "最初の比較項目で差がつきます。"
+            },
+            {
+              "text": "最小MACのL2SWが必ず選ばれる",
+              "ok": false,
+              "explain": "MAC比較へ進むのはプライオリティが同じ場合です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stp-roles",
+      "title": "STPのポート役割を判断する",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "stp-roles-1",
+          "format": "読む",
+          "theme": "STPのポート役割を判断する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "ルートへ向かう口と各LANを代表する口",
+          "body": "ルートブリッジのポートは指定ポートです。非ルートブリッジは最小コストでルートへ向かう口をルートポートにします。同一LANの余分な口は非指定ポートになり、ループを止めます。トポロジ変更時はMACアドレス表を更新します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "場所",
+              "役割"
+            ],
+            "rows": [
+              [
+                "ルートブリッジの全ポート",
+                "指定"
+              ],
+              [
+                "非ルートからルートへの最良経路",
+                "ルート"
+              ],
+              [
+                "冗長経路の遮断側",
+                "非指定"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "stp-roles-2",
+          "format": "選択",
+          "theme": "STPのポート役割を判断する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ルートブリッジL3SW1の全ポートの役割はどれか。",
+          "choices": [
+            {
+              "text": "全てルートポート",
+              "ok": false,
+              "explain": "ルートブリッジ自身は上位ルートへ向かいません。"
+            },
+            {
+              "text": "全て非指定ポート",
+              "ok": false,
+              "explain": "全てを遮断すると通信できません。"
+            },
+            {
+              "text": "指定ポート",
+              "ok": true,
+              "explain": "各セグメントへ最良のBPDUを送る側です。"
+            }
+          ]
+        },
+        {
+          "id": "stp-roles-3",
+          "format": "選択",
+          "theme": "STPのポート役割を判断する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "L2SW3からL3SW1とL3SW2へのコストが同じで、L3SW1が上位。L3SW2側はどれか。",
+          "choices": [
+            {
+              "text": "バックアップポート",
+              "ok": false,
+              "explain": "原問のSTPで問う名称は非指定です。"
+            },
+            {
+              "text": "非指定ポート",
+              "ok": true,
+              "explain": "L3SW1側をルートポートにし、冗長側を遮断します。"
+            },
+            {
+              "text": "指定ポート",
+              "ok": false,
+              "explain": "L2SW3の上りでは最良経路側がルートポートです。"
+            }
+          ]
+        },
+        {
+          "id": "stp-roles-4",
+          "format": "穴埋め",
+          "theme": "STPのポート役割を判断する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "原文c、d、eを補え。",
+          "template": "L3SW1の全ポートは{c}。L2SW3のL3SW2側は{d}。変更時に{e}テーブルをクリアする。",
+          "blanks": [
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "指定",
+                  "ok": true,
+                  "explain": "ルートブリッジのポートです。"
+                },
+                {
+                  "text": "ルート",
+                  "ok": false,
+                  "explain": "上位のルートへ向かうポートではありません。"
+                },
+                {
+                  "text": "非指定",
+                  "ok": false,
+                  "explain": "ルートの全ポートを遮断しません。"
+                }
+              ],
+              "why": "ルートブリッジのポートです。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "非指定",
+                  "ok": true,
+                  "explain": "同コストで上位のL3SW1側がルートポートです。"
+                },
+                {
+                  "text": "ルート",
+                  "ok": false,
+                  "explain": "L3SW2側は冗長な遮断側です。"
+                },
+                {
+                  "text": "指定",
+                  "ok": false,
+                  "explain": "L2SW3から上位へ向かうポートの分類です。"
+                }
+              ],
+              "why": "同コストで上位のL3SW1側がルートポートです。"
+            },
+            {
+              "key": "e",
+              "label": "e",
+              "choices": [
+                {
+                  "text": "MACアドレス",
+                  "ok": true,
+                  "explain": "古い転送先を残さないため更新します。"
+                },
+                {
+                  "text": "DNSキャッシュ",
+                  "ok": false,
+                  "explain": "STP変更でスイッチが消す表ではありません。"
+                },
+                {
+                  "text": "NAT変換",
+                  "ok": false,
+                  "explain": "L2SWの転送表ではありません。"
+                }
+              ],
+              "why": "古い転送先を残さないため更新します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.08,
+            "bottom": 0.69,
+            "label": "STPの役割と状態遷移（IPA原典）"
+          }
+        },
+        {
+          "id": "stp-roles-5",
+          "format": "並べ替え",
+          "theme": "STPのポート役割を判断する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "ループを防ぐ役割決定を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "ブリッジIDでルートブリッジを選ぶ"
+            },
+            {
+              "code": "非ルートでルートへの最良ポートを選ぶ"
+            },
+            {
+              "code": "冗長側を非指定にして転送を止める"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "全リンクを物理的に残し、論理的な木を一つ作ります。",
+          "ngExplain": "全リンクを物理的に残し、論理的な木を一つ作ります。"
+        },
+        {
+          "id": "stp-roles-6",
+          "format": "選択",
+          "theme": "STPのポート役割を判断する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "遮断していたポートを転送へ変えた。古いMAC表を残す問題はどれか。",
+          "choices": [
+            {
+              "text": "DNS名が解決不能になるだけ",
+              "ok": false,
+              "explain": "レイヤ2の転送先誤りが直接の問題です。"
+            },
+            {
+              "text": "移動前のポートへ誤転送し得る",
+              "ok": true,
+              "explain": "トポロジ変更後の実際の位置と表がずれます。"
+            },
+            {
+              "text": "VRRP値が自動で0になる",
+              "ok": false,
+              "explain": "MAC表更新とVRRP優先度は別です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rstp",
+      "title": "RSTPが早く切り替わる根拠を説明する",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "rstp-1",
+          "format": "読む",
+          "theme": "RSTPが早く切り替わる根拠を説明する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "予備の役割と合意を先に用意する",
+          "body": "RSTPはRapid Spanning Tree Protocolです。代替ポートはルートポート障害時の予備です。プロポーザルとアグリーメントを交換して、転送可能な構成を確認します。STPの転送遅延待ちを繰り返さず状態を変えます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "スイッチAのルートポート障害"
+              },
+              {
+                "t": "スイッチBからプロポーザル"
+              },
+              {
+                "t": "AがBを上位と判定し合意"
+              },
+              {
+                "t": "予備ポートを転送へ"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "rstp-2",
+          "format": "選択",
+          "theme": "RSTPが早く切り替わる根拠を説明する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "AはBのBPDUが自分より優れていると判定した。Bを何と判断するか。",
+          "choices": [
+            {
+              "text": "DNSフォワーダ",
+              "ok": false,
+              "explain": "STPトポロジの役割ではありません。"
+            },
+            {
+              "text": "上位のスイッチ",
+              "ok": true,
+              "explain": "ルートまでの情報がAより優れています。"
+            },
+            {
+              "text": "下位の端末",
+              "ok": false,
+              "explain": "BPDUを交換するスイッチです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.43,
+            "bottom": 0.89,
+            "label": "RSTP図2と空欄fの判断（IPA原典）"
+          }
+        },
+        {
+          "id": "rstp-3",
+          "format": "選択",
+          "theme": "RSTPが早く切り替わる根拠を説明する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "RSTPがSTPより早く復旧できる二つの根拠はどれか。",
+          "choices": [
+            {
+              "text": "代替ポートを事前決定し、転送遅延を待たず遷移する",
+              "ok": true,
+              "explain": "予備経路と状態遷移の両方が時間短縮に寄与します。"
+            },
+            {
+              "text": "全ポートを常時転送し、BPDUを廃止する",
+              "ok": false,
+              "explain": "全ポート転送ではループし得ます。"
+            },
+            {
+              "text": "IPを変更し、DNSを停止する",
+              "ok": false,
+              "explain": "レイヤ2の収束方式とは無関係です。"
+            }
+          ]
+        },
+        {
+          "id": "rstp-4",
+          "format": "穴埋め",
+          "theme": "RSTPが早く切り替わる根拠を説明する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "二つの回答要素を補え。",
+          "template": "ポート故障時の{a}を事前に決める。また、{b}を待たずに状態遷移する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "DNSサーバ",
+                  "ok": false,
+                  "explain": "レイヤ2経路の予備ではありません。"
+                },
+                {
+                  "text": "NATアドレス",
+                  "ok": false,
+                  "explain": "ポート切替と無関係です。"
+                },
+                {
+                  "text": "代替ポート",
+                  "ok": true,
+                  "explain": "ルートポートの予備として決めています。"
+                }
+              ],
+              "why": "ルートポートの予備として決めています。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "DHCPリース",
+                  "ok": false,
+                  "explain": "IP配布期間ではありません。"
+                },
+                {
+                  "text": "音声化遅延",
+                  "ok": false,
+                  "explain": "VoIPの受信処理ではありません。"
+                },
+                {
+                  "text": "転送遅延",
+                  "ok": true,
+                  "explain": "STPのリスニング・ラーニング待ちを短縮します。"
+                }
+              ],
+              "why": "STPのリスニング・ラーニング待ちを短縮します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.1,
+            "bottom": 0.43,
+            "label": "代替・バックアップポートの表（IPA原典）"
+          }
+        },
+        {
+          "id": "rstp-5",
+          "format": "並べ替え",
+          "theme": "RSTPが早く切り替わる根拠を説明する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "障害後のRSTP動作を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "Aがルートポートのダウンを検知する"
+            },
+            {
+              "code": "BとのBPDU交換でBを上位と判定する"
+            },
+            {
+              "code": "合意後、予備だったポートをフォワーディングにする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "予備役割を利用し、合意した経路を迅速に転送状態へ移します。",
+          "ngExplain": "予備役割を利用し、合意した経路を迅速に転送状態へ移します。"
+        },
+        {
+          "id": "rstp-6",
+          "format": "選択",
+          "theme": "RSTPが早く切り替わる根拠を説明する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "予備ポートを事前に決めていても、相手との接続が切れている。即時復旧できるか。",
+          "choices": [
+            {
+              "text": "できない",
+              "ok": true,
+              "explain": "予備経路自体が利用可能である必要があります。"
+            },
+            {
+              "text": "役割名が代替なら必ずできる",
+              "ok": false,
+              "explain": "設定上の役割だけでは物理障害を回避できません。"
+            },
+            {
+              "text": "DNSを変えればレイヤ2が復旧する",
+              "ok": false,
+              "explain": "物理・レイヤ2経路の問題です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stack",
+      "title": "論理1台化と回線利用を理解する",
+      "targets": [
+        "s4-1",
+        "s4-2",
+        "s5"
+      ],
+      "steps": [
+        {
+          "id": "stack-1",
+          "format": "読む",
+          "theme": "論理1台化と回線利用を理解する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "冗長な二台を一つとして扱う",
+          "body": "二台のL3SWをスタックし、論理的に一台として管理します。下位L2SWとはリンクアグリゲーションで複数回線を束ねます。サーバの二つのNICは別メンバへ接続し、アクティブ／アクティブで使います。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "技術",
+              "効果"
+            ],
+            "rows": [
+              [
+                "スタック",
+                "二台を論理一台として管理"
+              ],
+              [
+                "リンクアグリゲーション",
+                "複数リンクを一つとして使用"
+              ],
+              [
+                "アクティブ／アクティブ",
+                "両NICを利用"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "stack-2",
+          "format": "選択",
+          "theme": "論理1台化と回線利用を理解する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "構成管理の運用負荷が減る直接の理由はどれか。",
+          "choices": [
+            {
+              "text": "二台のL3SWを一台として管理できる",
+              "ok": true,
+              "explain": "管理対象の論理構成が簡単になります。"
+            },
+            {
+              "text": "全サーバのIPが不要になる",
+              "ok": false,
+              "explain": "スタックしてもサーバのIPは必要です。"
+            },
+            {
+              "text": "全障害がなくなる",
+              "ok": false,
+              "explain": "冗長化は障害をなくすものではありません。"
+            }
+          ]
+        },
+        {
+          "id": "stack-3",
+          "format": "選択",
+          "theme": "論理1台化と回線利用を理解する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "スタックL3SW〜L2SW以外で両回線を使える区間はどれか。",
+          "choices": [
+            {
+              "text": "新ルータ〜インターネット",
+              "ok": false,
+              "explain": "原図でこの回線の束ね方は示されていません。"
+            },
+            {
+              "text": "PC〜L2SW",
+              "ok": false,
+              "explain": "PC側の二回線接続は示されていません。"
+            },
+            {
+              "text": "スタックL3SW〜新ディレクトリサーバ",
+              "ok": true,
+              "explain": "サーバの二NICをアクティブ／アクティブで接続します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 8,
+            "top": 0.15,
+            "bottom": 0.72,
+            "label": "図3のスタックとリンク集約（IPA原典）"
+          }
+        },
+        {
+          "id": "stack-4",
+          "format": "穴埋め",
+          "theme": "論理1台化と回線利用を理解する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "STPを不要にする二技術と理由を補え。",
+          "template": "{a}と{b}を用い、レイヤ2の{c}がない構成にする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "DNS",
+                  "ok": false,
+                  "explain": "ループ防止技術ではありません。"
+                },
+                {
+                  "text": "スタック",
+                  "ok": true,
+                  "explain": "二台を一つの論理スイッチにします。"
+                },
+                {
+                  "text": "VRRP",
+                  "ok": false,
+                  "explain": "今回の新内部NWで採用した技術ではありません。"
+                }
+              ],
+              "why": "二台を一つの論理スイッチにします。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "DHCP",
+                  "ok": false,
+                  "explain": "アドレス配布機能です。"
+                },
+                {
+                  "text": "リンクアグリゲーション",
+                  "ok": true,
+                  "explain": "並行リンクを一つの論理リンクとして扱います。"
+                },
+                {
+                  "text": "NAT",
+                  "ok": false,
+                  "explain": "IP変換でありレイヤ2ループ対策ではありません。"
+                }
+              ],
+              "why": "並行リンクを一つの論理リンクとして扱います。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "IPアドレス",
+                  "ok": false,
+                  "explain": "STPはIP割当てを防止しません。"
+                },
+                {
+                  "text": "ループ",
+                  "ok": true,
+                  "explain": "STPが防止する対象です。"
+                },
+                {
+                  "text": "名前解決",
+                  "ok": false,
+                  "explain": "DNSが扱う対象です。"
+                }
+              ],
+              "why": "STPが防止する対象です。"
+            }
+          ]
+        },
+        {
+          "id": "stack-5",
+          "format": "並べ替え",
+          "theme": "論理1台化と回線利用を理解する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "回線を有効利用できる理由を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "二台のL3SWをスタックして論理一台にする"
+            },
+            {
+              "code": "サーバの二NICを別メンバへ接続する"
+            },
+            {
+              "code": "アクティブ／アクティブで両リンクを転送に使う"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "単に回線を二本接続するだけでなく、論理構成とチーミング設定が必要です。",
+          "ngExplain": "単に回線を二本接続するだけでなく、論理構成とチーミング設定が必要です。"
+        },
+        {
+          "id": "stack-6",
+          "format": "選択",
+          "theme": "論理1台化と回線利用を理解する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "二本を独立したレイヤ2リンクとして同時転送し、集約もSTPもない。リスクはどれか。",
+          "choices": [
+            {
+              "text": "DNSゾーンが必ず消える",
+              "ok": false,
+              "explain": "リンク構成とDNSデータは別です。"
+            },
+            {
+              "text": "VRRPのIPが暗号化される",
+              "ok": false,
+              "explain": "ループの問題とは無関係です。"
+            },
+            {
+              "text": "フレームが循環するループ",
+              "ok": true,
+              "explain": "冗長リンクを論理的に整理しないとループを作り得ます。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "frame-mac",
+      "title": "同一サブネットとルータ越えのMACを分ける",
+      "targets": [
+        "s6-1",
+        "s6-2"
+      ],
+      "steps": [
+        {
+          "id": "frame-mac-1",
+          "format": "読む",
+          "theme": "同一サブネットとルータ越えのMACを分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "MACはリンクごとに付け替わる",
+          "body": "ディレクトリサーバ間は同じVLAN11です。現行PCから新公開Webサーバへは、現行L3SW1とスタックL3SWの間をルータ越えで流れます。キャプチャ地点の両端がどの機器かを図から確認します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "通信",
+              "観測リンクの送信元MAC",
+              "宛先MAC"
+            ],
+            "rows": [
+              [
+                "現行DS→新DS",
+                "現行DS",
+                "新DS"
+              ],
+              [
+                "現行PC→新Web",
+                "現行L3SW1",
+                "スタックL3SW"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "frame-mac-2",
+          "format": "選択",
+          "theme": "同一サブネットとルータ越えのMACを分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "同じVLAN11の現行DSから新DSへ送る。キャプチャで見える宛先MACはどれか。",
+          "choices": [
+            {
+              "text": "デフォルトゲートウェイ",
+              "ok": false,
+              "explain": "同一サブネット通信でルータを経由しません。"
+            },
+            {
+              "text": "DNSサーバ",
+              "ok": false,
+              "explain": "名前解決後のデータ配送先ではありません。"
+            },
+            {
+              "text": "新ディレクトリサーバ",
+              "ok": true,
+              "explain": "同一サブネットなので最終宛先のMACを使います。"
+            }
+          ]
+        },
+        {
+          "id": "frame-mac-3",
+          "format": "選択",
+          "theme": "同一サブネットとルータ越えのMACを分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "別サブネットの現行PCから新Webへ送る。L3SW間リンクの送信元MACはどれか。",
+          "choices": [
+            {
+              "text": "新公開Webサーバ",
+              "ok": false,
+              "explain": "受信側であり送信元ではありません。"
+            },
+            {
+              "text": "現行L3SW1",
+              "ok": true,
+              "explain": "PCから受けたパケットを次のルータへ転送する側です。"
+            },
+            {
+              "text": "現行PC",
+              "ok": false,
+              "explain": "ルータを越えるとEthernetヘッダを付け替えます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.16,
+            "bottom": 0.58,
+            "label": "ステップ1のL3SW間接続（IPA原典）"
+          }
+        },
+        {
+          "id": "frame-mac-4",
+          "format": "穴埋め",
+          "theme": "同一サブネットとルータ越えのMACを分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "二つの通信のMACを完成させよ。",
+          "template": "同一VLANのDS間は{a}→{b}。PCから新WebのL3SW間は{c}→{d}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "現行ディレクトリサーバ",
+                  "ok": true,
+                  "explain": "元のサーバがフレームを送ります。"
+                },
+                {
+                  "text": "現行L3SW1",
+                  "ok": false,
+                  "explain": "同一VLANではルーティングしません。"
+                },
+                {
+                  "text": "新ディレクトリサーバ",
+                  "ok": false,
+                  "explain": "宛先側です。"
+                }
+              ],
+              "why": "元のサーバがフレームを送ります。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "新ディレクトリサーバ",
+                  "ok": true,
+                  "explain": "同一サブネットの最終宛先です。"
+                },
+                {
+                  "text": "スタックL3SW",
+                  "ok": false,
+                  "explain": "同一VLANの中継はしますが宛先MACではありません。"
+                },
+                {
+                  "text": "新FW",
+                  "ok": false,
+                  "explain": "この内部通信の宛先ではありません。"
+                }
+              ],
+              "why": "同一サブネットの最終宛先です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "現行L3SW1",
+                  "ok": true,
+                  "explain": "観測リンクへ送信するルータです。"
+                },
+                {
+                  "text": "現行PC",
+                  "ok": false,
+                  "explain": "最初のLANでのみ送信元MACになります。"
+                },
+                {
+                  "text": "現行FW",
+                  "ok": false,
+                  "explain": "内部の経路上にありません。"
+                }
+              ],
+              "why": "観測リンクへ送信するルータです。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "スタックL3SW",
+                  "ok": true,
+                  "explain": "観測リンクの次ホップです。"
+                },
+                {
+                  "text": "新公開Webサーバ",
+                  "ok": false,
+                  "explain": "さらに別サブネットの先にあります。"
+                },
+                {
+                  "text": "新L2SW1",
+                  "ok": false,
+                  "explain": "L2中継機器のMACを宛先にしません。"
+                }
+              ],
+              "why": "観測リンクの次ホップです。"
+            }
+          ]
+        },
+        {
+          "id": "frame-mac-5",
+          "format": "並べ替え",
+          "theme": "同一サブネットとルータ越えのMACを分ける",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "キャプチャのMACを決める順に並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "送信元と宛先が同一サブネットか判断する"
+            },
+            {
+              "code": "キャプチャするリンクの両端機器を確認する"
+            },
+            {
+              "code": "そのリンクで送信する機器と次ホップのMACを答える"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "IPの終点と、各EthernetリンクのMAC終点を分けます。",
+          "ngExplain": "IPの終点と、各EthernetリンクのMAC終点を分けます。"
+        },
+        {
+          "id": "frame-mac-6",
+          "format": "選択",
+          "theme": "同一サブネットとルータ越えのMACを分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "L3SW間の逆方向をキャプチャした。送信元と宛先はどうなるか。",
+          "choices": [
+            {
+              "text": "両方ともDNSサーバ",
+              "ok": false,
+              "explain": "名前解決は観測リンクのMACを決めません。"
+            },
+            {
+              "text": "スタックL3SW→現行L3SW1",
+              "ok": true,
+              "explain": "同じリンクでも通信方向が逆ならMACの役割も逆です。"
+            },
+            {
+              "text": "現行PC→新Webのまま",
+              "ok": false,
+              "explain": "それは元の向きのIP通信です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "address-range",
+      "title": "表から割当可能範囲を除外する",
+      "targets": [
+        "s6-3"
+      ],
+      "steps": [
+        {
+          "id": "address-range-1",
+          "format": "読む",
+          "theme": "表から割当可能範囲を除外する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "未使用でも経路が通る範囲だけを選ぶ",
+          "body": "DMZは172.16.254.0/24です。既存サーバは10〜100を使用します。移行中の経路表は172.16.254.128/25だけを新側へ転送します。経路の後半範囲は128から始まります。サーバのサブネットは/24のままです。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "範囲",
+              "扱い"
+            ],
+            "rows": [
+              [
+                "172.16.254.10〜100",
+                "現行サーバ使用"
+              ],
+              [
+                "172.16.254.128/25",
+                "新側へ経路あり"
+              ],
+              [
+                "172.16.254.255",
+                "ブロードキャスト"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "address-range-2",
+          "format": "選択",
+          "theme": "表から割当可能範囲を除外する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "サーバのマスクは/24で、新側への経路だけが128/25である。.128は割り当てられるか。",
+          "choices": [
+            {
+              "text": "割り当てられない。.128は常にネットワークアドレスだから",
+              "ok": false,
+              "explain": "ネットワークアドレスかどうかは、サーバに設定する/24で判断します。"
+            },
+            {
+              "text": "割り当てられる。.128は/24のホストアドレスだから",
+              "ok": true,
+              "explain": "サーバは/24に属します。.128は/24のネットワークアドレスでもブロードキャストでもありません。"
+            },
+            {
+              "text": "割り当てられない。静的経路の先頭は宛先にできないから",
+              "ok": false,
+              "explain": "経路のプレフィックスと、サーバ自身のサブネット設定を分けて判断します。"
+            }
+          ]
+        },
+        {
+          "id": "address-range-3",
+          "format": "選択",
+          "theme": "表から割当可能範囲を除外する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "原問の表5〜7を踏まえた公式の割当可能範囲はどれか。",
+          "choices": [
+            {
+              "text": "172.16.254.128〜254",
+              "ok": true,
+              "explain": "新側への静的経路が/25で用意され、255を除きます。"
+            },
+            {
+              "text": "172.16.254.101〜254",
+              "ok": false,
+              "explain": "101〜127は未使用でも新側への指定経路から外れます。"
+            },
+            {
+              "text": "172.16.254.10〜100",
+              "ok": false,
+              "explain": "現行サーバが使用中です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.37,
+            "bottom": 0.88,
+            "label": "表5〜7の新サーバと静的経路（IPA原典）"
+          }
+        },
+        {
+          "id": "address-range-4",
+          "format": "穴埋め",
+          "theme": "表から割当可能範囲を除外する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "下限と上限を補え。",
+          "template": "表の設定上、新公開Webサーバは172.16.254.{a}〜172.16.254.{b}から選ぶ。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "101",
+                  "ok": false,
+                  "explain": "未使用でも経路の前半側です。"
+                },
+                {
+                  "text": "255",
+                  "ok": false,
+                  "explain": "ブロードキャスト側です。"
+                },
+                {
+                  "text": "128",
+                  "ok": true,
+                  "explain": "新側DMZへの/25経路の先頭です。"
+                }
+              ],
+              "why": "新側DMZへの/25経路の先頭です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "255",
+                  "ok": false,
+                  "explain": "ホストへ割り当てません。"
+                },
+                {
+                  "text": "127",
+                  "ok": false,
+                  "explain": "新側への/25より前の範囲です。"
+                },
+                {
+                  "text": "254",
+                  "ok": true,
+                  "explain": "/24と/25のブロードキャスト255を除きます。"
+                }
+              ],
+              "why": "/24と/25のブロードキャスト255を除きます。"
+            }
+          ]
+        },
+        {
+          "id": "address-range-5",
+          "format": "並べ替え",
+          "theme": "表から割当可能範囲を除外する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "範囲を絞る順に並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "DMZの172.16.254.0/24を確認する"
+            },
+            {
+              "code": "現行使用範囲と新側への経路範囲を照合する"
+            },
+            {
+              "code": "新側の172.16.254.128〜254を割当候補にする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "単なる未使用範囲ではなく、移行中の静的経路も条件です。",
+          "ngExplain": "単なる未使用範囲ではなく、移行中の静的経路も条件です。"
+        },
+        {
+          "id": "address-range-6",
+          "format": "選択",
+          "theme": "表から割当可能範囲を除外する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "新側への経路を172.16.254.0/24へ広げた。101は候補になり得るか。",
+          "choices": [
+            {
+              "text": "他の予約や重複がなければ候補になり得る",
+              "ok": true,
+              "explain": "経路の制約が外れれば、未使用範囲を再評価できます。"
+            },
+            {
+              "text": "/24なので101は存在しない",
+              "ok": false,
+              "explain": "0〜255を含む範囲です。"
+            },
+            {
+              "text": "必ず現行Webと重複する",
+              "ok": false,
+              "explain": "現行使用範囲は10〜100です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "coexistence",
+      "title": "仮想IPの重複を避ける",
+      "targets": [
+        "s6-4"
+      ],
+      "steps": [
+        {
+          "id": "coexistence-1",
+          "format": "読む",
+          "theme": "仮想IPの重複を避ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "同じLANに同じ仮想IPを二組置かない",
+          "body": "現行FWと新FWはどちらもアクティブ／スタンバイです。現行L2SW1と新L2SW1を接続すると、同じDMZへ共存します。現行側のFW接続を残すと、両クラスタが同じ仮想IPを名乗ります。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "現行FWクラスタ：VIP 172.16.254.1"
+              },
+              {
+                "t": "L2SW1同士を接続して同一LAN"
+              },
+              {
+                "t": "新FWクラスタ：同じVIP 172.16.254.1"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "coexistence-2",
+          "format": "選択",
+          "theme": "仮想IPの重複を避ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "二つのFWクラスタが同一LANで同じ仮想IPを使う。問題はどれか。",
+          "choices": [
+            {
+              "text": "同じIPに異なるMACの応答が生じ得る",
+              "ok": true,
+              "explain": "どちらへ送るべきか不安定になります。"
+            },
+            {
+              "text": "IPアドレス数が2倍に増える",
+              "ok": false,
+              "explain": "同じIPの重複であり増加ではありません。"
+            },
+            {
+              "text": "DNS名が二文字になる",
+              "ok": false,
+              "explain": "レイヤ2・3の重複問題です。"
+            }
+          ]
+        },
+        {
+          "id": "coexistence-3",
+          "format": "選択",
+          "theme": "仮想IPの重複を避ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "表8で現行FWと現行L2SW間のケーブルを抜く目的はどれか。",
+          "choices": [
+            {
+              "text": "現行公開Webを削除する",
+              "ok": false,
+              "explain": "サーバは切戻し用に残します。"
+            },
+            {
+              "text": "新FWをインターネットから外す",
+              "ok": false,
+              "explain": "新FWを利用する移行です。"
+            },
+            {
+              "text": "現行FWの仮想IPを共存LANから外す",
+              "ok": true,
+              "explain": "新旧L2SW接続時のIP重複を防ぎます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.25,
+            "bottom": 0.52,
+            "label": "DMZ変更手順と切戻し用接続（IPA原典）"
+          }
+        },
+        {
+          "id": "coexistence-4",
+          "format": "穴埋め",
+          "theme": "仮想IPの重複を避ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "問題を具体化せよ。",
+          "template": "ケーブルを抜かず新旧L2SWを接続すると、現行FWと新FWの{a}が{b}する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "機器のシリアル番号",
+                  "ok": false,
+                  "explain": "LAN通信の重複対象ではありません。"
+                },
+                {
+                  "text": "仮想IPアドレス",
+                  "ok": true,
+                  "explain": "両クラスタの共有アドレスです。"
+                },
+                {
+                  "text": "DNSゾーン名",
+                  "ok": false,
+                  "explain": "同じゾーン登録は別の条件です。"
+                }
+              ],
+              "why": "両クラスタの共有アドレスです。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "集約",
+                  "ok": false,
+                  "explain": "IPをまとめる処理ではありません。"
+                },
+                {
+                  "text": "重複",
+                  "ok": true,
+                  "explain": "同一LANで同じIPを名乗ります。"
+                },
+                {
+                  "text": "暗号化",
+                  "ok": false,
+                  "explain": "接続によって暗号化されません。"
+                }
+              ],
+              "why": "同一LANで同じIPを名乗ります。"
+            }
+          ]
+        },
+        {
+          "id": "coexistence-5",
+          "format": "並べ替え",
+          "theme": "仮想IPの重複を避ける",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "重複が生じる条件を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "現行FW接続を残したままにする"
+            },
+            {
+              "code": "現行L2SW1と新L2SW1を接続して同一LANにする"
+            },
+            {
+              "code": "新旧FWの同じ仮想IPが重複する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "装置が二組あることだけでなく、同じブロードキャストドメインになる点が条件です。",
+          "ngExplain": "装置が二組あることだけでなく、同じブロードキャストドメインになる点が条件です。"
+        },
+        {
+          "id": "coexistence-6",
+          "format": "選択",
+          "theme": "仮想IPの重複を避ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "新FWの仮想IPを別の未使用IPにした。重複は解消するか。",
+          "choices": [
+            {
+              "text": "何も確認せず完全に移行できる",
+              "ok": false,
+              "explain": "経路やサーバ設定が旧VIPを参照し得ます。"
+            },
+            {
+              "text": "MAC重複が必ず発生する",
+              "ok": false,
+              "explain": "異なる装置のMACが異なること自体は正常です。"
+            },
+            {
+              "text": "IP重複は解消するが、ゲートウェイ設定との整合確認が必要",
+              "ok": true,
+              "explain": "サーバが参照する仮想IPも合わせて設計します。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rollback",
+      "title": "静的NATと確認通信を組み立てる",
+      "targets": [
+        "s6-5",
+        "s6-6"
+      ],
+      "steps": [
+        {
+          "id": "rollback-1",
+          "format": "読む",
+          "theme": "静的NATと確認通信を組み立てる",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "切戻しは新FWから旧サーバへ通す",
+          "body": "インターネット回線は新側へ切替済みです。現行公開Webサーバは新旧L2SW間の接続を通して残っています。切戻しでは新FWの静的NATの変換先だけを旧Webへ戻します。DNSキャッシュがない利用者は、先に新外部DNSへ問い合わせます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "インターネット"
+              },
+              {
+                "t": "新ルータ1"
+              },
+              {
+                "t": "新L2SW0"
+              },
+              {
+                "t": "新FW1"
+              },
+              {
+                "t": "新L2SW1"
+              },
+              {
+                "t": "L2SW1"
+              },
+              {
+                "t": "現行公開Web"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "rollback-2",
+          "format": "選択",
+          "theme": "静的NATと確認通信を組み立てる",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "新Web不具合時、新FWで変更するものはどれか。",
+          "choices": [
+            {
+              "text": "静的NATの変換後IPを現行WebのIPへ変更する",
+              "ok": true,
+              "explain": "公開IPへの通信を旧サーバへ届けます。"
+            },
+            {
+              "text": "全利用者PCのMACを変更する",
+              "ok": false,
+              "explain": "インターネット側利用者の設定変更ではありません。"
+            },
+            {
+              "text": "新外部DNSを削除する",
+              "ok": false,
+              "explain": "名前解決通信の確認対象として残ります。"
+            }
+          ]
+        },
+        {
+          "id": "rollback-3",
+          "format": "選択",
+          "theme": "静的NATと確認通信を組み立てる",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "キャッシュがない利用者から新Webへ接続すると、新FWログで確認できる二つはどれか。",
+          "choices": [
+            {
+              "text": "DHCP通信とVRRP通信",
+              "ok": false,
+              "explain": "インターネット利用者の接続手順ではありません。"
+            },
+            {
+              "text": "旧内部DNS通信だけ",
+              "ok": false,
+              "explain": "公開名は新外部DNSが応答します。"
+            },
+            {
+              "text": "新外部DNS宛てDNS通信と、新公開Web宛てWeb通信",
+              "ok": true,
+              "explain": "名前解決後にWebへ接続します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.1,
+            "bottom": 0.59,
+            "label": "表8のDMZ切替と確認手順（IPA原典）"
+          }
+        },
+        {
+          "id": "rollback-4",
+          "format": "穴埋め",
+          "theme": "静的NATと確認通信を組み立てる",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "変更内容と経路を補え。",
+          "template": "静的NATの変換先を{a}へ変える。新FW通過後は{b}を経由して旧Webへ届く。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "現行L3SW1のIP",
+                  "ok": false,
+                  "explain": "DMZのWebサーバではありません。"
+                },
+                {
+                  "text": "現行公開WebサーバのIP",
+                  "ok": true,
+                  "explain": "切戻し先のサーバです。"
+                },
+                {
+                  "text": "新外部DNSのIP",
+                  "ok": false,
+                  "explain": "Web通信の変換先ではありません。"
+                }
+              ],
+              "why": "切戻し先のサーバです。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "L2SW20→PC",
+                  "ok": false,
+                  "explain": "内部PC側の経路です。"
+                },
+                {
+                  "text": "新L2SW1→L2SW1",
+                  "ok": true,
+                  "explain": "新旧DMZをつないだ経路です。"
+                },
+                {
+                  "text": "スタックL3SW→内部DNS",
+                  "ok": false,
+                  "explain": "公開WebのDMZ経路ではありません。"
+                }
+              ],
+              "why": "新旧DMZをつないだ経路です。"
+            }
+          ]
+        },
+        {
+          "id": "rollback-5",
+          "format": "並べ替え",
+          "theme": "静的NATと確認通信を組み立てる",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "インターネットから旧Webへの経路を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "新ルータ1→新L2SW0"
+            },
+            {
+              "code": "新FW1で静的NATを適用する"
+            },
+            {
+              "code": "新L2SW1→L2SW1→現行公開Webサーバ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "回線は新側、新FWの変換先だけ旧サーバという混在状態を追います。",
+          "ngExplain": "回線は新側、新FWの変換先だけ旧サーバという混在状態を追います。"
+        },
+        {
+          "id": "rollback-6",
+          "format": "選択",
+          "theme": "静的NATと確認通信を組み立てる",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "DNS応答は得られるがWeb通信がログにない。次に確認すべき箇所はどれか。",
+          "choices": [
+            {
+              "text": "DHCPリレーのgiaddrだけ",
+              "ok": false,
+              "explain": "外部利用者のWeb接続とは別です。"
+            },
+            {
+              "text": "STPのルートだけで断定する",
+              "ok": false,
+              "explain": "経路全体のログと設定を確認します。"
+            },
+            {
+              "text": "名前解決後の接続先とFW許可・NAT",
+              "ok": true,
+              "explain": "DNS成功後のWeb通信経路に問題がある可能性があります。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dhcp-cutover",
+      "title": "仮想ゲートウェイとDHCPスコープを対応させる",
+      "targets": [
+        "s6-7",
+        "s6-8"
+      ],
+      "steps": [
+        {
+          "id": "dhcp-cutover-1",
+          "format": "読む",
+          "theme": "仮想ゲートウェイとDHCPスコープを対応させる",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "切替後もPCのゲートウェイを変えない",
+          "body": "現行PCのデフォルトゲートウェイは各VLANの.1です。切替時はスタックL3SWのVLAN11一時IPを172.17.11.1へ変更します。DHCPリレーはPCのブロードキャストをサーバへ送り、giaddrで受信サブネットを伝えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "VLAN",
+              "リレーのgiaddr",
+              "選ぶスコープ"
+            ],
+            "rows": [
+              [
+                "101",
+                "172.17.101.1",
+                "172.17.101.0/24"
+              ],
+              [
+                "102",
+                "172.17.102.1",
+                "172.17.102.0/24"
+              ],
+              [
+                "103",
+                "172.17.103.1",
+                "172.17.103.0/24"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "dhcp-cutover-2",
+          "format": "選択",
+          "theme": "仮想ゲートウェイとDHCPスコープを対応させる",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "スタックL3SWのVLAN11へ切替時に設定するIPはどれか。",
+          "choices": [
+            {
+              "text": "172.17.11.101",
+              "ok": false,
+              "explain": "移行中の一時IPであり切替後のゲートウェイではありません。"
+            },
+            {
+              "text": "172.17.10.1",
+              "ok": false,
+              "explain": "FW-L3SW間の仮想IPです。"
+            },
+            {
+              "text": "172.17.11.1",
+              "ok": true,
+              "explain": "現行L3SWのVRRP仮想IPを引き継ぎます。"
+            }
+          ]
+        },
+        {
+          "id": "dhcp-cutover-3",
+          "format": "選択",
+          "theme": "仮想ゲートウェイとDHCPスコープを対応させる",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "DHCPサーバがgiaddrを見る目的はどれか。",
+          "choices": [
+            {
+              "text": "DNSゾーンを選ぶ",
+              "ok": false,
+              "explain": "DHCPのアドレススコープ選択に使います。"
+            },
+            {
+              "text": "PCのサブネットを識別し、対応するスコープから割り当てる",
+              "ok": true,
+              "explain": "リレー元インタフェースがPCの所属を示します。"
+            },
+            {
+              "text": "PCのMACを暗号化する",
+              "ok": false,
+              "explain": "giaddrはリレーエージェントのIP情報です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.48,
+            "bottom": 0.82,
+            "label": "内部NWとDHCP切替手順（IPA原典）"
+          }
+        },
+        {
+          "id": "dhcp-cutover-4",
+          "format": "穴埋め",
+          "theme": "仮想ゲートウェイとDHCPスコープを対応させる",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "切替前後の値を補え。",
+          "template": "VLAN11の一時IP{a}を、切替時に{b}へ変更する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "172.17.11.101",
+                  "ok": true,
+                  "explain": "共存中に割り当てた未使用IPです。"
+                },
+                {
+                  "text": "172.17.11.1",
+                  "ok": false,
+                  "explain": "切替後の仮想ゲートウェイです。"
+                },
+                {
+                  "text": "172.16.254.1",
+                  "ok": false,
+                  "explain": "DMZのFW仮想IPです。"
+                }
+              ],
+              "why": "共存中に割り当てた未使用IPです。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "172.17.11.1",
+                  "ok": true,
+                  "explain": "サーバが使い続けるデフォルトゲートウェイです。"
+                },
+                {
+                  "text": "172.17.10.4",
+                  "ok": false,
+                  "explain": "FW-L3SW間の別サブネットです。"
+                },
+                {
+                  "text": "199.a.β.1",
+                  "ok": false,
+                  "explain": "インターネット側のルータです。"
+                }
+              ],
+              "why": "サーバが使い続けるデフォルトゲートウェイです。"
+            }
+          ]
+        },
+        {
+          "id": "dhcp-cutover-5",
+          "format": "並べ替え",
+          "theme": "仮想ゲートウェイとDHCPスコープを対応させる",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "DHCPリレーの処理を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "PCのDHCPDISCOVERをVLANインタフェースで受ける"
+            },
+            {
+              "code": "giaddrにそのインタフェースのIPを設定してサーバへ転送する"
+            },
+            {
+              "code": "サーバが対応するサブネットのスコープを選ぶ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "サーバはPCのブロードキャストを直接見ないため、リレー元のIPを判断材料にします。",
+          "ngExplain": "サーバはPCのブロードキャストを直接見ないため、リレー元のIPを判断材料にします。"
+        },
+        {
+          "id": "dhcp-cutover-6",
+          "format": "選択",
+          "theme": "仮想ゲートウェイとDHCPスコープを対応させる",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "giaddrが誤って172.17.102.1になったVLAN101の要求へ何が起こり得るか。",
+          "choices": [
+            {
+              "text": "VRRPマスタが自動で変わる",
+              "ok": false,
+              "explain": "DHCPスコープ選択とVRRPは別です。"
+            },
+            {
+              "text": "VLAN102用スコープから誤って選ぶ",
+              "ok": true,
+              "explain": "サーバはgiaddrで所属サブネットを判断します。"
+            },
+            {
+              "text": "必ずVLAN101をMACだけで判定する",
+              "ok": false,
+              "explain": "原問の判断材料はgiaddrです。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1821 @@
+{
+  "examKey": "2024r06h/pm1/2",
+  "title": "拠点の経路交換からSD-WANの切替を設計する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm1_qs.pdf",
+    "https://www.rfc-editor.org/rfc/rfc5880"
+  ],
+  "sections": [
+    {
+      "id": "edge",
+      "title": "顧客側と通信事業者側を区別する",
+      "targets": [
+        "s1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "edge-01",
+          "format": "読む",
+          "theme": "顧客側と通信事業者側を区別する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "支店から事業者網につなぐ",
+          "body": "支店のルータを通信事業者のルータへ接続します。顧客側をCE、事業者側をPEと呼びます。ASは一つの経路制御方針で管理する単位です。境界の位置から使うBGPを判断します。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 55,
+                "y": 65,
+                "label": "支店LAN"
+              },
+              {
+                "id": "node1",
+                "x": 165,
+                "y": 65,
+                "label": "CE 顧客側"
+              },
+              {
+                "id": "node2",
+                "x": 275,
+                "y": 65,
+                "label": "PE 事業者側"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：CEはCustomer Edge、PEはProvider Edge"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "edge-02",
+          "format": "選択",
+          "theme": "顧客側と通信事業者側を区別する",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "顧客の拠点に置き、PEと対向する装置の分類はどれか。",
+          "choices": [
+            {
+              "text": "DNSキャッシュサーバ",
+              "explain": "名前解決の装置であり、拠点の経路交換を担う装置ではありません。",
+              "ok": false
+            },
+            {
+              "text": "カスタマーエッジルータ",
+              "explain": "CEのCustomerは顧客を表します。",
+              "ok": true
+            },
+            {
+              "text": "プロバイダエッジルータ",
+              "explain": "PEは通信事業者側の境界です。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "edge-03",
+          "format": "選択",
+          "theme": "顧客側と通信事業者側を区別する",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "CEがAS65500、PEがAS64500。両者の経路交換はどれか。",
+          "choices": [
+            {
+              "text": "eBGP",
+              "explain": "external BGPは異なるAS間で使います。",
+              "ok": true
+            },
+            {
+              "text": "iBGP",
+              "explain": "internal BGPは同じAS内部で使います。",
+              "ok": false
+            },
+            {
+              "text": "OSPFの同一エリア内だけの交換",
+              "explain": "原問の拠点間経路交換はBGPです。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "edge-04",
+          "format": "穴埋め",
+          "theme": "顧客側と通信事業者側を区別する",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "二つの分類を完成する",
+          "template": "原問のルータ1～4は{a}エッジルータである。65500は{b}AS番号である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄ア",
+              "choices": [
+                {
+                  "text": "プロバイダ",
+                  "explain": "PE1～4が事業者側です。",
+                  "ok": false
+                },
+                {
+                  "text": "カスタマー",
+                  "explain": "事業者側PEに対向する顧客側の装置です。",
+                  "ok": true
+                }
+              ],
+              "why": "事業者側PEに対向する顧客側の装置です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄オ",
+              "choices": [
+                {
+                  "text": "プライベート",
+                  "explain": "65500はプライベートAS番号の範囲に含まれます。",
+                  "ok": true
+                },
+                {
+                  "text": "グローバルIPv4",
+                  "explain": "AS番号とIPアドレスは異なる識別子です。",
+                  "ok": false
+                }
+              ],
+              "why": "65500はプライベートAS番号の範囲に含まれます。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "edge-05",
+          "format": "選択",
+          "theme": "顧客側と通信事業者側を区別する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "異なる拠点で同じプライベートAS番号を使う。IPアドレスも同じになるか。",
+          "choices": [
+            {
+              "text": "プライベートAS番号ならインターネット上で一意である",
+              "explain": "プライベート番号は内部利用向けで、世界で一意ではありません。",
+              "ok": false
+            },
+            {
+              "text": "ならない。AS番号と宛先プレフィックスは別に割り当てる",
+              "explain": "経路制御上のAS識別と、パケットの宛先は別の情報です。",
+              "ok": true
+            },
+            {
+              "text": "全拠点のLANが自動的に同一アドレスになる",
+              "explain": "AS番号の一致はLANアドレスの一致を意味しません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "edge-06",
+          "format": "穴埋め",
+          "theme": "顧客側と通信事業者側を区別する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "原問の四拠点のAS番号を対応させる",
+          "template": "データセンターのcは{a}、本社のdは{b}、支店Vのeは{c}、支店Wのfは{d}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "データセンター",
+              "choices": [
+                {
+                  "text": "64500",
+                  "explain": "L社VPNのAS番号です。",
+                  "ok": false
+                },
+                {
+                  "text": "65500",
+                  "explain": "G社各拠点のAS番号です。",
+                  "ok": true
+                }
+              ],
+              "why": "G社各拠点のAS番号です。"
+            },
+            {
+              "key": "b",
+              "label": "本社",
+              "choices": [
+                {
+                  "text": "65500",
+                  "explain": "本社も同じ顧客AS番号を使います。",
+                  "ok": true
+                },
+                {
+                  "text": "64500",
+                  "explain": "事業者のAS番号ではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "本社も同じ顧客AS番号を使います。"
+            },
+            {
+              "key": "c",
+              "label": "支店V",
+              "choices": [
+                {
+                  "text": "10.3.0.0/16",
+                  "explain": "これは支店VのIPプレフィックスです。",
+                  "ok": false
+                },
+                {
+                  "text": "65500",
+                  "explain": "支店Vも同じAS番号です。",
+                  "ok": true
+                }
+              ],
+              "why": "支店Vも同じAS番号です。"
+            },
+            {
+              "key": "d",
+              "label": "支店W",
+              "choices": [
+                {
+                  "text": "65500",
+                  "explain": "支店Wも同じAS番号を使います。",
+                  "ok": true
+                },
+                {
+                  "text": "10.4.0.0/16",
+                  "explain": "これは支店WのIPプレフィックスです。",
+                  "ok": false
+                }
+              ],
+              "why": "支店Wも同じAS番号を使います。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.41,
+            "bottom": 0.76,
+            "label": "表1・表2のAS番号と拠点（IPA原表）"
+          }
+        },
+        {
+          "id": "edge-07",
+          "format": "選択",
+          "theme": "顧客側と通信事業者側を区別する",
+          "scaffold": 2,
+          "type": "quiz",
+          "title": "条件変更：2台が同じAS番号でBGPを交換する。種類はどれか。",
+          "choices": [
+            {
+              "text": "常にeBGP",
+              "explain": "別々の装置でも同じASならiBGPです。",
+              "ok": false
+            },
+            {
+              "text": "必ずBGPを停止する",
+              "explain": "同一AS内でもiBGPによる交換ができます。",
+              "ok": false
+            },
+            {
+              "text": "iBGP",
+              "explain": "同一AS内なのでinternal BGPです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "override",
+      "title": "AS PATHを書き換える理由",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "override-01",
+          "format": "読む",
+          "theme": "AS PATHを書き換える理由",
+          "scaffold": 5,
+          "type": "info",
+          "title": "自分のASが経路中に見える",
+          "body": "本社と支店が同じAS65500を使います。本社が受けたAS PATHは64500 65500です。BGPは自ASを含む経路をループとして拒否します。as-overrideは、この構成で経路を受け取れるようにする設定です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "場所",
+              "AS番号"
+            ],
+            "rows": [
+              [
+                "支店V",
+                "65500"
+              ],
+              [
+                "L社VPN",
+                "64500"
+              ],
+              [
+                "本社",
+                "65500"
+              ]
+            ],
+            "caption": "説明用：同じ顧客ASを事業者網で接続"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "override-02",
+          "format": "選択",
+          "theme": "AS PATHを書き換える理由",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "本社が64500 65500という経路を通常の規則で拒否する理由はどれか。",
+          "choices": [
+            {
+              "text": "自分のAS65500がAS PATHに含まれる",
+              "explain": "既に自ASを通った経路と判断するためです。",
+              "ok": true
+            },
+            {
+              "text": "64500が二桁でない",
+              "explain": "AS番号の十進表記の桁数は拒否理由ではありません。",
+              "ok": false
+            },
+            {
+              "text": "宛先が必ず自分のIPだから",
+              "explain": "AS PATHは宛先IPアドレスではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "override-03",
+          "format": "選択",
+          "theme": "AS PATHを書き換える理由",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "PEでas-overrideを行う場合、64500 65500の置換結果はどれか。",
+          "choices": [
+            {
+              "text": "65500 65500",
+              "explain": "受信側の自ASが残り、ループ検出を避けられません。",
+              "ok": false
+            },
+            {
+              "text": "64500だけ",
+              "explain": "この例では顧客ASを削除するのではなく置換します。",
+              "ok": false
+            },
+            {
+              "text": "64500 64500",
+              "explain": "顧客AS65500を事業者AS64500に置き換えます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "override-04",
+          "format": "穴埋め",
+          "theme": "AS PATHを書き換える理由",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "原問のPrefixとAS PATHを完成する",
+          "template": "支店VへのPrefix aは{a}である。設定後のAS PATH bは{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "宛先",
+              "choices": [
+                {
+                  "text": "10.2.0.0/16",
+                  "explain": "これは本社のプレフィックスです。",
+                  "ok": false
+                },
+                {
+                  "text": "10.3.0.0/16",
+                  "explain": "支店Vの宛先はas-overrideで変わりません。",
+                  "ok": true
+                }
+              ],
+              "why": "支店Vの宛先はas-overrideで変わりません。"
+            },
+            {
+              "key": "b",
+              "label": "経由ASの列",
+              "choices": [
+                {
+                  "text": "64500 64500",
+                  "explain": "65500を64500へ置き換えます。",
+                  "ok": true
+                },
+                {
+                  "text": "64500 65500",
+                  "explain": "これは設定前のAS PATHです。",
+                  "ok": false
+                }
+              ],
+              "why": "65500を64500へ置き換えます。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.41,
+            "bottom": 0.76,
+            "label": "表1の書換え前後と表2の支店V（IPA原表）"
+          }
+        },
+        {
+          "id": "override-05",
+          "format": "並べ替え",
+          "theme": "AS PATHを書き換える理由",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "経路を受け入れられる理由を並べる",
+          "lead": "宛先アドレスの変更とは区別します。",
+          "lines": [
+            {
+              "code": "複数の拠点がAS65500を使う"
+            },
+            {
+              "code": "PEが広告中の65500を64500へ置換する"
+            },
+            {
+              "code": "本社が受信するAS PATHから自AS番号がなくなる"
+            },
+            {
+              "code": "本社が自ASを含むことによる拒否を避けられる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "プレフィックスを変えず、AS PATHのループ検査に対応します。",
+          "ngExplain": "書換え対象は宛先ネットワークでなくAS PATHです。",
+          "stage": "reason"
+        },
+        {
+          "id": "override-06",
+          "format": "選択",
+          "theme": "AS PATHを書き換える理由",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：顧客AS65050、事業者AS64510。64510 65050を置換するとどうなるか。",
+          "choices": [
+            {
+              "text": "65050 64510",
+              "explain": "列を逆転する機能ではありません。",
+              "ok": false
+            },
+            {
+              "text": "宛先IPを64510に変える",
+              "explain": "AS番号をIPアドレスとして転送することはありません。",
+              "ok": false
+            },
+            {
+              "text": "64510 64510",
+              "explain": "同じ規則で顧客ASを事業者ASへ置換します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "redistribute",
+      "title": "再配布で経路が戻るのを防ぐ",
+      "targets": [
+        "s1",
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "redistribute-01",
+          "format": "読む",
+          "theme": "再配布で経路が戻るのを防ぐ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "拠点内と拠点間で言葉を変える",
+          "body": "拠点内はOSPF、拠点間はBGPを使います。OSPFはOpen Shortest Path Firstです。一方で学んだ経路を他方へ渡す処理を再配布と呼びます。戻ってきた経路を無制限に渡すと、経路が循環する危険があります。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "OSPF",
+                "d": "拠点内の経路"
+              },
+              {
+                "t": "BGP",
+                "d": "拠点間へ再配布"
+              },
+              {
+                "t": "OSPF",
+                "d": "別拠点で再配布"
+              }
+            ],
+            "caption": "説明用：異なるルーティングプロトコルをつなぐ"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "redistribute-02",
+          "format": "選択",
+          "theme": "再配布で経路が戻るのを防ぐ",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "OSPFで学んだ経路をBGPでも広告する処理はどれか。",
+          "choices": [
+            {
+              "text": "NAPT",
+              "explain": "IPアドレスやポートを変換する処理です。",
+              "ok": false
+            },
+            {
+              "text": "TLS終端",
+              "explain": "暗号化通信を終える処理であり、経路の交換ではありません。",
+              "ok": false
+            },
+            {
+              "text": "再配布",
+              "explain": "異なるルーティングプロトコルへ経路を渡します。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "redistribute-03",
+          "format": "選択",
+          "theme": "再配布で経路が戻るのを防ぐ",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "元のプロトコルへ再び渡される経路を制限する狙いはどれか。",
+          "choices": [
+            {
+              "text": "BGPのパケットを全て暗号化する",
+              "explain": "経路フィルターは暗号化の機能ではありません。",
+              "ok": false
+            },
+            {
+              "text": "ルーティングループを防ぐ",
+              "explain": "別経路として戻った情報で転送が循環する危険を抑えます。",
+              "ok": true
+            },
+            {
+              "text": "全てのLANで同じIPを使う",
+              "explain": "アドレスの重複を許可するための設定ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "redistribute-04",
+          "format": "穴埋め",
+          "theme": "再配布で経路が戻るのを防ぐ",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "処理名と防止する障害を完成する",
+          "template": "経路情報を{a}するとき、戻りの経路をフィルターで制限して{b}を防ぐ。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄イ",
+              "choices": [
+                {
+                  "text": "名前解決",
+                  "explain": "名前解決はDNSの役割です。",
+                  "ok": false
+                },
+                {
+                  "text": "再配布",
+                  "explain": "OSPFとBGPの間で学習経路を渡します。",
+                  "ok": true
+                }
+              ],
+              "why": "OSPFとBGPの間で学習経路を渡します。"
+            },
+            {
+              "key": "b",
+              "label": "防止対象",
+              "choices": [
+                {
+                  "text": "ルーティングループによる障害",
+                  "explain": "元の経路が別の情報として循環する危険を抑えます。",
+                  "ok": true
+                },
+                {
+                  "text": "サーバ証明書の期限切れ",
+                  "explain": "経路フィルターで証明書の有効期間は変更できません。",
+                  "ok": false
+                }
+              ],
+              "why": "元の経路が別の情報として循環する危険を抑えます。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "redistribute-05",
+          "format": "並べ替え",
+          "theme": "再配布で経路が戻るのを防ぐ",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "フィルターの必要性を説明する",
+          "lead": "原因から障害の防止へ並べます。",
+          "lines": [
+            {
+              "code": "OSPFの経路をBGPへ再配布する"
+            },
+            {
+              "code": "同じ経路が別の境界からOSPFへ戻る可能性がある"
+            },
+            {
+              "code": "元へ戻す経路をフィルターで制限する"
+            },
+            {
+              "code": "ルーティングループによる障害を防ぐ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "再配布する境界と、戻りを止める条件を対応させます。",
+          "ngExplain": "全てを遮断するのでなく、再流入させてはいけない経路を識別します。",
+          "stage": "reason"
+        },
+        {
+          "id": "redistribute-06",
+          "format": "選択",
+          "theme": "再配布で経路が戻るのを防ぐ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：フィルターでBGPからの経路を全部捨てた。何が問題か。",
+          "choices": [
+            {
+              "text": "OSPFが自動的に全他拠点の経路を復元する",
+              "explain": "拠点間はBGPに依存しており、自動復元の根拠はありません。",
+              "ok": false
+            },
+            {
+              "text": "必要な他拠点への経路も失う",
+              "explain": "ループを防ぐ条件と、必要な経路の許可を両立させます。",
+              "ok": true
+            },
+            {
+              "text": "必ず全経路が正しく残る",
+              "explain": "全拒否なら必要な経路も学習できません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "external-lsa",
+      "title": "外部経路を作った装置を追う",
+      "targets": [
+        "s1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "external-lsa-01",
+          "format": "読む",
+          "theme": "外部経路を作った装置を追う",
+          "scaffold": 5,
+          "type": "info",
+          "title": "プロキシまでの経路を支店へ届ける",
+          "body": "社外アクセスはデータセンターのプロキシを経由します。プロキシはDMZにあります。DMZは内部LANと分けた公開用のネットワークです。支店へ届く経路は途中でBGPを通り、支店のルータでOSPFへ再配布されます。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 55,
+                "y": 65,
+                "label": "DCのDMZ"
+              },
+              {
+                "id": "node1",
+                "x": 165,
+                "y": 65,
+                "label": "BGPの経路"
+              },
+              {
+                "id": "node2",
+                "x": 275,
+                "y": 65,
+                "label": "支店ルータ"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：支店のOSPFへ外部経路を取り込む"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "external-lsa-02",
+          "format": "選択",
+          "theme": "外部経路を作った装置を追う",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "PCがまず接続するプロキシへの到達性を確保する。配る宛先はどれか。",
+          "choices": [
+            {
+              "text": "全PCのMACアドレス",
+              "explain": "OSPFはMACアドレスではなくIP経路を配ります。",
+              "ok": false
+            },
+            {
+              "text": "WebページのURL",
+              "explain": "ルーティングテーブルはURLで転送先を判断しません。",
+              "ok": false
+            },
+            {
+              "text": "DMZのサブネット",
+              "explain": "原問のプロキシはデータセンターのDMZにあります。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "external-lsa-03",
+          "format": "選択",
+          "theme": "外部経路を作った装置を追う",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "BGPの経路をエリア0のOSPFへ取り込んだ。LSAの種類はどれか。",
+          "choices": [
+            {
+              "text": "Type3だけ",
+              "explain": "Type3はエリア間の経路です。今回は外部プロトコルからの再配布です。",
+              "ok": false
+            },
+            {
+              "text": "Type5の外部LSA",
+              "explain": "OSPF外部で得た経路を広告する種類です。",
+              "ok": true
+            },
+            {
+              "text": "Type1だけ",
+              "explain": "Type1はルータとリンクの情報です。外部経路そのものの広告とは異なります。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "external-lsa-04",
+          "format": "穴埋め",
+          "theme": "外部経路を作った装置を追う",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "種類と生成した機器を分けて答える",
+          "template": "支店Vで受け取るのは{a}である。L3SW3へ届くこのLSAを生成するのは{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "LSAのタイプ",
+              "choices": [
+                {
+                  "text": "Type3",
+                  "explain": "別OSPFエリアからの経路要約ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "Type5（外部LSA）",
+                  "explain": "全拠点がエリア0なので、外部経路をType5で広告します。",
+                  "ok": true
+                }
+              ],
+              "why": "全拠点がエリア0なので、外部経路をType5で広告します。"
+            },
+            {
+              "key": "b",
+              "label": "生成機器",
+              "choices": [
+                {
+                  "text": "ルータ1",
+                  "explain": "元のDMZ側にありますが、BGPを経た後のLSAは支店側で生成します。",
+                  "ok": false
+                },
+                {
+                  "text": "L3SW3",
+                  "explain": "このLSAを受け取る側であり、この外部経路の生成元ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "ルータ3",
+                  "explain": "支店VでBGPの経路をOSPFへ再配布する境界です。",
+                  "ok": true
+                }
+              ],
+              "why": "支店VでBGPの経路をOSPFへ再配布する境界です。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.06,
+            "bottom": 0.36,
+            "label": "再配布とDMZ経路の配布条件（IPA原文）"
+          }
+        },
+        {
+          "id": "external-lsa-05",
+          "format": "並べ替え",
+          "theme": "外部経路を作った装置を追う",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "LSAの生成元を追う",
+          "lead": "BGPを通る前後で同じLSAが運ばれると考えないようにします。",
+          "lines": [
+            {
+              "code": "データセンターのDMZへの経路を拠点間BGPで受け取る"
+            },
+            {
+              "code": "支店Vのルータ3がOSPFへ再配布する"
+            },
+            {
+              "code": "ルータ3がType5の外部LSAを生成する"
+            },
+            {
+              "code": "L3SW3がそのLSAを受信する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "経路情報は引き継がれても、OSPFのLSAは再配布点で生成されます。",
+          "ngExplain": "最初に経路を知った装置と、支店内のLSA生成装置を区別します。",
+          "stage": "reason"
+        },
+        {
+          "id": "external-lsa-06",
+          "format": "選択",
+          "theme": "外部経路を作った装置を追う",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：支店WのL3SW4で同じ外部経路を見る。支店での生成元はどれか。",
+          "choices": [
+            {
+              "text": "必ずデータセンターのL3SW1",
+              "explain": "途中のBGPがOSPFのLSAをそのまま運ぶわけではありません。",
+              "ok": false
+            },
+            {
+              "text": "ルータ4",
+              "explain": "支店WでBGPからOSPFへ再配布する境界です。",
+              "ok": true
+            },
+            {
+              "text": "ルータ3",
+              "explain": "支店Vの再配布点です。支店Wではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "overlay",
+      "title": "トンネルに必要な情報を分ける",
+      "targets": [
+        "s1",
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "overlay-01",
+          "format": "読む",
+          "theme": "トンネルに必要な情報を分ける",
+          "scaffold": 5,
+          "type": "info",
+          "title": "回線と暗号トンネルを分ける",
+          "body": "SD-WANはSoftware-Defined Wide Area Networkです。既存回線の上にIPsecトンネルを作ります。コントローラーが装置の設定情報を配ります。接続先の場所と暗号通信のための情報を分けて考えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "層・情報",
+              "この問題での役割"
+            ],
+            "rows": [
+              [
+                "アンダーレイ",
+                "MPLS VPNやインターネット回線"
+              ],
+              [
+                "オーバーレイ",
+                "装置間のIPsecトンネル"
+              ],
+              [
+                "コントローラー",
+                "経路とトンネル構築情報の配布"
+              ]
+            ],
+            "caption": "説明用：回線と論理的な接続"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "overlay-02",
+          "format": "選択",
+          "theme": "トンネルに必要な情報を分ける",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "同じ宛先でも業務アプリ別に経路を変える方式はどれか。",
+          "choices": [
+            {
+              "text": "最少接続数方式",
+              "explain": "LBのサーバ振分け方式であり、この経路制御の名称ではありません。",
+              "ok": false
+            },
+            {
+              "text": "ポリシーベースルーティング",
+              "explain": "宛先だけでなくアプリケーションなどの条件で経路を選びます。",
+              "ok": true
+            },
+            {
+              "text": "DNSラウンドロビン",
+              "explain": "DNS応答によるサーバの振分けです。アプリ別の経路選択とは異なります。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "overlay-03",
+          "format": "選択",
+          "theme": "トンネルに必要な情報を分ける",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "IPsecトンネルを作る相手を特定する情報はどれか。",
+          "choices": [
+            {
+              "text": "対向SD-WAN装置のIPアドレス",
+              "explain": "アンダーレイで対向装置へ到達するためです。",
+              "ok": true
+            },
+            {
+              "text": "相手PCの画面サイズ",
+              "explain": "トンネルの相手はSD-WAN装置です。表示設定は使いません。",
+              "ok": false
+            },
+            {
+              "text": "全てのゲームファイル名",
+              "explain": "転送する内容とトンネルの接続先は別です。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "overlay-04",
+          "format": "選択",
+          "theme": "トンネルに必要な情報を分ける",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "接続先IPが分かっただけで、暗号化トンネルの準備は足りるか。",
+          "choices": [
+            {
+              "text": "IPアドレスがそのまま秘密鍵になる",
+              "explain": "IPアドレスは通信相手を指定する情報であり秘密鍵ではありません。",
+              "ok": false
+            },
+            {
+              "text": "DNSのTTLだけを追加すれば足りる",
+              "explain": "TTLはDNS情報の保持期間であり暗号化の情報ではありません。",
+              "ok": false
+            },
+            {
+              "text": "鍵情報なども必要になる",
+              "explain": "IPアドレスは相手への到達に使います。暗号通信には別の情報が必要です。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "overlay-05",
+          "format": "穴埋め",
+          "theme": "トンネルに必要な情報を分ける",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "空欄カと配布する二情報を完成する",
+          "template": "アプリ別の選択は{a}ルーティングである。トンネル確立には{b}と{c}を配布する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "方式",
+              "choices": [
+                {
+                  "text": "ラウンドロビン",
+                  "explain": "接続を順番に分ける方式とは異なります。",
+                  "ok": false
+                },
+                {
+                  "text": "ポリシーベース",
+                  "explain": "アプリケーション識別を条件に使います。",
+                  "ok": true
+                }
+              ],
+              "why": "アプリケーション識別を条件に使います。"
+            },
+            {
+              "key": "b",
+              "label": "接続先を特定",
+              "choices": [
+                {
+                  "text": "IPアドレス",
+                  "explain": "対向装置へ到達するための情報です。",
+                  "ok": true
+                },
+                {
+                  "text": "VLANの表示名",
+                  "explain": "名前だけでは対向IPsec装置に到達できません。",
+                  "ok": false
+                }
+              ],
+              "why": "対向装置へ到達するための情報です。"
+            },
+            {
+              "key": "c",
+              "label": "暗号通信を準備",
+              "choices": [
+                {
+                  "text": "メールのMX優先度",
+                  "explain": "メール配送のDNS情報です。",
+                  "ok": false
+                },
+                {
+                  "text": "鍵情報",
+                  "explain": "IPアドレスとは別のトンネル確立用情報です。",
+                  "ok": true
+                }
+              ],
+              "why": "IPアドレスとは別のトンネル確立用情報です。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.03,
+            "bottom": 0.21,
+            "label": "ポリシー制御とトンネル構築情報（IPA原文）"
+          }
+        },
+        {
+          "id": "overlay-06",
+          "format": "並べ替え",
+          "theme": "トンネルに必要な情報を分ける",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "管理と実際の通信を順に置く",
+          "lead": "コントローラーが配る二種類のトンネル情報を使います。",
+          "lines": [
+            {
+              "code": "対向装置のIPアドレスを把握する"
+            },
+            {
+              "code": "トンネル確立に使う鍵情報を準備する"
+            },
+            {
+              "code": "装置間でIPsecトンネルを確立する"
+            },
+            {
+              "code": "ポリシーに従ってトンネルへ業務通信を転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "制御に必要な情報を先に配り、その後でデータを転送します。",
+          "ngExplain": "IPアドレスと鍵情報を使える状態にしてから、トンネルを利用します。",
+          "stage": "reason"
+        },
+        {
+          "id": "overlay-07",
+          "format": "選択",
+          "theme": "トンネルに必要な情報を分ける",
+          "scaffold": 2,
+          "type": "quiz",
+          "title": "条件変更：拠点にインターネット回線を追加した。PCのWeb通信も直接出てよいか。",
+          "choices": [
+            {
+              "text": "回線追加と同時に全PCが直接出る",
+              "explain": "アンダーレイの増設と、業務通信の出口の方針は別です。",
+              "ok": false
+            },
+            {
+              "text": "コントローラーが全Web通信のプロキシになる",
+              "explain": "コントローラーは設定を管理する役割です。",
+              "ok": false
+            },
+            {
+              "text": "原問の導入方針ではデータセンターのプロキシを経由する",
+              "explain": "直接アクセスは次フェーズです。回線追加だけで運用方針は変わりません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "bfd",
+      "title": "故障検出を切替の前提にする",
+      "targets": [
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "bfd-01",
+          "format": "読む",
+          "theme": "故障検出を切替の前提にする",
+          "scaffold": 5,
+          "type": "info",
+          "title": "リンクが上がっていても先で止まる",
+          "body": "SD-WAN装置の物理ポートは正常です。しかし、IPsecトンネルの途中で通信が止まりました。BFDはBidirectional Forwarding Detectionです。通信経路の故障を短時間で検出します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "物理ポート",
+                "d": "リンクは正常"
+              },
+              {
+                "t": "IPsecトンネル",
+                "d": "途中で転送停止"
+              },
+              {
+                "t": "BFD",
+                "d": "応答の途絶で経路障害を検出"
+              }
+            ],
+            "caption": "説明用：物理状態だけでは足りない状況"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "bfd-02",
+          "format": "選択",
+          "theme": "故障検出を切替の前提にする",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "物理ポートのリンク状態だけでは何を見逃すか。",
+          "choices": [
+            {
+              "text": "装置に電源が入っていないことだけ",
+              "explain": "今回は装置と物理ポートは動いている条件です。",
+              "ok": false
+            },
+            {
+              "text": "接続先のメールの件名",
+              "explain": "リンク状態もBFDもメール本文を検査しません。",
+              "ok": false
+            },
+            {
+              "text": "トンネル途中の転送障害",
+              "explain": "ポートが上がっていても、先の経路が通信できるとは限りません。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "bfd-03",
+          "format": "選択",
+          "theme": "故障検出を切替の前提にする",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "BFDをトンネルインタフェースに設定する直接の目的はどれか。",
+          "choices": [
+            {
+              "text": "回線の帯域を物理的に増やす",
+              "explain": "検出時間と伝送速度は異なる性質です。",
+              "ok": false
+            },
+            {
+              "text": "IPsecトンネル障害の検出を高速にする",
+              "explain": "検出を早めることで、経路切替の判断へ早く進めます。",
+              "ok": true
+            },
+            {
+              "text": "暗号鍵のビット長を増やす",
+              "explain": "BFDは暗号強度を変更しません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "bfd-04",
+          "format": "穴埋め",
+          "theme": "故障検出を切替の前提にする",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "対象と改善する性質を入れる",
+          "template": "{a}の障害を{b}するためにBFDを設定する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "監視するもの",
+              "choices": [
+                {
+                  "text": "IPsecトンネル",
+                  "explain": "原問はトンネルインタフェースでBFDを有効化します。",
+                  "ok": true
+                },
+                {
+                  "text": "全アプリケーションの処理結果",
+                  "explain": "BFDはアプリケーション内容を判定しません。",
+                  "ok": false
+                }
+              ],
+              "why": "原問はトンネルインタフェースでBFDを有効化します。"
+            },
+            {
+              "key": "b",
+              "label": "改善するもの",
+              "choices": [
+                {
+                  "text": "必ず発生しなく",
+                  "explain": "監視は故障そのものをなくす機能ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "高速に検出",
+                  "explain": "故障発生から気付くまでを短くします。",
+                  "ok": true
+                }
+              ],
+              "why": "故障発生から気付くまでを短くします。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "bfd-05",
+          "format": "並べ替え",
+          "theme": "故障検出を切替の前提にする",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "障害発生から通信復旧まで並べる",
+          "lead": "検出と切替を区別します。",
+          "lines": [
+            {
+              "code": "優先IPsecトンネルで転送障害が起きる"
+            },
+            {
+              "code": "BFDがトンネルの障害を検出する"
+            },
+            {
+              "code": "経路制御が利用可能な代替トンネルを選ぶ"
+            },
+            {
+              "code": "代替経路で通信を続ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "BFDの役割は検出です。実際の転送先は経路制御が決めます。",
+          "ngExplain": "監視による検出が先で、その結果を受けて切り替えます。",
+          "stage": "reason"
+        },
+        {
+          "id": "bfd-06",
+          "format": "選択",
+          "theme": "故障検出を切替の前提にする",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：代替トンネルも故障した。BFDを速くすれば復旧できるか。",
+          "choices": [
+            {
+              "text": "BFDが暗号化なしで全通信を必ず送る",
+              "explain": "監視機能が運用ポリシーを勝手に解除するわけではありません。",
+              "ok": false
+            },
+            {
+              "text": "検出は早まるが、利用可能な経路がなければ復旧できない",
+              "explain": "障害を検出する能力と代替経路の存在は別です。",
+              "ok": true
+            },
+            {
+              "text": "BFDが新しい物理回線を生成する",
+              "explain": "BFDは回線を設置する機能ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "normal-te",
+      "title": "正常時のトンネル両端を読む",
+      "targets": [
+        "s5-1"
+      ],
+      "steps": [
+        {
+          "id": "normal-te-01",
+          "format": "読む",
+          "theme": "正常時のトンネル両端を読む",
+          "scaffold": 5,
+          "type": "info",
+          "title": "通信の始点と終点を先に決める",
+          "body": "本社のPCから支店VのPCへ通信します。本社は装置2、支店Vは装置3です。正常時はL社VPNを優先します。トンネルは送り側と受け側の二つのTEを通ります。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "区間",
+              "本社側",
+              "支店V側"
+            ],
+            "rows": [
+              [
+                "L社VPN",
+                "TE023",
+                "TE032"
+              ],
+              [
+                "インターネット",
+                "TE123",
+                "TE132"
+              ]
+            ],
+            "caption": "説明用：この2拠点に関係するトンネル端点"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "normal-te-02",
+          "format": "選択",
+          "theme": "正常時のトンネル両端を読む",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "本社から支店Vへの通信で、最初に決める装置の組はどれか。",
+          "choices": [
+            {
+              "text": "装置1と装置2",
+              "explain": "装置1はデータセンターです。支店Vが含まれていません。",
+              "ok": false
+            },
+            {
+              "text": "装置3と装置4",
+              "explain": "装置4は支店Wです。本社が含まれていません。",
+              "ok": false
+            },
+            {
+              "text": "装置2と装置3",
+              "explain": "通信元と通信先の拠点を対応させます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "normal-te-03",
+          "format": "選択",
+          "theme": "正常時のトンネル両端を読む",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "VPNとインターネットの両方が正常。どの線をたどるか。",
+          "choices": [
+            {
+              "text": "先に目についた破線",
+              "explain": "破線はインターネット側です。優先条件を確認します。",
+              "ok": false
+            },
+            {
+              "text": "装置2と3を直接結ぶL社VPN側の実線",
+              "explain": "原問の方針はL社VPN優先です。",
+              "ok": true
+            },
+            {
+              "text": "データセンター経由の線",
+              "explain": "本社と支店Vを直接結ぶトンネルが示されています。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "normal-te-04",
+          "format": "穴埋め",
+          "theme": "正常時のトンネル両端を読む",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "正常時の両端を完成する",
+          "template": "本社側の{a}から入り、支店V側の{b}から出る。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "送信側TE",
+              "choices": [
+                {
+                  "text": "TE023",
+                  "explain": "装置2から装置3へのVPN側端点です。",
+                  "ok": true
+                },
+                {
+                  "text": "TE021",
+                  "explain": "装置1へ向かうVPN側の端点です。",
+                  "ok": false
+                }
+              ],
+              "why": "装置2から装置3へのVPN側端点です。"
+            },
+            {
+              "key": "b",
+              "label": "受信側TE",
+              "choices": [
+                {
+                  "text": "TE031",
+                  "explain": "データセンターとのトンネル端点です。",
+                  "ok": false
+                },
+                {
+                  "text": "TE032",
+                  "explain": "装置3から見た装置2とのVPN側端点です。",
+                  "ok": true
+                }
+              ],
+              "why": "装置3から見た装置2とのVPN側端点です。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 13,
+            "top": 0.53,
+            "bottom": 0.92,
+            "label": "図3の装置2・装置3間の実線と破線（IPA原図）"
+          }
+        },
+        {
+          "id": "normal-te-05",
+          "format": "並べ替え",
+          "theme": "正常時のトンネル両端を読む",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "正常時の答案を組み立てる",
+          "lead": "端点を一つだけ答えないようにします。",
+          "lines": [
+            {
+              "code": "通信元を本社の装置2、通信先を支店Vの装置3と特定する"
+            },
+            {
+              "code": "正常時はL社VPNを使う方針を確認する"
+            },
+            {
+              "code": "図3の両装置間の実線をたどる"
+            },
+            {
+              "code": "TE023とTE032を挙げる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "通信する拠点、優先回線、両端の順に確認します。",
+          "ngExplain": "回線名だけでは足りません。設問は通過するTEを全て求めています。",
+          "stage": "reason"
+        },
+        {
+          "id": "normal-te-06",
+          "format": "選択",
+          "theme": "正常時のトンネル両端を読む",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：同じVPNトンネルで支店Vから本社へ返信する。通過順はどれか。",
+          "choices": [
+            {
+              "text": "TE031 → TE012",
+              "explain": "データセンターを介する別の区間を混ぜています。",
+              "ok": false
+            },
+            {
+              "text": "TE032 → TE023",
+              "explain": "同じ二端点を逆向きに通ります。",
+              "ok": true
+            },
+            {
+              "text": "TE123 → TE132",
+              "explain": "これはインターネット側の端点です。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "failover-te",
+      "title": "障害時に同じ拠点間の代替を選ぶ",
+      "targets": [
+        "s5-2"
+      ],
+      "steps": [
+        {
+          "id": "failover-te-01",
+          "format": "読む",
+          "theme": "障害時に同じ拠点間の代替を選ぶ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "片側のVPN回線が使えなくなった",
+          "body": "支店VのL社VPN接続回線が故障しました。インターネット接続は動作しています。通信元と通信先の拠点は変わりません。利用するトンネルの種類だけを切り替えます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "正常時",
+                "d": "本社2 → VPN → 支店V3"
+              },
+              {
+                "t": "支店VのVPN障害",
+                "d": "VPN側トンネルは使用不可"
+              },
+              {
+                "t": "代替",
+                "d": "本社2 → インターネット → 支店V3"
+              }
+            ],
+            "caption": "説明用：障害で変えるのは接続先の拠点ではない"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "failover-te-02",
+          "format": "選択",
+          "theme": "障害時に同じ拠点間の代替を選ぶ",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "本社側のVPN回線が正常なら、支店VのVPN側端点へ届くか。",
+          "choices": [
+            {
+              "text": "届かない。支店V側の接続回線が切れている",
+              "explain": "両端へ到達できて初めてトンネルを使えます。",
+              "ok": true
+            },
+            {
+              "text": "必ず届く。本社側だけ正常なら十分",
+              "explain": "受信側の回線障害を無視しています。",
+              "ok": false
+            },
+            {
+              "text": "VPNを使えば支店Vの回線自体を通らず届く",
+              "explain": "原問のVPN側トンネルは支店VのVPN回線を必要とします。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "failover-te-03",
+          "format": "選択",
+          "theme": "障害時に同じ拠点間の代替を選ぶ",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "代替としてたどる図3の線はどれか。",
+          "choices": [
+            {
+              "text": "装置2と4を結ぶVPN側の実線",
+              "explain": "支店Wへ送っても支店Vへの回答にはなりません。",
+              "ok": false
+            },
+            {
+              "text": "故障したVPN側実線のまま",
+              "explain": "障害を検出しても経路を変更しなければ到達できません。",
+              "ok": false
+            },
+            {
+              "text": "装置2と3を結ぶインターネット側の破線",
+              "explain": "通信拠点を保ち、利用可能な回線へ替えます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "failover-te-04",
+          "format": "穴埋め",
+          "theme": "障害時に同じ拠点間の代替を選ぶ",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "障害時にも両端を答える",
+          "template": "本社から支店Vへ、{a}と{b}を通過する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "本社の端点",
+              "choices": [
+                {
+                  "text": "TE123",
+                  "explain": "装置2のインターネット側で装置3に対応します。",
+                  "ok": true
+                },
+                {
+                  "text": "TE023",
+                  "explain": "故障したVPN側を使う端点です。",
+                  "ok": false
+                }
+              ],
+              "why": "装置2のインターネット側で装置3に対応します。"
+            },
+            {
+              "key": "b",
+              "label": "支店Vの端点",
+              "choices": [
+                {
+                  "text": "TE032",
+                  "explain": "VPN側の端点なので今回は使えません。",
+                  "ok": false
+                },
+                {
+                  "text": "TE132",
+                  "explain": "装置3のインターネット側で装置2に対応します。",
+                  "ok": true
+                }
+              ],
+              "why": "装置3のインターネット側で装置2に対応します。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 13,
+            "top": 0.53,
+            "bottom": 0.92,
+            "label": "図3の装置2・装置3間のインターネット側（IPA原図）"
+          }
+        },
+        {
+          "id": "failover-te-05",
+          "format": "並べ替え",
+          "theme": "障害時に同じ拠点間の代替を選ぶ",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "故障から代替TEの答案まで並べる",
+          "lead": "支店VのVPN回線だけが故障した場合です。",
+          "lines": [
+            {
+              "code": "支店VのL社VPN接続回線が使えない"
+            },
+            {
+              "code": "本社と支店VのVPN側トンネルを利用できない"
+            },
+            {
+              "code": "インターネット側の同じ拠点間トンネルを選ぶ"
+            },
+            {
+              "code": "TE123とTE132を通過する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "障害の範囲を確認して、同じ通信先へ向かう代替を選びます。",
+          "ngExplain": "宛先拠点を変えずに、VPN側からインターネット側へ移ります。",
+          "stage": "reason"
+        },
+        {
+          "id": "failover-te-06",
+          "format": "選択",
+          "theme": "障害時に同じ拠点間の代替を選ぶ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：支店Vの回線は正常で装置3自体が停止した。どちらのトンネルを使えるか。",
+          "choices": [
+            {
+              "text": "インターネット側なら装置3を使わない",
+              "explain": "どちらも装置3で終端します。",
+              "ok": false
+            },
+            {
+              "text": "L社VPN側なら自動的に装置4へ置き換わる",
+              "explain": "装置4は別拠点です。原問に装置3の冗長機はありません。",
+              "ok": false
+            },
+            {
+              "text": "装置3で終端する両方のトンネルが使えない",
+              "explain": "端点装置が停止したので、回線の二重化だけでは救えません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

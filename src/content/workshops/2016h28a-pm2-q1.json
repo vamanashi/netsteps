@@ -1,0 +1,2210 @@
+{
+  "examKey": "2016h28a/pm2/1",
+  "title": "ブラウザ通話を二つの回線へ広げる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm2_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "nat",
+      "title": "宛先変換と送信元変換",
+      "targets": [
+        "s1-1"
+      ],
+      "steps": [
+        {
+          "id": "nat-1",
+          "format": "読む",
+          "theme": "宛先変換と送信元変換",
+          "scaffold": 5,
+          "type": "info",
+          "title": "IPアドレスを書き換える向き",
+          "body": "NAT（Network Address Translation）はIPアドレスを変換します。外部からWebサーバへ入るときは宛先を公開IPからDMZ（Demilitarized Zone：外部向けサーバ用の区画）のIPへ変換します。社内から外へ出るNAPT（Network Address Port Translation）では、送信元IPと送信元ポートを変換して複数通信を区別します。設問1(1)は向きと範囲を問います。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 170,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "社外PC",
+                "x": 55,
+                "y": 70,
+                "icon": "pc"
+              },
+              {
+                "id": "node1",
+                "label": "FW",
+                "x": 165,
+                "y": 70,
+                "icon": "router"
+              },
+              {
+                "id": "node2",
+                "label": "Webサーバ",
+                "x": 275,
+                "y": 70,
+                "icon": "server"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：FW（Firewall）で公開宛先からDMZ内宛先へ変換"
+          }
+        },
+        {
+          "id": "nat-2",
+          "format": "選択",
+          "theme": "宛先変換と送信元変換",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "社外PCから内部Webへ要求を届ける変換は？",
+          "choices": [
+            {
+              "text": "送信元IPだけの変換",
+              "explain": "送信者を変えても公開宛先と内部サーバの対応は作れません。"
+            },
+            {
+              "text": "宛先IPの変換",
+              "explain": "外部が指定する公開入口を内部サーバへ対応付けます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "nat-3",
+          "format": "選択",
+          "theme": "宛先変換と送信元変換",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "社内発NAPTで送信元ポートも変える理由は？",
+          "choices": [
+            {
+              "text": "Webサーバの待受ポートを増やすため",
+              "explain": "送信元の識別と宛先の待受サービスは別です。"
+            },
+            {
+              "text": "一つの公開IPで複数通信を区別するため",
+              "explain": "IPとポートの対応で応答を元の通信へ戻せます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "nat-4",
+          "format": "穴埋め",
+          "theme": "宛先変換と送信元変換",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "原問のア・イ・ウ",
+          "template": "公開側{a}からDMZ側{b}へ宛先を変換する。送信元NAPTはIPと{c}を変換する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ア",
+              "why": "ISP1の公開範囲です。",
+              "choices": [
+                {
+                  "text": "10.0.8.0/24",
+                  "explain": "FW接続用の内部範囲です。"
+                },
+                {
+                  "text": "ip1/29",
+                  "explain": "原問のISP1接続範囲です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "イ",
+              "why": "Webの所属範囲です。",
+              "choices": [
+                {
+                  "text": "10.0.6.0/24",
+                  "explain": "イントラネット用の範囲です。"
+                },
+                {
+                  "text": "10.0.9.0/24",
+                  "explain": "原問のDMZです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "ウ",
+              "why": "外向き通信の送り手を識別します。",
+              "choices": [
+                {
+                  "text": "宛先ポート番号",
+                  "explain": "Webサービスを指定する番号であり設問の変換対象とは異なります。"
+                },
+                {
+                  "text": "送信元ポート番号",
+                  "explain": "内部の各通信に対応する番号です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "nat-5",
+          "format": "並べ替え",
+          "theme": "宛先変換と送信元変換",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "外部要求の経路",
+          "lead": "処理順に並べる。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "公開IPにWeb要求を送る"
+            },
+            {
+              "code": "FWが宛先をDMZのWebサーバIPへ変換する"
+            },
+            {
+              "code": "Webサーバが要求を処理する"
+            },
+            {
+              "code": "応答の送信元を公開IPに対応させて戻す"
+            }
+          ],
+          "shuffled": [
+            1,
+            3,
+            0,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "要求の宛先と応答の送信元に同じ公開入口を使います。",
+          "ngExplain": "内部サーバへ変換した後も外部に見える通信相手の整合が必要です。"
+        },
+        {
+          "id": "nat-6",
+          "format": "選択",
+          "theme": "宛先変換と送信元変換",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：内部WebのIPだけ変更。公開入口を維持するため見直すのは？",
+          "choices": [
+            {
+              "text": "公開DNS名を増やすだけ",
+              "explain": "名前を追加しても内部の宛先対応と通過許可は直りません。"
+            },
+            {
+              "text": "宛先NATの変換後IPとFW許可",
+              "explain": "公開側を保ちながら内部の転送先を変えます。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "capacity",
+      "title": "ポートを数え、増設条件をそろえる",
+      "targets": [
+        "s1-2",
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "capacity-1",
+          "format": "読む",
+          "theme": "ポートを数え、増設条件をそろえる",
+          "scaffold": 5,
+          "type": "info",
+          "title": "上限計算は問題の仮定で行う",
+          "body": "TCP（Transmission Control Protocol）のポートは16ビットで、2の16乗は65,536です。原問は送信元NAPT用の公開IP2個でこの全範囲を使う単純化した上限を求めます。実機の予約ポートや宛先別再利用などの条件とは区別します。Web増設にはDNS（Domain Name System）の追加に加え、FWの通信許可と宛先NATの追加も必要です。",
+          "stage": "concept",
+          "fig": {
+            "kind": "header",
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "送信元ポート",
+                    "bits": 16,
+                    "hi": true
+                  },
+                  {
+                    "t": "宛先ポート",
+                    "bits": 16
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：TCPヘッダの先頭32ビット"
+          }
+        },
+        {
+          "id": "capacity-2",
+          "format": "選択",
+          "theme": "ポートを数え、増設条件をそろえる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "原問の上限計算に使う式は？",
+          "choices": [
+            {
+              "text": "2 × 65,536 × 65,536",
+              "explain": "原問の上限モデルに宛先ポートの組合せを追加していません。"
+            },
+            {
+              "text": "2 × 65,536",
+              "explain": "公開IPごとに一組のポート空間を数えます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "capacity-3",
+          "format": "選択",
+          "theme": "ポートを数え、増設条件をそろえる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "DNSだけ更新しても新Webを使えるとは限らない理由は？",
+          "choices": [
+            {
+              "text": "DNSに載せるとFWの全ポートが閉じるから",
+              "explain": "DNS変更自体が全通信拒否を引き起こすのではありません。"
+            },
+            {
+              "text": "NAT対応と通信許可が別の設定だから",
+              "explain": "名前を知ってもサーバまで届けて通す必要があります。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "capacity-4",
+          "format": "穴埋め",
+          "theme": "ポートを数え、増設条件をそろえる",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "計算結果と必要な二作業",
+          "template": "上限は{a}接続。DNS以外に通信の{b}と宛先{c}を追加する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "結果",
+              "why": "2組分です。",
+              "choices": [
+                {
+                  "text": "65,536",
+                  "explain": "公開IPが1個の場合です。"
+                },
+                {
+                  "text": "131,072",
+                  "explain": "2×65,536です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "設定1",
+              "why": "到達可能にします。",
+              "choices": [
+                {
+                  "text": "全拒否",
+                  "explain": "サービス利用できなくなります。"
+                },
+                {
+                  "text": "許可",
+                  "explain": "対象の新Web通信を通します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "設定2",
+              "why": "公開入口と内部機器の対応です。",
+              "choices": [
+                {
+                  "text": "DNSのTTLだけ",
+                  "explain": "キャッシュ期間ではアドレス変換先は作れません。"
+                },
+                {
+                  "text": "NATの定義",
+                  "explain": "新しい公開IPを内部サーバに対応させます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "capacity-5",
+          "format": "並べ替え",
+          "theme": "ポートを数え、増設条件をそろえる",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "増設の確認を役割順に",
+          "lead": "名前→変換→通過の順で。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "DNSで新しい公開入口を知らせる"
+            },
+            {
+              "code": "宛先NATで公開IPを内部Webに対応させる"
+            },
+            {
+              "code": "FWで必要な通信を許可する"
+            }
+          ],
+          "shuffled": [
+            1,
+            0,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "DNS以外の後半二つが設問1(3)の解答要素です。",
+          "ngExplain": "名前解決と変換とフィルタを一つの機能と考えないでください。"
+        },
+        {
+          "id": "capacity-6",
+          "format": "選択",
+          "theme": "ポートを数え、増設条件をそろえる",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：同じ計算モデルで公開IP3個なら上限は？",
+          "choices": [
+            {
+              "text": "131,072",
+              "explain": "原問の2個の値をそのまま使っています。"
+            },
+            {
+              "text": "196,608",
+              "explain": "3×65,536です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "isp",
+      "title": "二回線でも相手のIPを変えない",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "isp-1",
+          "format": "読む",
+          "theme": "二回線でも相手のIPを変えない",
+          "scaffold": 5,
+          "type": "info",
+          "title": "ISPに合わせたIP変換",
+          "body": "ISP（Internet Service Provider：接続事業者）1と2は異なる公開IPを払い出します。原問のLB（Load Balancer：負荷分散装置）は送信先ISPのIPに送信元を変換します。要求をISP1で受けてISP2で返すと、要求の宛先と応答の送信元が食い違います。設問2では、単に『経路が非対称』でなくこの変換条件を理由にします。",
+          "stage": "concept",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "要求 client -> ISP1側IP",
+              "誤った応答 ISP2側IP -> client",
+              "要求宛先と応答送信元を比較"
+            ],
+            "caption": "説明用：往復のIPの整合"
+          }
+        },
+        {
+          "id": "isp-2",
+          "format": "選択",
+          "theme": "二回線でも相手のIPを変えない",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "新たに追加する公開IPと従来分との重要な違いは？",
+          "choices": [
+            {
+              "text": "一方はプライベートIPである",
+              "explain": "どちらもインターネットに公開するIPです。"
+            },
+            {
+              "text": "異なるISPから払い出されている",
+              "explain": "ISP1側だけを増やすのではなくISP2側にも入口を作ります。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "isp-3",
+          "format": "選択",
+          "theme": "二回線でも相手のIPを変えない",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "原問のLBで往復を同じISPへそろえる理由は？",
+          "choices": [
+            {
+              "text": "DNSのキャッシュを禁止するため",
+              "explain": "キャッシュと戻りの変換規則は別の話です。"
+            },
+            {
+              "text": "応答送信元を要求の宛先IPと一致させるため",
+              "explain": "ISP別変換による通信相手の不整合を避けます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "isp-4",
+          "format": "穴埋め",
+          "theme": "二回線でも相手のIPを変えない",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "どのIP同士が食い違うか",
+          "template": "行きの{a}IPと戻りの{b}IPが異なってしまう。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "行き",
+              "why": "サービスの入口です。",
+              "choices": [
+                {
+                  "text": "送信元",
+                  "explain": "これはブラウザのIPです。"
+                },
+                {
+                  "text": "宛先",
+                  "explain": "ブラウザが接続した相手です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "戻り",
+              "why": "応答する相手です。",
+              "choices": [
+                {
+                  "text": "宛先",
+                  "explain": "応答を受け取るブラウザ側です。"
+                },
+                {
+                  "text": "送信元",
+                  "explain": "行きの宛先と一致すべき情報です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "isp-5",
+          "format": "並べ替え",
+          "theme": "二回線でも相手のIPを変えない",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "問題発生の因果",
+          "lead": "本問のISP別NATを前提に並べる。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "ISP1の公開IP宛てに要求が届く"
+            },
+            {
+              "code": "戻りをISP2へ送ると送信元がISP2のIPになる"
+            },
+            {
+              "code": "要求宛先と応答送信元が異なり通信の整合が崩れる"
+            },
+            {
+              "code": "LBで往復を同じISP経由にする"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            3,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "どの仕様の下でなぜ困るかまで説明します。",
+          "ngExplain": "あらゆる非対称経路が不可という一般論にせずIP変換に注目します。"
+        },
+        {
+          "id": "isp-6",
+          "format": "選択",
+          "theme": "二回線でも相手のIPを変えない",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：新規要求をISP2のIPへ送った。正しい応答の送信元は？",
+          "choices": [
+            {
+              "text": "故障前から使っていたISP1側IP",
+              "explain": "別の入口を名乗ることになってしまいます。"
+            },
+            {
+              "text": "要求で指定したISP2側のIP",
+              "explain": "新規接続の入口と整合させます。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "stun",
+      "title": "外から見える自分を知る",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "stun-1",
+          "format": "読む",
+          "theme": "外から見える自分を知る",
+          "scaffold": 5,
+          "type": "info",
+          "title": "観測したIPをデータで返す",
+          "body": "WebRTC（Web Real-Time Communication）はブラウザで音声や動画を交換する技術です。STUN（Session Traversal Utilities for NAT）は要求の送信元IP・ポートを観測し、Bindingレスポンスのデータに入れて返します。自分のIPとその値を比べてNATの介在を調べます。SDP（Session Description Protocol）では自分のアドレス候補を相手のAP（Application）へ渡します。",
+          "stage": "concept"
+        },
+        {
+          "id": "stun-2",
+          "format": "選択",
+          "theme": "外から見える自分を知る",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "変換後の自分のIPを取り出す場所は？",
+          "choices": [
+            {
+              "text": "応答IPヘッダの送信元",
+              "explain": "そこにはSTUNサーバのIPが入ります。"
+            },
+            {
+              "text": "Bindingレスポンス中のデータ",
+              "explain": "サーバが観測結果を格納した部分です。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "stun-3",
+          "format": "選択",
+          "theme": "外から見える自分を知る",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "返された観測IPを自分のIPと比べる理由は？",
+          "choices": [
+            {
+              "text": "STUNサーバのDNS登録を変更するため",
+              "explain": "観測は名前の登録変更ではありません。"
+            },
+            {
+              "text": "途中で自分のIPが変換されたか分かるから",
+              "explain": "送信時の自己情報と外部での観測を比較します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "stun-4",
+          "format": "穴埋め",
+          "theme": "外から見える自分を知る",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "ブラウザ2が通知する二候補",
+          "template": "自身の{a}と変換後の{b}をSDPに含める。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "内側候補",
+              "why": "ブラウザ2自身のIPです。",
+              "choices": [
+                {
+                  "text": "〈g1〉",
+                  "explain": "相手であるブラウザ1のIPです。"
+                },
+                {
+                  "text": "〈p〉",
+                  "explain": "私設IP候補です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "外側候補",
+              "why": "NATの外側で見えるIPです。",
+              "choices": [
+                {
+                  "text": "STUNサーバのIP",
+                  "explain": "自分への到達候補ではありません。"
+                },
+                {
+                  "text": "〈g2〉",
+                  "explain": "ブラウザ2の変換後IPです。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "stun-5",
+          "format": "並べ替え",
+          "theme": "外から見える自分を知る",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "候補情報を渡す",
+          "lead": "取得から通知の順。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "STUNへBinding要求を送る"
+            },
+            {
+              "code": "応答データから観測されたIPを取り出す"
+            },
+            {
+              "code": "自分のIPと比較する"
+            },
+            {
+              "code": "自分のIPと変換後IPをSDPで相手へ知らせる"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            3,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "相手へ渡すのは自分に到達する候補です。",
+          "ngExplain": "観測サーバのIPと観測された自分のIPを混同しないでください。"
+        },
+        {
+          "id": "stun-6",
+          "format": "選択",
+          "theme": "外から見える自分を知る",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：自己IPと応答データのIPが一致。本問の比較でIP変換を検出したと言える？",
+          "choices": [
+            {
+              "text": "NATが必ず存在しないと全方式で断定できる",
+              "explain": "この比較の範囲を超えて全変換方式を否定できません。"
+            },
+            {
+              "text": "この比較だけではIP変換は検出されない",
+              "explain": "一致しておりIPが変わった証拠がありません。ポート変換などは別に確認します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "stun-route",
+      "title": "候補を取った出口を使う",
+      "targets": [
+        "s3-3",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "stun-route-1",
+          "format": "読む",
+          "theme": "候補を取った出口を使う",
+          "scaffold": 5,
+          "type": "info",
+          "title": "映像経路は候補取得につながる",
+          "body": "本問はAPの使用ポートが既知で、IPとNAT対応が一定時間変わらず、この配置でホールパンチが有効とベンダ確認済みです。ブラウザ2のAPがSTUNへアクセスしたときのLB振分けで変換後IPが決まり、後続の映像通信がその候補を使います。STUNの接続A・Bはvlan1とvlan2へ分離し、片方のISP故障に備えます。",
+          "stage": "concept"
+        },
+        {
+          "id": "stun-route-2",
+          "format": "選択",
+          "theme": "候補を取った出口を使う",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "二つのSTUNを同じISP側だけに置く弱点は？",
+          "choices": [
+            {
+              "text": "STUNの応答データが自動で暗号化されない",
+              "explain": "配置の冗長性とは別の問題です。"
+            },
+            {
+              "text": "同じISP障害で両方への経路を失う",
+              "explain": "台数だけでなく故障の影響範囲を分けます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "stun-route-3",
+          "format": "選択",
+          "theme": "候補を取った出口を使う",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "映像が使うISPがSTUNアクセス時に関係するのは？",
+          "choices": [
+            {
+              "text": "STUNが映像をすべて中継するから",
+              "explain": "原問の映像はAP間で直接交換します。"
+            },
+            {
+              "text": "選ばれた出口の公開IPを相手へ候補として知らせるから",
+              "explain": "候補とNAT対応を維持して後続通信を行います。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "stun-route-4",
+          "format": "穴埋め",
+          "theme": "候補を取った出口を使う",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "配置と振分けの主体",
+          "template": "A・Bは{a}へ一つずつ接続する。エは{b}、アクセス先オは{c}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "VLAN集合",
+              "why": "両ISPの外側です。",
+              "choices": [
+                {
+                  "text": "vlan9とvlan8",
+                  "explain": "DMZ・FW接続側であり両ISPの外側ではありません。"
+                },
+                {
+                  "text": "vlan1とvlan2",
+                  "explain": "A/Bの順番は逆でも構いません。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "エ",
+              "why": "社内側から外向きに通信します。",
+              "choices": [
+                {
+                  "text": "ブラウザ1のAP",
+                  "explain": "外部側でありこの社内発振分けの主体ではありません。"
+                },
+                {
+                  "text": "ブラウザ2のAP",
+                  "explain": "LBの振分けを受ける側です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "オ",
+              "why": "NAT後の自己IPを返します。",
+              "choices": [
+                {
+                  "text": "Webサーバ",
+                  "explain": "SDP交換の中継先ですがNAT観測の相手ではありません。"
+                },
+                {
+                  "text": "STUNサーバ",
+                  "explain": "候補の取得先です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "stun-route-5",
+          "format": "並べ替え",
+          "theme": "候補を取った出口を使う",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "映像経路の決まり方",
+          "lead": "候補取得から実データへ。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "ブラウザ2のAPがSTUNへアクセスする"
+            },
+            {
+              "code": "LBが出口ISPを選び公開IPへ変換する"
+            },
+            {
+              "code": "取得した候補をSDPで相手APへ渡す"
+            },
+            {
+              "code": "相互到達した候補を使って映像を交換する"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            3,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "交換内容を運ぶWebサーバと候補を返すSTUNを区別します。",
+          "ngExplain": "映像中に無関係な出口へ変えてもよいわけではありません。"
+        },
+        {
+          "id": "stun-route-6",
+          "format": "選択",
+          "theme": "候補を取った出口を使う",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原図でブラウザ1がブラウザ2へインターネットから送る宛先候補は？",
+          "choices": [
+            {
+              "text": "〈p〉のみ",
+              "explain": "私設IPは外部から直接到達できる宛先とは限りません。"
+            },
+            {
+              "text": "〈g2〉",
+              "explain": "NAT外側のIPから対応を逆にたどります。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.37,
+            "bottom": 0.59,
+            "label": "図4の内側と外側（IPA原図・問題本文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "upgrade",
+      "title": "呼制御をWebSocketへ切り替える",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "upgrade-1",
+          "format": "読む",
+          "theme": "呼制御をWebSocketへ切り替える",
+          "scaffold": 5,
+          "type": "info",
+          "title": "接続開始と音声は別の段階",
+          "body": "IP-PBX（IP Private Branch Exchange）はIP電話の交換機です。本問のAPはHTTP（Hypertext Transfer Protocol）で接続し、Upgradeと101応答でWebSocketへ移ります。その上でSIP（Session Initiation Protocol）による登録・呼出しを行い、その後に音声を交換します。設問4(1)は最初と切替後の方式を分けます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "GET / HTTP/1.1",
+              "Upgrade: websocket",
+              "HTTP/1.1 101 Switching Protocols",
+              "以後 WebSocket 上で REGISTER / INVITE"
+            ],
+            "caption": "説明用：図6の切替の説明例"
+          }
+        },
+        {
+          "id": "upgrade-2",
+          "format": "選択",
+          "theme": "呼制御をWebSocketへ切り替える",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "101 Switching Protocolsより前の通信方式は？",
+          "choices": [
+            {
+              "text": "SIPのみ",
+              "explain": "最初のプロトコル切替はHTTPで行います。"
+            },
+            {
+              "text": "HTTP",
+              "explain": "HTTPのUpgrade要求に対する応答です。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "upgrade-3",
+          "format": "選択",
+          "theme": "呼制御をWebSocketへ切り替える",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "呼出し成功だけで音声成功を断定できない理由は？",
+          "choices": [
+            {
+              "text": "101応答に音声データが含まれるから",
+              "explain": "101は切替を知らせる応答です。"
+            },
+            {
+              "text": "SIPの呼制御と音声データは別の通信だから",
+              "explain": "呼制御の到達とメディアの到達を分けて確認します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "upgrade-4",
+          "format": "穴埋め",
+          "theme": "呼制御をWebSocketへ切り替える",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "二方式を順に",
+          "template": "最初は{a}、101応答で{b}へ切り替え、その上でSIPを使う。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "カ",
+              "why": "切替交渉の方式です。",
+              "choices": [
+                {
+                  "text": "WebSocket",
+                  "explain": "これは切替後です。"
+                },
+                {
+                  "text": "HTTP",
+                  "explain": "Upgradeを要求します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "キ",
+              "why": "継続的な双方向通信です。",
+              "choices": [
+                {
+                  "text": "HTTPのまま",
+                  "explain": "原問は明示的に方式を切り替えます。"
+                },
+                {
+                  "text": "WebSocket",
+                  "explain": "SIPシグナリングをその上で運びます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "upgrade-5",
+          "format": "並べ替え",
+          "theme": "呼制御をWebSocketへ切り替える",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "通話までの段階",
+          "lead": "処理順に並べる。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "HTTPでWebSocketへのUpgradeを要求する"
+            },
+            {
+              "code": "101応答でWebSocketへ移る"
+            },
+            {
+              "code": "SIPで登録し呼出しを行う"
+            },
+            {
+              "code": "音声データを交換する"
+            }
+          ],
+          "shuffled": [
+            2,
+            3,
+            0,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "最初の接続・呼制御・実データの段階が異なります。",
+          "ngExplain": "接続しただけで音声まで通るとは限りません。"
+        },
+        {
+          "id": "upgrade-6",
+          "format": "選択",
+          "theme": "呼制御をWebSocketへ切り替える",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：HTTPに到達したが101ではなくエラー。完了したと言えるのは？",
+          "choices": [
+            {
+              "text": "SIP登録まで",
+              "explain": "切替前のエラーであり後続成功とは言えません。"
+            },
+            {
+              "text": "HTTP到達まで",
+              "explain": "WebSocket切替やSIP成功は確認できていません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "voice",
+      "title": "電話の入口をISPごとに用意する",
+      "targets": [
+        "s4-2",
+        "s4-3",
+        "s4-4"
+      ],
+      "steps": [
+        {
+          "id": "voice-1",
+          "format": "読む",
+          "theme": "電話の入口をISPごとに用意する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "名前で二つの電話入口を選ぶ",
+          "body": "本問のIP-PBXは外部側に二つのUA（User Agent：呼制御の端点）を持ちます。ISP1・ISP2の公開IPを一つずつ割り当て、C・DをそれぞれのVLAN（Virtual LAN）へ接続します。APはIP-PBXのFQDN（Fully Qualified Domain Name：完全修飾ドメイン名）をLBのDNSへ問い合わせ、返された入口に接続します。設問4(2)〜(4)は割当・配線・名前解決の三段階です。",
+          "stage": "concept"
+        },
+        {
+          "id": "voice-2",
+          "format": "選択",
+          "theme": "電話の入口をISPごとに用意する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "二つのUAに適切な公開IPの組合せは？",
+          "choices": [
+            {
+              "text": "ISP1から二つ",
+              "explain": "IPは二つでもISP1障害に両方巻き込まれます。"
+            },
+            {
+              "text": "ISP1とISP2から一つずつ",
+              "explain": "入口を異なる回線へ分散できます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "voice-3",
+          "format": "選択",
+          "theme": "電話の入口をISPごとに用意する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "APが通話前にIP-PBXの名前をLBへ問い合わせる理由は？",
+          "choices": [
+            {
+              "text": "LBが全音声の録音を担当するため",
+              "explain": "名前解決と音声記録は別の機能です。"
+            },
+            {
+              "text": "LBのDNS応答でISP側の入口を選ぶため",
+              "explain": "音声の大きさではなく接続先IPを振り分けます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "voice-4",
+          "format": "穴埋め",
+          "theme": "電話の入口をISPごとに用意する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "ク・ケ・コを役割で",
+          "template": "{a}のFQDNについて、APは{b}クエリを{c}へ送る。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ク",
+              "why": "呼制御の接続相手です。",
+              "choices": [
+                {
+                  "text": "STUNサーバ",
+                  "explain": "候補取得には使いますがこの呼制御の接続先ではありません。"
+                },
+                {
+                  "text": "IP-PBX",
+                  "explain": "外部APの電話入口です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "ケ",
+              "why": "名前をIPへ解決します。",
+              "choices": [
+                {
+                  "text": "SIP INVITE",
+                  "explain": "呼出しは名前解決後の段階です。"
+                },
+                {
+                  "text": "DNS",
+                  "explain": "Aレコードを問い合わせます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "コ",
+              "why": "外向きDNSが移された先です。",
+              "choices": [
+                {
+                  "text": "FW",
+                  "explain": "新構成では外向きDNS機能をLBへ移します。"
+                },
+                {
+                  "text": "LB",
+                  "explain": "DNSで両ISPの入口を返します。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "voice-5",
+          "format": "並べ替え",
+          "theme": "電話の入口をISPごとに用意する",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "電話入口の設計順",
+          "lead": "割当・配線・名前・接続の順。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "IP-PBXのUAへ両ISPのIPを一つずつ割り当てる"
+            },
+            {
+              "code": "C・Dをvlan1・vlan2へ一つずつ接続する"
+            },
+            {
+              "code": "LBにIP-PBXの名前と両入口を登録する"
+            },
+            {
+              "code": "APが名前解決した入口で呼制御を始める"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            1,
+            3
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "C/Dの割当は逆でも二つのISP側へ分ける条件を満たします。",
+          "ngExplain": "アドレスだけ増やして配線を一つのISPへ集めると冗長化になりません。"
+        },
+        {
+          "id": "voice-6",
+          "format": "選択",
+          "theme": "電話の入口をISPごとに用意する",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原図のC・Dが接続すべきVLAN集合は？",
+          "choices": [
+            {
+              "text": "vlan7とvlan7",
+              "explain": "既存の内部IP-PBX接続側だけでは外部二回線化になりません。"
+            },
+            {
+              "text": "vlan1とvlan2",
+              "explain": "ISP1・ISP2側の範囲です。",
+              "ok": true
+            },
+            {
+              "text": "vlan8とvlan9",
+              "explain": "FW接続側とDMZでありISPの外側ではありません。"
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.07,
+            "bottom": 0.585,
+            "label": "図3・表2の接続先（IPA原図・問題本文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "records",
+      "title": "一つの名前と四つの公開入口",
+      "targets": [
+        "s5-2",
+        "s5-3"
+      ],
+      "steps": [
+        {
+          "id": "records-1",
+          "format": "読む",
+          "theme": "一つの名前と四つの公開入口",
+          "scaffold": 5,
+          "type": "info",
+          "title": "件数と異なる名前の数は別",
+          "body": "DNSラウンドロビンは同じサービス名に複数IPを対応させて選ばせます。本問のWebは2台×2ISPの公開IPを共通の名前へ登録します。AP内ではIP直書きでなくFQDNを使うので、電話入口のIP-PBXと候補取得先のSTUNサーバ1・2にも名前解決が必要です。設問5(2)(3)では個数と全対象機器を落とさず答えます。",
+          "stage": "concept"
+        },
+        {
+          "id": "records-2",
+          "format": "選択",
+          "theme": "一つの名前と四つの公開入口",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "2台のWebへ両ISPから公開入口を作る。IP数は？",
+          "choices": [
+            {
+              "text": "2個",
+              "explain": "サーバの台数だけを数え、ISP別の入口が不足します。"
+            },
+            {
+              "text": "4個",
+              "explain": "各WebにISP1・ISP2の入口があり2×2です。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "records-3",
+          "format": "選択",
+          "theme": "一つの名前と四つの公開入口",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "四つのAレコードでもFQDNは1個なのは？",
+          "choices": [
+            {
+              "text": "Aレコードに名前の欄がないから",
+              "explain": "Aレコードは名前からIPを得る情報です。"
+            },
+            {
+              "text": "同じWebサービス名に四つのIPを登録するから",
+              "explain": "レコード件数と異なる名前の数は別です。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "records-4",
+          "format": "穴埋め",
+          "theme": "一つの名前と四つの公開入口",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "件数と名前解決対象",
+          "template": "Web名は{a}個、公開IPは{b}個。APが解決する追加対象はIP-PBXと{c}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "名前数",
+              "why": "共通のWeb名です。",
+              "choices": [
+                {
+                  "text": "4",
+                  "explain": "IP数と混同しています。"
+                },
+                {
+                  "text": "1",
+                  "explain": "同じFQDNで分散します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "IP数",
+              "why": "Web2台×ISP2社です。",
+              "choices": [
+                {
+                  "text": "1",
+                  "explain": "全入口の区別が不足します。"
+                },
+                {
+                  "text": "4",
+                  "explain": "各台の両側入口です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "全対象",
+              "why": "候補取得先を二つとも含めます。",
+              "choices": [
+                {
+                  "text": "L2SW1とL2SW2",
+                  "explain": "APがFQDNで接続するサービス機器ではありません。"
+                },
+                {
+                  "text": "STUNサーバ1とSTUNサーバ2",
+                  "explain": "APは両サーバ名を使います。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "records-5",
+          "format": "並べ替え",
+          "theme": "一つの名前と四つの公開入口",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "四つのレコードを組み立てる",
+          "lead": "共通名→台ごとの入口→登録。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "Webの共通FQDNを一つ用意する"
+            },
+            {
+              "code": "Web1にISP1・ISP2の公開入口を用意する"
+            },
+            {
+              "code": "Web2にもISP1・ISP2の公開入口を用意する"
+            },
+            {
+              "code": "同じFQDNへ四つのAレコードを登録する"
+            }
+          ],
+          "shuffled": [
+            2,
+            1,
+            0,
+            3
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "サーバ数、回線数、名前数を別に数えます。",
+          "ngExplain": "サーバごとに別名を返すだけでは同じ名前での分散という条件になりません。"
+        },
+        {
+          "id": "records-6",
+          "format": "選択",
+          "theme": "一つの名前と四つの公開入口",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：共通名のままWeb3台×ISP2社なら？",
+          "choices": [
+            {
+              "text": "FQDN6個、公開IP6個",
+              "explain": "共通名を維持する条件を無視しています。"
+            },
+            {
+              "text": "FQDN1個、公開IP6個",
+              "explain": "名前は共通、入口だけ3×2へ増えます。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "rollback",
+      "title": "失敗しても時間内に戻す",
+      "targets": [
+        "s5-1",
+        "s5-4"
+      ],
+      "steps": [
+        {
+          "id": "rollback-1",
+          "format": "読む",
+          "theme": "失敗しても時間内に戻す",
+          "scaffold": 5,
+          "type": "info",
+          "title": "停止枠には復旧も含める",
+          "body": "切替後の確認で不具合が判明することがあります。旧状態へ戻す切り戻しの時間を、切替作業と確認の時間に加えて確保します。本問で2通りの定義ファイルを準備する既存機器はFWです。新設LBは切替1時点で最終構成用の全定義を用意するという、別の運用条件があります。",
+          "stage": "concept"
+        },
+        {
+          "id": "rollback-2",
+          "format": "選択",
+          "theme": "失敗しても時間内に戻す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "切替と確認に加える失敗時の作業は？",
+          "choices": [
+            {
+              "text": "DNSキャッシュの永久保存",
+              "explain": "復旧手順の名称ではありません。"
+            },
+            {
+              "text": "切り戻し",
+              "explain": "旧状態へ戻してサービスを再開する作業です。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "rollback-3",
+          "format": "選択",
+          "theme": "失敗しても時間内に戻す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "本問で2通りの定義を持つ対象がFWなのは？",
+          "choices": [
+            {
+              "text": "LBが切替2でも定義を全面変更するから",
+              "explain": "LBは切替1で全定義を投入し後の変更を不要にする条件です。"
+            },
+            {
+              "text": "既存FWの定義を旧構成と変更後で切り替えるため",
+              "explain": "設定ファイルを選んだ再起動で変更し、必要なら旧状態へ戻します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "rollback-4",
+          "format": "穴埋め",
+          "theme": "失敗しても時間内に戻す",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "停止時間と対象機器",
+          "template": "停止枠＝切替＋確認＋{a}。2通りの定義を持つ機器は{b}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "サ",
+              "why": "不具合時の復旧です。",
+              "choices": [
+                {
+                  "text": "増設サーバの購入",
+                  "explain": "計画段階の調達であり停止中の復旧作業ではありません。"
+                },
+                {
+                  "text": "切り戻し",
+                  "explain": "失敗時にも時間内で復旧します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "機器",
+              "why": "既存設定を変更します。",
+              "choices": [
+                {
+                  "text": "STUNサーバ",
+                  "explain": "切替2の新設対象であり本問の該当機器ではありません。"
+                },
+                {
+                  "text": "FW",
+                  "explain": "定義ファイルを選んで再起動します。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "rollback-5",
+          "format": "並べ替え",
+          "theme": "失敗しても時間内に戻す",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "切替を安全に実施する",
+          "lead": "準備から失敗時復旧まで。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "旧定義と戻す手順を準備する"
+            },
+            {
+              "code": "新定義で切り替える"
+            },
+            {
+              "code": "動作確認で継続可否を判断する"
+            },
+            {
+              "code": "失敗時は確保した時間で切り戻す"
+            }
+          ],
+          "shuffled": [
+            0,
+            3,
+            2,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "先に戻す方法を決めてから切り替えます。",
+          "ngExplain": "失敗後に旧設定の探索を始めると復旧が間に合わない恐れがあります。"
+        },
+        {
+          "id": "rollback-6",
+          "format": "選択",
+          "theme": "失敗しても時間内に戻す",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：切替30分・確認40分・戻し20分。予備なし最低枠は？",
+          "choices": [
+            {
+              "text": "70分",
+              "explain": "失敗時の切り戻しが抜けています。"
+            },
+            {
+              "text": "90分",
+              "explain": "三つを合計します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "tests",
+      "title": "出発点と回線を変えて確認する",
+      "targets": [
+        "s5-5",
+        "s5-6"
+      ],
+      "steps": [
+        {
+          "id": "tests-1",
+          "format": "読む",
+          "theme": "出発点と回線を変えて確認する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "同じWebでも経路は異なる",
+          "body": "切替1では既存の社外→Web、社内→Web、社内→インターネットを確認します。公開向けNAT、内部からの到達、外向きNAPTという別の条件を通ります。ドメイン登録変更では、追加されたISP2経由の外向きDNS機能も確認します。社内やISP1から成功しただけでは新しい経路の確認になりません。",
+          "stage": "concept"
+        },
+        {
+          "id": "tests-2",
+          "format": "選択",
+          "theme": "出発点と回線を変えて確認する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "社外からWebが成功すれば、社内からWebの試験は不要？",
+          "choices": [
+            {
+              "text": "不要。宛先Webが同じだから",
+              "explain": "出発点の違いを見落としています。"
+            },
+            {
+              "text": "必要。出発点で経路と変換条件が異なる",
+              "explain": "同じ宛先でも通る設定をすべて確認したことにはなりません。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "tests-3",
+          "format": "選択",
+          "theme": "出発点と回線を変えて確認する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "ISP1からのDNS成功だけでは不足する理由は？",
+          "choices": [
+            {
+              "text": "DNSの返すIPは常に私設IPだから",
+              "explain": "公開DNSが私設IPしか返さないという条件はありません。"
+            },
+            {
+              "text": "追加したISP2経由の外向きDNSを試していない",
+              "explain": "従来経路の成功は追加経路の成功を保証しません。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "tests-4",
+          "format": "穴埋め",
+          "theme": "出発点と回線を変えて確認する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "切替1で試す三方向",
+          "template": "社外→{a}、社内→{b}、社内→{c}を確認する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "外から",
+              "why": "施工情報を外部から使います。",
+              "choices": [
+                {
+                  "text": "STUNサーバだけ",
+                  "explain": "切替2の新サービスであり既存Web試験を代替しません。"
+                },
+                {
+                  "text": "Webサーバ",
+                  "explain": "公開サービスへの到達です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "内からWeb",
+              "why": "社内利用者の施工情報です。",
+              "choices": [
+                {
+                  "text": "社内IP電話機だけ",
+                  "explain": "Web経路の試験ではありません。"
+                },
+                {
+                  "text": "Webサーバ",
+                  "explain": "社内からの別経路です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "内から外",
+              "why": "外向きアクセスです。",
+              "choices": [
+                {
+                  "text": "同一LANプリンタ",
+                  "explain": "WANやNATの確認になりません。"
+                },
+                {
+                  "text": "インターネット",
+                  "explain": "送信元NAPTと出口を確認します。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tests-5",
+          "format": "並べ替え",
+          "theme": "出発点と回線を変えて確認する",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "外向きDNSの追加経路を確認",
+          "lead": "外部利用者側からの試験として並べる。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "ISP2側の公開DNS登録を確認する"
+            },
+            {
+              "code": "外部からISP2を経由する問い合わせを行う"
+            },
+            {
+              "code": "LBの外向きDNSが正しく応答することを確かめる"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "設問5(6)は対象機能に加えてISP2経由という条件が重要です。",
+          "ngExplain": "『名前解決できた』だけではどの追加経路を確認したか不明です。"
+        },
+        {
+          "id": "tests-6",
+          "format": "選択",
+          "theme": "出発点と回線を変えて確認する",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：ISP2でDNSは成功するが社外Webは失敗。言えるのは？",
+          "choices": [
+            {
+              "text": "DNS成功なのでWebの設定も全て正常",
+              "explain": "DNS結果だけで後続通信の設定までは証明できません。"
+            },
+            {
+              "text": "DNS経路は確認できたがWebのNAT・許可などは別途確認が要る",
+              "explain": "名前解決とサービスへの到達は別です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "permits",
+      "title": "新規通信とFWを通る経路",
+      "targets": [
+        "s5-7"
+      ],
+      "steps": [
+        {
+          "id": "permits-1",
+          "format": "読む",
+          "theme": "新規通信とFWを通る経路",
+          "scaffold": 5,
+          "type": "info",
+          "title": "図5の記号を経路へ翻訳する",
+          "body": "①は社外AP→STUN、①′は社内AP→STUN、②はWebを介したHTTPSのSDP交換です。③はAP同士の最適ルート確認、④は音声・映像などの実データ交換です。本問ではSTUNはFWの外側に置かれます。切替2で追加するのは、FWを通る新規の①′・③・④であり、既存の②や外側同士の①と分けます。",
+          "stage": "concept"
+        },
+        {
+          "id": "permits-2",
+          "format": "選択",
+          "theme": "新規通信とFWを通る経路",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "①と①′のうち、このFWに追加許可が必要なのは？",
+          "choices": [
+            {
+              "text": "①",
+              "explain": "社外ブラウザからFW外側STUNへ接続するのでこのFWを通りません。"
+            },
+            {
+              "text": "①′",
+              "explain": "社内のブラウザ2から外側STUNへ出ます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "permits-3",
+          "format": "選択",
+          "theme": "新規通信とFWを通る経路",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "②を新規追加に含めない理由は？",
+          "choices": [
+            {
+              "text": "SDPはネットワークを使わない",
+              "explain": "Webサーバ経由で実際に交換されます。"
+            },
+            {
+              "text": "既存のWeb向けHTTPSとして既に許可されている",
+              "explain": "SDPを運んでも経路と通信方式は既存Webのものです。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "permits-4",
+          "format": "穴埋め",
+          "theme": "新規通信とFWを通る経路",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "追加許可を三つそろえる",
+          "template": "社内からの候補取得{a}、最適ルート確認{b}、実データ交換{c}を追加する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "候補",
+              "why": "STUNへの社内発通信です。",
+              "choices": [
+                {
+                  "text": "①",
+                  "explain": "外側同士なので対象FWを横切りません。"
+                },
+                {
+                  "text": "①′",
+                  "explain": "FWを横切る新規通信です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "経路",
+              "why": "AP間の到達性を試します。",
+              "choices": [
+                {
+                  "text": "②",
+                  "explain": "既存HTTPSの候補交換です。"
+                },
+                {
+                  "text": "③",
+                  "explain": "最適ルートの決定です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "データ",
+              "why": "映像などを運びます。",
+              "choices": [
+                {
+                  "text": "②",
+                  "explain": "制御用の情報交換でありメディアではありません。"
+                },
+                {
+                  "text": "④",
+                  "explain": "実際のメディア交換です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "permits-5",
+          "format": "並べ替え",
+          "theme": "新規通信とFWを通る経路",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "追加ルールの導出手順",
+          "lead": "経路と差分で判断する。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "各通信の送信元と宛先を確認する"
+            },
+            {
+              "code": "FWを横切るか構成図で確認する"
+            },
+            {
+              "code": "既存Web許可で扱う②を除く"
+            },
+            {
+              "code": "新規の①′・③・④を許可する"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            3,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "図番号の暗記ではなく場所と既存設定から導きます。",
+          "ngExplain": "STUNやSDPという名前だけで全てを同じ追加対象にしないでください。"
+        },
+        {
+          "id": "permits-6",
+          "format": "選択",
+          "theme": "新規通信とFWを通る経路",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原図の③が成功しても④を遮断すると？",
+          "choices": [
+            {
+              "text": "③が通れば④も必ず通る",
+              "explain": "異なる通信のフィルタ条件を同一視しています。"
+            },
+            {
+              "text": "候補経路を確認できても音声・映像を交換できない",
+              "explain": "準備通信と実データの許可は別です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 7,
+            "top": 0.315,
+            "bottom": 0.515,
+            "label": "図5の候補取得・確認・交換（IPA原図・問題本文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "final",
+      "title": "通信の成功を段階ごとに判断する",
+      "targets": [
+        "s1-3",
+        "s2-2",
+        "s3-1",
+        "s3-2",
+        "s3-3",
+        "s3-4",
+        "s4-2",
+        "s4-3",
+        "s4-4",
+        "s5-1",
+        "s5-2",
+        "s5-3",
+        "s5-4",
+        "s5-5",
+        "s5-6",
+        "s5-7"
+      ],
+      "steps": [
+        {
+          "id": "final-1",
+          "format": "読む",
+          "theme": "通信の成功を段階ごとに判断する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "成功の範囲を見極める",
+          "body": "名前解決、NATでの変換、候補の取得、候補への到達、実データ交換は別段階です。二回線化では台数だけでなくIPの払い出し元と配置を分け、往復の整合も保ちます。最後はヒントを使わず、不足している条件を判断し原問の答案へつなげます。",
+          "stage": "concept"
+        },
+        {
+          "id": "final-2",
+          "format": "選択",
+          "theme": "通信の成功を段階ごとに判断する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "WebとSTUNは成功するが動画だけ届かない。見落とせない区別は？",
+          "choices": [
+            {
+              "text": "STUN成功は動画転送成功と同じ",
+              "explain": "STUNは候補観測用で全動画を中継しません。"
+            },
+            {
+              "text": "候補取得と相互到達・実データ到達は別",
+              "explain": "前段の成功で後段の通信まで保証されません。",
+              "ok": true
+            }
+          ],
+          "stage": "apply"
+        },
+        {
+          "id": "final-3",
+          "format": "選択",
+          "theme": "通信の成功を段階ごとに判断する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "IP-PBXとSTUNを各二つ用意したのに一つのISP障害で使えない。確認すべき理由は？",
+          "choices": [
+            {
+              "text": "公開IPは2個以上設定できない",
+              "explain": "本問では異なるISP側に複数IPを割り当てます。"
+            },
+            {
+              "text": "両方を同じISP側に置くと故障の影響を共有する",
+              "explain": "台数と独立した経路の数は別です。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "final-4",
+          "format": "穴埋め",
+          "theme": "通信の成功を段階ごとに判断する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "理由を含む短い答案",
+          "template": "NAT検出はBinding応答の{a}のIPと自分のIPを比較する。往復ISP不一致では要求{b}と応答{c}が異なる。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "観測値の場所",
+              "why": "STUNが返した自己IPです。",
+              "choices": [
+                {
+                  "text": "ヘッダの送信元",
+                  "explain": "そこはSTUNサーバを示します。"
+                },
+                {
+                  "text": "データ",
+                  "explain": "外側ヘッダの送信元ではありません。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "要求",
+              "why": "接続したサービスです。",
+              "choices": [
+                {
+                  "text": "送信元IP",
+                  "explain": "ブラウザ側のIPです。"
+                },
+                {
+                  "text": "宛先IP",
+                  "explain": "戻りの送信元との整合を見ます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "応答",
+              "why": "ISP別に変わる相手のアドレスです。",
+              "choices": [
+                {
+                  "text": "宛先IP",
+                  "explain": "ブラウザ側を見てもこの不整合を示せません。"
+                },
+                {
+                  "text": "送信元IP",
+                  "explain": "行きの宛先と一致するべきです。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "final-5",
+          "format": "並べ替え",
+          "theme": "通信の成功を段階ごとに判断する",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "拡張計画の組立て",
+          "lead": "依存する段階を順に。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "LBとISP2を追加し既存Web・外向き通信・DNSを確認する"
+            },
+            {
+              "code": "STUNとIP-PBXを両ISP側へ接続する"
+            },
+            {
+              "code": "FWで新規の候補取得・確認・データ交換を許可する"
+            },
+            {
+              "code": "候補交換から実際の通話まで確認する"
+            }
+          ],
+          "shuffled": [
+            2,
+            3,
+            0,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "段階切替と段階確認で何が成功したかを明確にします。",
+          "ngExplain": "DNSやHTTPの成功だけで電話機能完成と判断しないでください。"
+        },
+        {
+          "id": "final-6",
+          "format": "選択",
+          "theme": "通信の成功を段階ごとに判断する",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "補助なし確認：STUNの候補が途中で変更され、相手は旧候補を使い続けた。崩れた原問の前提は？",
+          "choices": [
+            {
+              "text": "WebのFQDNが一つであること",
+              "explain": "Webの名前数とこの通信中の候補維持は別の条件です。"
+            },
+            {
+              "text": "一定時間IPとNAT対応が変わらないこと",
+              "explain": "候補と変換対応の維持がホールパンチの前提です。",
+              "ok": true
+            },
+            {
+              "text": "ポート番号が16ビットであること",
+              "explain": "候補が変わってもヘッダの幅は変わりません。"
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.DS_Store
+.playwright-mcp/
+netsteps-*.png
+.env
+.env.*
+*.pem
+*.key
+.claude/
+.codex/
+*.log
+backups/
+netsteps-*.json
+data/
+docs/NETSTEPS_HANDOFF.md
+docs/netsteps-r7q1.jsx

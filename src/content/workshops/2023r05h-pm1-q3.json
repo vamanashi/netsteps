@@ -1,0 +1,1863 @@
+{
+  "examKey": "2023r05h/pm1/3",
+  "title": "教室の無線LANを帯域・給電・障害時から設計する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm1_qs.pdf"
+  ],
+  "sections": [
+    {
+      "id": "three-bands",
+      "title": "端末を複数の無線帯へ分散する",
+      "targets": [
+        "s1",
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "three-bands-1",
+          "format": "読む",
+          "theme": "端末を複数の無線帯へ分散する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "1教室の多数の端末が同時に動画を見ます。原問のAPは2.4GHzと二つの5GHz帯を同時利用します。APはAccess Point、無線LANの接続装置です。ここでの三帯域は6GHzを含む構成ではありません。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "無線部",
+              "利用する範囲",
+              "接続する端末"
+            ],
+            "rows": [
+              [
+                "2.4GHz",
+                "2.4GHz帯",
+                "IoT機器・予備"
+              ],
+              [
+                "5GHz側1",
+                "W52/W53",
+                "ノートPCの半数"
+              ],
+              [
+                "5GHz側2",
+                "W56",
+                "残りのノートPC"
+              ]
+            ],
+            "caption": "説明用：原問のトライバンドの分け方"
+          }
+        },
+        {
+          "id": "three-bands-2",
+          "format": "選択",
+          "theme": "端末を複数の無線帯へ分散する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "原問の三つの周波数帯を同時利用する呼称はどれか。",
+          "choices": [
+            {
+              "text": "チャネルボンディング",
+              "explain": "複数チャネルを束ねて幅を広げる技術です。"
+            },
+            {
+              "text": "スタック",
+              "explain": "複数スイッチを論理的に一台にする構成です。"
+            },
+            {
+              "text": "トライバンド",
+              "explain": "2.4GHzと二つの5GHz帯を使う構成です。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "three-bands-3",
+          "format": "選択",
+          "theme": "端末を複数の無線帯へ分散する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "二つの5GHz帯へ端末を半数ずつ分ける利点はどれか。",
+          "choices": [
+            {
+              "text": "一台のPCが必ず全無線部の速度を合計できる",
+              "explain": "原問の分散利用は、単一端末への全帯域集約ではありません。"
+            },
+            {
+              "text": "一つの無線部へ集中する端末を減らせる",
+              "explain": "通信機会を分散し、より多くの端末が安定して通信できます。",
+              "ok": true
+            },
+            {
+              "text": "各端末のIPアドレスが不要になる",
+              "explain": "IPによる通信に必要なアドレスは変わりません。"
+            }
+          ]
+        },
+        {
+          "id": "three-bands-4",
+          "format": "穴埋め",
+          "theme": "端末を複数の無線帯へ分散する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "二つの範囲と効果を組み立てる。",
+          "template": "5GHz帯を{a}と{b}に分け、より多くの端末が{c}できるようにする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "5GHz側1",
+              "choices": [
+                {
+                  "text": "W52/W53",
+                  "explain": "原問の一方の5GHz帯です。",
+                  "ok": true
+                },
+                {
+                  "text": "2.4GHz",
+                  "explain": "5GHz帯の区分ではありません。"
+                },
+                {
+                  "text": "6GHz",
+                  "explain": "原問の構成には含まれません。"
+                }
+              ],
+              "why": "表1と本文の三帯域の条件を合わせます。"
+            },
+            {
+              "key": "b",
+              "label": "5GHz側2",
+              "choices": [
+                {
+                  "text": "W52だけ",
+                  "explain": "一方の範囲の一部を重ねています。"
+                },
+                {
+                  "text": "2.4GHz",
+                  "explain": "三つ目の無線帯であり、5GHzの区分ではありません。"
+                },
+                {
+                  "text": "W56",
+                  "explain": "もう一方の範囲です。",
+                  "ok": true
+                }
+              ],
+              "why": "二つの5GHz帯を両方答えます。"
+            },
+            {
+              "key": "c",
+              "label": "利点",
+              "choices": [
+                {
+                  "text": "無給電で通信",
+                  "explain": "APにも端末にも電力は必要です。"
+                },
+                {
+                  "text": "安定して通信",
+                  "explain": "端末を分散することで混雑を軽減します。",
+                  "ok": true
+                },
+                {
+                  "text": "認証せず接続",
+                  "explain": "認証要件は残ります。"
+                }
+              ],
+              "why": "最大速度だけでなく多数端末の安定性を説明します。"
+            }
+          ]
+        },
+        {
+          "id": "three-bands-5",
+          "format": "並べ替え",
+          "theme": "端末を複数の無線帯へ分散する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "端末分散の因果を並べる。",
+          "lead": "同じ教室で50台を接続する場合です。",
+          "lines": [
+            {
+              "code": "二つの5GHz帯で異なるESSIDを用意する"
+            },
+            {
+              "code": "ノートPCを二つの帯域へ半数ずつ接続する"
+            },
+            {
+              "code": "一方への集中を抑え、多数端末の通信を安定させる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "ESSIDは無線LANのネットワーク名です。名前を分けて接続先を分散します。",
+          "ngExplain": "原因から動作、結果へつなげます。ESSIDは無線LANのネットワーク名です。名前を分けて接続先を分散します。"
+        },
+        {
+          "id": "three-bands-6",
+          "format": "選択",
+          "theme": "端末を複数の無線帯へ分散する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "全PCを一つの5GHz側へ接続したまま、別の5GHz側を空けた。十分に分散できるか。",
+          "choices": [
+            {
+              "text": "2.4GHzを廃止すれば自動で均等になる",
+              "explain": "別の5GHz側へ端末を分散する直接の対策ではありません。"
+            },
+            {
+              "text": "できない。端末を別の無線部へ接続する必要がある",
+              "explain": "無線部が増えても、端末が偏れば混雑が残ります。",
+              "ok": true
+            },
+            {
+              "text": "できる。無線部を増設するだけで必ず均等になる",
+              "explain": "接続先の設定・選択まで確認する必要があります。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "radar-dfs",
+      "title": "レーダー検知から通信断を説明する",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "radar-dfs-1",
+          "format": "読む",
+          "theme": "レーダー検知から通信断を説明する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "5GHz帯の一部はレーダーと共用します。APはレーダーを検知すると使用チャネルを変更します。DFSはDynamic Frequency Selectionです。原問では対象の二帯域、APの動作、端末への影響を分けて答えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "対象",
+              "原問の扱い"
+            ],
+            "rows": [
+              [
+                "W52",
+                "この設問のレーダー検知対象に含めない"
+              ],
+              [
+                "W53",
+                "DFSでレーダーを回避"
+              ],
+              [
+                "W56",
+                "DFSでレーダーを回避"
+              ]
+            ],
+            "caption": "説明用：対象の周波数帯"
+          }
+        },
+        {
+          "id": "radar-dfs-2",
+          "format": "選択",
+          "theme": "レーダー検知から通信断を説明する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "原問でレーダーと干渉する可能性がある二帯域はどれか。",
+          "choices": [
+            {
+              "text": "W52と2.4GHz",
+              "explain": "原問の該当する二帯域ではありません。"
+            },
+            {
+              "text": "W52とW53だけ",
+              "explain": "W56が欠け、W52を含めています。"
+            },
+            {
+              "text": "W53とW56",
+              "explain": "設問で問われるDFSの対象です。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "radar-dfs-3",
+          "format": "選択",
+          "theme": "レーダー検知から通信断を説明する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "レーダー検知時、APがまず行う動作はどれか。",
+          "choices": [
+            {
+              "text": "全端末のパスワードを変更する",
+              "explain": "認証情報の問題ではありません。"
+            },
+            {
+              "text": "検知したチャネルでの送信を停止する",
+              "explain": "レーダーとの干渉を回避するためです。",
+              "ok": true
+            },
+            {
+              "text": "同じチャネルの送信出力を上げる",
+              "explain": "干渉回避になりません。"
+            }
+          ]
+        },
+        {
+          "id": "radar-dfs-4",
+          "format": "穴埋め",
+          "theme": "レーダー検知から通信断を説明する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "動作と利用者への影響を結ぶ。",
+          "template": "検知したチャネルの電波を{a}し、他のチャネルへ移って再開する。その際に{b}が起こり得る。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "APの動作",
+              "choices": [
+                {
+                  "text": "停止",
+                  "explain": "レーダーを避けるためです。",
+                  "ok": true
+                },
+                {
+                  "text": "増幅",
+                  "explain": "同じチャネルでの干渉を増やします。"
+                },
+                {
+                  "text": "暗号化し直すだけ",
+                  "explain": "暗号化しても周波数干渉は解消しません。"
+                }
+              ],
+              "why": "停止・別チャネルへの遷移・再開を含めます。"
+            },
+            {
+              "key": "b",
+              "label": "端末への影響",
+              "choices": [
+                {
+                  "text": "DHCPアドレスの恒久消失",
+                  "explain": "DFSの直接の効果ではありません。"
+                },
+                {
+                  "text": "映像ファイルの必然的な破壊",
+                  "explain": "通信断と保存ファイル破壊は別です。"
+                },
+                {
+                  "text": "接続断や通信断",
+                  "explain": "端末が変更先へ追従するまで通信が途切れ得ます。",
+                  "ok": true
+                }
+              ],
+              "why": "レーダー検知に伴い不定期に発生する点が重要です。"
+            }
+          ]
+        },
+        {
+          "id": "radar-dfs-5",
+          "format": "並べ替え",
+          "theme": "レーダー検知から通信断を説明する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "DFSの一連の動作を並べる。",
+          "lead": "利用中のチャネルでレーダーを検知しました。",
+          "lines": [
+            {
+              "code": "レーダーを検知する"
+            },
+            {
+              "code": "そのチャネルの電波を停止する"
+            },
+            {
+              "code": "他のチャネルへ遷移して通信を再開する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "停止してから移行します。端末の接続断が発生する可能性があります。",
+          "ngExplain": "原因から動作、結果へつなげます。停止してから移行します。端末の接続断が発生する可能性があります。",
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.65,
+            "bottom": 0.84,
+            "label": "Wi-Fi 6の特長：三帯域とDFS（IPA原文）"
+          }
+        },
+        {
+          "id": "radar-dfs-6",
+          "format": "選択",
+          "theme": "レーダー検知から通信断を説明する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "APは正常稼働し有線リンクも正常だが、時折無線だけ切れる。DFSが原因か判断する情報はどれか。",
+          "choices": [
+            {
+              "text": "Webサーバの証明書だけ",
+              "explain": "無線チャネルの変更を確認できません。"
+            },
+            {
+              "text": "レーダー検知とチャネル変更のログ",
+              "explain": "切断時刻と照合して原因を調べます。",
+              "ok": true
+            },
+            {
+              "text": "利用者のパスワード長だけ",
+              "explain": "DFSの発生時刻とは結び付きません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "antennas-password",
+      "title": "空間多重と認証情報を区別する",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "antennas-password-1",
+          "format": "読む",
+          "theme": "空間多重と認証情報を区別する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "多数の端末へ効率よく無線通信したい状況です。MIMOはMultiple Input and Multiple Outputです。複数アンテナで複数の空間ストリームを扱います。一方、WPA3-PersonalのSAEはパスワードに基づく認証を強化します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "仕組み",
+              "主な対象"
+            ],
+            "rows": [
+              [
+                "MIMO・MU-MIMO",
+                "アンテナと空間ストリーム"
+              ],
+              [
+                "SAE",
+                "パスワードに基づく認証"
+              ],
+              [
+                "チャネルボンディング",
+                "周波数チャネルの幅"
+              ]
+            ],
+            "caption": "説明用：通信効率とセキュリティの役割"
+          }
+        },
+        {
+          "id": "antennas-password-2",
+          "format": "選択",
+          "theme": "空間多重と認証情報を区別する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "複数の空間ストリームを作るため送受信側に必要なものはどれか。",
+          "choices": [
+            {
+              "text": "複数のパスワード",
+              "explain": "認証情報を増やしても空間ストリームは増えません。"
+            },
+            {
+              "text": "複数のDNSゾーン",
+              "explain": "名前管理と無線の空間多重は別です。"
+            },
+            {
+              "text": "複数のアンテナ",
+              "explain": "空間的な経路を利用して同時通信します。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "antennas-password-3",
+          "format": "選択",
+          "theme": "空間多重と認証情報を区別する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "WPA3-Personalの辞書攻撃耐性で保護したい利用者指定情報はどれか。",
+          "choices": [
+            {
+              "text": "無線チャネル番号",
+              "explain": "秘密にして認証する情報ではありません。"
+            },
+            {
+              "text": "パスワード",
+              "explain": "候補を試して推測する攻撃への耐性を強化します。",
+              "ok": true
+            },
+            {
+              "text": "APのMACアドレス",
+              "explain": "秘密の認証情報として指定するものではありません。"
+            }
+          ]
+        },
+        {
+          "id": "antennas-password-4",
+          "format": "穴埋め",
+          "theme": "空間多重と認証情報を区別する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "空欄bとcに対応する対象を選ぶ。",
+          "template": "複数の{b}で空間多重を行い、SAEで{c}への辞書攻撃耐性を高める。",
+          "blanks": [
+            {
+              "key": "b",
+              "label": "通信側",
+              "choices": [
+                {
+                  "text": "アンテナ",
+                  "explain": "送受信に用いる物理的な構成です。",
+                  "ok": true
+                },
+                {
+                  "text": "IPアドレス",
+                  "explain": "数を増やしても空間多重になりません。"
+                },
+                {
+                  "text": "サーバ証明書",
+                  "explain": "空間多重のための装置ではありません。"
+                }
+              ],
+              "why": "MU-MIMOは複数利用者へこの仕組みを使います。"
+            },
+            {
+              "key": "c",
+              "label": "認証側",
+              "choices": [
+                {
+                  "text": "アンテナ",
+                  "explain": "秘密情報ではありません。"
+                },
+                {
+                  "text": "VLAN番号",
+                  "explain": "ネットワークの区分番号です。"
+                },
+                {
+                  "text": "パスワード",
+                  "explain": "利用者が指定する認証情報です。",
+                  "ok": true
+                }
+              ],
+              "why": "SAEはSimultaneous Authentication of Equalsです。"
+            }
+          ]
+        },
+        {
+          "id": "antennas-password-5",
+          "format": "並べ替え",
+          "theme": "空間多重と認証情報を区別する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "空間多重が役立つ理由を並べる。",
+          "lead": "端末とAPが必要な機能に対応している条件です。",
+          "lines": [
+            {
+              "code": "送受信側で複数アンテナを用いる"
+            },
+            {
+              "code": "複数の空間ストリームを利用する"
+            },
+            {
+              "code": "複数端末との通信効率を高める"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "アンテナという構成と、通信効率という効果を結びます。",
+          "ngExplain": "原因から動作、結果へつなげます。アンテナという構成と、通信効率という効果を結びます。"
+        },
+        {
+          "id": "antennas-password-6",
+          "format": "選択",
+          "theme": "空間多重と認証情報を区別する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "アンテナ数を変えずパスワードを強くした。直接改善するのはどれか。",
+          "choices": [
+            {
+              "text": "有線リンクの帯域",
+              "explain": "無線認証の変更では有線速度は変わりません。"
+            },
+            {
+              "text": "認証情報の推測への耐性",
+              "explain": "無線容量とは別の改善です。",
+              "ok": true
+            },
+            {
+              "text": "物理的な空間ストリーム数",
+              "explain": "パスワード変更ではアンテナ構成は変わりません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "classroom-rate",
+      "title": "動画容量を1秒当たりの通信量へ直す",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "classroom-rate-1",
+          "format": "読む",
+          "theme": "動画容量を1秒当たりの通信量へ直す",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "1台のPCが1時間に7.2Gバイトの動画を再生します。1教室では50台が同時に再生します。オーバーヘッドを無視し、10進のGとMで計算します。APとフロアL2SWの間に必要な通信量を段階的に求めます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "変換",
+              "値"
+            ],
+            "rows": [
+              [
+                "1バイト",
+                "8ビット"
+              ],
+              [
+                "1時間",
+                "3600秒"
+              ],
+              [
+                "1Gビット",
+                "1000Mビット"
+              ]
+            ],
+            "caption": "説明用：原問のレート換算"
+          }
+        },
+        {
+          "id": "classroom-rate-2",
+          "format": "選択",
+          "theme": "動画容量を1秒当たりの通信量へ直す",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "7.2GバイトをGビットに変換した値はどれか。",
+          "choices": [
+            {
+              "text": "0.9Gビット",
+              "explain": "バイトからビットでは8で割らず掛けます。"
+            },
+            {
+              "text": "7.2Gビット",
+              "explain": "バイトとビットを同じ単位として扱っています。"
+            },
+            {
+              "text": "57.6Gビット",
+              "explain": "7.2×8です。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "classroom-rate-3",
+          "format": "選択",
+          "theme": "動画容量を1秒当たりの通信量へ直す",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "1台が1秒当たりに受け取る量を求める式はどれか。",
+          "choices": [
+            {
+              "text": "7.2×1000×8×3600",
+              "explain": "時間当たりの容量から毎秒へ直すので、秒数で割ります。"
+            },
+            {
+              "text": "7.2×1000×8÷3600",
+              "explain": "容量をMビットにし、秒数で割ります。",
+              "ok": true
+            },
+            {
+              "text": "7.2×1000÷8÷3600",
+              "explain": "バイトからビットへの変換が逆です。"
+            }
+          ]
+        },
+        {
+          "id": "classroom-rate-4",
+          "format": "穴埋め",
+          "theme": "動画容量を1秒当たりの通信量へ直す",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "1台分から教室全体へ進む。",
+          "template": "1台当たり{a}Mbpsなので、50台で{b}Mbpsになる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "毎秒レート",
+              "choices": [
+                {
+                  "text": "16",
+                  "explain": "57600Mビット÷3600秒です。",
+                  "ok": true
+                },
+                {
+                  "text": "2",
+                  "explain": "バイトをビットに変換していません。"
+                },
+                {
+                  "text": "57.6",
+                  "explain": "1時間分のGビットを毎秒の値として扱っています。"
+                }
+              ],
+              "why": "計算途中で単位も確認します。"
+            },
+            {
+              "key": "b",
+              "label": "教室全体",
+              "choices": [
+                {
+                  "text": "100",
+                  "explain": "バイト/秒の数値をビット/秒と混同しています。"
+                },
+                {
+                  "text": "16000",
+                  "explain": "台数は50台です。"
+                },
+                {
+                  "text": "800",
+                  "explain": "16×50です。",
+                  "ok": true
+                }
+              ],
+              "why": "原問はオーバーヘッドを無視する条件です。"
+            }
+          ]
+        },
+        {
+          "id": "classroom-rate-5",
+          "format": "並べ替え",
+          "theme": "動画容量を1秒当たりの通信量へ直す",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "最大トラフィック量を求める手順を並べる。",
+          "lead": "1教室50台という条件です。",
+          "lines": [
+            {
+              "code": "7.2Gバイトに8を掛けてビットへ直す"
+            },
+            {
+              "code": "3600秒で割り、1台分の16Mbpsを求める"
+            },
+            {
+              "code": "50台分を合計して800Mbpsを求める"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "容量→毎秒→台数の順で考えます。",
+          "ngExplain": "原因から動作、結果へつなげます。容量→毎秒→台数の順で考えます。"
+        },
+        {
+          "id": "classroom-rate-6",
+          "format": "選択",
+          "theme": "動画容量を1秒当たりの通信量へ直す",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "隣のAP故障で25台が加わった。同じ動画なら合計はどれか。",
+          "choices": [
+            {
+              "text": "400Mbps",
+              "explain": "追加25台分だけを計算し、既存50台分を落としています。"
+            },
+            {
+              "text": "1200Mbps",
+              "explain": "16×75です。1Gbpsを超えるため平常時だけの設計では足りません。",
+              "ok": true
+            },
+            {
+              "text": "800Mbpsのまま",
+              "explain": "動画を見る端末数が増えています。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "access-power",
+      "title": "無線・給電・有線の制約を別々に確認する",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "access-power-1",
+          "format": "読む",
+          "theme": "無線・給電・有線の制約を別々に確認する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "APへはLANケーブルでデータと電力を送ります。PoEはPower over Ethernetです。動画量が収まっても給電不足ならAPは動作を維持できません。空欄d・e・fは無線幅、給電方式、有線速度をそれぞれ問います。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "制約",
+              "原問の選択"
+            ],
+            "rows": [
+              [
+                "20MHzを二つ束ねる",
+                "チャネルボンディングで40MHz"
+              ],
+              [
+                "IEEE802.3atの30Wでは不安",
+                "IEEE802.3btのPoE++"
+              ],
+              [
+                "1Gbps超への備え",
+                "2.5GBASE-T又は5GBASE-T"
+              ]
+            ],
+            "caption": "説明用：異なる三つの能力"
+          }
+        },
+        {
+          "id": "access-power-2",
+          "format": "選択",
+          "theme": "無線・給電・有線の制約を別々に確認する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "20MHzチャネルを二つ束ねる方式はどれか。",
+          "choices": [
+            {
+              "text": "MU-MIMO",
+              "explain": "空間ストリームを複数利用者へ使う方式です。"
+            },
+            {
+              "text": "リンクアグリゲーション",
+              "explain": "有線リンクを論理的に束ねる方式です。"
+            },
+            {
+              "text": "チャネルボンディング",
+              "explain": "周波数幅を広げる方式です。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "access-power-3",
+          "format": "選択",
+          "theme": "無線・給電・有線の制約を別々に確認する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "APの電力不足を解消する変更はどれか。",
+          "choices": [
+            {
+              "text": "無線SSIDを二つに増やす",
+              "explain": "名前を増やしても供給電力は増えません。"
+            },
+            {
+              "text": "必要電力に対応したIEEE802.3btを採用する",
+              "explain": "PoE++と呼ばれる方式を原問で検討しています。",
+              "ok": true
+            },
+            {
+              "text": "DNSのTTLを短くする",
+              "explain": "電力供給能力は変わりません。"
+            }
+          ]
+        },
+        {
+          "id": "access-power-4",
+          "format": "穴埋め",
+          "theme": "無線・給電・有線の制約を別々に確認する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "三つの技術をそれぞれの役割へ置く。",
+          "template": "無線幅は{d}、給電は{e}、2.5/5Gbps接続は{f}で改善する。",
+          "blanks": [
+            {
+              "key": "d",
+              "label": "幅を束ねる",
+              "choices": [
+                {
+                  "text": "チャネルボンディング",
+                  "explain": "20MHzを束ねて40MHzにします。",
+                  "ok": true
+                },
+                {
+                  "text": "スタック",
+                  "explain": "スイッチの論理的一体化です。"
+                },
+                {
+                  "text": "DHCPリレー",
+                  "explain": "アドレス要求の中継です。"
+                }
+              ],
+              "why": "原問の空欄dです。"
+            },
+            {
+              "key": "e",
+              "label": "給電",
+              "choices": [
+                {
+                  "text": "PoE+",
+                  "explain": "原問では30Wで不足するリスクがあります。"
+                },
+                {
+                  "text": "VRRP",
+                  "explain": "ルータ冗長化であり給電方式ではありません。"
+                },
+                {
+                  "text": "PoE++",
+                  "explain": "IEEE802.3btを指します。",
+                  "ok": true
+                }
+              ],
+              "why": "原問の空欄eです。"
+            },
+            {
+              "key": "f",
+              "label": "有線速度",
+              "choices": [
+                {
+                  "text": "IGMP",
+                  "explain": "マルチキャスト参加制御です。"
+                },
+                {
+                  "text": "マルチギガビットイーサネット",
+                  "explain": "2.5GBASE-Tと5GBASE-Tです。",
+                  "ok": true
+                },
+                {
+                  "text": "1000BASE-Tだけ",
+                  "explain": "1Gbpsを超える条件への対応になりません。"
+                }
+              ],
+              "why": "原問の空欄fです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 17,
+            "top": 0.27,
+            "bottom": 0.84,
+            "label": "チャネル幅・PoE・有線帯域の検討（IPA原文）"
+          }
+        },
+        {
+          "id": "access-power-5",
+          "format": "並べ替え",
+          "theme": "無線・給電・有線の制約を別々に確認する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "AP接続の設計を見直す。",
+          "lead": "平常時800Mbpsでも、故障時は1.2Gbpsになる例です。",
+          "lines": [
+            {
+              "code": "隣接APへの端末集中を想定する"
+            },
+            {
+              "code": "故障時に必要な有線帯域とAPの電力を確認する"
+            },
+            {
+              "code": "対応するポート速度・給電能力・ケーブルを選ぶ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "速度と電力は独立した確認事項です。",
+          "ngExplain": "原因から動作、結果へつなげます。速度と電力は独立した確認事項です。"
+        },
+        {
+          "id": "access-power-6",
+          "format": "選択",
+          "theme": "無線・給電・有線の制約を別々に確認する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "ポートを5Gbpsへ更新したがPoE供給能力は据置きだった。保証できることはどれか。",
+          "choices": [
+            {
+              "text": "5Gbpsでも通信速度は1Gbpsから変わらない",
+              "explain": "対応機器とケーブルの条件を満たせば速度を改善できます。"
+            },
+            {
+              "text": "有線速度の上限は改善するが、給電不足は別途確認が必要",
+              "explain": "通信速度と供給電力を分けて設計します。",
+              "ok": true
+            },
+            {
+              "text": "5Gbpsなら電力不足も必ず解消する",
+              "explain": "帯域の増加は供給電力の増加を意味しません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stack-lag",
+      "title": "冗長なスイッチを一つの接続先として扱う",
+      "targets": [
+        "s1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "stack-lag-1",
+          "format": "読む",
+          "theme": "冗長なスイッチを一つの接続先として扱う",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "サーバから二台のスイッチへリンクを接続します。原問は各二台をスタック接続し、論理的に一台として扱う案です。その上でスイッチをまたぐリンクアグリゲーションを使います。複数の通信を複数リンクへ分散できます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "二台の基幹L3SW",
+                "d": "スタックで論理一台"
+              },
+              {
+                "t": "複数のリンク",
+                "d": "リンクアグリゲーション"
+              },
+              {
+                "t": "二台のサーバL2SW",
+                "d": "こちらもスタックで論理一台"
+              }
+            ],
+            "caption": "説明用：原問の第二案の考え方"
+          }
+        },
+        {
+          "id": "stack-lag-2",
+          "format": "選択",
+          "theme": "冗長なスイッチを一つの接続先として扱う",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "複数スイッチを論理一台として扱う原問の方式はどれか。",
+          "choices": [
+            {
+              "text": "VRRPだけ",
+              "explain": "仮想ゲートウェイを提供しますが、スイッチ全体を一台にはしません。"
+            },
+            {
+              "text": "DHCPリレー",
+              "explain": "DHCPメッセージを別ネットワークへ中継します。"
+            },
+            {
+              "text": "スタック",
+              "explain": "物理的な複数台を一体として構成します。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "stack-lag-3",
+          "format": "選択",
+          "theme": "冗長なスイッチを一つの接続先として扱う",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "スタックをまたぐリンクアグリゲーションの帯域面の利点はどれか。",
+          "choices": [
+            {
+              "text": "リンクを増やさず回線規格自体が変わる",
+              "explain": "複数の物理リンクを束ねて使う技術です。"
+            },
+            {
+              "text": "平常時も複数リンクを同時に利用できる",
+              "explain": "待機リンクを含めずに一方だけ使う構成との差です。",
+              "ok": true
+            },
+            {
+              "text": "全通信で単一フロー速度が必ず本数倍になる",
+              "explain": "一般にフロー単位の分散です。単一フローの速度倍増とは限りません。"
+            }
+          ]
+        },
+        {
+          "id": "stack-lag-4",
+          "format": "穴埋め",
+          "theme": "冗長なスイッチを一つの接続先として扱う",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "方式と帯域の関係を組み立てる。",
+          "template": "二台を{g}で論理一台とし、リンクアグリゲーションで{a}から本数分の帯域を利用する。",
+          "blanks": [
+            {
+              "key": "g",
+              "label": "スイッチ構成",
+              "choices": [
+                {
+                  "text": "スタック",
+                  "explain": "原問の空欄gです。",
+                  "ok": true
+                },
+                {
+                  "text": "フラッディング",
+                  "explain": "宛先を絞らないフレーム転送です。"
+                },
+                {
+                  "text": "DNSラウンドロビン",
+                  "explain": "名前解決による分散です。"
+                }
+              ],
+              "why": "スイッチをまたいだ接続の前提を作ります。"
+            },
+            {
+              "key": "a",
+              "label": "利用する時期",
+              "choices": [
+                {
+                  "text": "全リンクの故障後",
+                  "explain": "通信可能なリンクが必要です。"
+                },
+                {
+                  "text": "DHCP更新時だけ",
+                  "explain": "DHCP更新とは独立しています。"
+                },
+                {
+                  "text": "平常時",
+                  "explain": "複数リンクで通信を分散できます。",
+                  "ok": true
+                }
+              ],
+              "why": "障害時だけではなく平常時の帯域を説明します。"
+            }
+          ]
+        },
+        {
+          "id": "stack-lag-5",
+          "format": "並べ替え",
+          "theme": "冗長なスイッチを一つの接続先として扱う",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "帯域を活用する構成を組み立てる。",
+          "lead": "原問のスタック対応機器を利用します。",
+          "lines": [
+            {
+              "code": "二台ずつのスイッチをスタックにする"
+            },
+            {
+              "code": "スイッチをまたぐリンクをアグリゲーションする"
+            },
+            {
+              "code": "平常時から複数リンクへ通信を分散する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "機器の論理構成とリンクの論理構成を順に整えます。",
+          "ngExplain": "原因から動作、結果へつなげます。機器の論理構成とリンクの論理構成を順に整えます。"
+        },
+        {
+          "id": "stack-lag-6",
+          "format": "選択",
+          "theme": "冗長なスイッチを一つの接続先として扱う",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "10GbE二本のうち一本が故障した。複数通信の利用可能帯域の目安はどうなるか。",
+          "choices": [
+            {
+              "text": "必ず二本とも利用不能になる",
+              "explain": "正しく構成されていれば残ったメンバーを利用できます。"
+            },
+            {
+              "text": "二本分から残る一本分へ減る",
+              "explain": "通信を継続できても、帯域の余裕は減ります。",
+              "ok": true
+            },
+            {
+              "text": "故障前と必ず同じ帯域を維持する",
+              "explain": "物理リンク一本分の帯域は失われます。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "core-bottleneck",
+      "title": "動画の通り道から集約区間を見付ける",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "core-bottleneck-1",
+          "format": "読む",
+          "theme": "動画の通り道から集約区間を見付ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "各教室の動画は、動画サーバからサーバL2SWと基幹L3SWを通って届きます。原問では認証後のデータ通信はWLCを経由しません。WLCはWireless LAN Controllerです。多数教室の合計が通る区間を原図で探します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "動画コンテンツサーバ",
+                "d": "動画を送信"
+              },
+              {
+                "t": "サーバL2SW → 基幹L3SW",
+                "d": "複数教室の通信が集約"
+              },
+              {
+                "t": "フロアL2SW → AP",
+                "d": "各教室へ分岐"
+              }
+            ],
+            "caption": "説明用：動画データの通り道"
+          }
+        },
+        {
+          "id": "core-bottleneck-2",
+          "format": "選択",
+          "theme": "動画の通り道から集約区間を見付ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "動画の通信量を合計すべき場所はどれか。",
+          "choices": [
+            {
+              "text": "WLCの管理画面だけ",
+              "explain": "原問では認証後の通信がWLCを経由しません。"
+            },
+            {
+              "text": "インターネット接続だけ",
+              "explain": "動画は学校が保有するサーバから提供します。"
+            },
+            {
+              "text": "サーバL2SWと基幹L3SWの間",
+              "explain": "複数教室向けの動画が共通して通ります。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "core-bottleneck-3",
+          "format": "選択",
+          "theme": "動画の通り道から集約区間を見付ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "原図で、サーバL2SWと基幹L3SWを結ぶ区間はどれか。",
+          "choices": [
+            {
+              "text": "(v)",
+              "explain": "WLC側の接続を示しています。"
+            },
+            {
+              "text": "(ii)",
+              "explain": "サーバ側とフロア側を結ぶ集約箇所です。",
+              "ok": true
+            },
+            {
+              "text": "(i)",
+              "explain": "FWと基幹L3SWの間です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.49,
+            "bottom": 0.92,
+            "label": "図1：接続区間(i)〜(v)（IPA原図）"
+          }
+        },
+        {
+          "id": "core-bottleneck-4",
+          "format": "穴埋め",
+          "theme": "動画の通り道から集約区間を見付ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "区間と解決理由を組み立てる。",
+          "template": "懸念する区間は{a}。リンクアグリゲーションにより{b}を同時に利用できる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "区間",
+              "choices": [
+                {
+                  "text": "(ii)",
+                  "explain": "複数教室の動画トラフィックが集約します。",
+                  "ok": true
+                },
+                {
+                  "text": "(i)",
+                  "explain": "インターネット方向は動画の主要経路ではありません。"
+                },
+                {
+                  "text": "(v)",
+                  "explain": "WLCを動画が通らないという条件があります。"
+                }
+              ],
+              "why": "区間記号を根拠となる経路と対応させます。"
+            },
+            {
+              "key": "b",
+              "label": "帯域",
+              "choices": [
+                {
+                  "text": "故障したリンクの帯域",
+                  "explain": "故障リンクでは通信できません。"
+                },
+                {
+                  "text": "DNSサーバのメモリ",
+                  "explain": "帯域の改善理由ではありません。"
+                },
+                {
+                  "text": "平常時にリンク本数分の帯域",
+                  "explain": "複数の通信を分散します。",
+                  "ok": true
+                }
+              ],
+              "why": "設問3(2)は区間と理由の両方が必要です。"
+            }
+          ]
+        },
+        {
+          "id": "core-bottleneck-5",
+          "format": "並べ替え",
+          "theme": "動画の通り道から集約区間を見付ける",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "ボトルネックの答案を組み立てる。",
+          "lead": "15教室から同時に動画を要求する状況です。",
+          "lines": [
+            {
+              "code": "動画がサーバL2SWから基幹L3SWを通ると確認する"
+            },
+            {
+              "code": "集約区間(ii)に複数教室の通信量が集まると判断する"
+            },
+            {
+              "code": "複数リンクを平常時から使う構成で帯域を増やす"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "端末数だけでなく、その通信が共通して通る場所を探します。",
+          "ngExplain": "原因から動作、結果へつなげます。端末数だけでなく、その通信が共通して通る場所を探します。"
+        },
+        {
+          "id": "core-bottleneck-6",
+          "format": "選択",
+          "theme": "動画の通り道から集約区間を見付ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "全動画の提供元をインターネット側へ移した。追加で容量確認が重要になる区間はどれか。",
+          "choices": [
+            {
+              "text": "DHCPサーバの接続だけ",
+              "explain": "アドレス配布と動画転送の帯域は別です。"
+            },
+            {
+              "text": "FWと基幹L3SWの間の(i)",
+              "explain": "動画データが新たにインターネット方向から入ります。",
+              "ok": true
+            },
+            {
+              "text": "元の(ii)だけで十分",
+              "explain": "提供元が変われば主要な通過区間も変わります。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dhcp-relay",
+      "title": "別ネットワークの端末へアドレスを配る",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "dhcp-relay-1",
+          "format": "読む",
+          "theme": "別ネットワークの端末へアドレスを配る",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "端末は教室側のネットワークに接続します。DHCPサーバはマシン室側にあります。DHCPはDynamic Host Configuration Protocolです。端末の初回ブロードキャスト要求を越境させるため、基幹L3SWで中継します。"
+        },
+        {
+          "id": "dhcp-relay-2",
+          "format": "選択",
+          "theme": "別ネットワークの端末へアドレスを配る",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ルータを越えたDHCPサーバへ要求を届ける機能はどれか。",
+          "choices": [
+            {
+              "text": "VRRP",
+              "explain": "ゲートウェイ冗長化であってDHCP要求の中継ではありません。"
+            },
+            {
+              "text": "SAE",
+              "explain": "無線認証の方式です。"
+            },
+            {
+              "text": "DHCPリレーエージェント",
+              "explain": "端末の要求を受け、サーバへ中継します。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "dhcp-relay-3",
+          "format": "選択",
+          "theme": "別ネットワークの端末へアドレスを配る",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "単にデフォルトルートを設定するだけで不足する理由はどれか。",
+          "choices": [
+            {
+              "text": "DHCPはHTTP/2でしか通信できないから",
+              "explain": "DHCPはHTTPの仕組みではありません。"
+            },
+            {
+              "text": "端末の初回DHCPブロードキャストを通常のルーティングでは越境転送しない",
+              "explain": "要求を受けて中継する機能が必要です。",
+              "ok": true
+            },
+            {
+              "text": "IPアドレスは無線端末には不要だから",
+              "explain": "無線端末にもIP通信のためのアドレスが必要です。"
+            }
+          ]
+        },
+        {
+          "id": "dhcp-relay-4",
+          "format": "穴埋め",
+          "theme": "別ネットワークの端末へアドレスを配る",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "設置箇所と機能を組み立てる。",
+          "template": "{a}に{h}を設定し、DHCPサーバへ要求を中継する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "機器",
+              "choices": [
+                {
+                  "text": "基幹L3SW",
+                  "explain": "端末ネットワークとサーバ側を中継します。",
+                  "ok": true
+                },
+                {
+                  "text": "動画の再生ソフト",
+                  "explain": "ネットワーク間のDHCP中継は行いません。"
+                },
+                {
+                  "text": "利用者のパスワード",
+                  "explain": "設定対象となるネットワーク機器ではありません。"
+                }
+              ],
+              "why": "原問のL3境界へ設定します。"
+            },
+            {
+              "key": "h",
+              "label": "機能",
+              "choices": [
+                {
+                  "text": "HTTPリバースプロキシ",
+                  "explain": "HTTP要求の中継です。"
+                },
+                {
+                  "text": "IGMPスヌーピング",
+                  "explain": "マルチキャスト配信先の監視です。"
+                },
+                {
+                  "text": "DHCPリレーエージェント",
+                  "explain": "原問の空欄hです。",
+                  "ok": true
+                }
+              ],
+              "why": "配る情報と中継する要求から機能を選びます。"
+            }
+          ]
+        },
+        {
+          "id": "dhcp-relay-5",
+          "format": "並べ替え",
+          "theme": "別ネットワークの端末へアドレスを配る",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "端末へDHCP情報が届く流れを並べる。",
+          "lead": "端末とサーバは異なるネットワークです。",
+          "lines": [
+            {
+              "code": "端末がDHCPの初回要求をブロードキャストする"
+            },
+            {
+              "code": "基幹L3SWのリレーが要求をサーバへ中継する"
+            },
+            {
+              "code": "サーバの回答がリレーを介して端末へ届く"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "ブロードキャストの到達範囲をリレーで補います。",
+          "ngExplain": "原因から動作、結果へつなげます。ブロードキャストの到達範囲をリレーで補います。"
+        },
+        {
+          "id": "dhcp-relay-6",
+          "format": "選択",
+          "theme": "別ネットワークの端末へアドレスを配る",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "DHCPサーバを端末と同じブロードキャストドメインへ移した。初回要求はどうなるか。",
+          "choices": [
+            {
+              "text": "DHCPを廃止しないと動かない",
+              "explain": "同一セグメントでのDHCPは通常の利用形態です。"
+            },
+            {
+              "text": "サーバが直接受信でき、中継なしでも動作できる",
+              "explain": "同一セグメントで要求が届く条件になります。",
+              "ok": true
+            },
+            {
+              "text": "同じセグメントでも必ず二台のリレーが必要",
+              "explain": "リレーはネットワーク境界を越えるための機能です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "maintenance-loop",
+      "title": "保守対象からループ事故を想定する",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "maintenance-loop-1",
+          "format": "読む",
+          "theme": "保守対象からループ事故を想定する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "学校職員はAPとフロアL2SWを交換・復旧します。動画コンテンツサーバの保守も学校の担当です。誤配線や設定の復旧ミスでレイヤー2のループができると、ブロードキャストが循環します。担当範囲と事故の原因を両方確認します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "機器",
+              "原問の保守担当"
+            ],
+            "rows": [
+              [
+                "AP・フロアL2SW",
+                "学校職員"
+              ],
+              [
+                "動画コンテンツサーバ",
+                "学校"
+              ],
+              [
+                "基幹L3SW・サーバL2SWなど",
+                "提案される保守の対象"
+              ]
+            ],
+            "caption": "説明用：RFPで分かれた責任範囲"
+          }
+        },
+        {
+          "id": "maintenance-loop-2",
+          "format": "選択",
+          "theme": "保守対象からループ事故を想定する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "学校職員が保守する三種類の組合せはどれか。",
+          "choices": [
+            {
+              "text": "基幹L3SW、FW、認証システム",
+              "explain": "これらは提案側の保守対象です。"
+            },
+            {
+              "text": "AP、DNSサーバ、FW",
+              "explain": "原問で学校の保守対象として指定された組合せではありません。"
+            },
+            {
+              "text": "AP、フロアL2SW、動画コンテンツサーバ",
+              "explain": "本文の保守対象を合わせた三種類です。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "maintenance-loop-3",
+          "format": "選択",
+          "theme": "保守対象からループ事故を想定する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "ブロードキャストストームにつながる作業ミスはどれか。",
+          "choices": [
+            {
+              "text": "利用者パスワードの変更だけ",
+              "explain": "認証失敗は起こり得ますが、L2ループとは別です。"
+            },
+            {
+              "text": "ループになる誤接続や設定ミス",
+              "explain": "フレームが繰り返し回り、通信量が増えます。",
+              "ok": true
+            },
+            {
+              "text": "動画ファイル名の誤記だけ",
+              "explain": "配線ループを作る操作ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "maintenance-loop-4",
+          "format": "穴埋め",
+          "theme": "保守対象からループ事故を想定する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "対象機器と発生原因を組み立てる。",
+          "template": "職員の保守対象はAP、{a}、{b}であり、{c}に備える。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "スイッチ",
+              "choices": [
+                {
+                  "text": "フロアL2SW",
+                  "explain": "予備機交換と復旧を学校職員が行います。",
+                  "ok": true
+                },
+                {
+                  "text": "基幹L3SW",
+                  "explain": "提案側の保守対象です。"
+                },
+                {
+                  "text": "サーバL2SW",
+                  "explain": "こちらも提案側の保守対象です。"
+                }
+              ],
+              "why": "スイッチの役割名まで区別します。"
+            },
+            {
+              "key": "b",
+              "label": "サーバ",
+              "choices": [
+                {
+                  "text": "RADIUSサーバ",
+                  "explain": "利用者認証システムの一部です。"
+                },
+                {
+                  "text": "DHCPサーバ",
+                  "explain": "提案する保守対象です。"
+                },
+                {
+                  "text": "動画コンテンツサーバ",
+                  "explain": "学校保有サーバの保守は学校が行います。",
+                  "ok": true
+                }
+              ],
+              "why": "動画サーバの条件はRFPの続きにあります。"
+            },
+            {
+              "key": "c",
+              "label": "作業ミス",
+              "choices": [
+                {
+                  "text": "正しいポートのラベル確認",
+                  "explain": "誤配線を減らす作業です。"
+                },
+                {
+                  "text": "ループを作る誤接続や設定ミス",
+                  "explain": "ストームの直接原因です。",
+                  "ok": true
+                },
+                {
+                  "text": "正しい設定の保存",
+                  "explain": "復旧を助ける作業です。"
+                }
+              ],
+              "why": "作業ミスを単に操作ミスとだけ書かず、ループを示します。"
+            }
+          ]
+        },
+        {
+          "id": "maintenance-loop-5",
+          "format": "並べ替え",
+          "theme": "保守対象からループ事故を想定する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "誤接続から通信障害までを並べる。",
+          "lead": "ループ抑止が働かない条件を考えます。",
+          "lines": [
+            {
+              "code": "交換作業でL2のループになる接続を作る"
+            },
+            {
+              "code": "ブロードキャストフレームが繰り返し転送される"
+            },
+            {
+              "code": "帯域や機器処理が消費され、正常通信へ影響する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "原因はループです。無線のチャネル干渉とは別です。",
+          "ngExplain": "原因から動作、結果へつなげます。原因はループです。無線のチャネル干渉とは別です。"
+        },
+        {
+          "id": "maintenance-loop-6",
+          "format": "選択",
+          "theme": "保守対象からループ事故を想定する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "職員がサーバの二つのNICをつなぐ。事故予防で確認すべきことはどれか。",
+          "choices": [
+            {
+              "text": "DHCPのリース期間だけ",
+              "explain": "ループを生む配線・設定の確認になりません。"
+            },
+            {
+              "text": "配線とNIC・スイッチ側の冗長化設定の整合",
+              "explain": "誤ったブリッジ設定などによるループを防ぎます。",
+              "ok": true
+            },
+            {
+              "text": "動画ファイルを圧縮すればループは起きない",
+              "explain": "データ量を減らしてもループという構造は残ります。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

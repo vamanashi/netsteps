@@ -1,0 +1,2203 @@
+{
+  "examKey": "2022r04h/pm2/2",
+  "title": "仮想サーバとコンテナを止めずに移行する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm2_ans.pdf",
+    "https://www.rfc-editor.org/rfc/rfc5798.txt"
+  ],
+  "sections": [
+    {
+      "id": "virtual-basics",
+      "title": "一台の物理サーバに複数の実行環境を載せる",
+      "targets": [
+        "s1-1",
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "id": "virtual-basics-1",
+          "type": "info",
+          "title": "アプリとその実行場所を区別する",
+          "body": "AP（Application：アプリケーション）は業務の処理を行うソフトウェアです。PC（Personal Computer：利用者の端末）からAPを利用します。原問は一つのAPを二台で冗長化し、片方が停止しても利用を続けることを目指します。",
+          "format": "読む",
+          "theme": "アプリとその実行場所を区別する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "virtual-basics-2",
+          "type": "info",
+          "title": "ホストと仮想サーバ",
+          "body": "ホストサーバは物理的な機械、仮想サーバはその上で動く独立した実行環境です。ハイパーバイザはCPU（Central Processing Unit：演算装置）やメモリを割り当て、複数の仮想サーバを動かすソフトウェアです。二つの仮想サーバがあっても、土台のホストが一台なら障害を共有します。",
+          "format": "読む",
+          "theme": "ホストと仮想サーバ",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "virtual-basics-3",
+          "type": "quiz",
+          "title": "AP0aとAP0bを同じ物理ホストに置いた。ホストの電源が切れるとどうなるか。",
+          "choices": [
+            {
+              "text": "両方のAP仮想サーバが停止する",
+              "ok": true,
+              "explain": "論理的に二台でも実行基盤は同じです。"
+            },
+            {
+              "text": "片方が別の物理ホストへ必ず自動移動する",
+              "ok": false,
+              "explain": "自動移動の仕組みは条件にありません。"
+            },
+            {
+              "text": "仮想サーバには電源が不要なので動く",
+              "ok": false,
+              "explain": "仮想サーバも物理資源が必要です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "AP0aとAP0bを同じ物理ホストに置いた。ホストの電源が切れるとどうなるか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "virtual-basics-4",
+          "type": "info",
+          "title": "利用者に見せる一つの接続先",
+          "body": "IP（Internet Protocol）のアドレスは通信先を表します。VRRP（Virtual Router Redundancy Protocol）はマスタが一つの仮想IPを担当し、バックアップが引き継ぐ仕組みです。DNS（Domain Name System）のAレコードでFQDN（Fully Qualified Domain Name：完全修飾ドメイン名）をIPv4アドレスへ対応させます。",
+          "format": "読む",
+          "theme": "利用者に見せる一つの接続先",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "virtual-basics-5",
+          "type": "quiz",
+          "title": "練習用の条件：二台を交代させても利用者の接続先を変えたくない。DNSに登録するのはどれか。",
+          "choices": [
+            {
+              "text": "利用者PCのIP",
+              "ok": false,
+              "explain": "APの接続先を表しません。"
+            },
+            {
+              "text": "二台で引き継ぐ仮想IP",
+              "ok": true,
+              "explain": "担当機器が変わっても利用者の接続先は同じです。"
+            },
+            {
+              "text": "現在のマスタだけが持つ個別IP",
+              "ok": false,
+              "explain": "その機器が停止すると同じ宛先では継続できません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：二台を交代させても利用者の接続先を変えたくない。DNSに登録するのはどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        }
+      ]
+    },
+    {
+      "id": "server-vm",
+      "title": "障害単位を分けてVRRPで切り替える",
+      "targets": [
+        "s1-1",
+        "s1-2",
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "障害単位を分けてVRRPで切り替える",
+          "body": "原問はAP0aとAP0bを別のホストへ配置します。各APの二台は同じVRRPグループを構成し、マスタがAdvertisement（アドバタイズメント：周期的な広告）を送信します。VRID（Virtual Router Identifier）は同じLAN（Local Area Network：局所ネットワーク）内のグループを区別する番号です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "構成",
+              "確認"
+            ],
+            "rows": [
+              [
+                "AP0aとAP0b",
+                "異なる物理ホストに配置"
+              ],
+              [
+                "同じAPの二台",
+                "同じVRRPグループ"
+              ],
+              [
+                "別のAP",
+                "別のVRRPグループ"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "server-vm-1",
+          "format": "読む",
+          "theme": "障害単位を分けてVRRPで切り替える",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "冗長な二台を同じホストへ収容した場合の問題はどれか。",
+          "choices": [
+            {
+              "text": "VRRPの仮想IPが二倍になる",
+              "ok": false,
+              "explain": "収容先だけでは仮想IP数は変わりません。"
+            },
+            {
+              "text": "DNSが必ず外部向けになる",
+              "ok": false,
+              "explain": "仮想化配置とDNS公開範囲は別です。"
+            },
+            {
+              "text": "ホスト停止で二台とも停止する",
+              "ok": true,
+              "explain": "物理ホストが共通障害点になります。"
+            }
+          ],
+          "id": "server-vm-2",
+          "format": "選択",
+          "theme": "障害単位を分けてVRRPで切り替える",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "バックアップがマスタ停止を判断する条件はどれか。",
+          "choices": [
+            {
+              "text": "DNS TTLが0になる",
+              "ok": false,
+              "explain": "VRRPの受信判定とは別です。"
+            },
+            {
+              "text": "決められた時間内にAdvertisementを受信しない",
+              "ok": true,
+              "explain": "周期メッセージの欠落で判断します。"
+            },
+            {
+              "text": "一度でもHTTP 404を受ける",
+              "ok": false,
+              "explain": "VRRPの死活判定ではありません。"
+            }
+          ],
+          "id": "server-vm-3",
+          "format": "選択",
+          "theme": "障害単位を分けてVRRPで切り替える",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "server-vm-7",
+          "type": "info",
+          "title": "VRIDの範囲を数える",
+          "body": "VRRPv3のVRIDは8ビットですが、使える値は1〜255です。0はグループに使えないので、同じLAN上で識別できる仮想ルータの組は255組です。ネットワーク全体のサーバ台数の上限ではありません。",
+          "format": "読む",
+          "theme": "VRIDの範囲を数える",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "server-vm-8",
+          "type": "quiz",
+          "title": "練習用の条件：同じLANでAP0とAP1を別のVRRPグループとして動かす。VRIDの割当てはどれか。",
+          "choices": [
+            {
+              "text": "全て10にする",
+              "ok": false,
+              "explain": "同じLANで別のAPをグループ識別できません。"
+            },
+            {
+              "text": "AP0aは10、AP0bは11にする",
+              "ok": false,
+              "explain": "同じAPの冗長ペアを別グループにしてしまいます。"
+            },
+            {
+              "text": "AP0の二台は10、AP1の二台は11",
+              "ok": true,
+              "explain": "同じ組で一致させ、別の組とは区別します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：同じLANでAP0とAP1を別のVRRPグループとして動かす。VRIDの割当てはどれか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "server-vm-9",
+          "type": "quiz",
+          "title": "VRIDは8ビットで256通りあり、0を使えない。同じLANで構成できる組数を選ぶ。",
+          "choices": [
+            {
+              "text": "8×2＝16",
+              "ok": false,
+              "explain": "8ビットの組合せ数は2の8乗です。"
+            },
+            {
+              "text": "256−1＝255",
+              "ok": true,
+              "explain": "1〜255の255種類です。"
+            },
+            {
+              "text": "256−2＝254",
+              "ok": false,
+              "explain": "IPサブネットのホスト数の計算と混同しています。"
+            }
+          ],
+          "format": "選択",
+          "theme": "VRIDは8ビットで256通りあり、0を使えない。同じLANで構成できる組数を選ぶ。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "type": "blank",
+          "title": "原文ア〜エを埋める",
+          "template": "仮想化ソフトは{a}。APごとの識別子は{b}。同一LANでは最大{c}組を識別し、FQDNと仮想IPv4アドレスは{d}レコードで対応させる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ア",
+              "choices": [
+                {
+                  "text": "ハイパーバイザ",
+                  "ok": true,
+                  "explain": "物理ホスト上で仮想サーバを動かします。"
+                },
+                {
+                  "text": "リバースプロキシ",
+                  "ok": false,
+                  "explain": "HTTPを中継する装置です。"
+                },
+                {
+                  "text": "NAPT",
+                  "ok": false,
+                  "explain": "アドレスとポートを変換します。"
+                }
+              ],
+              "why": "物理ホスト上で仮想サーバを動かします。"
+            },
+            {
+              "key": "b",
+              "label": "イ",
+              "choices": [
+                {
+                  "text": "VRID",
+                  "ok": true,
+                  "explain": "仮想ルータを識別します。"
+                },
+                {
+                  "text": "TTL",
+                  "ok": false,
+                  "explain": "DNSキャッシュ時間です。"
+                },
+                {
+                  "text": "VLAN IDだけ",
+                  "ok": false,
+                  "explain": "この空欄はVRRPの識別子です。"
+                }
+              ],
+              "why": "仮想ルータを識別します。"
+            },
+            {
+              "key": "c",
+              "label": "ウ",
+              "choices": [
+                {
+                  "text": "255",
+                  "ok": true,
+                  "explain": "VRIDの値域から構成可能な数です。"
+                },
+                {
+                  "text": "254",
+                  "ok": false,
+                  "explain": "ホスト用アドレス数と混同しています。"
+                },
+                {
+                  "text": "4094",
+                  "ok": false,
+                  "explain": "VLAN IDの範囲と混同しています。"
+                }
+              ],
+              "why": "VRIDの値域から構成可能な数です。"
+            },
+            {
+              "key": "d",
+              "label": "エ",
+              "choices": [
+                {
+                  "text": "A",
+                  "ok": true,
+                  "explain": "FQDNをIPv4アドレスへ対応させます。"
+                },
+                {
+                  "text": "MX",
+                  "ok": false,
+                  "explain": "メール配送先です。"
+                },
+                {
+                  "text": "SRV",
+                  "ok": false,
+                  "explain": "サービスのホストとポートを示します。"
+                }
+              ],
+              "why": "FQDNをIPv4アドレスへ対応させます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.05,
+            "bottom": 0.91,
+            "label": "原文：サーバ仮想化とVRRP"
+          },
+          "id": "server-vm-4",
+          "format": "穴埋め",
+          "theme": "障害単位を分けてVRRPで切り替える",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "マスタ停止から切替えまでを並べる",
+          "lead": "バックアップ側の観測から考えます。",
+          "lines": [
+            {
+              "code": "マスタがAdvertisementを周期送信する"
+            },
+            {
+              "code": "マスタ停止で送信が途絶える"
+            },
+            {
+              "code": "バックアップが決められた時間内に受信できない"
+            },
+            {
+              "code": "バックアップがマスタへ切り替わる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "停止そのものではなくメッセージ欠落を観測します。",
+          "ngExplain": "HTTP応答やDNS応答でVRRPを直接判定しません。",
+          "id": "server-vm-5",
+          "format": "並べ替え",
+          "theme": "障害単位を分けてVRRPで切り替える",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "二台を別ホストへ置いたが同じ電源系統だけに接続した。残る課題はどれか。",
+          "choices": [
+            {
+              "text": "Aレコードが必ず消える",
+              "ok": false,
+              "explain": "電源系統だけでDNS設定は消えません。"
+            },
+            {
+              "text": "電源系統が共通障害点になる",
+              "ok": true,
+              "explain": "障害単位をさらに分ける必要があります。"
+            },
+            {
+              "text": "VRIDが必ず重複する",
+              "ok": false,
+              "explain": "電源配置はVRIDを変えません。"
+            }
+          ],
+          "id": "server-vm-6",
+          "format": "選択",
+          "theme": "障害単位を分けてVRRPで切り替える",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "container-basics",
+      "title": "コンテナの内側と外側を分けて考える",
+      "targets": [
+        "s2-1",
+        "s2-3",
+        "s2-4"
+      ],
+      "steps": [
+        {
+          "id": "container-basics-1",
+          "type": "info",
+          "title": "コンテナはOSを共有する実行環境",
+          "body": "OS（Operating System：基本ソフトウェア）を各仮想サーバで動かす方式に対し、コンテナはホストのOSカーネルを共有しながらAPの実行環境を分離します。原問ではNIC（Network Interface Card：ネットワーク接続部）につながる仮想ルータと、コンテナを接続する仮想ブリッジを使います。",
+          "format": "読む",
+          "theme": "コンテナはOSを共有する実行環境",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "container-basics-2",
+          "type": "info",
+          "title": "機器の宛先と処理の宛先",
+          "body": "TCP（Transmission Control Protocol）とUDP（User Datagram Protocol）はポート番号で相手側の処理を区別します。HTTP（Hypertext Transfer Protocol）はWeb要求と応答の規約です。WebAPコンテナは内部の80番で待ち受け、外からはコンテナサーバの公開された転送用ポートへ接続させます。",
+          "format": "読む",
+          "theme": "機器の宛先と処理の宛先",
+          "scaffold": 5,
+          "stage": "concept",
+          "fig": {
+            "kind": "header",
+            "unit": 32,
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "送信元ポート",
+                    "bits": 16
+                  },
+                  {
+                    "t": "宛先ポート",
+                    "bits": 16
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：TCPヘッダ先頭32ビット"
+          }
+        },
+        {
+          "id": "container-basics-3",
+          "type": "info",
+          "title": "外向き変換と着信の転送",
+          "body": "NAPT（Network Address Port Translation）はIPアドレスとポートを変換します。本問の外向き通信では内部の送信元をコンテナサーバ側の値へ変えます。ポートフォワードは外部から特定ポートへ届いた通信を、決めた内部IP・ポートへ転送します。",
+          "format": "読む",
+          "theme": "外向き変換と着信の転送",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "container-basics-4",
+          "type": "quiz",
+          "title": "練習用の条件：内部172.16.0.16:80へ届ける規則は、外部192.168.0.112:8000。外部PCが最初に指定する宛先はどれか。",
+          "choices": [
+            {
+              "text": "192.168.0.112:8000",
+              "ok": true,
+              "explain": "外部に示された入口へ接続し、その後で内部宛先へ変換します。"
+            },
+            {
+              "text": "172.16.0.16:80",
+              "ok": false,
+              "explain": "この構成では外部から内部IPへ直接到達しません。"
+            },
+            {
+              "text": "192.168.0.112:80",
+              "ok": false,
+              "explain": "外部側の転送用ポートは8000という条件です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：内部172.16.0.16:80へ届ける規則は、外部192.168.0.112:8000。外部PCが最初に指定する宛先はどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "id": "container-basics-5",
+          "type": "quiz",
+          "title": "別ホストの分離された内部網でも172.16.0.16を使う。外側の入口IPは別々。衝突しないための条件はどれか。",
+          "choices": [
+            {
+              "text": "内部網を同じブリッジへ直結する",
+              "ok": false,
+              "explain": "同じ領域で同じIPを使うと重複します。"
+            },
+            {
+              "text": "同じIPなら通信も自動的に同じAPになる",
+              "ok": false,
+              "explain": "アドレスを使う領域が違えば別のAPです。"
+            },
+            {
+              "text": "内部網同士を直結せず、外部とは各ホストの変換を介す",
+              "ok": true,
+              "explain": "外部から見える入口を区別し、重複した内部IPの領域を分離します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "別ホストの分離された内部網でも172.16.0.16を使う。外側の入口IPは別々。衝突しないための条件はどれか。",
+          "scaffold": 4,
+          "stage": "reason",
+          "fig": {
+            "kind": "topo",
+            "height": 250,
+            "nodes": [
+              {
+                "id": "outside",
+                "x": 170,
+                "y": 25,
+                "label": "外部PC",
+                "icon": "pc"
+              },
+              {
+                "id": "hosta",
+                "x": 80,
+                "y": 101,
+                "label": "サーバa",
+                "sub": ".112",
+                "icon": "router"
+              },
+              {
+                "id": "hostb",
+                "x": 260,
+                "y": 101,
+                "label": "サーバb",
+                "sub": ".113",
+                "icon": "router"
+              },
+              {
+                "id": "appa",
+                "x": 80,
+                "y": 191,
+                "label": "内部AP0a",
+                "sub": "172.16.0.16",
+                "icon": "server"
+              },
+              {
+                "id": "appb",
+                "x": 260,
+                "y": 191,
+                "label": "内部AP0b",
+                "sub": "172.16.0.16",
+                "icon": "server"
+              }
+            ],
+            "links": [
+              {
+                "from": "outside",
+                "to": "hosta"
+              },
+              {
+                "from": "outside",
+                "to": "hostb"
+              },
+              {
+                "from": "hosta",
+                "to": "appa"
+              },
+              {
+                "from": "hostb",
+                "to": "appb"
+              }
+            ],
+            "caption": "説明用：別々の内部領域（省略IPは192.168.0.x）"
+          }
+        },
+        {
+          "id": "container-basics-6",
+          "type": "blank",
+          "title": "内部IPを再利用できる理由を組み立てる",
+          "template": "各仮想ブリッジは{isolation}され、外部との通信では{translation}ので内部IPを共用できる。",
+          "blanks": [
+            {
+              "key": "isolation",
+              "label": "領域",
+              "choices": [
+                {
+                  "text": "分離",
+                  "ok": true,
+                  "explain": "同じネットワークへ直結していません。"
+                },
+                {
+                  "text": "直結",
+                  "ok": false,
+                  "explain": "重複IPが同じ領域に現れます。"
+                }
+              ],
+              "why": "同じネットワークへ直結していません。"
+            },
+            {
+              "key": "translation",
+              "label": "境界の働き",
+              "choices": [
+                {
+                  "text": "NAPTやポートフォワードでアドレスを変換する",
+                  "ok": true,
+                  "explain": "外部側はホストごとの入口で識別します。"
+                },
+                {
+                  "text": "DNSがIPの重複を消す",
+                  "ok": false,
+                  "explain": "名前解決は通信領域の分離やIP変換をしません。"
+                }
+              ],
+              "why": "外部側はホストごとの入口で識別します。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "内部IPを再利用できる理由を組み立てる",
+          "scaffold": 3,
+          "stage": "assemble"
+        }
+      ]
+    },
+    {
+      "id": "web-container",
+      "title": "HTTP要求を共用入口からコンテナへ届ける",
+      "targets": [
+        "s2-1",
+        "s2-2",
+        "s2-3",
+        "s2-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "HTTP要求を共用入口からコンテナへ届ける",
+          "body": "原問のPCは192.168.0.98の共用リバースプロキシへHTTPで接続します。リバースプロキシはサーバ側の入口となり、Hostヘッダに書かれた要求先名でAPを選びます。AP0への要求をコンテナサーバaの8000番へ送り、仮想ルータがAP0aの内部IP・80番へ転送します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "設定",
+              "値"
+            ],
+            "rows": [
+              [
+                "共用入口",
+                "192.168.0.98"
+              ],
+              [
+                "サーバa / b",
+                "192.168.0.112 / .113"
+              ],
+              [
+                "AP0の外部ポート",
+                "8000"
+              ],
+              [
+                "AP1の外部ポート",
+                "8001"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "web-container-1",
+          "format": "読む",
+          "theme": "HTTP要求を共用入口からコンテナへ届ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "別々の仮想ブリッジで同じIPを使える理由はどれか。",
+          "choices": [
+            {
+              "text": "同じL2セグメントだから",
+              "ok": false,
+              "explain": "同じセグメントなら重複IPが衝突します。"
+            },
+            {
+              "text": "DNSが重複を暗号化するから",
+              "ok": false,
+              "explain": "DNSはIP衝突を暗号化しません。"
+            },
+            {
+              "text": "外部では内部IPが直接利用されない",
+              "ok": true,
+              "explain": "NAPTとポートフォワードを介します。"
+            }
+          ],
+          "id": "web-container-2",
+          "format": "選択",
+          "theme": "HTTP要求を共用入口からコンテナへ届ける",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "id": "web-container-7",
+          "type": "quiz",
+          "title": "練習用の条件：ap0.u-sha.comとap1.u-sha.comはどちらも192.168.0.98を返す。宛先IPだけでAPを選べるか。",
+          "choices": [
+            {
+              "text": "選べる。共用IPはAPごとに自動で変わる",
+              "ok": false,
+              "explain": "DNSが同じIPを返すという条件と矛盾します。"
+            },
+            {
+              "text": "送信元ポートが80ならAP0と決まる",
+              "ok": false,
+              "explain": "APの識別を送信元ポートで行う条件はありません。"
+            },
+            {
+              "text": "選べない。HTTP要求の接続先名も見る",
+              "ok": true,
+              "explain": "共用IPではネットワーク層の宛先が同じなので、アプリケーション層の識別情報を使います。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：ap0.u-sha.comとap1.u-sha.comはどちらも192.168.0.98を返す。宛先IPだけでAPを選べるか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "quiz",
+          "title": "一つの共用IPで複数WebAPを識別するHTTP情報はどれか。",
+          "choices": [
+            {
+              "text": "イーサネットFCS",
+              "ok": false,
+              "explain": "誤り検出用でAP識別には使いません。"
+            },
+            {
+              "text": "Hostヘッダフィールド",
+              "ok": true,
+              "explain": "要求されたFQDNを示します。"
+            },
+            {
+              "text": "TCPのSYN番号",
+              "ok": false,
+              "explain": "AP名を表しません。"
+            }
+          ],
+          "id": "web-container-3",
+          "format": "選択",
+          "theme": "HTTP要求を共用入口からコンテナへ届ける",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "web-container-8",
+          "type": "quiz",
+          "title": "AP0の振分け先はa:8000/b:8000。aを選び、aは8000→172.16.0.16:80へ転送する。仮想ルータで変わるのはどれか。",
+          "choices": [
+            {
+              "text": "送信元PCのパスワード",
+              "ok": false,
+              "explain": "アドレス変換は利用者のパスワードを処理しません。"
+            },
+            {
+              "text": "宛先IPアドレスと宛先ポート番号",
+              "ok": true,
+              "explain": "外側入口から内部のAP0aへ両方を変換します。"
+            },
+            {
+              "text": "HTTPのHostをaへ書き換えるだけ",
+              "ok": false,
+              "explain": "このポートフォワードの設問で問うのはIPとポートの変換です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "AP0の振分け先はa:8000/b:8000。aを選び、aは8000→172.16.0.16:80へ転送する。仮想ルータで変わるのはどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "id": "web-container-9",
+          "type": "info",
+          "title": "原問解答例の用語を図と照合する",
+          "body": "設問2(1)の公式解答例は「コンテナサーバに付与したIP」と表記しています。ただし原図4ではコンテナサーバの192.168.0.112を外部側でも使っています。本教材では図の構成に従い、「外部で直接使わないのは、分離された仮想ブリッジ内のコンテナIP」と区別して理由を学びます。",
+          "format": "読む",
+          "theme": "原問解答例の用語を図と照合する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "blank",
+          "title": "AP0aまでの宛先変化を埋める",
+          "template": "PCの宛先は{a}:80。プロキシからは192.168.0.112:{b}。変換後は{c}:{d}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "共用入口",
+              "choices": [
+                {
+                  "text": "192.168.0.98",
+                  "ok": true,
+                  "explain": "共用リバースプロキシのIPです。"
+                },
+                {
+                  "text": "192.168.0.112",
+                  "ok": false,
+                  "explain": "コンテナサーバaのIPです。"
+                },
+                {
+                  "text": "172.16.0.16",
+                  "ok": false,
+                  "explain": "内部コンテナのIPです。"
+                }
+              ],
+              "why": "共用リバースプロキシのIPです。"
+            },
+            {
+              "key": "b",
+              "label": "外部ポート",
+              "choices": [
+                {
+                  "text": "8000",
+                  "ok": true,
+                  "explain": "AP0aへの振分け先です。"
+                },
+                {
+                  "text": "80",
+                  "ok": false,
+                  "explain": "変換後の内部ポートです。"
+                },
+                {
+                  "text": "8001",
+                  "ok": false,
+                  "explain": "AP1aへの振分け先です。"
+                }
+              ],
+              "why": "AP0aへの振分け先です。"
+            },
+            {
+              "key": "c",
+              "label": "内部IP",
+              "choices": [
+                {
+                  "text": "172.16.0.16",
+                  "ok": true,
+                  "explain": "AP0aの仮想NICです。"
+                },
+                {
+                  "text": "192.168.0.98",
+                  "ok": false,
+                  "explain": "共用入口です。"
+                },
+                {
+                  "text": "172.16.0.17",
+                  "ok": false,
+                  "explain": "AP1aのIPです。"
+                }
+              ],
+              "why": "AP0aの仮想NICです。"
+            },
+            {
+              "key": "d",
+              "label": "内部ポート",
+              "choices": [
+                {
+                  "text": "80",
+                  "ok": true,
+                  "explain": "WebAPが待ち受けるポートです。"
+                },
+                {
+                  "text": "8000",
+                  "ok": false,
+                  "explain": "外側の転送用ポートです。"
+                },
+                {
+                  "text": "443",
+                  "ok": false,
+                  "explain": "原問のAP0a通信ではありません。"
+                }
+              ],
+              "why": "WebAPが待ち受けるポートです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 18,
+            "top": 0.04,
+            "bottom": 0.92,
+            "label": "原表4と通信手順：AP0aへの振分け"
+          },
+          "id": "web-container-4",
+          "format": "穴埋め",
+          "theme": "HTTP要求を共用入口からコンテナへ届ける",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "PCからAP0aまでの変換を並べる",
+          "lead": "三つの観測点で宛先が変わります。",
+          "lines": [
+            {
+              "code": "DNSでap0の接続先192.168.0.98を得る"
+            },
+            {
+              "code": "Hostにap0.u-sha.comを指定して192.168.0.98:80へ送る"
+            },
+            {
+              "code": "プロキシが192.168.0.112:8000へ送る"
+            },
+            {
+              "code": "仮想ルータが172.16.0.16:80へ変換する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "共用入口、物理コンテナサーバ、内部コンテナの順です。",
+          "ngExplain": "プロキシと仮想ルータで二段階の宛先決定があります。",
+          "id": "web-container-5",
+          "format": "並べ替え",
+          "theme": "HTTP要求を共用入口からコンテナへ届ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "AP1へ要求した場合、変わる判断材料はどれか。",
+          "choices": [
+            {
+              "text": "共用DBの容量だけ",
+              "ok": false,
+              "explain": "HTTP振分け先を決めません。"
+            },
+            {
+              "text": "Hostヘッダと対応する振分けルール",
+              "ok": true,
+              "explain": "同じ共用IPでも要求先名でAPを選びます。"
+            },
+            {
+              "text": "PCの送信元MACだけ",
+              "ok": false,
+              "explain": "AP名の識別には使いません。"
+            }
+          ],
+          "id": "web-container-6",
+          "format": "選択",
+          "theme": "HTTP要求を共用入口からコンテナへ届ける",
+          "scaffold": 3,
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 19,
+            "top": 0.04,
+            "bottom": 0.58,
+            "label": "原図4：三地点のパケット値"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dedicated",
+      "title": "専用プロトコルをコンテナへ移す条件を洗い出す",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "専用プロトコルをコンテナへ移す条件を洗い出す",
+          "body": "専用APはHTTP以外の独自プロトコルを使います。外部ホストやDB（Database：データベース）との通信で、外向きのNAPTと着信のポートフォワードを両方確認します。HTTPのHostヘッダを使えない場合、同じポートの別APは別の宛先IPでも区別できる負荷分散装置が必要です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "確認項目",
+              "理由"
+            ],
+            "rows": [
+              [
+                "NAPT機能",
+                "送信元変換が独自通信へ与える影響"
+              ],
+              [
+                "ポートフォワード機能",
+                "着信の宛先変換が与える影響"
+              ],
+              [
+                "複数IPアドレス",
+                "同じポートのAPをIP別に識別"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "dedicated-1",
+          "format": "読む",
+          "theme": "専用プロトコルをコンテナへ移す条件を洗い出す",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "dedicated-7",
+          "type": "quiz",
+          "title": "練習用の条件：APがデータベースへ発信できることだけを確認した。まだ不足する試験はどれか。",
+          "choices": [
+            {
+              "text": "外向き試験を同じ条件でもう一度だけ行う",
+              "ok": false,
+              "explain": "まだ試していない着信方向を補えません。"
+            },
+            {
+              "text": "外部PCからの着信も、ポートフォワードを介して動作するか",
+              "ok": true,
+              "explain": "外向き成功だけでは着信の変換と独自プロトコルの相性を確かめられません。"
+            },
+            {
+              "text": "APのアイコンが正しい色か",
+              "ok": false,
+              "explain": "通信機能の確認にはなりません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：APがデータベースへ発信できることだけを確認した。まだ不足する試験はどれか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "quiz",
+          "title": "専用APごとに動作確認する二つのネットワーク機能はどれか。",
+          "choices": [
+            {
+              "text": "DNSとDHCP",
+              "ok": false,
+              "explain": "原文が挙げる仮想ルータ機能ではありません。"
+            },
+            {
+              "text": "VRRPとOSPF",
+              "ok": false,
+              "explain": "冗長化と経路制御であり変換機能ではありません。"
+            },
+            {
+              "text": "NAPTとポートフォワード",
+              "ok": true,
+              "explain": "外向きと着信の変換を確認します。"
+            }
+          ],
+          "id": "dedicated-2",
+          "format": "選択",
+          "theme": "専用プロトコルをコンテナへ移す条件を洗い出す",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "同じTCP 5000番を使う二つのAPを負荷分散装置で区別する方法はどれか。",
+          "choices": [
+            {
+              "text": "二つのAPを同じIPと同じポートにする",
+              "ok": false,
+              "explain": "入口だけでは振分け先を区別できません。"
+            },
+            {
+              "text": "複数IPを設定しIPごとにAPを対応させる",
+              "ok": true,
+              "explain": "IPとポートの組を別にできます。"
+            },
+            {
+              "text": "送信元ポートを必ず同じにする",
+              "ok": false,
+              "explain": "識別条件がさらに重なります。"
+            }
+          ],
+          "id": "dedicated-3",
+          "format": "選択",
+          "theme": "専用プロトコルをコンテナへ移す条件を洗い出す",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "dedicated-8",
+          "type": "quiz",
+          "title": "練習用の条件：AP0とAP1は共にTCP 5000固定で、Hostのような名前情報はない。宛先だけで区別する入口はどれか。",
+          "choices": [
+            {
+              "text": "AP0は192.168.0.120:5000、AP1は192.168.0.121:5000",
+              "ok": true,
+              "explain": "ポートが同じでもIPが違えばAPごとに対応する規則を選べます。"
+            },
+            {
+              "text": "両方192.168.0.120:5000",
+              "ok": false,
+              "explain": "宛先のIP・ポートが両方同じで区別できません。"
+            },
+            {
+              "text": "両方のDNS名を同じIPへ対応させるだけ",
+              "ok": false,
+              "explain": "HTTPのような要求先名が送られないのでDNS名の違いだけでは区別できません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：AP0とAP1は共にTCP 5000固定で、Hostのような名前情報はない。宛先だけで区別する入口はどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "type": "blank",
+          "title": "移行条件を二段で組み立てる",
+          "template": "仮想ルータでは{a}と{b}を確認する。負荷分散装置には{c}を設定し、IPごとに専用APを識別する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "外向き",
+              "choices": [
+                {
+                  "text": "NAPT機能",
+                  "ok": true,
+                  "explain": "外部通信の送信元を変換します。"
+                },
+                {
+                  "text": "ping監視",
+                  "ok": false,
+                  "explain": "監視種別です。"
+                },
+                {
+                  "text": "VRID",
+                  "ok": false,
+                  "explain": "仮想ルータ識別子です。"
+                }
+              ],
+              "why": "外部通信の送信元を変換します。"
+            },
+            {
+              "key": "b",
+              "label": "着信",
+              "choices": [
+                {
+                  "text": "ポートフォワード機能",
+                  "ok": true,
+                  "explain": "外部のIP・ポートを内部へ転送します。"
+                },
+                {
+                  "text": "Aレコード",
+                  "ok": false,
+                  "explain": "DNSの対応情報です。"
+                },
+                {
+                  "text": "ハイパーバイザ",
+                  "ok": false,
+                  "explain": "仮想サーバを動かします。"
+                }
+              ],
+              "why": "外部のIP・ポートを内部へ転送します。"
+            },
+            {
+              "key": "c",
+              "label": "識別方法",
+              "choices": [
+                {
+                  "text": "複数のIPアドレス",
+                  "ok": true,
+                  "explain": "同じポートでも宛先IPで分けます。"
+                },
+                {
+                  "text": "一つの共通MACだけ",
+                  "ok": false,
+                  "explain": "L3/L4の入口識別になりません。"
+                },
+                {
+                  "text": "全AP同一のIPだけ",
+                  "ok": false,
+                  "explain": "同じポートのAPを区別できません。"
+                }
+              ],
+              "why": "同じポートでも宛先IPで分けます。"
+            }
+          ],
+          "id": "dedicated-4",
+          "format": "穴埋め",
+          "theme": "専用プロトコルをコンテナへ移す条件を洗い出す",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "専用APの移行可否を確かめる",
+          "lead": "確認項目を整理してから両方向を試し、最後に入口の識別方法を確認します。外向きと着信の試験順はどちらでも構いません。",
+          "lines": [
+            {
+              "code": "独自プロトコルの接続とポート利用を調べる"
+            },
+            {
+              "code": "NAPT後も外向き通信が成立するか試す"
+            },
+            {
+              "code": "ポートフォワード後も着信が成立するか試す"
+            },
+            {
+              "code": "同じポートを使うAPは別IPで識別する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ],
+            [
+              0,
+              2,
+              1,
+              3
+            ]
+          ],
+          "okExplain": "WebAPのHTTP前提をそのまま適用しません。",
+          "ngExplain": "独自プロトコルは変換でデータ内のアドレス情報がずれる場合もあります。",
+          "originalExcerpt": {
+            "page": 19,
+            "top": 0.57,
+            "bottom": 0.93,
+            "label": "原文：専用APの移行懸念"
+          },
+          "id": "dedicated-5",
+          "format": "並べ替え",
+          "theme": "専用プロトコルをコンテナへ移す条件を洗い出す",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "独自プロトコルがデータ内に自分のIPを含める。NAPT後に起こり得ることはどれか。",
+          "choices": [
+            {
+              "text": "VRRPのVRIDが増える",
+              "ok": false,
+              "explain": "アドレス変換とVRIDは別です。"
+            },
+            {
+              "text": "データ内IPと外側IPが食い違い、通信が失敗する",
+              "ok": true,
+              "explain": "ヘッダだけの変換ではアプリ内情報が残ります。"
+            },
+            {
+              "text": "必ずHTTPへ自動変換される",
+              "ok": false,
+              "explain": "NAPTはアプリプロトコル変換ではありません。"
+            }
+          ],
+          "id": "dedicated-6",
+          "format": "選択",
+          "theme": "専用プロトコルをコンテナへ移す条件を洗い出す",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "monitor-basics",
+      "title": "届く・接続できる・処理できるを分ける",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "monitor-basics-1",
+          "type": "info",
+          "title": "pingはアプリの成功を確かめない",
+          "body": "ICMP（Internet Control Message Protocol）はIP通信の制御メッセージです。pingはエコー要求を送り、エコー応答が返るか確認します。コンテナサーバが返答しても、その上で動くWebAPが正常とは限りません。",
+          "format": "読む",
+          "theme": "pingはアプリの成功を確かめない",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "monitor-basics-2",
+          "type": "quiz",
+          "title": "コンテナサーバのping成功だけで、AP0aがWebページを返せると判断できるか。",
+          "choices": [
+            {
+              "text": "できない。応答したのはホストのIP通信機能",
+              "ok": true,
+              "explain": "アプリまで調べるには上位層の監視が必要です。"
+            },
+            {
+              "text": "できる。pingはWebページを取得する",
+              "ok": false,
+              "explain": "pingはHTTPのリソースを取得しません。"
+            },
+            {
+              "text": "できる。ホストが生きていれば全コンテナも正常",
+              "ok": false,
+              "explain": "アプリの停止や設定誤りは別に起こり得ます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "コンテナサーバのping成功だけで、AP0aがWebページを返せると判断できるか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "monitor-basics-3",
+          "type": "info",
+          "title": "TCPとHTTPで一段ずつ確かめる",
+          "body": "SYN（Synchronize）はTCP接続開始、ACK（Acknowledgment）は確認応答のフラグです。本問のTCP監視はSYNへのSYN/ACKを待ちます。URL（Uniform Resource Locator）監視は、HTTPのGETメソッドで指定リソースを要求し、一定時間内に取得できるかを調べます。",
+          "format": "読む",
+          "theme": "TCPとHTTPで一段ずつ確かめる",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "monitor-basics-4",
+          "type": "quiz",
+          "title": "原問のTCP接続監視でSYNを送った。成功判定で待つ応答はどれか。",
+          "choices": [
+            {
+              "text": "HTTPのGET",
+              "ok": false,
+              "explain": "GETはリソースを求める要求でありTCP応答ではありません。"
+            },
+            {
+              "text": "SYN/ACK",
+              "ok": true,
+              "explain": "接続開始へのTCP応答です。HTTPアプリの正常性までは保証しません。"
+            },
+            {
+              "text": "ICMPエコー応答",
+              "ok": false,
+              "explain": "pingに対する応答です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "原問のTCP接続監視でSYNを送った。成功判定で待つ応答はどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "id": "monitor-basics-5",
+          "type": "quiz",
+          "title": "原問のURL接続監視でindex.htmlを取得したい。送信するHTTPメソッドはどれか。",
+          "choices": [
+            {
+              "text": "GET",
+              "ok": true,
+              "explain": "リソースを要求し、その取得成否を確かめます。"
+            },
+            {
+              "text": "SYN/ACK",
+              "ok": false,
+              "explain": "TCPのフラグでありHTTPメソッドではありません。"
+            },
+            {
+              "text": "エコー要求",
+              "ok": false,
+              "explain": "ICMPのメッセージでありWebリソースを取得しません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "原問のURL接続監視でindex.htmlを取得したい。送信するHTTPメソッドはどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        }
+      ]
+    },
+    {
+      "id": "monitor",
+      "title": "監視結果の組から障害箇所を絞る",
+      "targets": [
+        "s4-1",
+        "s4-2",
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "監視結果の組から障害箇所を絞る",
+          "body": "原表5の番号は、2＝サーバaのping、4＝aの8000番へのTCP接続、7＝aの8000番でのURL接続です。1/6は共用リバースプロキシ、3/5/8はサーバb側を調べます。正常な結果も比較し、障害範囲を推測します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "項番",
+              "監視する対象",
+              "種別"
+            ],
+            "rows": [
+              [
+                "1 / 6",
+                "共用入口",
+                "ping / URL"
+              ],
+              [
+                "2",
+                "サーバa",
+                "ping"
+              ],
+              [
+                "3",
+                "サーバb",
+                "ping"
+              ],
+              [
+                "4 / 7",
+                "AP0a（a:8000）",
+                "TCP / URL"
+              ],
+              [
+                "5 / 8",
+                "AP0b（b:8000）",
+                "TCP / URL"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "monitor-1",
+          "format": "読む",
+          "theme": "監視結果の組から障害箇所を絞る",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "ping監視で待つものはどれか。",
+          "choices": [
+            {
+              "text": "TCP SYN/ACK",
+              "ok": false,
+              "explain": "TCP接続監視で待ちます。"
+            },
+            {
+              "text": "HTTP GET",
+              "ok": false,
+              "explain": "URL監視で送る要求です。"
+            },
+            {
+              "text": "ICMPエコー応答",
+              "ok": true,
+              "explain": "エコー要求への応答です。"
+            }
+          ],
+          "id": "monitor-2",
+          "format": "選択",
+          "theme": "監視結果の組から障害箇所を絞る",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "id": "monitor-7",
+          "type": "blank",
+          "title": "原問のキ・ク・ケを要求と応答から選ぶ",
+          "template": "pingはエコー要求に対する{icmp}を待つ。TCP監視はSYNに対する{tcp}を待つ。URL監視は{http}でリソースを要求する。",
+          "blanks": [
+            {
+              "key": "icmp",
+              "label": "キ",
+              "choices": [
+                {
+                  "text": "エコー応答",
+                  "ok": true,
+                  "explain": "ICMP要求への返答です。"
+                },
+                {
+                  "text": "SYN/ACK",
+                  "ok": false,
+                  "explain": "TCPの接続応答です。"
+                }
+              ],
+              "why": "ICMP要求への返答です。"
+            },
+            {
+              "key": "tcp",
+              "label": "ク",
+              "choices": [
+                {
+                  "text": "SYN/ACK",
+                  "ok": true,
+                  "explain": "TCP接続開始に応答します。"
+                },
+                {
+                  "text": "GET",
+                  "ok": false,
+                  "explain": "HTTPの要求です。"
+                }
+              ],
+              "why": "TCP接続開始に応答します。"
+            },
+            {
+              "key": "http",
+              "label": "ケ",
+              "choices": [
+                {
+                  "text": "GET",
+                  "ok": true,
+                  "explain": "リソース取得を要求します。"
+                },
+                {
+                  "text": "エコー応答",
+                  "ok": false,
+                  "explain": "HTTPのメソッドではありません。"
+                }
+              ],
+              "why": "リソース取得を要求します。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "原問のキ・ク・ケを要求と応答から選ぶ",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "原表5の要約：2はaのping、4/7はAP0aのTCP/URL。この3つだけ失敗し、共用入口とb側は正常。原問で想定する障害箇所はどれか。",
+          "choices": [
+            {
+              "text": "共用リバースプロキシ",
+              "ok": false,
+              "explain": "項番1と6は正常です。"
+            },
+            {
+              "text": "コンテナサーバa",
+              "ok": true,
+              "explain": "ホストIP、AP0aのTCP、AP0aのURLが失敗しています。"
+            },
+            {
+              "text": "WebAPコンテナAP0aだけ",
+              "ok": false,
+              "explain": "ホスト自体のping失敗も説明しにくいです。"
+            }
+          ],
+          "id": "monitor-3",
+          "format": "選択",
+          "theme": "監視結果の組から障害箇所を絞る",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "monitor-8",
+          "type": "quiz",
+          "title": "練習用の条件：aのpingは成功、AP0aへのTCPとURLだけ失敗。共用入口とb側は正常。優先して疑う範囲はどれか。",
+          "choices": [
+            {
+              "text": "サーバbの全面停止",
+              "ok": false,
+              "explain": "b側の監視は正常です。"
+            },
+            {
+              "text": "全社のネットワーク断",
+              "ok": false,
+              "explain": "共用入口とbへの通信成功を説明できません。"
+            },
+            {
+              "text": "AP0aまたはそこまでの転送設定",
+              "ok": true,
+              "explain": "ホストは応答するのでAP側に絞ります。原問の想定解はWebAPコンテナ（AP0a）です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：aのpingは成功、AP0aへのTCPとURLだけ失敗。共用入口とb側は正常。優先して疑う範囲はどれか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "二つの障害パターンを区別する",
+          "template": "原表5の2＝aのping、4/7＝AP0aのTCP/URL。他は正常とする。2・4・7失敗なら{a}を、4・7だけ失敗なら{b}を推測する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ホストも失敗",
+              "choices": [
+                {
+                  "text": "コンテナサーバa",
+                  "ok": true,
+                  "explain": "ホストとその上のAPへの監視が失敗します。"
+                },
+                {
+                  "text": "コンテナサーバb",
+                  "ok": false,
+                  "explain": "項番3・5・8は正常です。"
+                },
+                {
+                  "text": "共用リバースプロキシ",
+                  "ok": false,
+                  "explain": "項番1・6は正常です。"
+                }
+              ],
+              "why": "ホストとその上のAPへの監視が失敗します。"
+            },
+            {
+              "key": "b",
+              "label": "APだけ失敗",
+              "choices": [
+                {
+                  "text": "WebAPコンテナ（AP0a）",
+                  "ok": true,
+                  "explain": "ホストpingは成功しています。原問はAP0aの障害を想定しますが、実務ではポート転送やフィルタの故障も確認します。"
+                },
+                {
+                  "text": "コンテナサーバa全体",
+                  "ok": false,
+                  "explain": "ホストpingが成功しているため範囲が広すぎます。"
+                },
+                {
+                  "text": "WebAPコンテナ（AP0b）",
+                  "ok": false,
+                  "explain": "項番5・8は正常です。"
+                }
+              ],
+              "why": "ホストpingは成功しています。原問はAP0aの障害を想定しますが、実務ではポート転送やフィルタの故障も確認します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 20,
+            "top": 0.17,
+            "bottom": 0.93,
+            "label": "原表5：監視対象と設定値"
+          },
+          "id": "monitor-4",
+          "format": "穴埋め",
+          "theme": "監視結果の組から障害箇所を絞る",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "監視を下層から順に並べる",
+          "lead": "失敗範囲を狭めます。",
+          "lines": [
+            {
+              "code": "pingでコンテナサーバのIP到達性を見る"
+            },
+            {
+              "code": "TCPでAPの転送ポートを確認する"
+            },
+            {
+              "code": "URLでHTTPリソース取得を確認する"
+            },
+            {
+              "code": "成功と失敗の境界から障害箇所を推測する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "層の異なる監視を組み合わせます。",
+          "ngExplain": "一つの監視だけで全ての機能は確認できません。",
+          "id": "monitor-5",
+          "format": "並べ替え",
+          "theme": "監視結果の組から障害箇所を絞る",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "練習用の条件変更：同じ対象をIPで直接監視し、pingとTCPは成功、URLだけ失敗した。疑う範囲はどれか。",
+          "choices": [
+            {
+              "text": "DNSキャッシュ時間だけ",
+              "ok": false,
+              "explain": "IP直指定のURL監視でも失敗する条件です。"
+            },
+            {
+              "text": "HTTPアプリや要求したリソース",
+              "ok": true,
+              "explain": "IP到達性とポート待受けは確認できています。"
+            },
+            {
+              "text": "物理リンク断だけ",
+              "ok": false,
+              "explain": "リンク断ならpingも失敗しやすいです。"
+            }
+          ],
+          "id": "monitor-6",
+          "format": "選択",
+          "theme": "監視結果の組から障害箇所を絞る",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "migration-basics",
+      "title": "名前の切替えと接続先の切替えを分ける",
+      "targets": [
+        "s5-1",
+        "s5-3",
+        "s5-4"
+      ],
+      "steps": [
+        {
+          "id": "migration-basics-1",
+          "type": "info",
+          "title": "名前は同じまま新しい入口へ",
+          "body": "原問では旧APサーバと新WebAPコンテナを並行稼働し、DNSの対応先IPを新しい共用リバースプロキシへ変更します。hostsファイルは、そのPCだけで名前とIPを対応させる設定です。DNS切替え前でもテストPCだけ先に新環境を利用できます。",
+          "format": "読む",
+          "theme": "名前は同じまま新しい入口へ",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "migration-basics-2",
+          "type": "quiz",
+          "title": "練習用の条件：ap0.u-sha.comでアクセスし、Hostによる振分けも試す。テストPCのhostsへ書く対応はどれか。",
+          "choices": [
+            {
+              "text": "ap0.u-sha.com → 旧APのIP",
+              "ok": false,
+              "explain": "新環境へ切り替わりません。"
+            },
+            {
+              "text": "ap0.u-sha.com → 192.168.0.98",
+              "ok": true,
+              "explain": "名前を保持したまま新しい共用入口へ送るので、プロキシの設定も確認できます。"
+            },
+            {
+              "text": "ap0.u-sha.com → 172.16.0.16",
+              "ok": false,
+              "explain": "内部コンテナを直接指定すると共用入口の試験になりません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：ap0.u-sha.comでアクセスし、Hostによる振分けも試す。テストPCのhostsへ書く対応はどれか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "migration-basics-3",
+          "type": "info",
+          "title": "TTLを下げても古いキャッシュは即座に消えない",
+          "body": "TTL（Time To Live）はDNS応答をキャッシュに保持できる時間です。短くすると次の更新を早められますが、以前取得した長いTTLはそのまま残ります。切替えより十分前に短縮し、旧TTLのキャッシュが失効するのを待つ必要があります。",
+          "format": "読む",
+          "theme": "TTLを下げても古いキャッシュは即座に消えない",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "migration-basics-4",
+          "type": "quiz",
+          "title": "練習用の条件：9時に旧IPをTTL 3600秒で取得。9時10分に権威DNSのTTLを60秒へ変更した。既存キャッシュは直ちに60秒になるか。",
+          "choices": [
+            {
+              "text": "なる。全端末へ新TTLが配信される",
+              "ok": false,
+              "explain": "DNSにそのような一斉更新の仕組みはありません。"
+            },
+            {
+              "text": "古いキャッシュは永久に残る",
+              "ok": false,
+              "explain": "通常は取得したTTLに従って失効します。"
+            },
+            {
+              "text": "ならない。取得済みの旧TTLが残る",
+              "ok": true,
+              "explain": "管理側の変更は各キャッシュへ即時通知されません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：9時に旧IPをTTL 3600秒で取得。9時10分に権威DNSのTTLを60秒へ変更した。既存キャッシュは直ちに60秒になるか。",
+          "scaffold": 2,
+          "stage": "transfer"
+        },
+        {
+          "id": "migration-basics-5",
+          "type": "quiz",
+          "title": "練習用の条件：新環境は二台とも動くが、片方しか振り分けられていない。正常時だけの試験で十分か。",
+          "choices": [
+            {
+              "text": "二台を同時に止めるだけで十分",
+              "ok": false,
+              "explain": "残る一台への切替えを試せません。"
+            },
+            {
+              "text": "不十分。片方ずつ止め、残る側と振分けを確かめる",
+              "ok": true,
+              "explain": "二台の構築と共用プロキシ設定の両方を確かめます。"
+            },
+            {
+              "text": "十分。一度ページが出れば二台とも正常",
+              "ok": false,
+              "explain": "片側に到達していない可能性を除けません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：新環境は二台とも動くが、片方しか振り分けられていない。正常時だけの試験で十分か。",
+          "scaffold": 4,
+          "stage": "reason"
+        }
+      ]
+    },
+    {
+      "id": "migration",
+      "title": "DNS切替え前後を安全に確認する",
+      "targets": [
+        "s5-1",
+        "s5-2",
+        "s5-3",
+        "s5-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "DNS切替え前後を安全に確認する",
+          "body": "原問では切替え前に新コンテナを二台とも構築し、共用プロキシの振分けと監視を設定します。テストPCで、両方正常・aだけ停止・bだけ停止の三パターンを試します。全体のDNS切替え後は旧APサーバへのアクセス消失を確認して停止します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "段階",
+              "確認"
+            ],
+            "rows": [
+              [
+                "事前",
+                "hostsでAPのFQDNを新IPへ対応"
+              ],
+              [
+                "切替え前",
+                "新コンテナ二台とプロキシ設定"
+              ],
+              [
+                "切替え後",
+                "旧APサーバへのアクセスがない"
+              ],
+              [
+                "事前準備",
+                "TTLを短くしてキャッシュ保持時間を短縮"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "migration-1",
+          "format": "読む",
+          "theme": "DNS切替え前後を安全に確認する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "DNS切替え前にテストPCだけ新環境へ向ける設定はどれか。",
+          "choices": [
+            {
+              "text": "デフォルトゲートウェイを旧APにする",
+              "ok": false,
+              "explain": "名前の接続先を新環境へ変えられません。"
+            },
+            {
+              "text": "全社DNSのレコードを先に削除する",
+              "ok": false,
+              "explain": "利用者全体へ影響します。"
+            },
+            {
+              "text": "hostsにAPのFQDNと新IPを記載する",
+              "ok": true,
+              "explain": "全体DNSを変えずに接続先を上書きできます。"
+            }
+          ],
+          "id": "migration-2",
+          "format": "選択",
+          "theme": "DNS切替え前後を安全に確認する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "旧APサーバ停止前に確認する内容はどれか。",
+          "choices": [
+            {
+              "text": "旧APのDNS名が二つあること",
+              "ok": false,
+              "explain": "停止安全性の確認になりません。"
+            },
+            {
+              "text": "PCから旧APサーバへのアクセスがなくなったこと",
+              "ok": true,
+              "explain": "DNSキャッシュが残る利用者を考慮します。"
+            },
+            {
+              "text": "新APのCPUが常に0%であること",
+              "ok": false,
+              "explain": "利用中なら0%とは限りません。"
+            }
+          ],
+          "id": "migration-3",
+          "format": "選択",
+          "theme": "DNS切替え前後を安全に確認する",
+          "scaffold": 4,
+          "stage": "reason",
+          "originalExcerpt": {
+            "page": 22,
+            "top": 0.05,
+            "bottom": 0.92,
+            "label": "原表6：WebAPの移行手順"
+          }
+        },
+        {
+          "id": "migration-7",
+          "type": "quiz",
+          "title": "練習用の条件：DNSは新IPを返すが、旧APサーバにPCからアクセスが残る。停止してよいか。",
+          "choices": [
+            {
+              "text": "新APを削除する",
+              "ok": false,
+              "explain": "並行稼働で旧アクセスの収束を待つ手順と逆です。"
+            },
+            {
+              "text": "まだ停止しない。キャッシュや継続接続の利用を確認する",
+              "ok": true,
+              "explain": "DNSの更新だけでは旧接続が全て消えたとは判断できません。"
+            },
+            {
+              "text": "直ちに停止する。DNSが新IPなら影響はない",
+              "ok": false,
+              "explain": "実際に旧APへアクセスが残るという観測を無視しています。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：DNSは新IPを返すが、旧APサーバにPCからアクセスが残る。停止してよいか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "移行の三つの根拠を埋める",
+          "template": "テストPCの{a}へFQDNと新IPを書く。切替え後は{b}を確認する。TTL短縮でDNSキャッシュの{c}が短くなる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "事前テスト",
+              "choices": [
+                {
+                  "text": "hostsファイル",
+                  "ok": true,
+                  "explain": "PC単位で名前解決を上書きします。"
+                },
+                {
+                  "text": "ARPキャッシュ",
+                  "ok": false,
+                  "explain": "FQDNとIPの固定対応は書きません。"
+                },
+                {
+                  "text": "ルーティングテーブル",
+                  "ok": false,
+                  "explain": "名前解決の対応情報ではありません。"
+                }
+              ],
+              "why": "PC単位で名前解決を上書きします。"
+            },
+            {
+              "key": "b",
+              "label": "停止条件",
+              "choices": [
+                {
+                  "text": "旧APサーバへのアクセスがないこと",
+                  "ok": true,
+                  "explain": "残存利用者がいないことを確かめます。"
+                },
+                {
+                  "text": "新APへのアクセスが一件もないこと",
+                  "ok": false,
+                  "explain": "移行後は新APへアクセスされます。"
+                },
+                {
+                  "text": "DNS問合せが永久にないこと",
+                  "ok": false,
+                  "explain": "キャッシュ更新時には問合せが起こります。"
+                }
+              ],
+              "why": "残存利用者がいないことを確かめます。"
+            },
+            {
+              "key": "c",
+              "label": "変化",
+              "choices": [
+                {
+                  "text": "保持する時間",
+                  "ok": true,
+                  "explain": "TTLはTime To Liveです。"
+                },
+                {
+                  "text": "IPアドレスの桁数",
+                  "ok": false,
+                  "explain": "TTLでアドレス長は変わりません。"
+                },
+                {
+                  "text": "HTTPポート番号",
+                  "ok": false,
+                  "explain": "TTLでポートは変わりません。"
+                }
+              ],
+              "why": "TTLはTime To Liveです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 22,
+            "top": 0.05,
+            "bottom": 0.92,
+            "label": "原表6と会話：DNS切替えと停止条件"
+          },
+          "id": "migration-4",
+          "format": "穴埋め",
+          "theme": "DNS切替え前後を安全に確認する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "安全な切替えを並べる",
+          "lead": "理解のための移行手順です。二台の片側停止試験と監視登録はDNS切替え前に済ませます。短いTTLが行き渡る待ち時間も考慮します。",
+          "lines": [
+            {
+              "code": "新コンテナ二台と共用プロキシを構築し、新コンテナの監視を登録する"
+            },
+            {
+              "code": "hosts設定したテストPCで正常時と片側ずつ停止した新環境を確認する"
+            },
+            {
+              "code": "事前のTTL短縮と旧TTLの失効待ちを済ませてDNSを切り替える"
+            },
+            {
+              "code": "旧APへのアクセス消失を確認する"
+            },
+            {
+              "code": "旧APの監視を外して停止する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            4,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          ],
+          "okExplain": "準備、限定試験、全体切替え、停止確認の順です。",
+          "ngExplain": "DNS変更直後に旧APを止めるとキャッシュ利用者へ影響します。",
+          "id": "migration-5",
+          "format": "並べ替え",
+          "theme": "DNS切替え前後を安全に確認する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "migration-8",
+          "type": "blank",
+          "title": "三つの停止パターンで確かめる二つの目的",
+          "template": "各APへ到達して動作することから{containers}を確認し、停止した側を外して正常側へ届くことから{proxy}を確認する。",
+          "blanks": [
+            {
+              "key": "containers",
+              "label": "実体の確認",
+              "choices": [
+                {
+                  "text": "共用DBのディスク容量だけ",
+                  "ok": false,
+                  "explain": "今回の停止パターンは容量試験ではありません。"
+                },
+                {
+                  "text": "WebAPコンテナ二台が正しく構築されたこと",
+                  "ok": true,
+                  "explain": "両方のコンテナをそれぞれ動作確認する必要があります。"
+                }
+              ],
+              "why": "両方のコンテナをそれぞれ動作確認する必要があります。"
+            },
+            {
+              "key": "proxy",
+              "label": "入口の確認",
+              "choices": [
+                {
+                  "text": "DNSのTTLだけが正しいこと",
+                  "ok": false,
+                  "explain": "DNS切替え前の限定試験でも確認できる内容です。"
+                },
+                {
+                  "text": "共用リバースプロキシの設定が正しいこと",
+                  "ok": true,
+                  "explain": "振分け先の選択と異常な先の切離しを確かめます。"
+                }
+              ],
+              "why": "振分け先の選択と異常な先の切離しを確かめます。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "三つの停止パターンで確かめる二つの目的",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "migration-9",
+          "type": "quiz",
+          "title": "練習用の条件変更：aが停止したのにプロキシがaへ送り続ける。二台とも単体では正常だった。優先して見直す設定はどれか。",
+          "choices": [
+            {
+              "text": "旧APのDNS名の長さ",
+              "ok": false,
+              "explain": "新APの異常先への振分けは名前の長さでは直りません。"
+            },
+            {
+              "text": "両コンテナの台数を一台に減らす",
+              "ok": false,
+              "explain": "冗長化を失い、問題の設定も直りません。"
+            },
+            {
+              "text": "プロキシのヘルスチェックと振分け先除外",
+              "ok": true,
+              "explain": "停止したAPを検知して外す設定が必要です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件変更：aが停止したのにプロキシがaへ送り続ける。二台とも単体では正常だった。優先して見直す設定はどれか。",
+          "scaffold": 2,
+          "stage": "transfer"
+        },
+        {
+          "type": "quiz",
+          "title": "二台とも正常、一台目停止、二台目停止を試す二つの目的はどれか。",
+          "choices": [
+            {
+              "text": "旧APのディスク容量だけを確認する",
+              "ok": false,
+              "explain": "新構成の可用性確認になりません。"
+            },
+            {
+              "text": "二台の構築と共用プロキシ設定をそれぞれ確認する",
+              "ok": true,
+              "explain": "各実体と振分け・切離しの両方を確かめます。"
+            },
+            {
+              "text": "DNSのTTLとVRIDだけを確認する",
+              "ok": false,
+              "explain": "停止パターンの直接の目的ではありません。"
+            }
+          ],
+          "id": "migration-6",
+          "format": "選択",
+          "theme": "DNS切替え前後を安全に確認する",
+          "scaffold": 3,
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 22,
+            "top": 0.72,
+            "bottom": 0.94,
+            "label": "原文：DNS切替え前の三パターン試験"
+          }
+        }
+      ]
+    }
+  ]
+}

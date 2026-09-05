@@ -1,0 +1,1606 @@
+{
+  "examKey": "2018h30a/pm1/2",
+  "title": "切替中のネットワークでも異常を見逃さない",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "probe",
+      "title": "届くことと正常であることを分ける",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "冗長化と監視",
+          "body": "pingはICMP（Internet Control Message Protocol）のEcho Requestを送り、Echo Replyを受け取る検査です。監視対象へ要求を送るには、対象のIPアドレスが必要です。応答はIP通信の到達性を示しますが、全ポートや全サービスの正常を保証しません。設問1の監視の基礎を学びます。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "mon",
+                "label": "監視サーバ",
+                "icon": "server",
+                "x": 60,
+                "y": 60
+              },
+              {
+                "id": "sw",
+                "label": "管理IP付きSW",
+                "icon": "l2sw",
+                "x": 210,
+                "y": 60
+              },
+              {
+                "id": "pc",
+                "label": "PC",
+                "icon": "pc",
+                "x": 210,
+                "y": 150
+              }
+            ],
+            "links": [
+              {
+                "from": "mon",
+                "to": "sw",
+                "label": "ping"
+              },
+              {
+                "from": "sw",
+                "to": "pc",
+                "label": "別のリンク"
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "pingが送るEcho Requestを規定するプロトコルは？",
+          "choices": [
+            {
+              "text": "ICMP",
+              "ok": true,
+              "explain": "IP通信に関する制御・通知用で、Echo要求と応答も含みます。"
+            },
+            {
+              "text": "HTTP",
+              "ok": false,
+              "explain": "Webの要求と応答のプロトコルです。pingはWeb閲覧ではありません。"
+            },
+            {
+              "text": "STP",
+              "ok": false,
+              "explain": "レイヤ2のループを防ぐ仕組みで、pingのプロトコルではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "監視する相手を特定する",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "冗長化と監視",
+          "template": "監視サーバは{a}を使い、対象機器の{b}へEcho Requestを送る。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "プロトコル",
+              "why": "pingの要求の種類を考えます。",
+              "choices": [
+                {
+                  "text": "TCP",
+                  "ok": false,
+                  "explain": "pingはTCPコネクションを張る検査ではありません。"
+                },
+                {
+                  "text": "ICMP",
+                  "ok": true,
+                  "explain": "Echo Request/Replyを使います。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "宛先",
+              "why": "IPネットワーク越しに届く宛先が必要です。",
+              "choices": [
+                {
+                  "text": "IPアドレス",
+                  "ok": true,
+                  "explain": "監視対象の管理用IPアドレスなどを指定します。"
+                },
+                {
+                  "text": "利用者ID",
+                  "ok": false,
+                  "explain": "認証用の識別情報でありIPパケットの宛先ではありません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "スイッチにping応答があるのに、一部PCが孤立していることがあるのはなぜ？",
+          "choices": [
+            {
+              "text": "管理IPまでの経路と、PCの接続ケーブルは別だから",
+              "ok": true,
+              "explain": "スイッチ本体へ届いても、末端ポートやケーブルの全正常は分かりません。"
+            },
+            {
+              "text": "ping応答は必ず偽造だから",
+              "ok": false,
+              "explain": "偽造を仮定しなくても監視範囲の違いで説明できます。"
+            },
+            {
+              "text": "ICMPは必ず全ポートを検査するから",
+              "ok": false,
+              "explain": "Echoの到達性検査は全ポートのリンク監視ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "練習用の変更条件：管理用IPを設定していないL2スイッチを、別サブネットからping監視したい。必要なのは？",
+          "choices": [
+            {
+              "text": "利用者全員に同じIDを配布",
+              "ok": false,
+              "explain": "pingの宛先を作る設定ではありません。"
+            },
+            {
+              "text": "ケーブル名をDNSに登録するだけ",
+              "ok": false,
+              "explain": "実際に応答する管理IPなしでは対象にEcho要求を送れません。"
+            },
+            {
+              "text": "到達可能な管理用IPアドレスの設定",
+              "ok": true,
+              "explain": "管理通信の宛先が必要です。L2転送自体とは別の設定です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "冗長化と監視",
+          "lead": "ping監視の前提と限界をつなぐ。",
+          "lines": [
+            {
+              "code": "監視対象にIPアドレスを割り当て、"
+            },
+            {
+              "code": "ICMPのEcho要求と応答で到達性を確認するが、"
+            },
+            {
+              "code": "それだけで全ポートのリンク正常とは判断しない。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "IP到達性とポート状態の監視は補完し合います。",
+          "ngExplain": "応答が保証する範囲を広げすぎないようにします。"
+        }
+      ]
+    },
+    {
+      "id": "gateway",
+      "title": "出口のIPを変えずに交代する",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "冗長化と監視",
+          "body": "別ネットワークへ送るとき、PCはデフォルトゲートウェイへパケットを渡します。VRRP（Virtual Router Redundancy Protocol）は、その出口を仮想ルータとして冗長化する仕組みです。バックアップはマスタのVRRPアドバタイズメントを監視します。設問2では端末から見た出口と、交代を判断するメッセージを区別します。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "pc",
+                "label": "PC",
+                "icon": "pc",
+                "x": 50,
+                "y": 85
+              },
+              {
+                "id": "one",
+                "label": "マスタ",
+                "icon": "l3sw",
+                "x": 190,
+                "y": 45
+              },
+              {
+                "id": "two",
+                "label": "待機側",
+                "icon": "l3sw",
+                "x": 190,
+                "y": 140
+              }
+            ],
+            "links": [
+              {
+                "from": "pc",
+                "to": "one",
+                "label": "仮想の出口"
+              },
+              {
+                "from": "one",
+                "to": "two",
+                "label": "VRRP"
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "PCの設定を変更せず出口装置の故障に対応したい。VRRPで冗長化する対象は？",
+          "choices": [
+            {
+              "text": "全PCのMACアドレス",
+              "ok": false,
+              "explain": "端末のアドレスを同じにする方式ではありません。"
+            },
+            {
+              "text": "デフォルトゲートウェイ",
+              "ok": true,
+              "explain": "端末が設定した仮想の出口IPを引き継ぎます。"
+            },
+            {
+              "text": "DNSの検索結果",
+              "ok": false,
+              "explain": "名前解決結果を複製するプロトコルではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "交代の判断材料",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "冗長化と監視",
+          "template": "バックアップは{a}が届かなくなると、規定の待ち時間後に{b}になる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "監視する通知",
+              "why": "STPの通知ではなくVRRPの通知です。",
+              "choices": [
+                {
+                  "text": "VRRPアドバタイズメント",
+                  "ok": true,
+                  "explain": "マスタの存在を知らせるメッセージです。"
+                },
+                {
+                  "text": "BPDU",
+                  "ok": false,
+                  "explain": "スパニングツリーの制御用です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "新しい役割",
+              "why": "同じ仮想の出口を引き継ぎます。",
+              "choices": [
+                {
+                  "text": "DNSサーバ",
+                  "ok": false,
+                  "explain": "故障時に名前解決サーバへ変わるわけではありません。"
+                },
+                {
+                  "text": "マスタルータ",
+                  "ok": true,
+                  "explain": "仮想ルータとして実際の転送を引き受けます。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "端末のデフォルトゲートウェイにマスタの固有IPだけを設定するより、仮想IPを使う理由は？",
+          "choices": [
+            {
+              "text": "サーバのファイル内容を複製できるから",
+              "ok": false,
+              "explain": "VRRPはファイルの同期機能ではありません。"
+            },
+            {
+              "text": "交代しても端末の出口設定を維持できるから",
+              "ok": true,
+              "explain": "物理装置を替えても同じ仮想IPで利用できます。"
+            },
+            {
+              "text": "ケーブルを1本に減らせるから",
+              "ok": false,
+              "explain": "出口IPの継続利用と物理配線数は別です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "練習用の変更条件：コアSW2が最初からマスタ、コアSW1がバックアップ。SW1が監視するのは？",
+          "choices": [
+            {
+              "text": "SW2のVRRPアドバタイズメント",
+              "ok": true,
+              "explain": "機器番号ではなくマスタとバックアップの役割で決まります。"
+            },
+            {
+              "text": "自分のBPDUだけ",
+              "ok": false,
+              "explain": "STPの情報だけではVRRPマスタの存在を判断しません。"
+            },
+            {
+              "text": "PCのWeb応答だけ",
+              "ok": false,
+              "explain": "アプリ応答とVRRPのマスタ監視は別です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "冗長化と監視",
+          "lead": "端末の設定と冗長化の動作を順につなぐ。",
+          "lines": [
+            {
+              "code": "端末のデフォルトゲートウェイを仮想IPに設定し、"
+            },
+            {
+              "code": "バックアップがVRRPアドバタイズメントを監視して、"
+            },
+            {
+              "code": "マスタの不在を検知したときに出口の役割を引き継ぐ。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "冗長化対象と切替に使う通知を両方押さえています。",
+          "ngExplain": "BPDUをVRRPの通知にしないよう、制御プロトコルを分けます。"
+        }
+      ]
+    },
+    {
+      "id": "trunk",
+      "title": "1本に複数の論理LANを通す",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "冗長化と監視",
+          "body": "VLAN（Virtual LAN）は、物理ネットワーク上を論理的なLANに分けます。アクセスポートは通常一つのVLANを収容し、IEEE 802.1Qのトランクはタグで複数VLANを区別します。原問のコア間p4は、サーバ側と二つのフロア側のVLANを運ぶ必要があります。",
+          "fig": {
+            "kind": "header",
+            "unit": 32,
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "TPID",
+                    "bits": 16
+                  },
+                  {
+                    "t": "PCP",
+                    "bits": 3
+                  },
+                  {
+                    "t": "DEI",
+                    "bits": 1
+                  },
+                  {
+                    "t": "VLAN ID",
+                    "bits": 12,
+                    "hi": true
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：802.1Qの4バイトタグ"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "コア間の同じリンクでVLAN100とVLAN200を区別して運ぶ方式は？",
+          "choices": [
+            {
+              "text": "一つのアクセスポートVLANだけ",
+              "ok": false,
+              "explain": "一つだけでは二種類を独立して運べません。"
+            },
+            {
+              "text": "全PCのIPを同じにする",
+              "ok": false,
+              "explain": "論理LANの識別にならず、IPの重複を起こします。"
+            },
+            {
+              "text": "802.1Qトランク",
+              "ok": true,
+              "explain": "フレームにVLANの識別情報を持たせます。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "必要な集合をそろえる",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "冗長化と監視",
+          "template": "原問ではp1がVLAN100、p2がVLAN200、p3がVLAN300。コア間p4には{a}を設定する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "必要なVLAN",
+              "why": "片側のサービスだけを見ず、接続されるLANの和集合を取ります。",
+              "choices": [
+                {
+                  "text": "VLAN200・VLAN300だけ",
+                  "ok": false,
+                  "explain": "監視サーバなどがいるVLAN100を落としています。"
+                },
+                {
+                  "text": "VLAN100・VLAN200・VLAN300",
+                  "ok": true,
+                  "explain": "サーバ側と両フロア側の全てが必要です。"
+                },
+                {
+                  "text": "VLAN100だけ",
+                  "ok": false,
+                  "explain": "サーバ側だけになり、フロア用VLANが不足します。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "監視サーバのあるVLAN100だけをトランクに通せばよい、と言えない理由は？",
+          "choices": [
+            {
+              "text": "トランクは監視専用ではなくフロア側VLANも運ぶから",
+              "ok": true,
+              "explain": "用途ではなく、リンクを越える必要のある全VLANを確認します。"
+            },
+            {
+              "text": "VLAN IDは必ず連番で全4094個必要だから",
+              "ok": false,
+              "explain": "使うVLANの集合を設定します。全IDを通す必要はありません。"
+            },
+            {
+              "text": "VRRPはVLANを暗号化するから",
+              "ok": false,
+              "explain": "VRRPは出口の冗長化であって暗号化ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "練習用の変更条件：使用VLANが10・20だけの別LANで両方をコア間転送する。トランク設定は？",
+          "choices": [
+            {
+              "text": "100・200・300",
+              "ok": false,
+              "explain": "これは原問の固有番号であり変更後の構成には合いません。"
+            },
+            {
+              "text": "20だけ",
+              "ok": false,
+              "explain": "VLAN10の通信も必要なので不足します。"
+            },
+            {
+              "text": "10と20",
+              "ok": true,
+              "explain": "原問の番号を暗記せず、必要な集合から決めます。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "冗長化と監視",
+          "lead": "原問図1を参照し、p4の設定理由を組み立てる。",
+          "lines": [
+            {
+              "code": "サーバ側のVLAN100と、"
+            },
+            {
+              "code": "フロア側のVLAN200・VLAN300をコア間で運ぶため、"
+            },
+            {
+              "code": "p4のトランクに三つのVLANを設定する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "三つを列挙するだけでなく、各VLANがどこを支えるかを確認できています。",
+          "ngExplain": "一方の用途だけに絞らず、原図の三つのIDを追います。",
+          "originalExcerpt": {
+            "page": 8,
+            "top": 0.05,
+            "bottom": 0.46,
+            "label": "図1：コア間p4と三つのVLAN（IPA原図）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stp",
+      "title": "失った道と開き始める道を区別する",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "冗長化と監視",
+          "body": "STP（Spanning Tree Protocol）は、ループを含む配線で一部の転送を止め、輪をなくします。BPDU（Bridge Protocol Data Unit）はその制御情報です。原問の従来型STPでは、迂回ポートが転送可能になるまでリスニング、ラーニングを経ます。設問3では『通知が途絶えたポート』と『新しく開くポート』を区別します。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "通常の経路が切れ、代替ポートがリスニング中。一般データの転送について正しいものは？",
+          "choices": [
+            {
+              "text": "必ずスイッチ全体が電源断する",
+              "ok": false,
+              "explain": "ポート状態の変更は装置電源断とは別です。"
+            },
+            {
+              "text": "まだ通常データを転送できない",
+              "ok": true,
+              "explain": "ループを避けるための状態遷移を終える必要があります。"
+            },
+            {
+              "text": "直ちにフォワーディングと同じになる",
+              "ok": false,
+              "explain": "原問は従来型STPの待ちを含む動作です。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "同じポート番号を選ばない",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "冗長化と監視",
+          "template": "原問のフロアSW2では、フロアSW1側の{a}でBPDUを受信しなくなり、コアSW2側の{b}が転送可能になる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "途絶した側",
+              "why": "図2ではフロア間接続がp2です。",
+              "choices": [
+                {
+                  "text": "p1",
+                  "ok": false,
+                  "explain": "こちらは代替経路として状態遷移するコア側です。"
+                },
+                {
+                  "text": "p2",
+                  "ok": true,
+                  "explain": "従来のルートへの情報が来ていたフロアSW1側です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "新たに開く側",
+              "why": "本文でブロッキングから遷移するポートです。",
+              "choices": [
+                {
+                  "text": "p1",
+                  "ok": true,
+                  "explain": "コアSW2へ向かう代替経路を開きます。"
+                },
+                {
+                  "text": "p2",
+                  "ok": false,
+                  "explain": "途絶したBPDUの受信側と遷移する側を混同しています。"
+                }
+              ]
+            }
+          ],
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.5,
+            "bottom": 0.81,
+            "label": "図2：二つの断線とフロアSW2のポート（IPA原図）"
+          }
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "ケーブル1と2が同時に断線。フロアSW1がケーブル2のSYSLOGを即送信しても届かなかった理由は？",
+          "choices": [
+            {
+              "text": "ログはTCPなので必ず再送される",
+              "ok": false,
+              "explain": "原問のSYSLOGはUDPであり、到達保証を前提にできません。"
+            },
+            {
+              "text": "スパニングツリーが再構築中だった",
+              "ok": true,
+              "explain": "従来経路は切れ、迂回経路はまだ通常データを運べませんでした。"
+            },
+            {
+              "text": "ケーブル2の切断で監視サーバも必ず電源断した",
+              "ok": false,
+              "explain": "原文は監視サーバの電源断を条件にしていません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "練習用の変更条件：同じ故障でも、通知を出す前にSTPが再構築を完了していた。他に損失原因がなければ？",
+          "choices": [
+            {
+              "text": "迂回路で通知を運べる",
+              "ok": true,
+              "explain": "『再構築中で通れない』という条件がなくなっています。"
+            },
+            {
+              "text": "STPを使う限り全通知が永久に失われる",
+              "ok": false,
+              "explain": "待ち時間中の問題を永久停止へ一般化してはいけません。"
+            },
+            {
+              "text": "p1が転送可能でもBPDUだけしか通れない",
+              "ok": false,
+              "explain": "フォワーディング状態なら一般データを転送できます。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "冗長化と監視",
+          "lead": "原問の通知消失を、原因から結果へ説明する。",
+          "lines": [
+            {
+              "code": "ケーブル1の断線で従来経路が失われ、"
+            },
+            {
+              "code": "スパニングツリーが再構築中で迂回路を使えなかったため、"
+            },
+            {
+              "code": "ケーブル2のリンク状態遷移を知らせるSYSLOGが届かなかった。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "別々のケーブルの障害と、通知が消えた時間条件を結び付けています。",
+          "ngExplain": "ケーブル2だけを原因にせず、監視サーバへの道ができるまでの期間を入れます。"
+        }
+      ]
+    },
+    {
+      "id": "snmp",
+      "title": "情報を持つ側と集める側",
+      "targets": [
+        "s1",
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "冗長化と監視",
+          "body": "SNMP（Simple Network Management Protocol）は、機器の管理情報を扱います。監視対象で情報を持つ側がエージェント、収集する側がマネージャです。MIB（Management Information Base）は管理情報の体系です。原問のSNMPv2cでは、同じコミュニティを使って管理通信を行います。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "コアSW1のポート状態を監視サーバが取得する。エージェントはどちら？",
+          "choices": [
+            {
+              "text": "監視サーバ",
+              "ok": false,
+              "explain": "こちらは情報を集めるマネージャです。"
+            },
+            {
+              "text": "利用者のブラウザ",
+              "ok": false,
+              "explain": "原問でSNMP情報を持つ監視対象機器ではありません。"
+            },
+            {
+              "text": "コアSW1",
+              "ok": true,
+              "explain": "監視される機器側で、自機の管理情報を提供します。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "三つの役割を固定する",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "冗長化と監視",
+          "template": "原問ではコアSW1が{a}、監視サーバが{b}となり、SNMPv2cの管理に{c}を用いる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "機器側",
+              "why": "情報を提供する役割です。",
+              "choices": [
+                {
+                  "text": "エージェント",
+                  "ok": true,
+                  "explain": "コアSW1のMIBを管理・提供します。"
+                },
+                {
+                  "text": "マネージャ",
+                  "ok": false,
+                  "explain": "情報を集める監視サーバの役割です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "監視側",
+              "why": "複数機器の状態を収集します。",
+              "choices": [
+                {
+                  "text": "エージェント",
+                  "ok": false,
+                  "explain": "この対応では機器側を指します。"
+                },
+                {
+                  "text": "マネージャ",
+                  "ok": true,
+                  "explain": "監視サーバがこの役割を持ちます。"
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "v2cの識別",
+              "why": "原問のバージョン条件を使います。",
+              "choices": [
+                {
+                  "text": "コミュニティ",
+                  "ok": true,
+                  "explain": "SNMPv2cで管理通信に用いる文字列です。"
+                },
+                {
+                  "text": "クライアント証明書",
+                  "ok": false,
+                  "explain": "ここで問われるv2cのコミュニティとは異なります。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "コミュニティが同じなら安全に暗号化済み、と言い切れない理由は？",
+          "choices": [
+            {
+              "text": "SNMPはIPを使わないから",
+              "ok": false,
+              "explain": "IPネットワーク上の管理通信です。"
+            },
+            {
+              "text": "コミュニティは暗号化そのものではないから",
+              "ok": true,
+              "explain": "v2cの識別・アクセス管理の情報と通信の暗号化を区別します。"
+            },
+            {
+              "text": "マネージャが情報を持たないから",
+              "ok": false,
+              "explain": "マネージャにも収集情報はあります。暗号化の説明にはなりません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "練習用の変更条件：監視対象をサーバSWに変え、監視サーバは同じ。役割は？",
+          "choices": [
+            {
+              "text": "サーバSWがエージェント、監視サーバがマネージャ",
+              "ok": true,
+              "explain": "機器名ではなく情報提供と収集の役割で決まります。"
+            },
+            {
+              "text": "役割が必ず逆転する",
+              "ok": false,
+              "explain": "対象を替えただけで収集側が変わるわけではありません。"
+            },
+            {
+              "text": "両方ともマネージャになる",
+              "ok": false,
+              "explain": "対象側で情報提供する役割が必要です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "冗長化と監視",
+          "lead": "原問で要求される機器名の組を説明する。",
+          "lines": [
+            {
+              "code": "監視対象のコアSW1をSNMPエージェントとし、"
+            },
+            {
+              "code": "監視サーバをSNMPマネージャとして、"
+            },
+            {
+              "code": "共通のコミュニティを用いて管理情報を取得する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "エージェントの解答例には他のコアSW・フロアSW・サーバSWも使えます。マネージャは監視サーバです。",
+          "ngExplain": "役割名だけではなく原図中の機器名も必要です。"
+        }
+      ]
+    },
+    {
+      "id": "poll",
+      "title": "定期確認では次の時刻まで待つ",
+      "targets": [
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "冗長化と監視",
+          "body": "ポーリングは、監視側から定期的に状態を問い合わせる方式です。障害発生直後が確認時刻とは限らないので、検知に遅れが生じます。原問の5分間隔を、数値の暗記ではなく『次回まで待つ』という仕組みから説明します。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "12:00:00 poll → 正常",
+              "12:00:01 ポート断",
+              "12:05:00 poll → 異常"
+            ],
+            "caption": "説明用：5分周期と検知遅れ"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "5分おきに確認し、12:00の確認直後に障害が発生。通常、次に取得するのは？",
+          "choices": [
+            {
+              "text": "必ず12:00と同時",
+              "ok": false,
+              "explain": "イベント通知ではないので即時検知は保証されません。"
+            },
+            {
+              "text": "必ず24時間後",
+              "ok": false,
+              "explain": "周期は5分であり、日次確認ではありません。"
+            },
+            {
+              "text": "12:05ごろ",
+              "ok": true,
+              "explain": "次の定期問い合わせまで待つので、最大に近い遅れになります。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "遅れの原因を埋める",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "冗長化と監視",
+          "template": "5分間隔のポーリングは{a}ので、異常発生から検知まで{b}ことがある。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "取得の契機",
+              "why": "異常時に自動通知する方式との違いです。",
+              "choices": [
+                {
+                  "text": "定期的に状態を取得する",
+                  "ok": true,
+                  "explain": "確認の間に発生した障害を次回まで検知できません。"
+                },
+                {
+                  "text": "全ての異常を即時に通知する",
+                  "ok": false,
+                  "explain": "これはポーリングの説明ではありません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "結果",
+              "why": "周期と障害発生時刻の関係を表します。",
+              "choices": [
+                {
+                  "text": "常に0秒で終わる",
+                  "ok": false,
+                  "explain": "問い合わせ直後の異常で成立しません。"
+                },
+                {
+                  "text": "時間が空く",
+                  "ok": true,
+                  "explain": "最大でほぼ1周期の待ちがあり得ます。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "間隔を短くすると、検知遅れの上限が小さくなる理由は？",
+          "choices": [
+            {
+              "text": "UDPが自動的にTCPへ変わるから",
+              "ok": false,
+              "explain": "問い合わせ間隔でトランスポートは変わりません。"
+            },
+            {
+              "text": "STPが不要になるから",
+              "ok": false,
+              "explain": "監視頻度とループ防止は別です。"
+            },
+            {
+              "text": "次の問い合わせまでの待ちが短くなるから",
+              "ok": true,
+              "explain": "周期によって待ち時間が決まるためです。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "練習用の変更条件：周期を1分にし、12:00:01に障害。12:01:00に取得できた場合、遅れは？",
+          "choices": [
+            {
+              "text": "0秒",
+              "ok": false,
+              "explain": "定期取得なのでイベント発生と同時ではありません。"
+            },
+            {
+              "text": "約59秒",
+              "ok": true,
+              "explain": "障害から次回の確認までを引き算します。"
+            },
+            {
+              "text": "約5分",
+              "ok": false,
+              "explain": "変更前の周期をそのまま使っています。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "冗長化と監視",
+          "lead": "原問のポーリングの問題を原因付きで組み立てる。",
+          "lines": [
+            {
+              "code": "状態の取得が5分ごとなので、"
+            },
+            {
+              "code": "異常が発生しても次の取得時刻まで待つ場合があり、"
+            },
+            {
+              "code": "多くの場合、異常検知が遅れる。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "『遅い』だけでなく周期に起因する理由が明確です。",
+          "ngExplain": "毎回必ず5分かかるのではなく、発生時刻で待ちは変わります。"
+        }
+      ]
+    },
+    {
+      "id": "datagram",
+      "title": "すぐ送ることと届くことは別",
+      "targets": [
+        "s1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "冗長化と監視",
+          "body": "原問のSYSLOGはUDP（User Datagram Protocol）を使います。UDP自体は受信確認や再送による到達保証を持ちません。SNMPトラップも異常を直ちに通知しますが、トラップの到達確認はありません。設問1のプロトコルと設問4の通知の限界を結びます。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "原問でRFC 768と示されるSYSLOGのトランスポートは？",
+          "choices": [
+            {
+              "text": "UDP",
+              "ok": true,
+              "explain": "この原問ではUDPで送るSYSLOGが条件です。"
+            },
+            {
+              "text": "TCP",
+              "ok": false,
+              "explain": "SYSLOGに他の転送方式もありますが、原問の指定はUDPです。"
+            },
+            {
+              "text": "VRRP",
+              "ok": false,
+              "explain": "出口冗長化のプロトコルでありトランスポートではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "即時通知の限界",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "冗長化と監視",
+          "template": "トラップは異常時に{a}が、{b}ので途中で失われても到達を確認できない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "通知する時点",
+              "why": "周期を待つポーリングと区別します。",
+              "choices": [
+                {
+                  "text": "必ず次の5分境界で送信する",
+                  "ok": false,
+                  "explain": "ポーリング周期との混同です。"
+                },
+                {
+                  "text": "直ちに送信する",
+                  "ok": true,
+                  "explain": "異常発生をきっかけに送信します。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "不足する機能",
+              "why": "送った事実と受け取った事実を区別します。",
+              "choices": [
+                {
+                  "text": "到達確認がない",
+                  "ok": true,
+                  "explain": "トラップは確認応答を要求するインフォームとは異なります。"
+                },
+                {
+                  "text": "IPアドレスが存在しない",
+                  "ok": false,
+                  "explain": "通知にもIPアドレスを利用します。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "STP再構築中にトラップを一度送っただけでは、確実な検知と言えないのは？",
+          "choices": [
+            {
+              "text": "経路が通らない間に通知が失われ得るから",
+              "ok": true,
+              "explain": "即時送信でも、確認応答・再送がなければ一時断を越えられません。"
+            },
+            {
+              "text": "トラップが全て5分遅延するから",
+              "ok": false,
+              "explain": "遅れではなく損失の可能性が問題です。"
+            },
+            {
+              "text": "監視サーバはトラップを解析できないから",
+              "ok": false,
+              "explain": "原問の改善検討は解析不能を原因にしていません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "練習用の変更条件：送信時には経路が正常で、通知も無事到達した。この事実から言えることは？",
+          "choices": [
+            {
+              "text": "UDPにも受信確認機能が追加された",
+              "ok": false,
+              "explain": "ネットワークの状態でUDPの機能は変化しません。"
+            },
+            {
+              "text": "今後は監視が不要になる",
+              "ok": false,
+              "explain": "将来の故障検知は依然必要です。"
+            },
+            {
+              "text": "今回は届いたが、毎回の到達保証にはならない",
+              "ok": true,
+              "explain": "成功例とプロトコル上の保証は別です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "冗長化と監視",
+          "lead": "原問のトラップの弱点を一文にまとめる。",
+          "lines": [
+            {
+              "code": "トラップには到達確認がないので、"
+            },
+            {
+              "code": "障害発生時の経路断などでメッセージが失われると、"
+            },
+            {
+              "code": "監視サーバが異常を検知できない可能性がある。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "ポーリングの遅れとトラップの損失を区別できています。",
+          "ngExplain": "『送るのが遅い』ではなく『送っても届かない』と説明します。"
+        }
+      ]
+    },
+    {
+      "id": "inform",
+      "title": "再構築が終わるまで通知をつなぐ",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "冗長化と監視",
+          "body": "SNMPインフォームは、通知を送った後にマネージャからの確認応答を待ちます。応答がなければ再送できるので、一時的に経路が使えない場合の回復を待てます。ただし再送回数や間隔が足りなければ回復前に断念します。設問4(3)ではSTPの再構築時間を覆う動作が必要です。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "インフォームで確認応答が返らないときに必要な動作は？",
+          "choices": [
+            {
+              "text": "全てのループ防止を止める",
+              "ok": false,
+              "explain": "STP停止は別の重大な通信障害を引き起こし得ます。"
+            },
+            {
+              "text": "通知を再送する",
+              "ok": true,
+              "explain": "一時的に失われた通知を送り直して受信の機会を作ります。"
+            },
+            {
+              "text": "到達したとみなして終了する",
+              "ok": false,
+              "explain": "確認応答がないのに成功と判断してはいけません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "必要な期間を埋める",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "冗長化と監視",
+          "template": "原問と同じ障害に備え、{a}まで{b}を繰り返せるようにする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "待つ対象",
+              "why": "通信経路が再び利用できる時点を考えます。",
+              "choices": [
+                {
+                  "text": "スパニングツリーの再構築が完了する",
+                  "ok": true,
+                  "explain": "迂回路がデータを転送可能になるまでを覆います。"
+                },
+                {
+                  "text": "最初の通知を送った直後",
+                  "ok": false,
+                  "explain": "この時点では迂回路がまだ利用できない可能性があります。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "繰り返す動作",
+              "why": "到達確認付きの通知を使います。",
+              "choices": [
+                {
+                  "text": "トラップの受信確認待ちだけ",
+                  "ok": false,
+                  "explain": "トラップにはその確認応答の仕組みがありません。"
+                },
+                {
+                  "text": "インフォームの再送信",
+                  "ok": true,
+                  "explain": "応答がない間に送信機会を作り直します。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "『再送1回』だけを設定値の方針として挙げても足りない理由は？",
+          "choices": [
+            {
+              "text": "インフォームはポーリングだから",
+              "ok": false,
+              "explain": "異常時の通知であり定期的な問い合わせではありません。"
+            },
+            {
+              "text": "その再送も再構築完了前なら失われ得るから",
+              "ok": true,
+              "explain": "再送回数単独でなく、間隔を含めた継続時間が重要です。"
+            },
+            {
+              "text": "確認応答は利用者IDを暗号化するためだから",
+              "ok": false,
+              "explain": "確認応答の役割は受信の確認です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "冗長化と監視",
+          "intro": "練習用の変更条件：経路回復まで30秒。再送は未応答なら10秒ごとに行う。20秒で打ち切る案は？",
+          "choices": [
+            {
+              "text": "不足する",
+              "ok": true,
+              "explain": "回復前に全送信機会が終わるので、30秒以降にも機会が必要です。"
+            },
+            {
+              "text": "必ず十分",
+              "ok": false,
+              "explain": "再送した回数だけで到達を保証できません。"
+            },
+            {
+              "text": "確認応答がなくても成功にしてよい",
+              "ok": false,
+              "explain": "通知が届いた証拠を失います。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "冗長化と監視",
+          "lead": "原問の必要動作を、待つ条件を先にして組み立てる。",
+          "lines": [
+            {
+              "code": "スパニングツリーが再構築するまで、"
+            },
+            {
+              "code": "確認応答が得られないインフォームの再送信を"
+            },
+            {
+              "code": "繰り返せるようにする。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "STP回復まで再送を継続し、通知を回復後の経路へ届ける設計です。永続断の必達を保証するわけではありません。",
+          "ngExplain": "『UDPを使う』だけでは改善になりません。回復までの再送が核心です。"
+        },
+        {
+          "id": "independent",
+          "type": "info",
+          "title": "補助なしの原問へ",
+          "stage": "transfer",
+          "scaffold": 0,
+          "format": "読む",
+          "theme": "冗長化と監視",
+          "body": "ここまでで部品ごとの判断を練習しました。次は「公式の原問を解く」から、教材の解説を閉じて原文・原図だけで挑戦してください。用語だけでなく、対象機器・通信方向・条件・結果を設問の指定に合わせてそろえます。原問の答案と学習記録は別に保存されます。"
+        }
+      ]
+    }
+  ]
+}

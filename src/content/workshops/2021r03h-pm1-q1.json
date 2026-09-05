@@ -1,0 +1,1507 @@
+{
+  "examKey": "2021r03h/pm1/1",
+  "title": "店舗を増やし、接続構成を自動で確かめる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_ans.pdf",
+    "https://www.rfc-editor.org/rfc/rfc2131"
+  ],
+  "sections": [
+    {
+      "id": "address-budget",
+      "title": "端末設定と店舗数を分けて考える",
+      "targets": [
+        "s1-1",
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "id": "address-budget-1",
+          "format": "読む",
+          "theme": "端末設定と店舗数を分けて考える",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "店舗を増やす前に数える",
+          "body": "店舗端末は起動時に通信設定を受け取ります。DHCPはDynamic Host Configuration Protocolです。DNSはDomain Name Systemで、名前をIPアドレスに対応させます。原問では設定の通知元とアドレスの残数を区別します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "役割",
+              "台数"
+            ],
+            "rows": [
+              [
+                "本社のサーバ",
+                "3"
+              ],
+              [
+                "本社の端末とL2SW",
+                "2＋1"
+              ],
+              [
+                "1店舗の端末とL2SW",
+                "2＋1"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "address-budget-2",
+          "format": "選択",
+          "theme": "端末設定と店舗数を分けて考える",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "DNSサーバのIPアドレスを端末へ通知するのはどれか。",
+          "choices": [
+            {
+              "text": "DHCPサーバ",
+              "ok": true,
+              "explain": "名前解決先も端末設定の一部として通知します。"
+            },
+            {
+              "text": "DNSサーバ",
+              "ok": false,
+              "explain": "名前への問合せに答える機器です。設定配布元とは異なります。"
+            },
+            {
+              "text": "在庫管理サーバ",
+              "ok": false,
+              "explain": "在庫の管理を行います。端末への設定通知はDHCPの役割です。"
+            }
+          ]
+        },
+        {
+          "id": "address-budget-3",
+          "format": "選択",
+          "theme": "端末設定と店舗数を分けて考える",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "/24で全機器に1個ずつ割り当てる。本社分を除く残数はどれか。",
+          "choices": [
+            {
+              "text": "254個",
+              "ok": false,
+              "explain": "ネットワークとブロードキャストは除外していますが、本社分が未控除です。"
+            },
+            {
+              "text": "250個",
+              "ok": false,
+              "explain": "本社の端末だけでなくサーバ3台とL2SWも数えます。"
+            },
+            {
+              "text": "248個",
+              "ok": true,
+              "explain": "ホスト用254個から本社の6個を引きます。"
+            }
+          ],
+          "excerpt": {
+            "label": "練習用の条件",
+            "lines": [
+              "192.168.1.0/24を本社と全店舗で共用します。",
+              "本社はサーバ3台、端末2台、L2SW1台です。"
+            ]
+          }
+        },
+        {
+          "id": "address-budget-4",
+          "format": "穴埋め",
+          "theme": "端末設定と店舗数を分けて考える",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "1店舗分と端数の扱いを選べ。",
+          "template": "1店舗は{a}個を使う。248÷{a}の小数部分を{b}と、最大82店舗になる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "6",
+                  "ok": false,
+                  "explain": "6台は本社分であり、1店舗分ではありません。"
+                },
+                {
+                  "text": "3",
+                  "ok": true,
+                  "explain": "端末2台と管理用IPをもつL2SW1台です。"
+                },
+                {
+                  "text": "2",
+                  "ok": false,
+                  "explain": "L2SWの管理用IPが抜けています。"
+                }
+              ],
+              "why": "端末2台と管理用IPをもつL2SW1台です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "四捨五入する",
+                  "ok": false,
+                  "explain": "設置可能数は丸めではなく整数の上限を求めます。"
+                },
+                {
+                  "text": "切り捨てる",
+                  "ok": true,
+                  "explain": "1店舗分の3個がそろわない余りは使えません。"
+                },
+                {
+                  "text": "切り上げる",
+                  "ok": false,
+                  "explain": "不足したアドレスを追加で確保できません。"
+                }
+              ],
+              "why": "1店舗分の3個がそろわない余りは使えません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 2,
+            "top": 0.3,
+            "bottom": 0.83,
+            "label": "現行構成の本文と図1（IPA原典）"
+          }
+        },
+        {
+          "id": "address-budget-5",
+          "format": "並べ替え",
+          "theme": "端末設定と店舗数を分けて考える",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "店舗数の算定を組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "/24のホスト用アドレスを254個とする"
+            },
+            {
+              "code": "本社6台分を差し引いて248個とする"
+            },
+            {
+              "code": "1店舗3台分で割り、小数部分を切り捨てる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "ネットワーク全体、本社、店舗の順に数えます。既存の10店舗も最大82店舗の内数です。",
+          "ngExplain": "ネットワーク全体、本社、店舗の順に数えます。既存の10店舗も最大82店舗の内数です。"
+        },
+        {
+          "id": "address-budget-6",
+          "format": "選択",
+          "theme": "端末設定と店舗数を分けて考える",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "本社に管理サーバを2台追加した。同じ/24で最大店舗数はどうなるか。",
+          "choices": [
+            {
+              "text": "81店舗",
+              "ok": false,
+              "explain": "追加2台は元の余り2個で収まります。"
+            },
+            {
+              "text": "83店舗",
+              "ok": false,
+              "explain": "本社機器の追加で割当可能数は増えません。"
+            },
+            {
+              "text": "82店舗",
+              "ok": true,
+              "explain": "本社8個を引くと246個です。246÷3は82です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unknown-unicast",
+      "title": "ARPとMAC学習を区別する",
+      "targets": [
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "unknown-unicast-1",
+          "format": "読む",
+          "theme": "ARPとMAC学習を区別する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "宛先MACが分かっても出力ポートは別",
+          "body": "在庫管理サーバは端末のMACアドレスを知っています。L2SWの転送表は空です。サーバのARP表とL2SWのMACアドレス表は別の情報です。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "サーバ：IP→MACをARP表で確認"
+              },
+              {
+                "t": "L2SW：宛先MAC→出力ポートを検索"
+              },
+              {
+                "t": "未学習なら入力以外へ転送"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "unknown-unicast-2",
+          "format": "選択",
+          "theme": "ARPとMAC学習を区別する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ARP表に宛先MACがある。サーバが最初に送るものはどれか。",
+          "choices": [
+            {
+              "text": "宛先不明のARP要求だけ",
+              "ok": false,
+              "explain": "条件では対応関係を既に保持しています。"
+            },
+            {
+              "text": "DNS問合せ",
+              "ok": false,
+              "explain": "DNSは名前の解決でありMACの検索ではありません。"
+            },
+            {
+              "text": "宛先MACを指定したICMP要求",
+              "ok": true,
+              "explain": "ARPで再確認せずユニキャストを作れます。"
+            }
+          ]
+        },
+        {
+          "id": "unknown-unicast-3",
+          "format": "選択",
+          "theme": "ARPとMAC学習を区別する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "4ポートのL2SWでポート1に未学習宛先のフレームが入った。転送先はどれか。",
+          "choices": [
+            {
+              "text": "転送しない",
+              "ok": false,
+              "explain": "宛先未学習のユニキャストは通常フラッディングします。"
+            },
+            {
+              "text": "2、3、4",
+              "ok": true,
+              "explain": "同じLANの入力ポート以外へ転送します。"
+            },
+            {
+              "text": "1、2、3、4",
+              "ok": false,
+              "explain": "受信したポートへ折り返す必要はありません。"
+            }
+          ],
+          "excerpt": {
+            "label": "練習用の条件",
+            "lines": [
+              "全ポートは同一LANで、転送可能な状態です。",
+              "MACアドレス表に宛先はありません。"
+            ]
+          }
+        },
+        {
+          "id": "unknown-unicast-4",
+          "format": "穴埋め",
+          "theme": "ARPとMAC学習を区別する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "動作の主語と範囲を補え。",
+          "template": "{a}は、入力ポート{b}の全ポートへフレームを転送する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "L2SW",
+                  "ok": true,
+                  "explain": "設問はスイッチ内部の転送動作を問います。"
+                },
+                {
+                  "text": "DHCPサーバ",
+                  "ok": false,
+                  "explain": "IP設定を配る機器です。スイッチの転送判断は行いません。"
+                },
+                {
+                  "text": "監視対象端末",
+                  "ok": false,
+                  "explain": "まだ要求を受信する側です。"
+                }
+              ],
+              "why": "設問はスイッチ内部の転送動作を問います。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "以外",
+                  "ok": true,
+                  "explain": "入力したリンク以外へ広げます。"
+                },
+                {
+                  "text": "だけ",
+                  "ok": false,
+                  "explain": "入力先だけでは宛先に届きません。"
+                },
+                {
+                  "text": "を含む",
+                  "ok": false,
+                  "explain": "受信ポートへの折返しを含めません。"
+                }
+              ],
+              "why": "入力したリンク以外へ広げます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.675,
+            "bottom": 0.81,
+            "label": "設問1(3)のARP表とMAC表の条件（IPA原典）"
+          }
+        },
+        {
+          "id": "unknown-unicast-5",
+          "format": "並べ替え",
+          "theme": "ARPとMAC学習を区別する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "二つの表を使う順番を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "サーバがARP表から宛先MACを得る"
+            },
+            {
+              "code": "サーバがユニキャストのフレームを送る"
+            },
+            {
+              "code": "L2SWは宛先未学習なので入力以外へ転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "ARP解決済みでも、スイッチの出力ポートが既知とは限りません。",
+          "ngExplain": "ARP解決済みでも、スイッチの出力ポートが既知とは限りません。"
+        },
+        {
+          "id": "unknown-unicast-6",
+          "format": "選択",
+          "theme": "ARPとMAC学習を区別する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "宛先MACをポート3に学習した後、同じ要求がポート1に入った。どうするか。",
+          "choices": [
+            {
+              "text": "MACをIPに書き換える",
+              "ok": false,
+              "explain": "レイヤ2転送ではIPへの書換えを行いません。"
+            },
+            {
+              "text": "ポート3だけへ転送する",
+              "ok": true,
+              "explain": "宛先の所在が分かったので転送先を限定します。"
+            },
+            {
+              "text": "2、3、4へ転送する",
+              "ok": false,
+              "explain": "未学習時の処理です。今回は学習済みです。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "controller",
+      "title": "名前指定とAPIの役割を知る",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "controller-1",
+          "format": "読む",
+          "theme": "名前指定とAPIの役割を知る",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "出荷したルータの接続先を変える",
+          "body": "RTは起動後に管理コントローラへ自分を登録します。FQDNはFully Qualified Domain Nameで、完全なドメイン名です。REST APIはWebの要求を使って機能を呼び出す窓口です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "登録に使う情報",
+              "役割"
+            ],
+            "rows": [
+              [
+                "FQDN",
+                "接続先の名前"
+              ],
+              [
+                "DNS応答",
+                "現在のIPアドレス"
+              ],
+              [
+                "HTTP／HTTPS",
+                "登録要求の運搬"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "controller-2",
+          "format": "選択",
+          "theme": "名前指定とAPIの役割を知る",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "管理コントローラのIPが変わる。出荷済みRTの修正を減らす設定はどれか。",
+          "choices": [
+            {
+              "text": "MACアドレスで記述する",
+              "ok": false,
+              "explain": "離れた管理サーバの接続先指定には使えません。"
+            },
+            {
+              "text": "接続先をFQDNで記述する",
+              "ok": true,
+              "explain": "名前を維持してDNSの対応先を変更できます。"
+            },
+            {
+              "text": "IPアドレスを固定文字列で記述する",
+              "ok": false,
+              "explain": "変更時に各RTの設定更新が必要になります。"
+            }
+          ]
+        },
+        {
+          "id": "controller-3",
+          "format": "選択",
+          "theme": "名前指定とAPIの役割を知る",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "REST APIによる登録で使うアプリケーション層のプロトコルはどれか。",
+          "choices": [
+            {
+              "text": "HTTPまたはHTTPS",
+              "ok": true,
+              "explain": "Webの要求として登録情報を送ります。"
+            },
+            {
+              "text": "TCP",
+              "ok": false,
+              "explain": "通信の土台ですが、トランスポート層です。"
+            },
+            {
+              "text": "PPPoE",
+              "ok": false,
+              "explain": "ISPへの接続に使います。登録APIのプロトコルではありません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.295,
+            "bottom": 0.4,
+            "label": "RTがREST APIで登録する箇所（IPA原典）"
+          }
+        },
+        {
+          "id": "controller-4",
+          "format": "穴埋め",
+          "theme": "名前指定とAPIの役割を知る",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "変更と作業削減をつなげよ。",
+          "template": "{a}のIPアドレスが変わっても、DNSの対応を更新すれば{b}の接続先設定を変更せずに済む。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "在庫管理端末",
+                  "ok": false,
+                  "explain": "今回変わるのはコントローラです。"
+                },
+                {
+                  "text": "店舗のL2SW",
+                  "ok": false,
+                  "explain": "RTの登録先ではありません。"
+                },
+                {
+                  "text": "RT管理コントローラ",
+                  "ok": true,
+                  "explain": "移動するのは登録要求の宛先です。"
+                }
+              ],
+              "why": "移動するのは登録要求の宛先です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "DNS",
+                  "ok": false,
+                  "explain": "DNS側の対応先は更新が必要です。"
+                },
+                {
+                  "text": "新コントローラのIP",
+                  "ok": false,
+                  "explain": "新しいIPは変更済みという条件です。"
+                },
+                {
+                  "text": "出荷済みRT",
+                  "ok": true,
+                  "explain": "同じ名前で新しいアドレスを調べられます。"
+                }
+              ],
+              "why": "同じ名前で新しいアドレスを調べられます。"
+            }
+          ]
+        },
+        {
+          "id": "controller-5",
+          "format": "並べ替え",
+          "theme": "名前指定とAPIの役割を知る",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "初回登録までを組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "RTがPPPoEでISPに接続する"
+            },
+            {
+              "code": "FQDNを名前解決してコントローラのIPを得る"
+            },
+            {
+              "code": "HTTP／HTTPSのAPIでシリアル番号とEPのIPを送る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "インターネットへの接続と、管理サーバへの登録は別の段階です。",
+          "ngExplain": "インターネットへの接続と、管理サーバへの登録は別の段階です。"
+        },
+        {
+          "id": "controller-6",
+          "format": "選択",
+          "theme": "名前指定とAPIの役割を知る",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "IPが変わったがDNSキャッシュに旧IPが残る。名前指定だけで即時切替が保証されるか。",
+          "choices": [
+            {
+              "text": "保証されず、キャッシュの期限も考慮する",
+              "ok": true,
+              "explain": "名前指定は設定作業を減らしますが、旧応答は期限まで残り得ます。"
+            },
+            {
+              "text": "全RTが同時に即時切替する",
+              "ok": false,
+              "explain": "キャッシュの有効期限は機器ごとに異なり得ます。"
+            },
+            {
+              "text": "FQDNがMACアドレスに変わる",
+              "ok": false,
+              "explain": "名前解決結果はIPアドレスです。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bridge-domain",
+      "title": "トンネルの内側の経路を追う",
+      "targets": [
+        "s2-3",
+        "s2-4"
+      ],
+      "steps": [
+        {
+          "id": "bridge-domain-1",
+          "format": "読む",
+          "theme": "トンネルの内側の経路を追う",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "同じRTでもポートで通信先が違う",
+          "body": "BPはブリッジポートで、本社と店舗をレイヤ2で結びます。RPはルーティングポートで、インターネットへ出ます。原問ではBPとRPの相互通信は禁止です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "接続元",
+              "通信可能な側"
+            ],
+            "rows": [
+              [
+                "在庫端末→BP",
+                "本社のBP側LAN"
+              ],
+              [
+                "Wi-Fi AP→RP",
+                "インターネット"
+              ],
+              [
+                "RP→BP",
+                "通信不可"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "bridge-domain-2",
+          "format": "選択",
+          "theme": "トンネルの内側の経路を追う",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "同一サブネットの端末とサーバの間がL2トンネルでつながる。tracerouteに現れる終点はどれか。",
+          "choices": [
+            {
+              "text": "外側のインターネット全ルータ",
+              "ok": false,
+              "explain": "外側IPと内側IPの経路を混同しています。"
+            },
+            {
+              "text": "宛先サーバだけ",
+              "ok": true,
+              "explain": "内側IPのTTLを減らすルータを通りません。"
+            },
+            {
+              "text": "全L2SWと両端RT",
+              "ok": false,
+              "explain": "レイヤ2として転送する機器はIPの中継ホップではありません。"
+            }
+          ]
+        },
+        {
+          "id": "bridge-domain-3",
+          "format": "選択",
+          "theme": "トンネルの内側の経路を追う",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "店舗APのログを本社へ直接送れない理由はどれか。",
+          "choices": [
+            {
+              "text": "本社への店舗側経路はBP経由に限られ、APはRP側だから",
+              "ok": true,
+              "explain": "RPとBPは相互通信できず、本社RP側への外部着信もできません。"
+            },
+            {
+              "text": "ログはUDPなのでトンネルを通れないから",
+              "ok": false,
+              "explain": "プロトコル一般の制限ではなく接続設計の問題です。"
+            },
+            {
+              "text": "Wi-FiはIPアドレスを使わないから",
+              "ok": false,
+              "explain": "Wi-Fi端末もIP通信を行います。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 4,
+            "top": 0.2,
+            "bottom": 0.85,
+            "label": "RP・BPの通信制限と図3（IPA原典）"
+          }
+        },
+        {
+          "id": "bridge-domain-4",
+          "format": "穴埋め",
+          "theme": "トンネルの内側の経路を追う",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "内側の経路とログ収集先を判断せよ。",
+          "template": "店舗在庫端末からのtracerouteの表示機器は{a}。APログを集約するなら、この条件では{b}側の到達可能な場所を検討する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "RT管理コントローラ",
+                  "ok": false,
+                  "explain": "RT管理用であり、tracerouteの宛先ではありません。"
+                },
+                {
+                  "text": "RT01とRT00",
+                  "ok": false,
+                  "explain": "BP間のレイヤ2転送は内側IPのホップになりません。"
+                },
+                {
+                  "text": "運用管理サーバ",
+                  "ok": true,
+                  "explain": "BP側LANで端末と直接IP通信します。"
+                }
+              ],
+              "why": "BP側LANで端末と直接IP通信します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "本社BP",
+                  "ok": false,
+                  "explain": "RP側APからは到達できません。"
+                },
+                {
+                  "text": "店舗の在庫管理LAN",
+                  "ok": false,
+                  "explain": "APとBP配下の通信は禁止されています。"
+                },
+                {
+                  "text": "インターネット",
+                  "ok": true,
+                  "explain": "RPから外向き通信が可能な側です。"
+                }
+              ],
+              "why": "RPから外向き通信が可能な側です。"
+            }
+          ]
+        },
+        {
+          "id": "bridge-domain-5",
+          "format": "並べ替え",
+          "theme": "トンネルの内側の経路を追う",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "APログが本社に届かない根拠を組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "APはRTのRPに接続されている"
+            },
+            {
+              "code": "店舗から本社へ到達できる経路はBP経由だけである"
+            },
+            {
+              "code": "RPとBPは通信できないので本社にログを届けられない"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "APの接続位置、到達経路、通信制限を結びます。",
+          "ngExplain": "APの接続位置、到達経路、通信制限を結びます。"
+        },
+        {
+          "id": "bridge-domain-6",
+          "format": "選択",
+          "theme": "トンネルの内側の経路を追う",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "練習条件を変え、端末とサーバの間でRTが通常のIP中継を行う。何が変わるか。",
+          "choices": [
+            {
+              "text": "RTで内側IPのTTLが減る",
+              "ok": true,
+              "explain": "レイヤ3中継に変わるので、tracerouteの中継ホップになり得ます。"
+            },
+            {
+              "text": "MAC表を使わなくても全端末に届く",
+              "ok": false,
+              "explain": "IP中継後も各リンクでレイヤ2配送が必要です。"
+            },
+            {
+              "text": "DNSが経路の全ホップを返す",
+              "ok": false,
+              "explain": "DNSは名前とアドレスの対応を返します。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lldp-collection",
+      "title": "隣接情報と収集経路を分ける",
+      "targets": [
+        "s3-1",
+        "s3-2",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "lldp-collection-1",
+          "format": "読む",
+          "theme": "隣接情報と収集経路を分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "配線は隣の機器から調べる",
+          "body": "LLDPはLink Layer Discovery Protocolです。接続した隣の機器へ機器名やポート情報を通知します。SNMPはSimple Network Management Protocolです。管理サーバはSNMPで管理情報を読み、原問では配線図と照合します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "LLDP：隣へ通知する"
+              },
+              {
+                "t": "受信側：LLDP-MIBに保持する"
+              },
+              {
+                "t": "SNMP：管理サーバが保持情報を読む"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "lldp-collection-2",
+          "format": "選択",
+          "theme": "隣接情報と収集経路を分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "隣接機器へLLDPを送るOSI層はどれか。",
+          "choices": [
+            {
+              "text": "第3層",
+              "ok": false,
+              "explain": "IP経路を越えて隣接通知を配送する仕組みではありません。"
+            },
+            {
+              "text": "第7層",
+              "ok": false,
+              "explain": "管理情報の取得用SNMPとは別です。"
+            },
+            {
+              "text": "第2層",
+              "ok": true,
+              "explain": "直接接続されたリンクの隣接情報を交換します。"
+            }
+          ]
+        },
+        {
+          "id": "lldp-collection-3",
+          "format": "選択",
+          "theme": "隣接情報と収集経路を分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "RTはコントローラ以外から管理できない。運用管理サーバがRTの隣接情報を得る方法はどれか。",
+          "choices": [
+            {
+              "text": "Wi-Fi APがLLDPを全国へ転送する",
+              "ok": false,
+              "explain": "LLDPは直接接続された隣を知るための仕組みです。"
+            },
+            {
+              "text": "コントローラが収集した情報をREST APIで受け取る",
+              "ok": true,
+              "explain": "権限のある機器を介して情報を取得します。"
+            },
+            {
+              "text": "運用管理サーバがRTへ直接SNMP問合せをする",
+              "ok": false,
+              "explain": "RTへの管理はコントローラに限定されています。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.655,
+            "bottom": 0.92,
+            "label": "LLDPとL2SW・端末の情報収集（IPA原典）"
+          }
+        },
+        {
+          "id": "lldp-collection-4",
+          "format": "穴埋め",
+          "theme": "隣接情報と収集経路を分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "二つの収集元を補え。",
+          "template": "L2SWと端末のMIBは{b}で取得する。RTのMIBは{c}が収集し、運用管理サーバにAPIで渡す。",
+          "blanks": [
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "SNMP",
+                  "ok": true,
+                  "explain": "MIBを管理側から読み出すプロトコルです。"
+                },
+                {
+                  "text": "LLDP",
+                  "ok": false,
+                  "explain": "隣接機器への通知に使います。"
+                },
+                {
+                  "text": "SSH",
+                  "ok": false,
+                  "explain": "遠隔ログインであり、本文のMIB取得方式とは異なります。"
+                }
+              ],
+              "why": "MIBを管理側から読み出すプロトコルです。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "RT管理コントローラ",
+                  "ok": true,
+                  "explain": "RTを管理できる機器です。"
+                },
+                {
+                  "text": "在庫管理端末",
+                  "ok": false,
+                  "explain": "RTを管理する権限がありません。"
+                },
+                {
+                  "text": "DHCPサーバ",
+                  "ok": false,
+                  "explain": "IP設定の通知を担当します。"
+                }
+              ],
+              "why": "RTを管理できる機器です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.095,
+            "bottom": 0.22,
+            "label": "RTの情報をAPIで取得する本文（IPA原典）"
+          }
+        },
+        {
+          "id": "lldp-collection-5",
+          "format": "並べ替え",
+          "theme": "隣接情報と収集経路を分ける",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "接続構成を確認する答案を組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "LLDPで隣接機器名と接続IFを把握する"
+            },
+            {
+              "code": "取得した各機器の接続構成を構成図と照合する"
+            },
+            {
+              "code": "各機器が構成図どおりに接続されていることを確認する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "疎通があるだけで正しいポートに接続されたとは判断できません。原問は故障確認ではなく配線の確認です。",
+          "ngExplain": "疎通があるだけで正しいポートに接続されたとは判断できません。原問は故障確認ではなく配線の確認です。"
+        },
+        {
+          "id": "lldp-collection-6",
+          "format": "選択",
+          "theme": "隣接情報と収集経路を分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "端末011と012を逆のポートにつないだ。両方pingに応答する場合、何で誤配線を見つけるか。",
+          "choices": [
+            {
+              "text": "DHCPのリース時間だけ",
+              "ok": false,
+              "explain": "リース時間は物理ポートとの対応を示しません。"
+            },
+            {
+              "text": "LLDPの隣接機器名とIFの組",
+              "ok": true,
+              "explain": "通信できても接続先ポートの対応は設計と異なります。"
+            },
+            {
+              "text": "pingが成功したので正しいとする",
+              "ok": false,
+              "explain": "到達性の試験では配線位置まで確認できません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unmanaged-neighbor",
+      "title": "管理外スイッチの見え方を推論する",
+      "targets": [
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "unmanaged-neighbor-1",
+          "format": "読む",
+          "theme": "管理外スイッチの見え方を推論する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "見える隣と管理できる機器は違う",
+          "body": "L2SW01と端末011の間にL2SW-Xを挿入します。XのLLDPは有効ですが、管理用IPは不明です。既知の機器から見える隣は変わっても、X自身への管理情報取得はできません。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "L2SW01 IF2"
+              },
+              {
+                "t": "L2SW-X（LLDP有効、管理IP不明）"
+              },
+              {
+                "t": "在庫管理端末011 IF1"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "unmanaged-neighbor-2",
+          "format": "選択",
+          "theme": "管理外スイッチの見え方を推論する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "L2SW01のIF2から見た隣接機器名はどうなるか。",
+          "choices": [
+            {
+              "text": "端末011のまま",
+              "ok": false,
+              "explain": "LLDPはXを越えて元の隣を知らせるものではありません。"
+            },
+            {
+              "text": "L2SW01の行が削除される",
+              "ok": false,
+              "explain": "L2SW01自体は引き続き管理情報を取得できます。"
+            },
+            {
+              "text": "L2SW-Xになる",
+              "ok": true,
+              "explain": "IF2のすぐ先にXが接続されます。"
+            }
+          ]
+        },
+        {
+          "id": "unmanaged-neighbor-3",
+          "format": "選択",
+          "theme": "管理外スイッチの見え方を推論する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "端末011のIF1から見た隣接機器名はどうなるか。",
+          "choices": [
+            {
+              "text": "端末011の行が削除される",
+              "ok": false,
+              "explain": "端末は管理対象のままです。隣接相手が変わります。"
+            },
+            {
+              "text": "L2SW-Xになる",
+              "ok": true,
+              "explain": "反対側の端末からも直接接続された相手はXです。"
+            },
+            {
+              "text": "RT01になる",
+              "ok": false,
+              "explain": "RT01とは直接つながっていません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.265,
+            "bottom": 0.475,
+            "label": "表1の行3と行5（IPA原典）"
+          }
+        },
+        {
+          "id": "unmanaged-neighbor-4",
+          "format": "穴埋め",
+          "theme": "管理外スイッチの見え方を推論する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "変更する行とXの現れる欄を補え。",
+          "template": "表1の行{a}の隣接機器名が変わる。Xは{b}欄に現れる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "3と5",
+                  "ok": true,
+                  "explain": "L2SW01のIF2と端末011のIF1が変化します。"
+                },
+                {
+                  "text": "1と2",
+                  "ok": false,
+                  "explain": "RTとL2SWの間は変更されません。"
+                },
+                {
+                  "text": "4と6",
+                  "ok": false,
+                  "explain": "端末012の接続は変更されません。"
+                }
+              ],
+              "why": "L2SW01のIF2と端末011のIF1が変化します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "隣接機器名",
+                  "ok": true,
+                  "explain": "既知の機器が受け取ったLLDPから把握できます。"
+                },
+                {
+                  "text": "自機器名だけ",
+                  "ok": false,
+                  "explain": "Xへの管理情報取得は行えません。"
+                },
+                {
+                  "text": "どの欄にも現れない",
+                  "ok": false,
+                  "explain": "管理IP不明でも、LLDPによる名前通知は受信できます。"
+                }
+              ],
+              "why": "既知の機器が受け取ったLLDPから把握できます。"
+            }
+          ]
+        },
+        {
+          "id": "unmanaged-neighbor-5",
+          "format": "並べ替え",
+          "theme": "管理外スイッチの見え方を推論する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "表の変化を答案にまとめよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "L2SW01と端末011は引き続き情報取得対象である"
+            },
+            {
+              "code": "両者の隣接機器名はL2SW-Xに変わる"
+            },
+            {
+              "code": "X自身の情報取得行は増えず、隣接機器名の欄にXが現れる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "原問の選択肢では、行3の変更がイ、行5の変更がエ、隣接機器名への出現がカです。",
+          "ngExplain": "原問の選択肢では、行3の変更がイ、行5の変更がエ、隣接機器名への出現がカです。",
+          "originalExcerpt": {
+            "page": 7,
+            "top": 0.705,
+            "bottom": 0.88,
+            "label": "設問3(4)の解答群（IPA原典）"
+          }
+        },
+        {
+          "id": "unmanaged-neighbor-6",
+          "format": "選択",
+          "theme": "管理外スイッチの見え方を推論する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "Xの管理用IPを登録し、SNMP取得にも成功するようになった。何が追加されるか。",
+          "choices": [
+            {
+              "text": "Xが第3層ルータになる",
+              "ok": false,
+              "explain": "管理情報を取得できることと転送層は別です。"
+            },
+            {
+              "text": "Xを自機器名とする接続情報",
+              "ok": true,
+              "explain": "X自身がもつ隣接情報も収集できるようになります。"
+            },
+            {
+              "text": "既存の行3と5が消える",
+              "ok": false,
+              "explain": "既知機器からの取得を止める条件ではありません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "integrate",
+      "title": "変更条件から確認方法を選ぶ",
+      "targets": [
+        "s1-2",
+        "s2-3",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "integrate-1",
+          "format": "読む",
+          "theme": "変更条件から確認方法を選ぶ",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "現地作業の確認を分ける",
+          "body": "新店舗は機器を接続した後、疎通と構成を確認します。台数の確認はIP枯渇の予防になります。到達性の試験と配線の照合を組み合わせます。"
+        },
+        {
+          "id": "integrate-2",
+          "format": "選択",
+          "theme": "変更条件から確認方法を選ぶ",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "83店舗を同じ構成で収容したい。現行/24で不足するのは幾つか。",
+          "choices": [
+            {
+              "text": "3個",
+              "ok": false,
+              "explain": "82店舗時点で2個余っています。"
+            },
+            {
+              "text": "0個",
+              "ok": false,
+              "explain": "256個のうち2個はホストに割り当てられません。"
+            },
+            {
+              "text": "1個",
+              "ok": true,
+              "explain": "本社6＋83×3＝255個で、使用可能254個を1個超えます。"
+            }
+          ]
+        },
+        {
+          "id": "integrate-3",
+          "format": "選択",
+          "theme": "変更条件から確認方法を選ぶ",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "店舗の在庫端末から本社サーバに到達するが、配線に疑問がある。次の確認はどれか。",
+          "choices": [
+            {
+              "text": "DNSを別名にする",
+              "ok": false,
+              "explain": "名前変更では誤配線を確認できません。"
+            },
+            {
+              "text": "LLDPのIF対応を構成図と照合する",
+              "ok": true,
+              "explain": "到達性とは別に物理接続を確認できます。"
+            },
+            {
+              "text": "tracerouteで全L2SWを数える",
+              "ok": false,
+              "explain": "L2SWはIPの中継ホップとして表示されません。"
+            }
+          ]
+        },
+        {
+          "id": "integrate-4",
+          "format": "穴埋め",
+          "theme": "変更条件から確認方法を選ぶ",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "観測値と確認内容を結べ。",
+          "template": "pingは主に{a}、LLDPのポート接続リストは{b}を確認する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "IP到達性",
+                  "ok": true,
+                  "explain": "応答が戻るかを確認します。"
+                },
+                {
+                  "text": "全ポートの正しい配線",
+                  "ok": false,
+                  "explain": "pingだけでは接続位置を特定できません。"
+                },
+                {
+                  "text": "店舗数の上限",
+                  "ok": false,
+                  "explain": "アドレスの台数計算が必要です。"
+                }
+              ],
+              "why": "応答が戻るかを確認します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "隣接機器とIFの対応",
+                  "ok": true,
+                  "explain": "構成図と接続位置を照合できます。"
+                },
+                {
+                  "text": "アプリの全機能",
+                  "ok": false,
+                  "explain": "物理的な隣接情報に限られます。"
+                },
+                {
+                  "text": "DNSの全ゾーン",
+                  "ok": false,
+                  "explain": "LLDPは名前解決の情報ではありません。"
+                }
+              ],
+              "why": "構成図と接続位置を照合できます。"
+            }
+          ]
+        },
+        {
+          "id": "integrate-5",
+          "format": "並べ替え",
+          "theme": "変更条件から確認方法を選ぶ",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "現地確認の説明を組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "店舗端末から疎通を試験する"
+            },
+            {
+              "code": "管理側で各機器の隣接情報を取得する"
+            },
+            {
+              "code": "構成図とのIF対応を照合して接続構成を確認する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "疎通の結果に配線情報を重ねると、単なる接続成功から構成の確認へ進めます。",
+          "ngExplain": "疎通の結果に配線情報を重ねると、単なる接続成功から構成の確認へ進めます。"
+        },
+        {
+          "id": "integrate-6",
+          "format": "選択",
+          "theme": "変更条件から確認方法を選ぶ",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "IPアドレス不足は解消したがRPとBPの制限はそのまま。APから本社BPのログサーバへ送れるか。",
+          "choices": [
+            {
+              "text": "LLDPを有効にすれば送れる",
+              "ok": false,
+              "explain": "隣接通知はRPとBPの通信許可を変えません。"
+            },
+            {
+              "text": "送れない",
+              "ok": true,
+              "explain": "アドレス数とポート間の通信制限は独立した条件です。"
+            },
+            {
+              "text": "空きIPがあれば送れる",
+              "ok": false,
+              "explain": "宛先に割り当て可能でも経路が許可されるとは限りません。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

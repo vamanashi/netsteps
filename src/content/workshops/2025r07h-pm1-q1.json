@@ -1,0 +1,2224 @@
+{
+  "examKey": "2025r07h/pm1/1",
+  "title": "ルータ更改を経路・確認・切戻しから組み立てる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_ans.pdf",
+    "https://www.rfc-editor.org/rfc/rfc2328.html"
+  ],
+  "sections": [
+    {
+      "id": "first-hop-foundation",
+      "title": "宛先と最初の中継先を分ける",
+      "targets": [
+        "s1-1"
+      ],
+      "steps": [
+        {
+          "id": "first-hop-purpose",
+          "type": "info",
+          "title": "別のネットワークへ届けたい",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "宛先と最初の中継先を分ける",
+          "scaffold": 5,
+          "body": "PC（Personal Computer、パソコン）から、別拠点のサーバへデータを送る場面です。サーバは、要求に応じて情報や機能を提供するコンピュータです。\n\nIP（Internet Protocol）アドレスは、ネットワーク上の送信元や宛先を表します。ルータはネットワーク間で、パケットというデータのまとまりを中継します。まず「最後に届けたい相手」と「最初に渡す中継機器」を分けましょう。",
+          "fig": {
+            "kind": "topo",
+            "height": 175,
+            "nodes": [
+              {"id": "client", "x": 42, "y": 65, "icon": "pc", "label": "送信元PC"},
+              {"id": "gateway", "x": 160, "y": 65, "icon": "router", "label": "ルータ", "sub": "最初の中継先", "hi": true},
+              {"id": "destination", "x": 278, "y": 65, "icon": "server", "label": "サーバ", "sub": "最後の宛先"}
+            ],
+            "links": [{"from": "client", "to": "gateway", "arrow": true}, {"from": "gateway", "to": "destination", "arrow": true}],
+            "caption": "説明用：ルータが二つのネットワークをつなぐ"
+          }
+        },
+        {
+          "id": "first-hop-default",
+          "type": "info",
+          "title": "行き先一覧に個別の道がないとき",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "宛先と最初の中継先を分ける",
+          "scaffold": 5,
+          "body": "経路表は宛先ネットワークと次に渡す相手の一覧です。デフォルトルートは、宛先に合うより具体的な経路がないときに使う経路で、その中継先をデフォルトゲートウェイと呼びます。ゲートウェイへ渡しても、IPパケットの最終宛先はサーバのままです。"
+        },
+        {
+          "id": "first-hop-address",
+          "type": "quiz",
+          "title": "練習用：PCの別網宛て経路はゲートウェイ192.168.10.1だけ。別網のサーバ192.168.20.8へ送るとき、最初に渡す相手は？",
+          "stage": "check",
+          "format": "選択",
+          "theme": "宛先と最初の中継先を分ける",
+          "scaffold": 4,
+          "choices": [
+            {
+              "text": "192.168.20.8へ同じリンクで直接渡す",
+              "ok": false,
+              "explain": "サーバは別網です。まず接続中の網のルータへ渡します。"
+            },
+            {
+              "text": "宛先名を調べたDNSサーバ",
+              "ok": false,
+              "explain": "DNSサーバは名前に対応するIPアドレスを調べる相手です。サーバへの通信を中継するゲートウェイとは別の役割です。"
+            },
+            {
+              "text": "192.168.10.1",
+              "ok": true,
+              "explain": "別網への個別経路がないのでデフォルトゲートウェイへ渡します。"
+            }
+          ]
+        },
+        {
+          "id": "first-hop-destination",
+          "type": "quiz",
+          "title": "同じ練習条件で、ルータへ渡すIPパケットの宛先は？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "宛先と最初の中継先を分ける",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "192.168.10.1",
+              "ok": false,
+              "explain": "これは中継先です。この練習ではIP宛先をルータ自身に変更しません。"
+            },
+            {
+              "text": "ゲートウェイのMACアドレス",
+              "ok": false,
+              "explain": "MACアドレスは、同じリンクで次の機器へ渡すためのアドレスです。フレームの宛先に使いますが、IPパケットの宛先欄にはIPアドレスを入れます。"
+            },
+            {
+              "text": "192.168.20.8",
+              "ok": true,
+              "explain": "最終宛先はサーバです。中継先の選択とIP宛先を区別します。"
+            }
+          ]
+        },
+        {
+          "id": "first-hop-build",
+          "type": "parsons",
+          "title": "宛先から転送までを組み立てる",
+          "stage": "assemble",
+          "format": "並べ替え",
+          "theme": "宛先と最初の中継先を分ける",
+          "scaffold": 2,
+          "lead": "練習用：別網の宛先に一致する個別経路はなく、デフォルトルートは設定済みです。",
+          "lines": [
+            {
+              "code": "個別経路がないと判断する"
+            },
+            {
+              "code": "デフォルトゲートウェイへ渡す"
+            },
+            {
+              "code": "受け取ったルータが自身の経路表で転送先を決める"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "PCとルータはそれぞれの経路表で判断します。",
+          "ngExplain": "ルータの転送より先に、PCが中継先へ渡す必要があります。"
+        },
+        {
+          "id": "first-hop-specific",
+          "type": "quiz",
+          "title": "練習用の変更条件：宛先192.168.20.0/24への個別経路がある。デフォルトルートとどちらを使う？",
+          "stage": "transfer",
+          "format": "選択",
+          "theme": "宛先と最初の中継先を分ける",
+          "scaffold": 1,
+          "choices": [
+            {
+              "text": "常にデフォルトルート",
+              "ok": false,
+              "explain": "より具体的な経路がない場合に使います。"
+            },
+            {
+              "text": "機器の識別番号だけで決める",
+              "ok": false,
+              "explain": "宛先ネットワークと経路を照合します。"
+            },
+            {
+              "text": "宛先に一致する個別経路",
+              "ok": true,
+              "explain": "より具体的な宛先への経路を優先します。別網なら必ずデフォルトではありません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ospf-foundation",
+      "title": "道の情報・機器の名前・共有する範囲",
+      "targets": [
+        "s1-1"
+      ],
+      "steps": [
+        {
+          "id": "ospf-map",
+          "type": "info",
+          "title": "ルータ同士で道の情報をそろえる",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "道の情報・機器の名前・共有する範囲",
+          "scaffold": 5,
+          "body": "OSPF（Open Shortest Path First）は、ルータ同士で接続状態や経路のコストを伝え、各ルータが経路表を計算する仕組みです。コストは経路選択用の数値で、小さい合計コストの経路を優先します。業務のパケットはこうしてできた経路表に従って転送します。"
+        },
+        {
+          "id": "ospf-map-check",
+          "type": "quiz",
+          "title": "練習用：同じ宛先へ通れる道が二つあり、合計コストは30と70。他の条件が同じなら？",
+          "stage": "check",
+          "format": "選択",
+          "theme": "道の情報・機器の名前・共有する範囲",
+          "scaffold": 4,
+          "choices": [
+            {
+              "text": "必ず二つに均等分散する",
+              "ok": false,
+              "explain": "合計コストが異なるので、同じ優先度ではありません。"
+            },
+            {
+              "text": "30の道を優先する",
+              "ok": true,
+              "explain": "OSPFは合計コストが小さい道を優先します。"
+            },
+            {
+              "text": "70の道を優先する",
+              "ok": false,
+              "explain": "大きい値ほど優先する指標ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "ospf-identity",
+          "type": "info",
+          "title": "どのルータの情報か区別する",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "道の情報・機器の名前・共有する範囲",
+          "scaffold": 5,
+          "body": "IDはIdentifier、識別子です。OSPFは各ルータを区別する32ビットのルータIDを使い、同じOSPFの範囲内で重複させません。IPv4（Internet Protocol version 4）アドレスの形で表しますが、役割は機器の識別であり、PCの中継先とは別です。"
+        },
+        {
+          "id": "ospf-identity-check",
+          "type": "quiz",
+          "title": "練習用：二台のルータが同じルータIDを使った。何が困る？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "道の情報・機器の名前・共有する範囲",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "情報がどのルータのものか区別できなくなる",
+              "ok": true,
+              "explain": "識別子の重複は経路情報の混乱を招きます。"
+            },
+            {
+              "text": "二台で一つのゲートウェイを共有する設定が完成する",
+              "ok": false,
+              "explain": "ルータIDの重複はゲートウェイ冗長化ではありません。"
+            },
+            {
+              "text": "合計コストが自動的に半分になる",
+              "ok": false,
+              "explain": "IDとコストは別の情報です。"
+            }
+          ]
+        },
+        {
+          "id": "ospf-loopback",
+          "type": "info",
+          "title": "ケーブルに結び付かない通信口",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "道の情報・機器の名前・共有する範囲",
+          "scaffold": 5,
+          "body": "インタフェースは機器の通信口です。ループバックインタフェースは機器内に作る論理的な通信口で、特定のケーブルの抜差しに直接左右されません。本問ではそのIPをルータIDに利用します。これは識別子の選び方であり、どんな障害でもそのIPへ到達できる保証ではありません。"
+        },
+        {
+          "id": "ospf-loopback-check",
+          "type": "quiz",
+          "title": "練習用：稼働中のルータで物理ポート一つだけを閉じる。ループバックを識別に使う利点は？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "道の情報・機器の名前・共有する範囲",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "全ルータに同じ番号を設定できる",
+              "ok": false,
+              "explain": "ルータごとに別の識別子が必要です。"
+            },
+            {
+              "text": "物理ポートの状態と機器の識別を切り分けられる",
+              "ok": true,
+              "explain": "ケーブル単位の状態に識別用の論理インタフェースを結び付けずに済みます。"
+            },
+            {
+              "text": "全ての通信経路が必ず残る",
+              "ok": false,
+              "explain": "識別子が残っても経路を失えば到達できません。"
+            }
+          ]
+        },
+        {
+          "id": "ospf-area",
+          "type": "info",
+          "title": "道の情報を共有する範囲を区切る",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "道の情報・機器の名前・共有する範囲",
+          "scaffold": 5,
+          "body": "OSPFのエリアは接続状態の情報を共有する範囲です。複数エリアを使うときの中心がバックボーンエリアで、エリアIDは0（0.0.0.0）です。本問はこの一つのエリアで構成します。同じエリアのルータはエリアIDを共有しても、ルータIDはそれぞれ別です。"
+        },
+        {
+          "id": "ospf-area-check",
+          "type": "quiz",
+          "title": "練習用：同じエリア0にルータ二台を置く。値の共有と区別は？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "道の情報・機器の名前・共有する範囲",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "エリアIDは同じ、ルータIDは別",
+              "ok": true,
+              "explain": "前者は共有する範囲、後者は各機器を指します。"
+            },
+            {
+              "text": "どちらのIDも同じ",
+              "ok": false,
+              "explain": "ルータIDまで同じでは二台を区別できません。"
+            },
+            {
+              "text": "ルータIDが同じならエリアは異なってよい",
+              "ok": false,
+              "explain": "ルータIDの重複でエリアを表現することはできません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "routing-roles",
+      "title": "経路制御で識別する三つの対象",
+      "targets": [
+        "s1-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "三つの役割を原問につなげる",
+          "body": "PCの最初の中継先、OSPFでの機器識別、経路情報を共有する範囲を分けました。原問の設問1(1)もこの三つを問います。役割から名称を選び、原文の条件へ結び付けます。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 50,
+                "y": 65,
+                "label": "PC"
+              },
+              {
+                "id": "node1",
+                "x": 160,
+                "y": 65,
+                "label": "ルータ"
+              },
+              {
+                "id": "node2",
+                "x": 270,
+                "y": 65,
+                "label": "別拠点"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：最初の中継先と経路交換"
+          },
+          "stage": "concept",
+          "id": "routing-roles-1",
+          "format": "読む",
+          "theme": "経路制御で識別する三つの対象",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "PCに宛先への個別経路がなく、デフォルトルートは設定済み。最初の中継先の呼び名は？",
+          "choices": [
+            {
+              "text": "DNS（Domain Name System、名前解決）サーバ",
+              "ok": false,
+              "explain": "名前からIPアドレスを調べる相手です。パケットの中継先とは異なります。"
+            },
+            {
+              "text": "OSPFのエリアID",
+              "ok": false,
+              "explain": "経路制御の範囲を識別する値です。機器の宛先ではありません。"
+            },
+            {
+              "text": "デフォルトゲートウェイ",
+              "ok": true,
+              "explain": "PCの経路表でデフォルトルートの中継先になります。"
+            }
+          ],
+          "stage": "check",
+          "id": "routing-roles-2",
+          "format": "選択",
+          "theme": "経路制御で識別する三つの対象",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "ループバックIPをルータIDに使う目的はどれか。",
+          "choices": [
+            {
+              "text": "全ルータのIDを同じにする",
+              "ok": false,
+              "explain": "識別するためのIDなので重複させません。"
+            },
+            {
+              "text": "OSPF内でルータを識別する",
+              "ok": true,
+              "explain": "接続回線の役割と機器の識別を分けられます。"
+            },
+            {
+              "text": "PCのIPアドレスを配布する",
+              "ok": false,
+              "explain": "アドレス配布はDHCP（Dynamic Host Configuration Protocol）の役割です。"
+            }
+          ],
+          "stage": "check",
+          "id": "routing-roles-3",
+          "format": "選択",
+          "theme": "経路制御で識別する三つの対象",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "三つの空欄を役割から埋めよ。",
+          "template": "エリア0.0.0.0は{area}エリア。機器の識別には{router}ID。PCのデフォルトルートの中継先は{gateway}。",
+          "blanks": [
+            {
+              "key": "area",
+              "label": "エリア名",
+              "choices": [
+                {
+                  "text": "バックボーン",
+                  "ok": true,
+                  "explain": "OSPFのエリア0はバックボーンエリアです。"
+                },
+                {
+                  "text": "スタブ",
+                  "ok": false,
+                  "explain": "スタブは外部経路の扱いを制限するエリアです。"
+                }
+              ],
+              "why": "OSPFのエリア0はバックボーンエリアです。"
+            },
+            {
+              "key": "router",
+              "label": "識別子",
+              "choices": [
+                {
+                  "text": "ルータ",
+                  "ok": true,
+                  "explain": "OSPFルータを区別するルータIDです。"
+                },
+                {
+                  "text": "VLAN（Virtual Local Area Network、仮想的な構内網）",
+                  "ok": false,
+                  "explain": "VLAN IDはレイヤー2の通信範囲を識別します。"
+                }
+              ],
+              "why": "OSPFルータを区別するルータIDです。"
+            },
+            {
+              "key": "gateway",
+              "label": "PCの中継先",
+              "choices": [
+                {
+                  "text": "デフォルトゲートウェイ",
+                  "ok": true,
+                  "explain": "別ネットワークへの最初の中継先です。"
+                },
+                {
+                  "text": "権威DNSサーバ",
+                  "ok": false,
+                  "explain": "権威DNSは名前解決の情報を管理します。"
+                }
+              ],
+              "why": "別ネットワークへの最初の中継先です。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "routing-roles-4",
+          "format": "穴埋め",
+          "theme": "経路制御で識別する三つの対象",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "PCから別拠点へ送る手順を並べよ。",
+          "lead": "宛先に一致する個別経路がPCにない場合です。",
+          "lines": [
+            {
+              "code": "PCがデフォルトルートを選ぶ"
+            },
+            {
+              "code": "PCがデフォルトゲートウェイへ渡す"
+            },
+            {
+              "code": "ルータが経路表に従って別拠点へ転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "PC側の中継先と、ルータ側の経路選択を分けます。",
+          "ngExplain": "ルータの転送はPCから受け取った後です。",
+          "stage": "reason",
+          "id": "routing-roles-5",
+          "format": "並べ替え",
+          "theme": "経路制御で識別する三つの対象",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "PCのゲートウェイを変えずにルータIDだけ変更した。変わる対象はどれか。",
+          "choices": [
+            {
+              "text": "エリア0の名称",
+              "ok": false,
+              "explain": "バックボーンというエリア名はルータIDに依存しません。"
+            },
+            {
+              "text": "OSPF内の機器識別",
+              "ok": true,
+              "explain": "ルータIDとPCのゲートウェイ設定は別の情報です。"
+            },
+            {
+              "text": "PCが最初に渡すIPアドレス",
+              "ok": false,
+              "explain": "ゲートウェイ設定を変えていないので、この理由では変わりません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "routing-roles-6",
+          "format": "選択",
+          "theme": "経路制御で識別する三つの対象",
+          "scaffold": 1
+        },
+        {
+          "id": "routing-original-bridge",
+          "type": "info",
+          "title": "原文のエリアと識別子を確かめる",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "経路制御で識別する三つの対象",
+          "scaffold": 5,
+          "body": "原問はエリア0のみを使い、ループバックIPでルータを識別します。PCの中継先は後の節で学ぶ仕組みで冗長化します。値の表記ではなく「範囲・機器・中継先」のどれを指すかで読み分けましょう。",
+          "originalExcerpt": {
+            "page": 4,
+            "top": 0.19,
+            "bottom": 0.39,
+            "label": "IPA原文：エリアとループバックIP"
+          }
+        }
+      ]
+    },
+    {
+      "id": "neighbor-auth",
+      "title": "経路を交換してよい相手を選ぶ",
+      "targets": [
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "同じ回線に未知のルータが接続された",
+          "body": "ネイバーはOSPFで発見した近隣ルータ、隣接関係は接続状態の情報を同期する関係です。練習用：共有回線に正規ルータと未知の機器が接続されました。ネイバー認証は認証情報を確認して、不正な相手との隣接関係・経路交換を防ぎます。業務データの暗号化とは別です。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 50,
+                "y": 65,
+                "label": "正規R"
+              },
+              {
+                "id": "node1",
+                "x": 160,
+                "y": 65,
+                "label": "共有回線"
+              },
+              {
+                "id": "node2",
+                "x": 270,
+                "y": 65,
+                "label": "未知のR"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：認証が必要になる接続"
+          },
+          "stage": "concept",
+          "id": "neighbor-auth-1",
+          "format": "読む",
+          "theme": "経路を交換してよい相手を選ぶ",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "未知の機器が隣接関係を結べると、何が問題になるか。",
+          "choices": [
+            {
+              "text": "DNSの名前が全て暗号化される",
+              "ok": false,
+              "explain": "OSPFはDNSの暗号化を行いません。"
+            },
+            {
+              "text": "PCの全通信が必ず盗聴される",
+              "ok": false,
+              "explain": "経路交換の危険が直接の問題です。全通信の盗聴までは断定できません。"
+            },
+            {
+              "text": "不正な経路情報を交換してしまう",
+              "ok": true,
+              "explain": "経路表が不正な情報の影響を受けるおそれがあります。"
+            }
+          ],
+          "stage": "check",
+          "id": "neighbor-auth-2",
+          "format": "選択",
+          "theme": "経路を交換してよい相手を選ぶ",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "ネイバー認証と通信内容の暗号化の違いはどれか。",
+          "choices": [
+            {
+              "text": "暗号化していれば経路交換相手の確認は不要",
+              "ok": false,
+              "explain": "回線の秘匿とOSPFへの参加制御は別に考えます。"
+            },
+            {
+              "text": "認証は経路交換の相手確認、暗号化は内容の秘匿",
+              "ok": true,
+              "explain": "OSPF認証だけで業務データの秘匿は保証されません。"
+            },
+            {
+              "text": "認証を使うと業務データも全て暗号化される",
+              "ok": false,
+              "explain": "認証の対象と業務データは別です。"
+            }
+          ],
+          "stage": "reason",
+          "id": "neighbor-auth-3",
+          "format": "選択",
+          "theme": "経路を交換してよい相手を選ぶ",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "防ぐ問題を対象と動作に分けよ。",
+          "template": "{subject}と{relation}になり、{action}してしまう問題を防ぐ。",
+          "blanks": [
+            {
+              "key": "subject",
+              "label": "相手",
+              "choices": [
+                {
+                  "text": "不正なOSPFルータ",
+                  "ok": true,
+                  "explain": "参加を拒否すべき相手は不正なOSPFルータです。"
+                },
+                {
+                  "text": "正規のDNSサーバ",
+                  "ok": false,
+                  "explain": "DNSサーバへの名前解決を禁止する機能ではありません。"
+                }
+              ],
+              "why": "参加を拒否すべき相手は不正なOSPFルータです。"
+            },
+            {
+              "key": "relation",
+              "label": "状態",
+              "choices": [
+                {
+                  "text": "隣接関係",
+                  "ok": true,
+                  "explain": "OSPFの隣接関係が経路交換につながります。"
+                },
+                {
+                  "text": "利用者のログイン状態",
+                  "ok": false,
+                  "explain": "利用者ログインとルータ間認証は別です。"
+                }
+              ],
+              "why": "OSPFの隣接関係が経路交換につながります。"
+            },
+            {
+              "key": "action",
+              "label": "危険な動作",
+              "choices": [
+                {
+                  "text": "経路交換",
+                  "ok": true,
+                  "explain": "不正経路を受け入れることを防ぎます。"
+                },
+                {
+                  "text": "時刻同期",
+                  "ok": false,
+                  "explain": "時刻同期はNTP（Network Time Protocol）の役割です。"
+                }
+              ],
+              "why": "不正経路を受け入れることを防ぎます。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "neighbor-auth-4",
+          "format": "穴埋め",
+          "theme": "経路を交換してよい相手を選ぶ",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "認証を置く理由を組み立てよ。",
+          "lead": "条件から防止したい結果へ並べます。",
+          "lines": [
+            {
+              "code": "共有回線に不正なOSPFルータが接続される可能性がある"
+            },
+            {
+              "code": "ネイバー認証で正規の相手か確認する"
+            },
+            {
+              "code": "不正な相手との隣接関係と経路交換を防ぐ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "接続可能であることと、経路交換を許すことは別です。",
+          "ngExplain": "防ぎたい結果の前に相手確認を置きます。",
+          "stage": "reason",
+          "id": "neighbor-auth-5",
+          "format": "並べ替え",
+          "theme": "経路を交換してよい相手を選ぶ",
+          "scaffold": 2
+        },
+        {
+          "id": "passive-concept",
+          "type": "info",
+          "title": "PC用の口では相手を探さない",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "経路を交換してよい相手を選ぶ",
+          "scaffold": 5,
+          "body": "パッシブインタフェースは、その口でOSPFの近隣探索や隣接関係の確立を行わない設定です。PCだけがつながり経路交換相手がいない口に使います。口を閉塞する設定とは異なり、その口のネットワーク情報は他のOSPF接続から広告できます。"
+        },
+        {
+          "type": "quiz",
+          "title": "PC専用インタフェースでは経路交換自体が不要。適切な設定はどれか。",
+          "choices": [
+            {
+              "text": "OSPFコストを小さくする",
+              "ok": false,
+              "explain": "コストは経路選択を変えます。経路交換を止める設定ではありません。"
+            },
+            {
+              "text": "パッシブインタフェース",
+              "ok": true,
+              "explain": "不要なOSPFの隣接関係を作らない設定です。"
+            },
+            {
+              "text": "認証を外して誰でも参加できるようにする",
+              "ok": false,
+              "explain": "相手を限定する目的に反します。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "neighbor-auth-6",
+          "format": "選択",
+          "theme": "経路を交換してよい相手を選ぶ",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "bgp-return",
+      "title": "クラウド側からの戻り経路を選ばせる",
+      "targets": [
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "入口が二つあるクラウド接続",
+          "body": "BGP（Border Gateway Protocol）はAS（Autonomous System、自律システム）という管理単位の間で経路を交換します。AS_PATHは経路の広告が通ってきたAS番号の列です。練習用の表では二台が同じ宛先を広告し、AS_PATH長より優先される条件は全て同じとします。この条件では短いAS_PATHが選ばれます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "広告元",
+              "AS_PATHの長さ"
+            ],
+            "rows": [
+              [
+                "R30",
+                "1"
+              ],
+              [
+                "R31",
+                "3"
+              ]
+            ],
+            "caption": "説明用：他条件が同じ場合の比較"
+          },
+          "stage": "concept",
+          "id": "bgp-return-1",
+          "format": "読む",
+          "theme": "クラウド側からの戻り経路を選ばせる",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "表の条件でクラウド側が選ぶ経路はどれか。",
+          "choices": [
+            {
+              "text": "R31",
+              "ok": false,
+              "explain": "長い経路が優先されるわけではありません。"
+            },
+            {
+              "text": "必ず半分ずつ",
+              "ok": false,
+              "explain": "AS_PATH長が異なるので、この条件で均等分散とはなりません。"
+            },
+            {
+              "text": "R30",
+              "ok": true,
+              "explain": "AS_PATHの長さ1が3より短いためです。"
+            }
+          ],
+          "stage": "check",
+          "id": "bgp-return-2",
+          "format": "選択",
+          "theme": "クラウド側からの戻り経路を選ばせる",
+          "scaffold": 4,
+          "fig": {
+            "kind": "table",
+            "head": [
+              "広告元",
+              "AS_PATHの長さ"
+            ],
+            "rows": [
+              [
+                "R30",
+                "1"
+              ],
+              [
+                "R31",
+                "3"
+              ]
+            ],
+            "caption": "説明用：他条件が同じ場合の比較"
+          }
+        },
+        {
+          "type": "quiz",
+          "title": "R31を待機側にするため、R31の広告へ同じAS番号を追加する理由はどれか。",
+          "choices": [
+            {
+              "text": "実際に通るルータ台数を増やす",
+              "ok": false,
+              "explain": "追加するのは経路属性です。物理的な中継機器を増やすわけではありません。"
+            },
+            {
+              "text": "AS_PATHを長く見せて選ばれにくくする",
+              "ok": true,
+              "explain": "AS_PATHプリペンドは広告を受けた側の経路選択に働きます。"
+            },
+            {
+              "text": "OSPFのエリアを増やす",
+              "ok": false,
+              "explain": "BGPの経路属性とOSPFエリアは異なります。"
+            }
+          ],
+          "stage": "reason",
+          "id": "bgp-return-3",
+          "format": "選択",
+          "theme": "クラウド側からの戻り経路を選ばせる",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "比較対象を含めて答案を組み立てよ。",
+          "template": "R31が広告するAS_PATH長を{comparison}する。",
+          "blanks": [
+            {
+              "key": "comparison",
+              "label": "比較",
+              "choices": [
+                {
+                  "text": "R30より長く",
+                  "ok": true,
+                  "explain": "本問の通常系はR30です。R31は選ばれにくくします。"
+                },
+                {
+                  "text": "R30より短く",
+                  "ok": false,
+                  "explain": "短くするとR31を優先する方向になります。"
+                }
+              ],
+              "why": "本問の通常系はR30です。R31は選ばれにくくします。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "bgp-return-4",
+          "format": "穴埋め",
+          "theme": "クラウド側からの戻り経路を選ばせる",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "戻り経路の選択までを並べよ。",
+          "lead": "他のBGP選択条件は同じです。",
+          "lines": [
+            {
+              "code": "R31が自AS番号を追加した経路を広告する"
+            },
+            {
+              "code": "クラウド側が二つのAS_PATH長を比較する"
+            },
+            {
+              "code": "クラウド側が短いR30経由の経路を選ぶ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "広告側の操作が、受信側の経路選択に反映されます。",
+          "ngExplain": "選択するのは広告を受け取ったクラウド側です。",
+          "stage": "reason",
+          "id": "bgp-return-5",
+          "format": "並べ替え",
+          "theme": "クラウド側からの戻り経路を選ばせる",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "保守中はR31を通常系にしたい。同じ前提でどうするか。",
+          "choices": [
+            {
+              "text": "R30のVRRP（Virtual Router Redundancy Protocol）優先度だけを下げる",
+              "ok": false,
+              "explain": "VRRPは構内網のゲートウェイ冗長化で、BGPの広告条件とは別です。次の節で仕組みを学びます。"
+            },
+            {
+              "text": "R30の広告をR31より長くする",
+              "ok": true,
+              "explain": "優先したくない側のAS_PATHを長くします。"
+            },
+            {
+              "text": "R31の広告だけをさらに長くする",
+              "ok": false,
+              "explain": "それではR31を選ばれにくくします。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "bgp-return-6",
+          "format": "選択",
+          "theme": "クラウド側からの戻り経路を選ばせる",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "vrrp-ready",
+      "title": "受け取る準備と転送する準備をそろえる",
+      "targets": [
+        "s1-1",
+        "s1-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "起動したルータへすぐ戻してよいか",
+          "body": "VRRPは複数ルータで仮想的なゲートウェイを共有し、マスターが中継を担当する仕組みです。PCは同じ仮想IPを中継先に設定でき、担当が交代しても設定変更が不要です。プリエンプトは復旧した高優先度ルータが担当を取り戻すこと、プリエンプトディレイはその待ち時間です。経路情報がそろい安定する「収束」を待ってから戻します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "起動",
+                "d": "インタフェースが利用可能"
+              },
+              {
+                "t": "OSPF収束待ち",
+                "d": "必要な経路情報をそろえる"
+              },
+              {
+                "t": "マスター復帰",
+                "d": "PCからの通信を転送"
+              }
+            ],
+            "caption": "説明用：プリエンプトディレイの目的"
+          },
+          "stage": "concept",
+          "id": "vrrp-ready-1",
+          "format": "読む",
+          "theme": "受け取る準備と転送する準備をそろえる",
+          "scaffold": 5
+        },
+        {
+          "id": "vrrp-preparation-check",
+          "type": "quiz",
+          "title": "練習用：R20は起動したが外部への経路がまだない。通信を受け取る担当に戻す前に必要なのは？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "受け取る準備と転送する準備をそろえる",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "外部へ転送できる経路をそろえる",
+              "ok": true,
+              "explain": "ゲートウェイの担当になれても出口の経路がなければ転送できません。"
+            },
+            {
+              "text": "PCの全宛先をR20のルータIDへ変える",
+              "ok": false,
+              "explain": "識別子は業務通信の最終宛先ではありません。"
+            },
+            {
+              "text": "優先度だけをさらに上げる",
+              "ok": false,
+              "explain": "担当選びの値であり経路収束を速めません。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "R20の優先度105、R21は100。プリエンプト有効なら復旧後の担当はどれか。",
+          "choices": [
+            {
+              "text": "R21",
+              "ok": false,
+              "explain": "100は105より小さい値です。"
+            },
+            {
+              "text": "二台とも常にマスター",
+              "ok": false,
+              "explain": "同じVRRPグループで担当を選びます。"
+            },
+            {
+              "text": "R20",
+              "ok": true,
+              "explain": "本問は値が大きい方がマスターになります。"
+            }
+          ],
+          "stage": "check",
+          "id": "vrrp-ready-2",
+          "format": "選択",
+          "theme": "受け取る準備と転送する準備をそろえる",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "R20が経路収束前にマスターになると何が起こり得るか。",
+          "choices": [
+            {
+              "text": "BGPのAS_PATHが必ず消える",
+              "ok": false,
+              "explain": "本問の待機理由はOSPFの収束です。"
+            },
+            {
+              "text": "PCから受け取っても宛先へ転送できない",
+              "ok": true,
+              "explain": "ゲートウェイを引き受ける準備と転送経路の準備は別です。"
+            },
+            {
+              "text": "PCのMAC（Media Access Control）アドレスが長くなる",
+              "ok": false,
+              "explain": "役割切替でMACアドレスの長さは変わりません。"
+            }
+          ],
+          "stage": "reason",
+          "id": "vrrp-ready-3",
+          "format": "選択",
+          "theme": "受け取る準備と転送する準備をそろえる",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "待つ対象を正確に選べ。",
+          "template": "プリエンプトディレイは{protocol}の{state}を待つために設定する。",
+          "blanks": [
+            {
+              "key": "protocol",
+              "label": "プロトコル",
+              "choices": [
+                {
+                  "text": "OSPF",
+                  "ok": true,
+                  "explain": "本問のルータ間経路制御はOSPFです。"
+                },
+                {
+                  "text": "DHCP",
+                  "ok": false,
+                  "explain": "PCへのアドレス配布完了を待つ設問ではありません。"
+                }
+              ],
+              "why": "本問のルータ間経路制御はOSPFです。"
+            },
+            {
+              "key": "state",
+              "label": "状態",
+              "choices": [
+                {
+                  "text": "経路情報が収束した状態",
+                  "ok": true,
+                  "explain": "転送に必要な経路情報が安定した状態を待ちます。"
+                },
+                {
+                  "text": "認証パスワードが変更された状態",
+                  "ok": false,
+                  "explain": "パスワードの変更は起動時の待機目的ではありません。"
+                }
+              ],
+              "why": "転送に必要な経路情報が安定した状態を待ちます。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "vrrp-ready-4",
+          "format": "穴埋め",
+          "theme": "受け取る準備と転送する準備をそろえる",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "再起動後の復帰手順を並べよ。",
+          "lead": "通信を受け取る前に経路を準備します。",
+          "lines": [
+            {
+              "code": "R20が起動する"
+            },
+            {
+              "code": "OSPFの経路情報が収束するまで待つ"
+            },
+            {
+              "code": "R20がVRRPマスターに戻る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "高優先度であることだけでは転送準備を保証しません。",
+          "ngExplain": "マスター復帰は経路準備の後です。",
+          "stage": "reason",
+          "id": "vrrp-ready-5",
+          "format": "並べ替え",
+          "theme": "受け取る準備と転送する準備をそろえる",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "収束に以前より時間が掛かる構成へ変えた。何を確認するか。",
+          "choices": [
+            {
+              "text": "PCのDNSキャッシュだけ",
+              "ok": false,
+              "explain": "DNSキャッシュはルータのOSPF収束を決めません。"
+            },
+            {
+              "text": "ディレイが新しい収束時間を考慮しているか",
+              "ok": true,
+              "explain": "運用では起動時の経路形成も検証します。"
+            },
+            {
+              "text": "優先度を上げれば待機は不要か",
+              "ok": false,
+              "explain": "高優先度でも経路形成は速くなりません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "vrrp-ready-6",
+          "format": "選択",
+          "theme": "受け取る準備と転送する準備をそろえる",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "probe-paths",
+      "title": "作業対象を通る業務経路を選ぶ",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "probe-vocabulary",
+          "type": "info",
+          "title": "図の機器と疎通確認を読む",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "作業対象を通る業務経路を選ぶ",
+          "scaffold": 5,
+          "body": "LAN（Local Area Network）は拠点内の網、WAN（Wide Area Network）は拠点間などの広域網です。L2SWはレイヤー2スイッチ、L3SWは網をまたいで転送できるレイヤー3スイッチです。FW（Firewall）は通信を許可・拒否します。\n\nSaaS（Software as a Service）はネットワーク経由で利用するソフトウェアサービスです。pingはICMP（Internet Control Message Protocol）の応答でIP疎通を調べるコマンドです。本問は継続pingが正常で損失がなければ業務影響なしとする仮定で監視先を選びます。"
+        },
+        {
+          "type": "info",
+          "title": "監視する宛先は出発地点で変わる",
+          "body": "本社にインターネット出口と社内サーバがあります。クラウドは拠点間回線の先です。本社の回線ルータを交換する場合、そのルータを通る通信を監視します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "出発地",
+              "本社内サーバ",
+              "クラウド"
+            ],
+            "rows": [
+              [
+                "本社PC",
+                "拠点間回線を通らない",
+                "拠点間回線を通る"
+              ],
+              [
+                "支社PC",
+                "拠点間回線を通る",
+                "支社から直接行ける"
+              ]
+            ],
+            "caption": "説明用：監視先を経路から選ぶ練習"
+          },
+          "stage": "concept",
+          "id": "probe-paths-1",
+          "format": "読む",
+          "theme": "作業対象を通る業務経路を選ぶ",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "本社PCから本社内サーバへのpingだけでは不足する理由はどれか。",
+          "choices": [
+            {
+              "text": "pingは常にインターネットへ出る",
+              "ok": false,
+              "explain": "pingも宛先に従って経路が決まります。"
+            },
+            {
+              "text": "同じ会社の機器にはpingできない",
+              "ok": false,
+              "explain": "会社の区別はICMPの疎通条件ではありません。"
+            },
+            {
+              "text": "交換する回線ルータを通らない",
+              "ok": true,
+              "explain": "別経路が正常でも作業対象の迂回を検証できません。"
+            }
+          ],
+          "stage": "check",
+          "id": "probe-paths-2",
+          "format": "選択",
+          "theme": "作業対象を通る業務経路を選ぶ",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "原図で大阪PCからR10を経由する監視対象はどれか。",
+          "choices": [
+            {
+              "text": "（ア）と（イ）",
+              "ok": false,
+              "explain": "どちらも大阪PCからR10を通る必要がありません。"
+            },
+            {
+              "text": "（ウ）C社SaaS",
+              "ok": true,
+              "explain": "（ア）と（イ）は大阪内からL3SW10側で到達します。"
+            },
+            {
+              "text": "（ア）インターネットだけ",
+              "ok": false,
+              "explain": "大阪PCはL3SW10とFW10を通ります。R10の監視になりません。"
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.44,
+            "bottom": 0.88,
+            "label": "原図1：大阪の出口と広域イーサ網"
+          },
+          "id": "probe-paths-3",
+          "format": "選択",
+          "theme": "作業対象を通る業務経路を選ぶ",
+          "scaffold": 4
+        },
+        {
+          "id": "tokyo-path-reason",
+          "type": "quiz",
+          "title": "原問条件：インターネット出口と社内サーバは大阪。東京とC社は広域イーサ網へ直接接続。東京PCからR10更改を監視する通信は？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "作業対象を通る業務経路を選ぶ",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "東京内で完結する通信だけ",
+              "ok": false,
+              "explain": "作業対象を通らない通信の成功だけでは不足します。"
+            },
+            {
+              "text": "大阪へ向かう通信",
+              "ok": true,
+              "explain": "大阪側のR10を通常通る経路を監視します。"
+            },
+            {
+              "text": "東京からC社への直接通信だけ",
+              "ok": false,
+              "explain": "大阪のR10を通らない経路では、R10更改の影響を調べられません。"
+            }
+          ]
+        },
+        {
+          "type": "blank",
+          "title": "東京からの監視先を二つそろえよ。",
+          "template": "東京PCからR10更改を確認する宛先は{internet}と{server}。",
+          "blanks": [
+            {
+              "key": "internet",
+              "label": "対象1",
+              "choices": [
+                {
+                  "text": "（ア）インターネット",
+                  "ok": true,
+                  "explain": "東京から大阪のFW10へ向かう通信はR10を通ります。"
+                },
+                {
+                  "text": "（ウ）C社SaaS",
+                  "ok": false,
+                  "explain": "東京からC社へは広域イーサ網で直接向かえます。"
+                }
+              ],
+              "why": "東京から大阪のFW10へ向かう通信はR10を通ります。"
+            },
+            {
+              "key": "server",
+              "label": "対象2",
+              "choices": [
+                {
+                  "text": "（イ）サーバセグメント",
+                  "ok": true,
+                  "explain": "大阪側のサーバへの通信もR10を通ります。"
+                },
+                {
+                  "text": "東京のL2SW20",
+                  "ok": false,
+                  "explain": "支社内だけの疎通はR10の状態を確認できません。"
+                }
+              ],
+              "why": "大阪側のサーバへの通信もR10を通ります。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "probe-paths-4",
+          "format": "穴埋め",
+          "theme": "作業対象を通る業務経路を選ぶ",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "監視対象を選ぶ手順を並べよ。",
+          "lead": "場所の名前ではなく通信経路で判断します。",
+          "lines": [
+            {
+              "code": "PCの出発地点と業務の宛先を決める"
+            },
+            {
+              "code": "通常時に通る機器を図でたどる"
+            },
+            {
+              "code": "R10を通る宛先へ継続してpingする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "大阪は（ウ）、東京は（ア）と（イ）が対象です。",
+          "ngExplain": "まず通常経路を確認してから監視先を選びます。",
+          "stage": "reason",
+          "id": "probe-paths-5",
+          "format": "並べ替え",
+          "theme": "作業対象を通る業務経路を選ぶ",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "交換対象が東京のR20に変わった。東京PCからC社へのpingはどうか。",
+          "choices": [
+            {
+              "text": "大阪内の通信しか監視できない",
+              "ok": false,
+              "explain": "pingは支社から外部への経路も確認できます。"
+            },
+            {
+              "text": "通常R20を通るので監視候補になる",
+              "ok": true,
+              "explain": "同じ宛先でも交換対象が変われば判断は変わります。"
+            },
+            {
+              "text": "先ほど除いたので今回も除く",
+              "ok": false,
+              "explain": "除外理由はR10を通らないことでした。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "probe-paths-6",
+          "format": "選択",
+          "theme": "作業対象を通る業務経路を選ぶ",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "cost-drain",
+      "title": "停止の前に経路を迂回させる",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "線を抜く前に通信を移す",
+          "body": "練習用の条件：同じ宛先への通常経路の合計コストは120、代替経路は1020です。OSPFはこの比較で小さい合計コストを選びます。交換対象を通る経路の合計を代替より大きくして通信を移します。口ごとの設定値と、経路全体で足した値を区別します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "経路",
+              "変更前の合計コスト"
+            ],
+            "rows": [
+              [
+                "対象ルータを通る",
+                "120"
+              ],
+              [
+                "対象を通らない代替",
+                "1020"
+              ]
+            ],
+            "caption": "説明用：練習用の変更前条件"
+          },
+          "stage": "concept",
+          "id": "cost-drain-1",
+          "format": "読む",
+          "theme": "停止の前に経路を迂回させる",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "交換対象を迂回させる操作はどれか。",
+          "choices": [
+            {
+              "text": "対象のコストを1にする",
+              "ok": false,
+              "explain": "対象経路を優先する方向です。"
+            },
+            {
+              "text": "PCのデフォルトゲートウェイを削除する",
+              "ok": false,
+              "explain": "業務通信自体を止めてしまいます。"
+            },
+            {
+              "text": "対象のOSPFコストを十分大きくする",
+              "ok": true,
+              "explain": "代替経路の合計コストより厳密に大きくします。同じ値では対象経路も選ばれる可能性があります。"
+            }
+          ],
+          "stage": "check",
+          "id": "cost-drain-2",
+          "format": "選択",
+          "theme": "停止の前に経路を迂回させる",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "対象経路を120から220に変えただけでは不十分なのはなぜか。",
+          "choices": [
+            {
+              "text": "コストはIPアドレスを変える値だから",
+              "ok": false,
+              "explain": "コストは経路選択用の指標です。"
+            },
+            {
+              "text": "代替経路1020よりまだ小さい",
+              "ok": true,
+              "explain": "変更した事実ではなく経路の大小関係が重要です。"
+            },
+            {
+              "text": "OSPFは値が大きい経路を選ぶ",
+              "ok": false,
+              "explain": "OSPFは小さい合計コストを優先します。"
+            }
+          ],
+          "stage": "reason",
+          "id": "cost-drain-3",
+          "format": "選択",
+          "theme": "停止の前に経路を迂回させる",
+          "scaffold": 4
+        },
+        {
+          "id": "cost-equal-check",
+          "type": "quiz",
+          "title": "練習用の変更条件：対象経路を1020まで上げ、代替経路も1020。対象に流れないと保証できる？",
+          "stage": "transfer",
+          "format": "選択",
+          "theme": "停止の前に経路を迂回させる",
+          "scaffold": 1,
+          "choices": [
+            {
+              "text": "値を変更したので必ず迂回する",
+              "ok": false,
+              "explain": "変更の有無ではなく比較結果が重要です。"
+            },
+            {
+              "text": "できない。等コストの経路として残り得る",
+              "ok": true,
+              "explain": "代替より十分大きくし、実際の迂回も確認します。"
+            },
+            {
+              "text": "同じ値なら対象だけ消える",
+              "ok": false,
+              "explain": "同じコストにしただけでは対象を除外できません。"
+            }
+          ]
+        },
+        {
+          "type": "blank",
+          "title": "原表の設定変更を具体化せよ。",
+          "template": "R10のOSPFコストを{value}など十分大きい値にし、{result}ようにする。",
+          "blanks": [
+            {
+              "key": "value",
+              "label": "設定例",
+              "choices": [
+                {
+                  "text": "65535",
+                  "ok": true,
+                  "explain": "代替経路を優先させるための十分大きい例です。"
+                },
+                {
+                  "text": "1",
+                  "ok": false,
+                  "explain": "1は対象を優先する方向です。"
+                }
+              ],
+              "why": "代替経路を優先させるための十分大きい例です。"
+            },
+            {
+              "key": "result",
+              "label": "狙い",
+              "choices": [
+                {
+                  "text": "通信がR10を迂回する",
+                  "ok": true,
+                  "explain": "代替ルータで業務を継続するのが目的です。"
+                },
+                {
+                  "text": "R10で通信を廃棄する",
+                  "ok": false,
+                  "explain": "廃棄は無停止更改の目的に反します。"
+                }
+              ],
+              "why": "代替ルータで業務を継続するのが目的です。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.39,
+            "bottom": 0.49,
+            "label": "原表2：1-1から1-3の順序"
+          },
+          "id": "cost-drain-4",
+          "format": "穴埋め",
+          "theme": "停止の前に経路を迂回させる",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "切離し前の確認を並べよ。",
+          "lead": "原表の1-1〜1-3に対応します。",
+          "lines": [
+            {
+              "code": "R10のコストを十分大きくする"
+            },
+            {
+              "code": "迂回して正常に通信できることを確認する"
+            },
+            {
+              "code": "R10の物理インタフェースを閉塞する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "経路変更の成功を確認してから機器を切り離します。",
+          "ngExplain": "コスト変更の直後に確認せず切り離さないでください。",
+          "stage": "reason",
+          "id": "cost-drain-5",
+          "format": "並べ替え",
+          "theme": "停止の前に経路を迂回させる",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "代替経路が故障していると判明した。コストを上げて停止してよいか。",
+          "choices": [
+            {
+              "text": "OSPF認証を外して停止する",
+              "ok": false,
+              "explain": "認証を外しても物理的な代替経路は復旧しません。"
+            },
+            {
+              "text": "停止せず、代替経路の復旧を先に行う",
+              "ok": true,
+              "explain": "コスト変更だけでは存在しない経路を作れません。"
+            },
+            {
+              "text": "65535なら代替経路がなくても通信できる",
+              "ok": false,
+              "explain": "コストは経路の優先度です。接続を生成しません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "cost-drain-6",
+          "format": "選択",
+          "theme": "停止の前に経路を迂回させる",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "rollback",
+      "title": "早く戻せる状態で切離しを試す",
+      "targets": [
+        "s2-3",
+        "s2-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "電源を切る前に閉塞する",
+          "body": "迂回後、対象ルータの全ポートを閉塞します。異常が出た場合は閉塞を解除できます。電源を切ってしまうと、切戻しに起動時間も必要です。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "迂回確認",
+                "d": "経路を逃がす"
+              },
+              {
+                "t": "全ポート閉塞",
+                "d": "異常なら解除できる"
+              },
+              {
+                "t": "保存・電源停止",
+                "d": "切離し確認後に実施"
+              }
+            ],
+            "caption": "説明用：切戻しやすい段階を残す"
+          },
+          "stage": "concept",
+          "id": "rollback-1",
+          "format": "読む",
+          "theme": "早く戻せる状態で切離しを試す",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "閉塞の段階で障害に気付いた。早く戻せる理由はどれか。",
+          "choices": [
+            {
+              "text": "閉塞するとOSPFが不要になる",
+              "ok": false,
+              "explain": "経路制御そのものが不要になるわけではありません。"
+            },
+            {
+              "text": "閉塞したポートでも業務通信を転送できる",
+              "ok": false,
+              "explain": "閉塞ポートは業務通信を転送しません。"
+            },
+            {
+              "text": "閉塞解除で戻せて再起動を待たない",
+              "ok": true,
+              "explain": "電源停止より切戻しが速いことが本問の要点です。"
+            }
+          ],
+          "stage": "check",
+          "id": "rollback-2",
+          "format": "選択",
+          "theme": "早く戻せる状態で切離しを試す",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "比較と理由を含む答案にせよ。",
+          "template": "{method}の方が、電源停止より{benefit}から。",
+          "blanks": [
+            {
+              "key": "method",
+              "label": "比較する操作",
+              "choices": [
+                {
+                  "text": "物理インタフェース閉塞",
+                  "ok": true,
+                  "explain": "解除が容易な切離し方法です。"
+                },
+                {
+                  "text": "ケーブルの廃棄",
+                  "ok": false,
+                  "explain": "ケーブルを廃棄すると元に戻せません。"
+                }
+              ],
+              "why": "解除が容易な切離し方法です。"
+            },
+            {
+              "key": "benefit",
+              "label": "利点",
+              "choices": [
+                {
+                  "text": "素早く切り戻せる",
+                  "ok": true,
+                  "explain": "機器の起動待ちを避けられます。"
+                },
+                {
+                  "text": "暗号強度を高められる",
+                  "ok": false,
+                  "explain": "閉塞と暗号強度は関係ありません。"
+                }
+              ],
+              "why": "機器の起動待ちを避けられます。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "rollback-3",
+          "format": "穴埋め",
+          "theme": "早く戻せる状態で切離しを試す",
+          "scaffold": 4
+        },
+        {
+          "id": "cable-label-reason",
+          "type": "info",
+          "title": "抜く前なら対応を確認できる",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "早く戻せる状態で切離しを試す",
+          "scaffold": 5,
+          "body": "同じ色のケーブルが多いと、抜いた後で元のポートを見分けられません。抜去前に「どのケーブルをどのポートへ戻すか」をラベルで記録します。原問の設問2(4)はイーサネットケーブルへのラベル付与という具体的作業まで答えます。"
+        },
+        {
+          "type": "quiz",
+          "title": "ケーブルを抜く前に追加する作業はどれか。",
+          "choices": [
+            {
+              "text": "各ケーブルに接続先ポートを識別するラベルを付ける",
+              "ok": true,
+              "explain": "新機器へ同じ対応で接続するためです。"
+            },
+            {
+              "text": "全ケーブルへ同じ番号を付ける",
+              "ok": false,
+              "explain": "対応を区別できないので誤接続を防げません。"
+            },
+            {
+              "text": "抜いた後に色だけを記憶する",
+              "ok": false,
+              "explain": "同色ケーブルや記憶違いに対応できません。"
+            }
+          ],
+          "stage": "check",
+          "id": "rollback-4",
+          "format": "選択",
+          "theme": "早く戻せる状態で切離しを試す",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "誤接続を防ぐ交換作業を並べよ。",
+          "lead": "電源停止後のケーブル作業です。",
+          "lines": [
+            {
+              "code": "抜去前にケーブルと接続先の対応をラベルで記録する"
+            },
+            {
+              "code": "ケーブルを抜き機器を交換する"
+            },
+            {
+              "code": "ラベルの対応に従って新機器へ接続する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "識別情報は元の対応を確認できる間に付けます。",
+          "ngExplain": "抜いた後では元のポートとの対応が失われます。",
+          "stage": "reason",
+          "id": "rollback-5",
+          "format": "並べ替え",
+          "theme": "早く戻せる状態で切離しを試す",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "新機種でポート番号が変わる場合、何をラベルと併用するか。",
+          "choices": [
+            {
+              "text": "ラベルを外して自動検出に任せる",
+              "ok": false,
+              "explain": "物理接続の誤りを確実に防ぐ方法ではありません。"
+            },
+            {
+              "text": "旧ポートと新ポートの対応表",
+              "ok": true,
+              "explain": "番号が異なる場合も役割を対応付けて接続します。"
+            },
+            {
+              "text": "旧番号を無条件で同じ新番号へ接続する",
+              "ok": false,
+              "explain": "番号だけでは機能が一致するとは限りません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "rollback-6",
+          "format": "選択",
+          "theme": "早く戻せる状態で切離しを試す",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "new-router-probes",
+      "title": "新ルータの両側を確認してから戻す",
+      "targets": [
+        "s2-5"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "新機器から近隣への疎通を確認する",
+          "body": "VLANはスイッチ内で論理的に分けたLANです。本問のR10は大阪のvlan20と広域イーサ網の両方につながります。下図の接続条件から各側でIP疎通を調べる相手を選びます。VPN（Virtual Private Network、仮想プライベート網）は別の冗長経路で、IPsec（IP Security）によって通信を保護します。",
+          "fig": {
+            "kind": "topo",
+            "height": 285,
+            "nodes": [
+              {
+                "id": "r10",
+                "label": "新R10",
+                "icon": "router",
+                "x": 260,
+                "y": 100
+              },
+              {
+                "id": "lan",
+                "label": "L3SW10",
+                "icon": "l3sw",
+                "x": 150,
+                "y": 40,
+                "sub": "vlan20"
+              },
+              {
+                "id": "r11",
+                "label": "R11",
+                "icon": "router",
+                "x": 40,
+                "y": 40
+              },
+              {
+                "id": "wan",
+                "label": "広域網",
+                "icon": "cloud",
+                "x": 150,
+                "y": 165
+              },
+              {
+                "id": "r20",
+                "label": "R20",
+                "icon": "router",
+                "x": 40,
+                "y": 230
+              },
+              {
+                "id": "r30",
+                "label": "R30",
+                "icon": "router",
+                "x": 270,
+                "y": 230
+              }
+            ],
+            "links": [
+              {
+                "from": "lan",
+                "to": "r10"
+              },
+              {
+                "from": "lan",
+                "to": "r11"
+              },
+              {
+                "from": "r10",
+                "to": "wan"
+              },
+              {
+                "from": "wan",
+                "to": "r20"
+              },
+              {
+                "from": "wan",
+                "to": "r30"
+              }
+            ],
+            "caption": "説明用：原図の接続条件（確認先は未指定）"
+          },
+          "stage": "concept",
+          "id": "new-router-probes-1",
+          "format": "読む",
+          "theme": "新ルータの両側を確認してから戻す",
+          "scaffold": 5
+        },
+        {
+          "id": "probe-both-sides",
+          "type": "quiz",
+          "title": "練習用：新ルータからLAN側へping成功、広域側は未確認。通常経路に戻してよい？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "新ルータの両側を確認してから戻す",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "片側の成功で全接続が正常といえる",
+              "ok": false,
+              "explain": "別の接続の成功までは確認できません。"
+            },
+            {
+              "text": "名前にRが付く機器だけ確認すればよい",
+              "ok": false,
+              "explain": "L3SWのようなIP中継機器も対象です。接続位置で選びます。"
+            },
+            {
+              "text": "広域側も確認してから判断する",
+              "ok": true,
+              "explain": "片側だけでは広域側の誤接続や設定漏れを見逃します。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "大阪側で確認する二台の組合せはどれか。",
+          "choices": [
+            {
+              "text": "L2SW11とL2SW12",
+              "ok": false,
+              "explain": "PC収容側です。R10の接続側そのものではありません。"
+            },
+            {
+              "text": "R21とR31",
+              "ok": false,
+              "explain": "IPsec VPN側のルータです。"
+            },
+            {
+              "text": "L3SW10とR11",
+              "ok": true,
+              "explain": "R10とR11はL3SW10のvlan20に収容されます。"
+            }
+          ],
+          "stage": "check",
+          "id": "new-router-probes-2",
+          "format": "選択",
+          "theme": "新ルータの両側を確認してから戻す",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "広域イーサ網側で確認する二台はどれか。",
+          "choices": [
+            {
+              "text": "FW10とL2SW30",
+              "ok": false,
+              "explain": "原図のR10の広域イーサ網側の隣接ルータではありません。"
+            },
+            {
+              "text": "R20とR30",
+              "ok": true,
+              "explain": "R10と同じ広域イーサ網につながるルータです。"
+            },
+            {
+              "text": "R21とR31",
+              "ok": false,
+              "explain": "こちらはIPsec VPN側につながります。"
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.44,
+            "bottom": 0.88,
+            "label": "原図1：新R10のLAN側と広域イーサ網側"
+          },
+          "id": "new-router-probes-3",
+          "format": "選択",
+          "theme": "新ルータの両側を確認してから戻す",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "四つの確認先を欠けなくそろえよ。",
+          "template": "大阪側は{lan1}と{lan2}。広域イーサ網側は{wan1}と{wan2}。",
+          "blanks": [
+            {
+              "key": "lan1",
+              "label": "LAN側1",
+              "choices": [
+                {
+                  "text": "L3SW10",
+                  "ok": true,
+                  "explain": "R10を収容するレイヤー3スイッチです。"
+                },
+                {
+                  "text": "L2SW10",
+                  "ok": false,
+                  "explain": "L2SW10はサーバを収容する側です。"
+                }
+              ],
+              "why": "R10を収容するレイヤー3スイッチです。"
+            },
+            {
+              "key": "lan2",
+              "label": "LAN側2",
+              "choices": [
+                {
+                  "text": "R11",
+                  "ok": true,
+                  "explain": "R11は同じvlan20にあります。"
+                },
+                {
+                  "text": "R21",
+                  "ok": false,
+                  "explain": "R21は東京のVPN側です。"
+                }
+              ],
+              "why": "R11は同じvlan20にあります。"
+            },
+            {
+              "key": "wan1",
+              "label": "広域側1",
+              "choices": [
+                {
+                  "text": "R20",
+                  "ok": true,
+                  "explain": "R20が東京の広域イーサ網側です。"
+                },
+                {
+                  "text": "R21",
+                  "ok": false,
+                  "explain": "R21は別の冗長経路です。"
+                }
+              ],
+              "why": "R20が東京の広域イーサ網側です。"
+            },
+            {
+              "key": "wan2",
+              "label": "広域側2",
+              "choices": [
+                {
+                  "text": "R30",
+                  "ok": true,
+                  "explain": "R30がC社側の広域イーサ網接続です。"
+                },
+                {
+                  "text": "R31",
+                  "ok": false,
+                  "explain": "R31はVPN側のルータです。"
+                }
+              ],
+              "why": "R30がC社側の広域イーサ網接続です。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "new-router-probes-4",
+          "format": "穴埋め",
+          "theme": "新ルータの両側を確認してから戻す",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "新機器を通常経路に戻す順序を並べよ。",
+          "lead": "交換後もコストは大きいままです。",
+          "lines": [
+            {
+              "code": "新R10の物理インタフェースの閉塞を解除する"
+            },
+            {
+              "code": "新R10から四つの接続先へのpingを確認する"
+            },
+            {
+              "code": "OSPFコストを戻し迂回を解除する"
+            },
+            {
+              "code": "業務経路が新R10を経由して正常なことを確認する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "接続確認を終えてから業務通信を戻します。",
+          "ngExplain": "コストを戻す前に新機器側の確認が必要です。",
+          "stage": "reason",
+          "id": "new-router-probes-5",
+          "format": "並べ替え",
+          "theme": "新ルータの両側を確認してから戻す",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "四台へping成功だが業務画面が開かない。実務で次に確認するのはどれか。",
+          "choices": [
+            {
+              "text": "接続先のラベルを全て削除する",
+              "ok": false,
+              "explain": "業務障害の切分けに役立ちません。"
+            },
+            {
+              "text": "実際の業務通信と認証・アプリケーションの状態",
+              "ok": true,
+              "explain": "本問はpingで業務影響を判定する仮定です。実務の業務正常性は別途確認します。"
+            },
+            {
+              "text": "ping成功だけで全業務正常と断定する",
+              "ok": false,
+              "explain": "pingはアプリケーション処理まで確認しません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "new-router-probes-6",
+          "format": "選択",
+          "theme": "新ルータの両側を確認してから戻す",
+          "scaffold": 1
+        }
+      ]
+    }
+  ]
+}

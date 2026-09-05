@@ -1,0 +1,1514 @@
+{
+  "examKey": "2015h27a/pm1/3",
+  "title": "攻撃を見つけ、止め、運用で改善する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "detection",
+      "title": "怪しさを判断する二つの物差し",
+      "targets": [
+        "s1",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "既知の形と普段からのずれ",
+          "body": "IDS（Intrusion Detection System、侵入検知システム）は通信の不審な点を見つけます。シグネチャ型は既知の攻撃パターン、アノマリ型は正常な仕様や基準からの逸脱で判断します。原問の方式名を覚えるだけでなく、未知の攻撃と誤検知への強弱を理解します。",
+          "id": "detection-1",
+          "format": "読む",
+          "theme": "怪しさを判断する二つの物差し",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "登録されていない攻撃でも、プロトコル仕様から逸脱していれば疑える方式は？",
+          "choices": [
+            {
+              "text": "シグネチャ型だけ",
+              "explain": "登録パターンへの一致が基本なので未知の攻撃には限界があります。"
+            },
+            {
+              "text": "アノマリ型（異常検知）",
+              "ok": true,
+              "explain": "既知の攻撃との一致だけに依存しません。"
+            }
+          ],
+          "id": "detection-2",
+          "format": "選択",
+          "theme": "怪しさを判断する二つの物差し",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "正常通信を異常と判断する危険が増えるのはなぜ？",
+          "choices": [
+            {
+              "text": "正常とする基準が実際の正常通信より狭いことがある",
+              "ok": true,
+              "explain": "逸脱して見えても業務上は正当な通信かもしれません。"
+            },
+            {
+              "text": "正常通信にはIPアドレスがないから",
+              "explain": "正常なIP通信にもIPアドレスはあります。"
+            }
+          ],
+          "id": "detection-3",
+          "format": "選択",
+          "theme": "怪しさを判断する二つの物差し",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "方式を判断根拠と結ぶ",
+          "template": "既知の攻撃パターンを照合するのは{a}型。正常基準からの逸脱を調べるのは{b}型。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "シグネチャ",
+                  "ok": true,
+                  "explain": "既知の特徴を登録して照合します。"
+                },
+                {
+                  "text": "アノマリ",
+                  "explain": "正常な基準からのずれを調べる方式です。"
+                }
+              ],
+              "why": "既知の特徴を登録して照合します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "アノマリ",
+                  "ok": true,
+                  "explain": "異常検知とも呼ばれます。"
+                },
+                {
+                  "text": "シグネチャ",
+                  "explain": "既知のパターン一致が基本です。"
+                }
+              ],
+              "why": "異常検知とも呼ばれます。"
+            }
+          ],
+          "id": "detection-4",
+          "format": "穴埋め",
+          "theme": "怪しさを判断する二つの物差し",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "検知を確定前の判断として扱う",
+          "lead": "正当な通信まで止めないための確認順です。",
+          "lines": [
+            {
+              "code": "基準から逸脱した通信を検出する"
+            },
+            {
+              "code": "通信内容と業務の状況を調べる"
+            },
+            {
+              "code": "攻撃か誤検知かを評価する"
+            },
+            {
+              "code": "判断基準を調整する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "検知しただけで必ず攻撃と断定すると業務通信を妨げます。",
+          "ngExplain": "基準変更の前に実際の通信を分析する必要があります。",
+          "id": "detection-5",
+          "format": "並べ替え",
+          "theme": "怪しさを判断する二つの物差し",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：新しい正常アプリを導入後、警報が急増",
+          "choices": [
+            {
+              "text": "全て新種の攻撃と決め付ける",
+              "explain": "導入による正当な通信変化も調べる必要があります。"
+            },
+            {
+              "text": "新アプリの正常通信と検知基準を照合する",
+              "ok": true,
+              "explain": "正常な変化を誤検知している可能性があります。"
+            }
+          ],
+          "id": "detection-6",
+          "format": "選択",
+          "theme": "怪しさを判断する二つの物差し",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "capture",
+      "title": "自分宛て以外の通信を取り込む",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "複製を届け、受信制限を外す",
+          "body": "スイッチのミラーポートは監視対象の通信を複製してIDSへ届けます。IDSのNIC（Network Interface Card、ネットワークインタフェース）はプロミスキャスモードで自分以外宛てのフレームも取り込みます。監視用ポートにIP（Internet Protocol）アドレスを付けない設定は、原問の第3層からの攻撃回避につながります。",
+          "fig": {
+            "kind": "topo",
+            "height": 200,
+            "nodes": [
+              {
+                "id": "sender",
+                "label": "送信元",
+                "icon": "pc",
+                "x": 60,
+                "y": 55
+              },
+              {
+                "id": "switch",
+                "label": "監視対象SW",
+                "icon": "l2sw",
+                "x": 165,
+                "y": 55
+              },
+              {
+                "id": "receiver",
+                "label": "本来の宛先",
+                "icon": "server",
+                "x": 270,
+                "y": 55
+              },
+              {
+                "id": "ids",
+                "label": "IDS",
+                "icon": "server",
+                "x": 165,
+                "y": 125
+              }
+            ],
+            "links": [
+              {
+                "from": "sender",
+                "to": "switch"
+              },
+              {
+                "from": "switch",
+                "to": "receiver"
+              },
+              {
+                "from": "switch",
+                "to": "ids",
+                "dash": true,
+                "label": "複製"
+              }
+            ],
+            "caption": "説明用：本線とIDS向けの複製"
+          },
+          "id": "capture-1",
+          "format": "読む",
+          "theme": "自分宛て以外の通信を取り込む",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "スイッチ側とIDS側の組合せは？",
+          "choices": [
+            {
+              "text": "両方にIPを登録するだけ",
+              "explain": "監視対象のフレームが複製されるわけではありません。"
+            },
+            {
+              "text": "ミラーポートとプロミスキャスモード",
+              "ok": true,
+              "explain": "前者が届け、後者が他宛て通信を取り込みます。"
+            }
+          ],
+          "id": "capture-2",
+          "format": "選択",
+          "theme": "自分宛て以外の通信を取り込む",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "監視用ポートにIPを付けない意図は？",
+          "choices": [
+            {
+              "text": "そのポート自身への第3層の攻撃を避ける",
+              "ok": true,
+              "explain": "宛先IPでIDSを狙う入口を減らします。"
+            },
+            {
+              "text": "どんな攻撃も完全に不可能にする",
+              "explain": "取り込むフレームの解析などに関する危険まではなくなりません。"
+            }
+          ],
+          "id": "capture-3",
+          "format": "選択",
+          "theme": "自分宛て以外の通信を取り込む",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "取り込みと防御の三要素",
+          "template": "SWの{a}ポートへ接続し、IDSは{b}モードにする。監視用ポートの{c}アドレスは未設定にする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "ミラー",
+                  "ok": true,
+                  "explain": "他ポートの通信を複製します。"
+                },
+                {
+                  "text": "コンソール",
+                  "explain": "機器管理用であり通信複製用ではありません。"
+                }
+              ],
+              "why": "他ポートの通信を複製します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "プロミスキャス",
+                  "ok": true,
+                  "explain": "自分のMAC以外宛ても受信します。"
+                },
+                {
+                  "text": "省電力",
+                  "explain": "他宛てフレームを取り込む機能ではありません。"
+                }
+              ],
+              "why": "自分のMAC以外宛ても受信します。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "IP",
+                  "ok": true,
+                  "explain": "第3層の到達先を設定しない意図です。"
+                },
+                {
+                  "text": "MAC",
+                  "explain": "フレームを取り込むNIC自体をなくす話ではありません。"
+                }
+              ],
+              "why": "第3層の到達先を設定しない意図です。"
+            }
+          ],
+          "id": "capture-4",
+          "format": "穴埋め",
+          "theme": "自分宛て以外の通信を取り込む",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "監視データが届くまで",
+          "lead": "通信を観測するための段階です。",
+          "lines": [
+            {
+              "code": "監視対象が通るスイッチを選ぶ"
+            },
+            {
+              "code": "対象通信をミラーポートへ複製する"
+            },
+            {
+              "code": "IDSがプロミスキャスモードで取り込む"
+            },
+            {
+              "code": "取り込んだ通信を解析する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "解析の前に到達と受信の両条件が必要です。",
+          "ngExplain": "モードを変えるだけでは別経路の通信は見えません。",
+          "id": "capture-5",
+          "format": "並べ替え",
+          "theme": "自分宛て以外の通信を取り込む",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：プロミスキャスを有効化したが、複製設定がない",
+          "choices": [
+            {
+              "text": "全LANの通信が自動的に集まる",
+              "explain": "プロミスキャスはスイッチの転送先を変更しません。"
+            },
+            {
+              "text": "そのポートへ届かない通信は観測できない",
+              "ok": true,
+              "explain": "受信制限を外しても、スイッチが送らなければ届きません。"
+            }
+          ],
+          "id": "capture-6",
+          "format": "選択",
+          "theme": "自分宛て以外の通信を取り込む",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "placement",
+      "title": "通らない枝では観測できない",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "図を道順として読む",
+          "body": "スイッチで観測できるのは、そのスイッチを通る通信です。DMZ（Demilitarized Zone、公開サーバ用の分離領域）と内部LANが別の枝なら、内部とインターネットの直通通信はDMZ側を通りません。原問のSW1・SW2・SW3を経路上かどうかで判断します。",
+          "id": "placement-1",
+          "format": "読む",
+          "theme": "通らない枝では観測できない",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用：外部→入口SW→FW→内部SW→PC。DMZ用SWはFWから別枝",
+          "choices": [
+            {
+              "text": "DMZ用SWだけで全通信を観測できる",
+              "explain": "別枝へはその通信が送られません。"
+            },
+            {
+              "text": "直通通信は入口SWと内部SWで観測できる",
+              "ok": true,
+              "explain": "実際に通る2地点です。"
+            }
+          ],
+          "id": "placement-2",
+          "format": "選択",
+          "theme": "通らない枝では観測できない",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "近くに設置しただけのIDSで監視できない理由は？",
+          "choices": [
+            {
+              "text": "物理的な近さではなく通信が接続ポートへ届く必要がある",
+              "ok": true,
+              "explain": "経路とミラー設定を確認します。"
+            },
+            {
+              "text": "IDSがIPを持っていないから必ず監視不能",
+              "explain": "受信専用の監視はIPなしでも可能です。"
+            }
+          ],
+          "id": "placement-3",
+          "format": "選択",
+          "theme": "通らない枝では観測できない",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "原問の直通経路を完成",
+          "template": "インターネット⇔内部LANの直通通信はSW1で{a}、SW2で{b}、SW3で{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "検出可",
+                  "ok": true,
+                  "explain": "外部側の共通経路を通ります。"
+                },
+                {
+                  "text": "検出不可",
+                  "explain": "SW1は外部との経路上です。"
+                }
+              ],
+              "why": "外部側の共通経路を通ります。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "検出不可",
+                  "ok": true,
+                  "explain": "SW2はDMZの枝にあり、この直通経路外です。"
+                },
+                {
+                  "text": "検出可",
+                  "explain": "全スイッチへ無条件に複製されるわけではありません。"
+                }
+              ],
+              "why": "SW2はDMZの枝にあり、この直通経路外です。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "検出可",
+                  "ok": true,
+                  "explain": "内部LAN側の経路を通ります。"
+                },
+                {
+                  "text": "検出不可",
+                  "explain": "内部LANと外部の直通通信はSW3を通ります。"
+                }
+              ],
+              "why": "内部LAN側の経路を通ります。"
+            }
+          ],
+          "id": "placement-4",
+          "format": "穴埋め",
+          "theme": "通らない枝では観測できない",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "観測位置を決める",
+          "lead": "通信の始点と終点が決まったら行うことです。",
+          "lines": [
+            {
+              "code": "通信の始点と終点を図に置く"
+            },
+            {
+              "code": "FWを経由する道順をたどる"
+            },
+            {
+              "code": "道順上のSWを選ぶ"
+            },
+            {
+              "code": "そのSWからIDSへ通信を複製する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "SW2が別枝だと分かれば○×○を根拠付きで選べます。",
+          "ngExplain": "全通信がRPを経由するという条件を追加しないでください。",
+          "id": "placement-5",
+          "format": "並べ替え",
+          "theme": "通らない枝では観測できない",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図1の確認：練習用変更条件としてインターネット⇔DMZの通信を監視するなら？",
+          "choices": [
+            {
+              "text": "SW3だけ",
+              "explain": "SW3は内部LAN側で、この通信の道順には入りません。"
+            },
+            {
+              "text": "SW1とSW2",
+              "ok": true,
+              "explain": "外部側とDMZ側の経路を通ります。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.23,
+            "bottom": 0.415,
+            "label": "IPA原図1：内部LANとDMZの分岐"
+          },
+          "id": "placement-6",
+          "format": "選択",
+          "theme": "通らない枝では観測できない",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "cooperation",
+      "title": "見つけたIDSから遮断するFWへ",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "検知と遮断の担当をつなぐ",
+          "body": "ミラーポートのIDSが複製を捨てても元の通信は止まりません。FW（Firewall）のACL（Access Control List、アクセス制御リスト）へ遮断ルールを動的に追加すれば、その後の通信を通過点で止められます。原問では不正通信の送信元アドレスを追加する内容まで説明します。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "練習用の検知：送信元 192.0.2.40 を調査",
+              "練習用のルール：deny source 192.0.2.40",
+              "適用先：経路上のFW"
+            ],
+            "caption": "説明用：概念を示す疑似ルール。実機コマンドではない。"
+          },
+          "id": "cooperation-1",
+          "format": "読む",
+          "theme": "見つけたIDSから遮断するFWへ",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "複製だけを受けるIDSが攻撃の複製を捨てたら？",
+          "choices": [
+            {
+              "text": "元の通信も必ず消える",
+              "explain": "コピーの破棄は元パケットの転送を取り消しません。"
+            },
+            {
+              "text": "元の通信はそのまま進み得る",
+              "ok": true,
+              "explain": "IDSが受けたのはコピーであり、本線ではありません。"
+            }
+          ],
+          "id": "cooperation-2",
+          "format": "選択",
+          "theme": "見つけたIDSから遮断するFWへ",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "IDSとFWの連携で必要な変更は？",
+          "choices": [
+            {
+              "text": "FWのACLへ遮断対象の送信元を追加する",
+              "ok": true,
+              "explain": "通過点で以後の該当通信を拒否します。"
+            },
+            {
+              "text": "IDSの画面の警報色を変える",
+              "explain": "検知の表示だけではFWの通過判定は変わりません。"
+            }
+          ],
+          "id": "cooperation-3",
+          "format": "選択",
+          "theme": "見つけたIDSから遮断するFWへ",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "誰が何を変えるかを明示",
+          "template": "IDSの検知を受けて{a}のACLを{b}に変更し、遮断対象の{c}を追加する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "FW",
+                  "ok": true,
+                  "explain": "原通信を通す・止める装置です。"
+                },
+                {
+                  "text": "DNS",
+                  "explain": "名前解決サーバの役割です。"
+                }
+              ],
+              "why": "原通信を通す・止める装置です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "動的",
+                  "ok": true,
+                  "explain": "検知結果に応じたルール更新です。"
+                },
+                {
+                  "text": "一切変更しない方針",
+                  "explain": "新たな遮断対象を反映できません。"
+                }
+              ],
+              "why": "検知結果に応じたルール更新です。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "送信元アドレス",
+                  "ok": true,
+                  "explain": "原問では攻撃元からの不正接続を止めます。"
+                },
+                {
+                  "text": "全宛先アドレス",
+                  "explain": "全サービスを止める過剰な範囲です。"
+                }
+              ],
+              "why": "原問では攻撃元からの不正接続を止めます。"
+            }
+          ],
+          "id": "cooperation-4",
+          "format": "穴埋め",
+          "theme": "見つけたIDSから遮断するFWへ",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "検知からその後の通信の遮断へ",
+          "lead": "連携動作を順番にしてください。",
+          "lines": [
+            {
+              "code": "IDSが不正通信の送信元を検出する"
+            },
+            {
+              "code": "FWのACLへその送信元の拒否ルールを追加する"
+            },
+            {
+              "code": "FWが以後の該当通信を遮断する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "検知→設定更新→経路上での適用までを書くと具体的です。",
+          "ngExplain": "通知だけでACLが変わらなければ通信は止まりません。",
+          "id": "cooperation-5",
+          "format": "並べ替え",
+          "theme": "見つけたIDSから遮断するFWへ",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：誤検知で共有ProxyのIPを丸ごと拒否した",
+          "choices": [
+            {
+              "text": "攻撃者の1要求だけが必ず止まる",
+              "explain": "共有IPの全通信に適用されるルールかもしれません。"
+            },
+            {
+              "text": "同じProxyを使う正常利用者も止まるおそれがある",
+              "ok": true,
+              "explain": "送信元IP単位の遮断範囲を評価する必要があります。"
+            }
+          ],
+          "id": "cooperation-6",
+          "format": "選択",
+          "theme": "見つけたIDSから遮断するFWへ",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "spoof",
+      "title": "返送先が攻撃者とは限らない",
+      "targets": [
+        "s1",
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "UDPに接続の切断はない",
+          "body": "TCPの不正接続にはRST（Reset）を送って切断を促す方法があります。UDP（User Datagram Protocol）には同じ接続の仕組みがないため、原問ではICMP（Internet Control Message Protocol）のport unreachableで到達不能を知らせます。送信元IPが偽装されていると、この返事は無関係な相手へ向かいます。",
+          "fig": {
+            "kind": "header",
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "送信元ポート",
+                    "bits": 16
+                  },
+                  {
+                    "t": "宛先ポート",
+                    "bits": 16
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：UDP先頭。送信元の証明ではない"
+          },
+          "id": "spoof-1",
+          "format": "読む",
+          "theme": "返送先が攻撃者とは限らない",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "ICMPの『宛先ポートへ到達不能』を表す語は？",
+          "choices": [
+            {
+              "text": "TCP SYN",
+              "explain": "TCP接続開始の要求でありICMPの到達不能ではありません。"
+            },
+            {
+              "text": "port unreachable",
+              "ok": true,
+              "explain": "UDPの受信先ポートが使えない旨を知らせます。"
+            }
+          ],
+          "id": "spoof-2",
+          "format": "選択",
+          "theme": "返送先が攻撃者とは限らない",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "攻撃パケットの送信元IPが第三者に偽装されていたら返事は？",
+          "choices": [
+            {
+              "text": "第三者へ向かい、攻撃者に届かないことがある",
+              "ok": true,
+              "explain": "IPの記載を信用して送るためです。"
+            },
+            {
+              "text": "必ず本当の攻撃者へ届く",
+              "explain": "IPアドレスから真の発信者を自動追跡する機能ではありません。"
+            }
+          ],
+          "id": "spoof-3",
+          "format": "選択",
+          "theme": "返送先が攻撃者とは限らない",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "理由を原因から書く",
+          "template": "不正アクセスの{a}が{b}可能性があるため、ICMPが攻撃者に届かないことがある。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "送信元アドレス",
+                  "ok": true,
+                  "explain": "返送先に使う情報です。"
+                },
+                {
+                  "text": "DNSサーバ名",
+                  "explain": "この返送の直接の宛先判断ではありません。"
+                }
+              ],
+              "why": "返送先に使う情報です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "偽装されている",
+                  "ok": true,
+                  "explain": "無関係な相手を返送先に指定され得ます。"
+                },
+                {
+                  "text": "暗号化されて必ず読めない",
+                  "explain": "IPの送信元が読めないという条件ではありません。"
+                }
+              ],
+              "why": "無関係な相手を返送先に指定され得ます。"
+            }
+          ],
+          "id": "spoof-4",
+          "format": "穴埋め",
+          "theme": "返送先が攻撃者とは限らない",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "反射の危険を説明する",
+          "lead": "原問の『他サイトへの攻撃にもなる』を因果でつなぎます。",
+          "lines": [
+            {
+              "code": "攻撃者が第三者のIPを送信元として偽装する"
+            },
+            {
+              "code": "防御側がそのIPへICMPを返す"
+            },
+            {
+              "code": "第三者へ不要なパケットが届く"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "不正通信の送信元表示と実際の攻撃者は一致するとは限りません。",
+          "ngExplain": "返事をすれば必ず攻撃者だけに影響すると思わないでください。",
+          "id": "spoof-5",
+          "format": "並べ替え",
+          "theme": "返送先が攻撃者とは限らない",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：大量の偽装UDPに全件ICMPで返答する",
+          "choices": [
+            {
+              "text": "UDPの送信者認証が自動完了する",
+              "explain": "ICMP返送は本人確認ではありません。"
+            },
+            {
+              "text": "無関係な返送先へ不要な通信を集中させ得る",
+              "ok": true,
+              "explain": "量が多いほど反射による負荷の危険も増えます。"
+            }
+          ],
+          "id": "spoof-6",
+          "format": "選択",
+          "theme": "返送先が攻撃者とは限らない",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "virtual-patch",
+      "title": "修正までの時間を守る",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "機器の修正と経路上の防御は別",
+          "body": "IPS（Intrusion Prevention System、侵入防止システム）は経路上で不正通信を遮断します。サーバへ修正パッチを適用するまで、既知の脆弱性を狙う通信をIPSで止める一時対策が考えられます。原問では『何を』『いつまで』止めるかが答案の重要な要素です。",
+          "id": "virtual-patch-1",
+          "format": "読む",
+          "theme": "修正までの時間を守る",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "新たな脆弱性が判明したが、パッチの業務試験に時間が必要",
+          "choices": [
+            {
+              "text": "IPSを入れればサーバのプログラムが修正される",
+              "explain": "通信の遮断とソフトウェアの修正は別です。"
+            },
+            {
+              "text": "パッチ適用まで脆弱性を悪用する通信をIPSで遮断する",
+              "ok": true,
+              "explain": "修正までの防御の空白を埋めます。"
+            }
+          ],
+          "id": "virtual-patch-2",
+          "format": "選択",
+          "theme": "修正までの時間を守る",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "『IPSで攻撃を止める』だけでは不足する要素は？",
+          "choices": [
+            {
+              "text": "対象となる脆弱性とパッチ適用までという期間",
+              "ok": true,
+              "explain": "原問の一時的な運用という条件を示す必要があります。"
+            },
+            {
+              "text": "IPSの筐体色",
+              "explain": "目的と運用条件に関係しません。"
+            }
+          ],
+          "id": "virtual-patch-3",
+          "format": "選択",
+          "theme": "修正までの時間を守る",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "一時対策を完成",
+          "template": "保護対象へ{a}するまで、{b}通信をIPSで遮断する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "セキュリティパッチを適用",
+                  "ok": true,
+                  "explain": "一時運用の終点を示します。"
+                },
+                {
+                  "text": "全通信を永続停止",
+                  "explain": "サービス継続という目的を失います。"
+                }
+              ],
+              "why": "一時運用の終点を示します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "脆弱性を悪用する攻撃の",
+                  "ok": true,
+                  "explain": "止める対象を限定します。"
+                },
+                {
+                  "text": "正常な業務の全ての",
+                  "explain": "正常な利用まで止めるのが目的ではありません。"
+                }
+              ],
+              "why": "止める対象を限定します。"
+            }
+          ],
+          "id": "virtual-patch-4",
+          "format": "穴埋め",
+          "theme": "修正までの時間を守る",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "暫定防御から修正へ",
+          "lead": "安全な移行の順です。",
+          "lines": [
+            {
+              "code": "新たな脆弱性と攻撃通信の特徴を確認する"
+            },
+            {
+              "code": "IPSで該当する攻撃通信を遮断する"
+            },
+            {
+              "code": "影響を確認したパッチを保護対象へ適用する"
+            },
+            {
+              "code": "暫定ルールの必要性を再評価する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "IPSで時間を確保しても本体の修正は必要です。",
+          "ngExplain": "暫定対策を恒久的なパッチの代替としないでください。",
+          "id": "virtual-patch-5",
+          "format": "並べ替え",
+          "theme": "修正までの時間を守る",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：攻撃通信が暗号化されIPSから内容を見られない",
+          "choices": [
+            {
+              "text": "どんな暗号化通信でもIPSは必ず中身を判定できる",
+              "explain": "復号や検査できる範囲に依存します。"
+            },
+            {
+              "text": "そのIPSの配置と検査機能で対象攻撃を遮断できるか確認する",
+              "ok": true,
+              "explain": "経路上にあるだけで内容を必ず見られるわけではありません。"
+            }
+          ],
+          "id": "virtual-patch-6",
+          "format": "選択",
+          "theme": "修正までの時間を守る",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "bypass",
+      "title": "止める安全と止めない業務",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "故障時に何を優先するか",
+          "body": "経路上のIPSが故障すると正常な通信も止まるおそれがあります。原問は業務の継続利用を優先し、故障時には検査・遮断せず通信を通すバイパス機能を利用します。通過できることと防御が続くことを混同しないようにします。",
+          "fig": {
+            "kind": "topo",
+            "height": 170,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "FW",
+                "icon": "fw",
+                "x": 60,
+                "y": 85
+              },
+              {
+                "id": "node1",
+                "label": "経路上IPS",
+                "icon": "fw",
+                "x": 165,
+                "y": 85
+              },
+              {
+                "id": "node2",
+                "label": "業務サーバ",
+                "icon": "server",
+                "x": 270,
+                "y": 85
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：IPS故障時は検査せず通過"
+          },
+          "id": "bypass-1",
+          "format": "読む",
+          "theme": "止める安全と止めない業務",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "IPS故障でもサービスを利用できるようにする機能は？",
+          "choices": [
+            {
+              "text": "故障時に全通信を遮断する",
+              "explain": "機密性重視なら選択肢ですが、本問の継続利用とは反対です。"
+            },
+            {
+              "text": "通信をそのまま通過させるバイパス",
+              "ok": true,
+              "explain": "検査機能が使えなくても経路を維持します。"
+            }
+          ],
+          "id": "bypass-2",
+          "format": "選択",
+          "theme": "止める安全と止めない業務",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "バイパス中に残る危険は？",
+          "choices": [
+            {
+              "text": "IPSによる遮断が働かず不正通信も通る可能性",
+              "ok": true,
+              "explain": "可用性を保つ代わりに検査の空白が生じます。"
+            },
+            {
+              "text": "全通信が必ず暗号化される",
+              "explain": "バイパスは暗号化機能ではありません。"
+            }
+          ],
+          "id": "bypass-3",
+          "format": "選択",
+          "theme": "止める安全と止めない業務",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "機能を短く書く",
+          "template": "IPS故障時、通信を{a}させ、{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "そのまま通過",
+                  "ok": true,
+                  "explain": "原問は継続利用を優先します。"
+                },
+                {
+                  "text": "全て破棄",
+                  "explain": "可用性を保てません。"
+                }
+              ],
+              "why": "原問は継続利用を優先します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "遮断しない",
+                  "ok": true,
+                  "explain": "故障時の通過機能の要点です。"
+                },
+                {
+                  "text": "必ず安全と保証する",
+                  "explain": "検査していない通信の安全は保証できません。"
+                }
+              ],
+              "why": "故障時の通過機能の要点です。"
+            }
+          ],
+          "id": "bypass-4",
+          "format": "穴埋め",
+          "theme": "止める安全と止めない業務",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "可用性のための故障対応",
+          "lead": "正常な通信を継続させる方針です。",
+          "lines": [
+            {
+              "code": "IPSの検査機能の故障を検出する"
+            },
+            {
+              "code": "バイパスで通信を通す"
+            },
+            {
+              "code": "検査停止の状態を運用担当へ知らせる"
+            },
+            {
+              "code": "修復して防御機能を戻す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "バイパスは障害中の一時状態として管理する必要があります。",
+          "ngExplain": "通るから正常と判断して放置すると防御の空白が続きます。",
+          "id": "bypass-5",
+          "format": "並べ替え",
+          "theme": "止める安全と止めない業務",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：未検査通信を絶対に通せないシステムなら？",
+          "choices": [
+            {
+              "text": "原問と同じバイパスが常に正解",
+              "explain": "業務継続と防御の優先順位に依存します。"
+            },
+            {
+              "text": "遮断側に倒す設計や冗長化を検討する",
+              "ok": true,
+              "explain": "優先条件が変わると故障時動作も再検討します。"
+            }
+          ],
+          "id": "bypass-6",
+          "format": "選択",
+          "theme": "止める安全と止めない業務",
+          "stage": "transfer",
+          "scaffold": 0
+        },
+        {
+          "type": "info",
+          "title": "次は原問を補助なしで解く",
+          "body": "この教材での操作はここまでです。次は既存の原問画面を開き、解説・選択肢・解答例を見ずに、大問全体へ取り組んでください。複数の空欄や指定された回答の個数も自分で確認します。原問の答案は教材の回答とは別に保存されます。",
+          "id": "operations-original-ready",
+          "format": "読む",
+          "theme": "ログから判断を育てる",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "operations",
+      "title": "ログから判断を育てる",
+      "targets": [
+        "s3-3",
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "導入は運用の始まり",
+          "body": "正常通信を攻撃とするのがフォールスポジティブ、攻撃を見逃すのがフォールスネガティブです。警報を減らすだけでは見逃しを増やすおそれがあります。原問の管理用PCはログを取得・解析し、不正アクセスへの対応を最適化するために使います。",
+          "id": "operations-1",
+          "format": "読む",
+          "theme": "ログから判断を育てる",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "警報数が多いので全検知を無効にすると？",
+          "choices": [
+            {
+              "text": "検知精度が必ず改善する",
+              "explain": "観測をやめただけで、判定が正しくなったわけではありません。"
+            },
+            {
+              "text": "誤警報は減っても攻撃の見逃しが増える",
+              "ok": true,
+              "explain": "単純な件数の減少は防御品質の向上とは限りません。"
+            }
+          ],
+          "id": "operations-2",
+          "format": "選択",
+          "theme": "ログから判断を育てる",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "管理用PCでの継続的な改善に必要な作業は？",
+          "choices": [
+            {
+              "text": "IDS・IPSのログを取得して解析する",
+              "ok": true,
+              "explain": "実際の通信と判定結果を使い、対策を調整します。"
+            },
+            {
+              "text": "ログを保存したら解析せず放置する",
+              "explain": "保存だけでは対応の改善につながりません。"
+            }
+          ],
+          "id": "operations-3",
+          "format": "選択",
+          "theme": "ログから判断を育てる",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "目的と作業を組み立てる",
+          "template": "不正アクセスへの対応を{a}するため、ログを{b}して{c}する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "最適化",
+                  "ok": true,
+                  "explain": "誤検知と見逃しを評価して調整します。"
+                },
+                {
+                  "text": "無条件に停止",
+                  "explain": "サービス継続との両立を失います。"
+                }
+              ],
+              "why": "誤検知と見逃しを評価して調整します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "取得",
+                  "ok": true,
+                  "explain": "判断材料を集める作業です。"
+                },
+                {
+                  "text": "削除",
+                  "explain": "改善のための証拠を失います。"
+                }
+              ],
+              "why": "判断材料を集める作業です。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "解析",
+                  "ok": true,
+                  "explain": "傾向や誤判定を確かめます。"
+                },
+                {
+                  "text": "暗記",
+                  "explain": "通信の性質が変われば再評価が必要です。"
+                }
+              ],
+              "why": "傾向や誤判定を確かめます。"
+            }
+          ],
+          "id": "operations-4",
+          "format": "穴埋め",
+          "theme": "ログから判断を育てる",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "改善のサイクルを作る",
+          "lead": "正常通信の妨害と見逃しの両方を減らすために並べます。",
+          "lines": [
+            {
+              "code": "IDS・IPSからログを集める"
+            },
+            {
+              "code": "正常通信と攻撃の記録を照合する"
+            },
+            {
+              "code": "誤検知と見逃しを評価する"
+            },
+            {
+              "code": "ルールと対応手順を調整する"
+            },
+            {
+              "code": "変更後のログで効果を確かめる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            4,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          ],
+          "okExplain": "収集→解析→調整→再確認を継続することが重要です。",
+          "ngExplain": "ルールを変えて終わりでは、正しく改善したか分かりません。",
+          "id": "operations-5",
+          "format": "並べ替え",
+          "theme": "ログから判断を育てる",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図2確認：管理用PCへログを集める目的として妥当なのは？",
+          "choices": [
+            {
+              "text": "管理LANがあれば原通信を見なくても全攻撃を防げる",
+              "explain": "管理経路は監視範囲や判定精度を自動保証しません。"
+            },
+            {
+              "text": "検知・遮断の結果を解析して対応を改善する",
+              "ok": true,
+              "explain": "管理経路を使いIDSとIPSの働きを継続的に評価します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.215,
+            "bottom": 0.432,
+            "label": "IPA原図2：IDS・IPSと管理用LANの位置"
+          },
+          "id": "operations-6",
+          "format": "選択",
+          "theme": "ログから判断を育てる",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    }
+  ]
+}

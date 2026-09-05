@@ -1,0 +1,1958 @@
+{
+  "examKey": "2025r07h/pm1/2",
+  "title": "学校の通信障害を帯域・変換枠・HTTPから切り分ける",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_ans.pdf",
+    "https://www.rfc-editor.org/info/rfc9113/"
+  ],
+  "sections": [
+    {
+      "id": "network-foundation",
+      "title": "一台の通信を宛先とポートで見分ける",
+      "targets": [
+        "s1-1",
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "network-address",
+          "type": "info",
+          "title": "校内の機器を見分け、外部へ届ける",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "一台の通信を宛先とポートで見分ける",
+          "scaffold": 5,
+          "body": "PC（Personal Computer、パソコン）にはIP（Internet Protocol）アドレスを設定します。プライベートIPは組織内で利用するアドレスで、例えば192.168.10.13です。原問では外部通信の出口で、ISP（Internet Service Provider、インターネット接続事業者）が割り当てたグローバルIPへ変換します。"
+        },
+        {
+          "id": "network-port",
+          "type": "info",
+          "title": "同じPCの複数の通信を見分ける",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "一台の通信を宛先とポートで見分ける",
+          "scaffold": 5,
+          "body": "IPアドレスが機器への届け先なら、ポート番号は機器内の通信を見分ける情報です。NAPT（Network Address Port Translation）はアドレスとポートの対応を記録して変換します。複数PCが同じ外部IPを使っても、外部ポートなどとの組合せで戻り先を区別できます。"
+        },
+        {
+          "id": "network-return",
+          "type": "quiz",
+          "title": "練習用：PC-AとPC-Bが同じ外部IPを使う。応答を正しいPCへ返すためにルータが保持するのは？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "一台の通信を宛先とポートで見分ける",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "外部IP一つだけ",
+              "ok": false,
+              "explain": "それだけでは二台のどちらの通信か区別できません。"
+            },
+            {
+              "text": "最後に通信したPCの名前だけ",
+              "ok": false,
+              "explain": "同時通信している別のPCの応答を取り違えます。"
+            },
+            {
+              "text": "変換前後のIP・ポートなどの対応",
+              "ok": true,
+              "explain": "外部側の通信から内部の通信を特定し直すための記録です。"
+            }
+          ]
+        },
+        {
+          "id": "network-power-separate",
+          "type": "quiz",
+          "title": "練習用：校内サーバは利用でき、外部への新規接続だけ失敗する。最初に比べる条件は？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "一台の通信を宛先とポートで見分ける",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "全PCの電源が切れているか",
+              "ok": false,
+              "explain": "校内サーバを利用できる観測と一致しません。"
+            },
+            {
+              "text": "違いを無視して端末を全交換する",
+              "ok": false,
+              "explain": "通信経路の違いから調査を絞れます。"
+            },
+            {
+              "text": "外部へ出るときだけ使う経路や変換処理",
+              "ok": true,
+              "explain": "校内通信との差から出口を調べます。これだけで故障箇所を断定はしません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "address-power",
+      "title": "校内アドレスとAPの給電を区別する",
+      "targets": [
+        "s1-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "校内のPCから外の教材へ接続する",
+          "body": "校内のPCのプライベートIPを、出口でグローバルIPと外側ポートへ変換するのが本問の構成です。LAN（Local Area Network、構内網）へ無線接続させる機器をAP（Access Point、アクセスポイント）と呼びます。APの給電と、外部接続のアドレス変換は別の役割です。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 50,
+                "y": 65,
+                "label": "PC"
+              },
+              {
+                "id": "node1",
+                "x": 160,
+                "y": 65,
+                "label": "NAPTルータ"
+              },
+              {
+                "id": "node2",
+                "x": 270,
+                "y": 65,
+                "label": "教材サービス"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：校内とインターネットの境界"
+          },
+          "stage": "concept",
+          "id": "address-power-1",
+          "format": "読む",
+          "theme": "校内アドレスとAPの給電を区別する",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "192.168.10.13を外部通信に利用する際、変換後に使うアドレスはどれか。",
+          "choices": [
+            {
+              "text": "別の192.168.x.x",
+              "ok": false,
+              "explain": "これもプライベートアドレスです。外部用のアドレスにはなりません。"
+            },
+            {
+              "text": "APのMAC（Media Access Control）アドレス",
+              "ok": false,
+              "explain": "MACアドレスはIPアドレスの代わりではありません。"
+            },
+            {
+              "text": "ISPから割り当てられたグローバルIPアドレス",
+              "ok": true,
+              "explain": "インターネット側で利用するアドレスへ変換します。"
+            }
+          ],
+          "stage": "check",
+          "id": "address-power-2",
+          "format": "選択",
+          "theme": "校内アドレスとAPの給電を区別する",
+          "scaffold": 4
+        },
+        {
+          "id": "poe-power",
+          "type": "info",
+          "title": "ケーブルでAPへ電力を届ける",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "校内アドレスとAPの給電を区別する",
+          "scaffold": 5,
+          "body": "PoE（Power over Ethernet）はイーサネットケーブルで通信と給電を行う仕組みです。PoE+はIEEE（Institute of Electrical and Electronics Engineers）の802.3atで規定され、本問の「給電側で最大30W」に対応します。ケーブル損失があるのでAPが必ず30Wを使えるという意味ではありません。IEEE 802.1Xは端末を認証する別の規格です。"
+        },
+        {
+          "type": "quiz",
+          "title": "スイッチが最大30Wを給電する機能の呼び名はどれか。",
+          "choices": [
+            {
+              "text": "IEEE 802.1X",
+              "ok": false,
+              "explain": "端末を認証する仕組みです。給電機能とは異なります。"
+            },
+            {
+              "text": "PoE+",
+              "ok": true,
+              "explain": "Power over Ethernetの給電機能です。本問の30WはPoE+に対応します。"
+            },
+            {
+              "text": "NAPT",
+              "ok": false,
+              "explain": "アドレスとポートの変換機能です。給電ではありません。"
+            }
+          ],
+          "stage": "check",
+          "id": "address-power-3",
+          "format": "選択",
+          "theme": "校内アドレスとAPの給電を区別する",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "原問の三つの役割を埋めよ。",
+          "template": "校内の{inside}IPをISPの{outside}IPへ変換する。最大30Wの給電には{power}を使う。",
+          "blanks": [
+            {
+              "key": "inside",
+              "label": "校内",
+              "choices": [
+                {
+                  "text": "プライベート",
+                  "ok": true,
+                  "explain": "192.168.0.0/16はプライベートアドレスの範囲です。"
+                },
+                {
+                  "text": "グローバル",
+                  "ok": false,
+                  "explain": "本問でISPから割り当てられる側がグローバルです。"
+                }
+              ],
+              "why": "192.168.0.0/16はプライベートアドレスの範囲です。"
+            },
+            {
+              "key": "outside",
+              "label": "外部",
+              "choices": [
+                {
+                  "text": "グローバル",
+                  "ok": true,
+                  "explain": "外部から識別できるIPアドレスです。"
+                },
+                {
+                  "text": "ループバック",
+                  "ok": false,
+                  "explain": "ループバックは自分自身への通信に用います。"
+                }
+              ],
+              "why": "外部から識別できるIPアドレスです。"
+            },
+            {
+              "key": "power",
+              "label": "給電",
+              "choices": [
+                {
+                  "text": "PoE+",
+                  "ok": true,
+                  "explain": "PoE+はケーブル経由の給電を行います。"
+                },
+                {
+                  "text": "DHCP（Dynamic Host Configuration Protocol）",
+                  "ok": false,
+                  "explain": "DHCPはIP設定を配布します。"
+                }
+              ],
+              "why": "PoE+はケーブル経由の給電を行います。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "address-power-4",
+          "format": "穴埋め",
+          "theme": "校内アドレスとAPの給電を区別する",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "外部への送信処理を並べよ。",
+          "lead": "APの給電が済み、PCはネットワークに接続できています。",
+          "lines": [
+            {
+              "code": "PCがプライベートIPでパケットを送る"
+            },
+            {
+              "code": "ルータがグローバルIPと外側ポートへ変換する"
+            },
+            {
+              "code": "ルータがインターネット側へ転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "給電、接続、アドレス変換は異なる役割です。",
+          "ngExplain": "外部へ転送する前に変換を行います。",
+          "stage": "reason",
+          "id": "address-power-5",
+          "format": "並べ替え",
+          "theme": "校内アドレスとAPの給電を区別する",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "APは起動しているが新規外部接続だけ失敗する。優先して確認するのはどれか。",
+          "choices": [
+            {
+              "text": "PCをグローバルIPに手作業で置き換える",
+              "ok": false,
+              "explain": "割当てや経路設計を無視した変更です。原因調査になりません。"
+            },
+            {
+              "text": "ルータのNAPT利用状況",
+              "ok": true,
+              "explain": "APの電力不足だけで外部の新規接続だけが失敗するとは説明できません。"
+            },
+            {
+              "text": "PoE+という名称を変更する",
+              "ok": false,
+              "explain": "名称の変更は通信状態を改善しません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "address-power-6",
+          "format": "選択",
+          "theme": "校内アドレスとAPの給電を区別する",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "dhcp-segment",
+      "title": "中継情報からPCの所属網を判断する",
+      "targets": [
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "DHCPサーバは別の階にある",
+          "body": "DHCPはPCにIPアドレスなどを配布します。配布候補の範囲をアドレスプールと呼びます。要求を別網のサーバへ中継するDHCPリレーは、PC側で受信した口のIPをgiaddr（gateway IP address、中継元のIPを示す欄）へ入れます。サーバはそれを基にPCの接続先セグメント、つまり同じ網の範囲を判断します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "接続口",
+              "IPとサブネットマスク"
+            ],
+            "rows": [
+              [
+                "1階側",
+                "192.168.10.1 / 255.255.255.0"
+              ],
+              [
+                "2階側",
+                "192.168.20.1 / 255.255.255.0"
+              ]
+            ],
+            "caption": "説明用：練習用のリレー設定（配布先は未記入）"
+          },
+          "stage": "concept",
+          "id": "dhcp-segment-1",
+          "format": "読む",
+          "theme": "中継情報からPCの所属網を判断する",
+          "scaffold": 5
+        },
+        {
+          "id": "dhcp-prefix",
+          "type": "info",
+          "title": "/24は網の部分を示す",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "中継情報からPCの所属網を判断する",
+          "scaffold": 5,
+          "body": "この練習の/24は、IPの先頭24ビットがネットワーク部分という意味です。192.168.20.1/24なら、先頭の192.168.20が同じ範囲は192.168.20.0/24です。giaddrにはPCへ貸すIPそのものではなく、PCのいる網を示すリレーのIPが入ります。"
+        },
+        {
+          "type": "quiz",
+          "title": "練習用：リレーの2階側は192.168.20.1/24。giaddrが192.168.20.1なら、サーバが選ぶプールの網は？",
+          "choices": [
+            {
+              "text": "DHCPサーバ自身の192.168.1.0/24",
+              "ok": false,
+              "explain": "サーバの設置網をPCへ配布すると所属網が合いません。"
+            },
+            {
+              "text": "常に192.168.10.0/24",
+              "ok": false,
+              "explain": "受信した中継情報を無視してはいけません。"
+            },
+            {
+              "text": "192.168.20.0/24",
+              "ok": true,
+              "explain": "要求が届いたPC側のセグメントを判断できます。"
+            }
+          ],
+          "stage": "check",
+          "id": "dhcp-segment-2",
+          "format": "選択",
+          "theme": "中継情報からPCの所属網を判断する",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "なぜPCのMACアドレスだけでは配布する網が決まらないか。",
+          "choices": [
+            {
+              "text": "DHCPはMACアドレスを一切扱わない",
+              "ok": false,
+              "explain": "端末識別に使う情報と、網の選択情報を区別します。"
+            },
+            {
+              "text": "同じPCでも接続するセグメントが変わり得る",
+              "ok": true,
+              "explain": "PCの識別と接続場所の識別は別です。"
+            },
+            {
+              "text": "MACアドレスには階数が書かれている",
+              "ok": false,
+              "explain": "MACアドレスから校内の階数は分かりません。"
+            }
+          ],
+          "stage": "reason",
+          "id": "dhcp-segment-3",
+          "format": "選択",
+          "theme": "中継情報からPCの所属網を判断する",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "giaddrの情報源と識別対象を結べ。",
+          "template": "中継装置の{interface}のIPを使い、{segment}を識別する。",
+          "blanks": [
+            {
+              "key": "interface",
+              "label": "情報源",
+              "choices": [
+                {
+                  "text": "要求を受信したインタフェース",
+                  "ok": true,
+                  "explain": "PC側で受信したインタフェースの情報です。"
+                },
+                {
+                  "text": "インターネット側インタフェース",
+                  "ok": false,
+                  "explain": "外部側ではPCの所属網を示せません。"
+                }
+              ],
+              "why": "PC側で受信したインタフェースの情報です。"
+            },
+            {
+              "key": "segment",
+              "label": "識別対象",
+              "choices": [
+                {
+                  "text": "PCが属するセグメント",
+                  "ok": true,
+                  "explain": "その網に対応する配布範囲を選びます。"
+                },
+                {
+                  "text": "Webサイトのドメイン",
+                  "ok": false,
+                  "explain": "ドメイン名の解決はDNS（Domain Name System）の仕事です。"
+                }
+              ],
+              "why": "その網に対応する配布範囲を選びます。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "dhcp-segment-4",
+          "format": "穴埋め",
+          "theme": "中継情報からPCの所属網を判断する",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "IPアドレス配布までを並べよ。",
+          "lead": "DHCPDISCOVERはアドレス設定を提供するサーバを探す要求です。教室網から別網のDHCPサーバへリレーで中継します。",
+          "lines": [
+            {
+              "code": "PCがDHCPDISCOVERを送信する"
+            },
+            {
+              "code": "リレーが受信インタフェースのIPをgiaddrに入れて中継する"
+            },
+            {
+              "code": "サーバがPCの所属セグメントに合うアドレスを選ぶ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "リレーの情報が遠隔サーバに接続場所を伝えます。",
+          "ngExplain": "giaddrの設定はサーバがプールを選ぶ前です。",
+          "stage": "reason",
+          "id": "dhcp-segment-5",
+          "format": "並べ替え",
+          "theme": "中継情報からPCの所属網を判断する",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "PCを1階から3階へ移動して再取得する。必要なgiaddrはどれか。",
+          "choices": [
+            {
+              "text": "PCの以前のMACアドレスをIPとして入れる",
+              "ok": false,
+              "explain": "giaddrはIPアドレスのフィールドです。"
+            },
+            {
+              "text": "3階側で要求を受信したインタフェースのIP",
+              "ok": true,
+              "explain": "現在の接続先を基準に配布する網を判断します。"
+            },
+            {
+              "text": "以前の1階側のIP",
+              "ok": false,
+              "explain": "古い網のアドレスを割り当てる原因になります。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "dhcp-segment-6",
+          "format": "選択",
+          "theme": "中継情報からPCの所属網を判断する",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "symptoms",
+      "title": "失敗する範囲から二つの仮説を立てる",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "全校で同時に外部教材を開く",
+          "body": "朝だけ一部かつ不特定のPCでログイン画面が出ません。ログインできても応答が遅いPCがあります。校内動画は正常なので、外部への出口の帯域と接続の管理容量を分けて調べます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "観測",
+              "調べる候補"
+            ],
+            "rows": [
+              [
+                "接続後の応答が遅い",
+                "外部接続帯域"
+              ],
+              [
+                "一部の新規接続が失敗",
+                "NAPTの管理容量"
+              ],
+              [
+                "校内動画は正常",
+                "外部経路との差"
+              ]
+            ],
+            "caption": "説明用：症状と仮説"
+          },
+          "stage": "concept",
+          "id": "symptoms-1",
+          "format": "読む",
+          "theme": "失敗する範囲から二つの仮説を立てる",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "固定のPC故障だけでは説明しにくい観測はどれか。",
+          "choices": [
+            {
+              "text": "同じPCだけが常に失敗する",
+              "ok": false,
+              "explain": "こちらは端末固有の設定や故障を疑う観測です。"
+            },
+            {
+              "text": "PCが一台も起動しない",
+              "ok": false,
+              "explain": "今回の症状と異なり、電源などから調べます。"
+            },
+            {
+              "text": "毎回一部かつ不特定のPCが失敗する",
+              "ok": true,
+              "explain": "特定端末の故障より、共有資源の不足を疑う根拠です。"
+            }
+          ],
+          "stage": "check",
+          "id": "symptoms-2",
+          "format": "選択",
+          "theme": "失敗する範囲から二つの仮説を立てる",
+          "scaffold": 4
+        },
+        {
+          "id": "napt-new-flow-reason",
+          "type": "quiz",
+          "title": "練習用：変換表が満杯で、既存の対応はまだ有効。既存の通信は続いても新しい通信が失敗し得る理由は？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "失敗する範囲から二つの仮説を立てる",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "帯域を増やせば対応表も必ず増える",
+              "ok": false,
+              "explain": "帯域と変換表上限は別の資源です。"
+            },
+            {
+              "text": "新しい通信の変換エントリーを追加できない",
+              "ok": true,
+              "explain": "既存の枠と新たに必要な枠を分けると、一部かつ不特定の失敗を説明できます。"
+            },
+            {
+              "text": "満杯になると全PCの電源が落ちる",
+              "ok": false,
+              "explain": "管理容量とPCの電源は別です。"
+            }
+          ]
+        },
+        {
+          "type": "blank",
+          "title": "NAPT不足を疑う根拠を組み立てよ。",
+          "template": "{symptom}PCが{scope}なので、NAPTの容量不足も疑う。",
+          "blanks": [
+            {
+              "key": "symptom",
+              "label": "症状",
+              "choices": [
+                {
+                  "text": "ログイン画面が表示されない",
+                  "ok": true,
+                  "explain": "新規接続失敗が調査の対象です。"
+                },
+                {
+                  "text": "校内動画を正常に見られる",
+                  "ok": false,
+                  "explain": "正常な校内動画だけではNAPT不足を直接説明しません。"
+                }
+              ],
+              "why": "新規接続失敗が調査の対象です。"
+            },
+            {
+              "key": "scope",
+              "label": "失敗範囲",
+              "choices": [
+                {
+                  "text": "一部かつ不特定",
+                  "ok": true,
+                  "explain": "共有される変換枠を取得できない可能性があります。"
+                },
+                {
+                  "text": "常に同じ一台",
+                  "ok": false,
+                  "explain": "固定端末だけなら端末固有の原因も強く疑います。"
+                }
+              ],
+              "why": "共有される変換枠を取得できない可能性があります。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "symptoms-3",
+          "format": "穴埋め",
+          "theme": "失敗する範囲から二つの仮説を立てる",
+          "scaffold": 4
+        },
+        {
+          "id": "bandwidth-contract",
+          "type": "info",
+          "title": "最大速度と確保する帯域を分ける",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "失敗する範囲から二つの仮説を立てる",
+          "scaffold": 5,
+          "body": "ベストエフォート型は、記載された最大速度をいつでも保証する契約ではありません。本問では最大1Gビット/秒でも実効約200Mビット/秒で頭打ちになり、ISPが契約条件によると説明しています。帯域確保型は契約した帯域を確保する方式です。どの区間・条件で確保するかも確認します。"
+        },
+        {
+          "type": "quiz",
+          "title": "契約最大1G、実測200Mで頭打ち。ISPも契約上の限界と説明した。改善する契約はどれか。",
+          "choices": [
+            {
+              "text": "帯域確保型",
+              "ok": true,
+              "explain": "本問ではベストエフォート型からの変更候補です。"
+            },
+            {
+              "text": "同じベストエフォート型の名称だけ変更",
+              "ok": false,
+              "explain": "実効帯域を改善する条件変更になりません。"
+            },
+            {
+              "text": "DHCPのリース期間だけ延長",
+              "ok": false,
+              "explain": "外部回線の帯域は増えません。"
+            }
+          ],
+          "stage": "check",
+          "id": "symptoms-4",
+          "format": "選択",
+          "theme": "失敗する範囲から二つの仮説を立てる",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "帯域の調査判断を並べよ。",
+          "lead": "ルータのCPU（Central Processing Unit、演算装置）の処理に余裕があり、ISPへ確認できた場面です。",
+          "lines": [
+            {
+              "code": "出口の通信量が約200Mビット毎秒で頭打ちと確認する"
+            },
+            {
+              "code": "ISPへの確認で現在の契約条件による制限と判断する"
+            },
+            {
+              "code": "帯域確保型を提案し、NAPT不足も別に調査する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "二つの症状は一つの対策だけで解消するとは限りません。",
+          "ngExplain": "帯域不足の確認だけでNAPTの調査を終えないようにします。",
+          "stage": "reason",
+          "id": "symptoms-5",
+          "format": "並べ替え",
+          "theme": "失敗する範囲から二つの仮説を立てる",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "帯域を増やした後もログに「table full（変換表が満杯）」が出る。次の対処は？",
+          "choices": [
+            {
+              "text": "校内動画サーバだけを停止する",
+              "ok": false,
+              "explain": "校内通信は通常、外部ルータのNAPT枠を使いません。"
+            },
+            {
+              "text": "NAPTのエントリー容量を調べる",
+              "ok": true,
+              "explain": "回線速度と変換表の枠数は別の資源です。"
+            },
+            {
+              "text": "帯域が増えれば変換枠も自動で増えると判断する",
+              "ok": false,
+              "explain": "両者は独立した設定です。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "symptoms-6",
+          "format": "選択",
+          "theme": "失敗する範囲から二つの仮説を立てる",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "mapping",
+      "title": "端末が決めた値とルータが割り当てた値",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "二台のPCを一つの外部IPで区別する",
+          "body": "PC側の元のIP・ポートと、NAPTルータが選ぶ外部側のIP・ポートを対応付けます。TCP（Transmission Control Protocol）は順序や再送を管理し、UDP（User Datagram Protocol）はその機能を持たない通信です。NAPTはUDPをTCPへ変更せず、プロトコルも対応を見分ける情報として記録します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "値",
+              "変換前",
+              "変換後"
+            ],
+            "rows": [
+              [
+                "IP",
+                "192.168.10.13",
+                "a.b.c.d"
+              ],
+              [
+                "ポート",
+                "56124",
+                "5001"
+              ],
+              [
+                "プロトコル",
+                "UDP",
+                "UDP"
+              ]
+            ],
+            "caption": "説明用：一つのNAPT対応"
+          },
+          "stage": "concept",
+          "id": "mapping-1",
+          "format": "読む",
+          "theme": "端末が決めた値とルータが割り当てた値",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "PCが指定した56124に対し、外側の5001を割り当てるのはどれか。",
+          "choices": [
+            {
+              "text": "DHCPサーバ",
+              "ok": false,
+              "explain": "IP設定を配布しますが、通信ごとのNAPTポートを選びません。"
+            },
+            {
+              "text": "教育サービスの利用者",
+              "ok": false,
+              "explain": "利用者がNAPT表のポートを決めるわけではありません。"
+            },
+            {
+              "text": "NAPTルータ",
+              "ok": true,
+              "explain": "外側ポートを対応表に記録します。"
+            }
+          ],
+          "stage": "check",
+          "id": "mapping-2",
+          "format": "選択",
+          "theme": "端末が決めた値とルータが割り当てた値",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "表1でルータ自身が割り当てる列はどれか。",
+          "choices": [
+            {
+              "text": "（iv）と（v）",
+              "ok": false,
+              "explain": "外側ポートは割り当てますが、UDPやTCPをルータが選び直しません。"
+            },
+            {
+              "text": "（iii）と（iv）",
+              "ok": true,
+              "explain": "変換後IPと変換後ポートです。ISPのIP群からルータが変換用IPを選びます。"
+            },
+            {
+              "text": "（i）と（ii）",
+              "ok": false,
+              "explain": "端末側の元のIPとポートです。"
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.15,
+            "bottom": 0.38,
+            "label": "原表1：変換前後の列名"
+          },
+          "id": "mapping-3",
+          "format": "選択",
+          "theme": "端末が決めた値とルータが割り当てた値",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "値を割り当てる位置を埋めよ。",
+          "template": "ルータが割り当てるのは{ip}と{port}。",
+          "blanks": [
+            {
+              "key": "ip",
+              "label": "IPの列",
+              "choices": [
+                {
+                  "text": "（iii）registered IP address",
+                  "ok": true,
+                  "explain": "外側で使う変換後IPです。"
+                },
+                {
+                  "text": "（i）local IP address",
+                  "ok": false,
+                  "explain": "端末の内側IPでありNAPTが新たに決める値ではありません。"
+                }
+              ],
+              "why": "外側で使う変換後IPです。"
+            },
+            {
+              "key": "port",
+              "label": "ポートの列",
+              "choices": [
+                {
+                  "text": "（iv）assigned port number",
+                  "ok": true,
+                  "explain": "外側で区別するためのポートです。"
+                },
+                {
+                  "text": "（ii）local port number",
+                  "ok": false,
+                  "explain": "元のポートは端末側の通信が持ちます。"
+                }
+              ],
+              "why": "外側で区別するためのポートです。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "mapping-4",
+          "format": "穴埋め",
+          "theme": "端末が決めた値とルータが割り当てた値",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "戻りのパケットをPCへ返す処理を並べよ。",
+          "lead": "外部宛てのNAPT対応表が既にあります。",
+          "lines": [
+            {
+              "code": "外側のIPとポート宛てに応答が届く"
+            },
+            {
+              "code": "ルータが対応する変換エントリーを探す"
+            },
+            {
+              "code": "元のPCのIPとポートへ戻して転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "変換エントリーは往復の対応を保持します。",
+          "ngExplain": "元のPCへ戻す前に対応表を参照します。",
+          "stage": "reason",
+          "id": "mapping-5",
+          "format": "並べ替え",
+          "theme": "端末が決めた値とルータが割り当てた値",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "異なる外部IPで同じ5001が使われた。直ちに異常といえるか。",
+          "choices": [
+            {
+              "text": "UDPからTCPに自動変換された証拠である",
+              "ok": false,
+              "explain": "ポート番号だけではプロトコル変換を示しません。"
+            },
+            {
+              "text": "IPも異なるので、ポートの重複だけでは異常といえない",
+              "ok": true,
+              "explain": "表1でも異なる外側IPに5001が現れます。"
+            },
+            {
+              "text": "ポート番号は世界中で一意でなければならない",
+              "ok": false,
+              "explain": "IPなどとの組合せで通信を区別します。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "mapping-6",
+          "format": "選択",
+          "theme": "端末が決めた値とルータが割り当てた値",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "capacity",
+      "title": "変換枠から台数と必要容量を計算する",
+      "targets": [
+        "s2-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "変換表には上限がある",
+          "body": "原問の条件：600台のPCが一台当たり最大200セッション（同時に行う通信）を使います。一セッションにつき一つの変換エントリーとして見積もり、PC以外は考慮しません。65,536枠で使える台数は割り算、600台に必要な枠は掛け算で求めます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "求めたい量",
+              "使う量"
+            ],
+            "rows": [
+              [
+                "利用できる台数",
+                "枠数÷一台の枠数"
+              ],
+              [
+                "600台に必要な枠",
+                "台数×一台の枠数"
+              ]
+            ],
+            "caption": "説明用：単位から式を選ぶ"
+          },
+          "stage": "concept",
+          "id": "capacity-1",
+          "format": "読む",
+          "theme": "変換枠から台数と必要容量を計算する",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "原問条件：一台200エントリー、PC以外は考慮しない。65,536枠で同時利用できる台数を求める式は？",
+          "choices": [
+            {
+              "text": "65,536×200",
+              "ok": false,
+              "explain": "単位が台数になりません。"
+            },
+            {
+              "text": "65,536÷200を切り上げる",
+              "ok": false,
+              "explain": "最後の一台に200枠を確保できなくなります。"
+            },
+            {
+              "text": "65,536÷200の小数部を切り捨てる",
+              "ok": true,
+              "explain": "一台分の200枠を全部確保できる台数です。"
+            }
+          ],
+          "stage": "check",
+          "id": "capacity-2",
+          "format": "選択",
+          "theme": "変換枠から台数と必要容量を計算する",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "一台200エントリー、上限65,536。327台と328台を比較した結果は？",
+          "choices": [
+            {
+              "text": "余り136枠で136台を追加できる",
+              "ok": false,
+              "explain": "一台当たり一枠ではなく200枠の見積りです。"
+            },
+            {
+              "text": "327台は65,400枠、328台は65,600枠で上限超過",
+              "ok": true,
+              "explain": "端数136枠では一台分の200枠に足りません。"
+            },
+            {
+              "text": "328台でも65,536枠に収まる",
+              "ok": false,
+              "explain": "328×200は65,600です。"
+            }
+          ],
+          "stage": "reason",
+          "id": "capacity-3",
+          "format": "選択",
+          "theme": "変換枠から台数と必要容量を計算する",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "台数と必要エントリー数を両方埋めよ。",
+          "template": "現在の上限で同時利用できるのは{pcs}台。600台には最低{entries}エントリーを設定する。",
+          "blanks": [
+            {
+              "key": "pcs",
+              "label": "台数",
+              "choices": [
+                {
+                  "text": "327",
+                  "ok": true,
+                  "explain": "65,536÷200を切り捨てます。"
+                },
+                {
+                  "text": "328",
+                  "ok": false,
+                  "explain": "切上げると必要枠が上限を超えます。"
+                }
+              ],
+              "why": "65,536÷200を切り捨てます。"
+            },
+            {
+              "key": "entries",
+              "label": "必要枠",
+              "choices": [
+                {
+                  "text": "120,000",
+                  "ok": true,
+                  "explain": "600×200=120,000です。PC以外は考慮しない条件です。"
+                },
+                {
+                  "text": "65,536",
+                  "ok": false,
+                  "explain": "既存値では600台分に不足します。"
+                }
+              ],
+              "why": "600×200=120,000です。PC以外は考慮しない条件です。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.55,
+            "bottom": 0.71,
+            "label": "IPA原文：エントリー上限と一台200セッション"
+          },
+          "id": "capacity-4",
+          "format": "穴埋め",
+          "theme": "変換枠から台数と必要容量を計算する",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "600台の必要枠を計算する判断を並べよ。",
+          "lead": "PC以外の通信は考慮しない原問の条件です。",
+          "lines": [
+            {
+              "code": "対象台数が600台であることを確認する"
+            },
+            {
+              "code": "一台200セッションなので600×200を計算する"
+            },
+            {
+              "code": "120,000エントリー以上を設定する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "台数の上限とは逆に、必要枠は掛け算で求めます。",
+          "ngExplain": "65,536を使うのは現在の収容台数の計算です。",
+          "stage": "reason",
+          "id": "capacity-5",
+          "format": "並べ替え",
+          "theme": "変換枠から台数と必要容量を計算する",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "台数を400台、一台150セッションに変更した。最低何枠必要か。",
+          "choices": [
+            {
+              "text": "400",
+              "ok": false,
+              "explain": "PC一台が複数の変換エントリーを使う条件です。"
+            },
+            {
+              "text": "60,000",
+              "ok": true,
+              "explain": "400×150です。条件が変われば必要容量も変わります。"
+            },
+            {
+              "text": "120,000",
+              "ok": false,
+              "explain": "元の600台・200セッションの結果を流用してはいけません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "capacity-6",
+          "format": "選択",
+          "theme": "変換枠から台数と必要容量を計算する",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "hol",
+      "title": "先頭待ちが後続処理を止める理由",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "http-request",
+          "type": "info",
+          "title": "Webでは要求に応答を返す",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "先頭待ちが後続処理を止める理由",
+          "scaffold": 5,
+          "body": "HTTP（Hypertext Transfer Protocol）はブラウザなどがリクエスト（要求）を送り、サーバがレスポンス（応答）を返す仕組みです。例えば画像取得要求に画像データを返します。ここからは複数画像を取得するときの待ち方を考えます。"
+        },
+        {
+          "type": "info",
+          "title": "小さな画像が大きな画像を待つ",
+          "body": "同じ接続で画像Aと画像Bを順に受け取ります。Aの転送が長引くと、後続のBも待たされます。この先頭待ちをHoL（Head of Line）ブロッキングと呼びます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "画像A",
+                "d": "大きくて処理に時間が掛かる"
+              },
+              {
+                "t": "画像B",
+                "d": "Aの完了まで待機"
+              },
+              {
+                "t": "表示完了",
+                "d": "後続まで遅れる"
+              }
+            ],
+            "caption": "説明用：直列処理の待ち"
+          },
+          "stage": "concept",
+          "id": "hol-1",
+          "format": "読む",
+          "theme": "先頭待ちが後続処理を止める理由",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "Bの処理自体が短くても完了が遅れる理由はどれか。",
+          "choices": [
+            {
+              "text": "BのIPアドレスが必ず不足する",
+              "ok": false,
+              "explain": "先頭待ちとアドレス不足は別です。"
+            },
+            {
+              "text": "Bは必ず再認証が必要になる",
+              "ok": false,
+              "explain": "提示した条件に認証の失敗はありません。"
+            },
+            {
+              "text": "先行のAが終わるまでBが待つ",
+              "ok": true,
+              "explain": "直列処理で後続の開始や完了が制限されるためです。"
+            }
+          ],
+          "stage": "check",
+          "id": "hol-2",
+          "format": "選択",
+          "theme": "先頭待ちが後続処理を止める理由",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "PCが送る取得要求と、サーバが返すデータの組合せはどれか。",
+          "choices": [
+            {
+              "text": "ACK（Acknowledgement、確認応答）とDHCPDISCOVER",
+              "ok": false,
+              "explain": "TCPの確認応答とDHCPの探索でありHTTPの要求・応答ではありません。"
+            },
+            {
+              "text": "リクエストとレスポンス",
+              "ok": true,
+              "explain": "HTTPの要求と応答を区別します。"
+            },
+            {
+              "text": "レスポンスとリクエスト",
+              "ok": false,
+              "explain": "送受信の役割が逆です。"
+            }
+          ],
+          "stage": "check",
+          "id": "hol-3",
+          "format": "選択",
+          "theme": "先頭待ちが後続処理を止める理由",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "遅延の理由を主語と条件で組み立てよ。",
+          "template": "{condition}まで{subject}が待たされるから。",
+          "blanks": [
+            {
+              "key": "condition",
+              "label": "待つ条件",
+              "choices": [
+                {
+                  "text": "先行の処理が終わる",
+                  "ok": true,
+                  "explain": "処理順による待ち時間が要因です。"
+                },
+                {
+                  "text": "全PCのIPアドレスが同じになる",
+                  "ok": false,
+                  "explain": "IPアドレスの統一は不要です。"
+                }
+              ],
+              "why": "処理順による待ち時間が要因です。"
+            },
+            {
+              "key": "subject",
+              "label": "待たされる対象",
+              "choices": [
+                {
+                  "text": "後続の処理",
+                  "ok": true,
+                  "explain": "遅れるのは後続の通信処理です。"
+                },
+                {
+                  "text": "NAPTの設定管理者",
+                  "ok": false,
+                  "explain": "管理者の操作待ちという条件ではありません。"
+                }
+              ],
+              "why": "遅れるのは後続の通信処理です。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "hol-4",
+          "format": "穴埋め",
+          "theme": "先頭待ちが後続処理を止める理由",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "直列処理の待ちを順に並べよ。",
+          "lead": "パイプラインで要求済みでも応答順の制約がある例です。",
+          "lines": [
+            {
+              "code": "先行する画像Aの応答処理に時間が掛かる"
+            },
+            {
+              "code": "後続する画像Bの応答が順序制約で待つ"
+            },
+            {
+              "code": "全画像の完了時刻が遅れる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "先行処理が後続に影響する因果関係を記述します。",
+          "ngExplain": "Bが小さいことだけでは先行待ちを解消できません。",
+          "stage": "reason",
+          "id": "hol-5",
+          "format": "並べ替え",
+          "theme": "先頭待ちが後続処理を止める理由",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "AとBを別のTCP接続で処理する。この待ちを減らす代わりに何が増え得るか。",
+          "choices": [
+            {
+              "text": "PoE+の最大給電電力",
+              "ok": false,
+              "explain": "HTTPの並列化は給電規格を変えません。"
+            },
+            {
+              "text": "TCP接続数とNAPTエントリー数",
+              "ok": true,
+              "explain": "同時接続で待ちを減らす一方、変換表を多く使います。"
+            },
+            {
+              "text": "一つのIPアドレスのビット数",
+              "ok": false,
+              "explain": "IPv4（Internet Protocol version 4）アドレスは32ビットです。接続を増やしても長さは変わりません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "hol-6",
+          "format": "選択",
+          "theme": "先頭待ちが後続処理を止める理由",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "streams",
+      "title": "一つの接続で複数の要求を扱う",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "streams-concept",
+          "type": "info",
+          "title": "識別して交互に運ぶ",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "一つの接続で複数の要求を扱う",
+          "scaffold": 5,
+          "body": "ストリームは一つの接続内で独立した要求・応答を扱う論理的な通信単位です。ID（Identifier、識別子）を付ければ、複数画像のデータを交互に運んでも受信側で分けられます。これを多重化と呼び、画像ごとに別接続を作る必要を減らします。"
+        },
+        {
+          "type": "info",
+          "title": "接続を増やさずに複数の画像を受け取る",
+          "body": "HTTP/2は一つのTCP接続に複数ストリームを設け、HTTPの応答順による待ちを減らします。ただしTCPは順序どおりにデータを渡すため、一部を失うと同じTCP上の他のストリームも待ち得ます。HTTP/3はUDP上のQUICというプロトコルを使い、異なるストリームへのこの待ちの波及を減らします。QUIC自体には再送などの機能があります。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "方式",
+              "通信のまとめ方"
+            ],
+            "rows": [
+              [
+                "HTTP/1.1の並列取得例",
+                "複数TCP接続"
+              ],
+              [
+                "HTTP/2",
+                "一つのTCPに複数ストリーム"
+              ],
+              [
+                "HTTP/3",
+                "UDP上のQUICに複数ストリーム"
+              ]
+            ],
+            "caption": "説明用：原図4につながる比較"
+          },
+          "stage": "concept",
+          "id": "streams-1",
+          "format": "読む",
+          "theme": "一つの接続で複数の要求を扱う",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "同じTCP接続のデータがどの要求に対応するか、何で区別するか。",
+          "choices": [
+            {
+              "text": "ストリームごとに異なる外部IP",
+              "ok": false,
+              "explain": "同じ接続内なので外部IPを個別に付ける必要はありません。"
+            },
+            {
+              "text": "APの給電ポート",
+              "ok": false,
+              "explain": "給電の接続場所からHTTPの要求は区別できません。"
+            },
+            {
+              "text": "ストリームID",
+              "ok": true,
+              "explain": "HTTP/2の各ストリームを識別します。"
+            }
+          ],
+          "stage": "check",
+          "id": "streams-2",
+          "format": "選択",
+          "theme": "一つの接続で複数の要求を扱う",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "画像を10枚取得してもTCP接続を一つにできる理由はどれか。",
+          "choices": [
+            {
+              "text": "NAPTを経由しなくなる",
+              "ok": false,
+              "explain": "接続の多重化とNAPTの通過有無は別です。"
+            },
+            {
+              "text": "ストリームを使って要求と応答を多重化する",
+              "ok": true,
+              "explain": "画像ごとにTCP接続を増やす必要を減らします。"
+            },
+            {
+              "text": "レスポンスを全て廃棄する",
+              "ok": false,
+              "explain": "廃棄すると画像を取得できません。"
+            }
+          ],
+          "stage": "reason",
+          "id": "streams-3",
+          "format": "選択",
+          "theme": "一つの接続で複数の要求を扱う",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "四つの空欄を通信の向きと単位から埋めよ。",
+          "template": "PCからのHTTP{request}にサーバがHTTP{response}を返す。HTTP/2では{identifier}で区別し、{parallel}処理を行う。",
+          "blanks": [
+            {
+              "key": "request",
+              "label": "PCから",
+              "choices": [
+                {
+                  "text": "リクエスト",
+                  "ok": true,
+                  "explain": "取得などの要求です。"
+                },
+                {
+                  "text": "レスポンス",
+                  "ok": false,
+                  "explain": "レスポンスは要求に対する応答です。"
+                }
+              ],
+              "why": "取得などの要求です。"
+            },
+            {
+              "key": "response",
+              "label": "サーバから",
+              "choices": [
+                {
+                  "text": "レスポンス",
+                  "ok": true,
+                  "explain": "サーバが返す応答です。"
+                },
+                {
+                  "text": "リクエスト",
+                  "ok": false,
+                  "explain": "この場面で要求するのはPCです。"
+                }
+              ],
+              "why": "サーバが返す応答です。"
+            },
+            {
+              "key": "identifier",
+              "label": "識別",
+              "choices": [
+                {
+                  "text": "ストリームID",
+                  "ok": true,
+                  "explain": "同一接続内のストリームを識別します。"
+                },
+                {
+                  "text": "VLAN（Virtual Local Area Network）ID",
+                  "ok": false,
+                  "explain": "VLAN IDはレイヤー2の所属網を区別します。"
+                }
+              ],
+              "why": "同一接続内のストリームを識別します。"
+            },
+            {
+              "key": "parallel",
+              "label": "処理",
+              "choices": [
+                {
+                  "text": "並列",
+                  "ok": true,
+                  "explain": "複数ストリームで並行する処理を扱えます。"
+                },
+                {
+                  "text": "必ず直列",
+                  "ok": false,
+                  "explain": "全応答を直列に限定する説明ではありません。"
+                }
+              ],
+              "why": "複数ストリームで並行する処理を扱えます。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "streams-4",
+          "format": "穴埋め",
+          "theme": "一つの接続で複数の要求を扱う",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "受信データを画像別に扱う流れを並べよ。",
+          "lead": "同じTCP接続に二つのストリームがあります。",
+          "lines": [
+            {
+              "code": "二つの要求を別のストリームに割り当てる"
+            },
+            {
+              "code": "各ストリームID付きのフレームを一つの接続で受信する"
+            },
+            {
+              "code": "ストリームIDに従ってそれぞれの応答として扱う"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "TCP接続を分けなくてもHTTPの交換を識別できます。",
+          "ngExplain": "識別子に基づいて受信後に各応答へ分けます。",
+          "stage": "reason",
+          "id": "streams-5",
+          "format": "並べ替え",
+          "theme": "一つの接続で複数の要求を扱う",
+          "scaffold": 2
+        },
+        {
+          "id": "stream-independent",
+          "type": "quiz",
+          "title": "練習用：一つのTCP接続に画像用ストリームが3本。この条件だけで外部ポートが3個必要になる？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "一つの接続で複数の要求を扱う",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "ならない。同じTCP接続を共有している",
+              "ok": true,
+              "explain": "ストリームはHTTP側の識別であり、NAPTの変換単位をストリームごとに増やすものではありません。"
+            },
+            {
+              "text": "必ず3個必要",
+              "ok": false,
+              "explain": "ストリーム数とTCP接続数は一致しません。"
+            },
+            {
+              "text": "外部IPが3個必要",
+              "ok": false,
+              "explain": "同じ接続の多重化はIPを増やす設計ではありません。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "HTTP/2のTCPパケットが失われた。他ストリームは影響を受け得るか。",
+          "choices": [
+            {
+              "text": "全ストリームがUDPへ自動変換される",
+              "ok": false,
+              "explain": "HTTP/2はTCP上です。HTTP/3と混同しないようにします。"
+            },
+            {
+              "text": "TCPの順序保証による待ちを受け得る",
+              "ok": true,
+              "explain": "HTTPの多重化だけではTCP層のHoLは解消しません。"
+            },
+            {
+              "text": "HTTP/2ならTCPの損失も無関係",
+              "ok": false,
+              "explain": "基盤となるTCP接続は共用しています。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "streams-6",
+          "format": "選択",
+          "theme": "一つの接続で複数の要求を扱う",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "udp-timeout",
+      "title": "不要な変換枠を早く回収する",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "通信終了後も変換枠が残る",
+          "body": "本問のルータはUDPの一つの通信の流れ（フロー）が無通信になってから300秒間、NAPTエントリーを残します。HTTP/3のQUICはUDP上で動き、終了がNAPTルータにTCPの終了と同じ形で伝わるとは限りません。未使用枠を早く回収できれば新しい通信へ再利用できます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "最後の通信",
+              "保持時間",
+              "削除時刻の例"
+            ],
+            "rows": [
+              [
+                "8:00:00",
+                "300秒",
+                "8:05:00"
+              ],
+              [
+                "8:00:00",
+                "120秒",
+                "8:02:00"
+              ]
+            ],
+            "caption": "説明用：無通信時間と回収"
+          },
+          "stage": "concept",
+          "id": "udp-timeout-1",
+          "format": "読む",
+          "theme": "不要な変換枠を早く回収する",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "HTTP/3の利用が増えた場合、表2で調整対象となる行はどれか。",
+          "choices": [
+            {
+              "text": "TCPのFIN（終了を示すフラグ）双方向だけ",
+              "ok": false,
+              "explain": "TCP接続の終了後に関する値です。"
+            },
+            {
+              "text": "DNSだけ",
+              "ok": false,
+              "explain": "HTTP/3通信自体のUDPエントリーとDNS問合せを区別します。"
+            },
+            {
+              "text": "UDP",
+              "ok": true,
+              "explain": "HTTP/3のQUICはUDP上で動きます。"
+            }
+          ],
+          "stage": "check",
+          "id": "udp-timeout-2",
+          "format": "選択",
+          "theme": "不要な変換枠を早く回収する",
+          "scaffold": 4
+        },
+        {
+          "id": "udp-timeout-reset",
+          "type": "quiz",
+          "title": "練習用：最後の通信は8:00:00、無通信保持120秒。8:01:30の通信でタイマーを更新した。削除予定は？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "不要な変換枠を早く回収する",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "8:02:00",
+              "ok": false,
+              "explain": "途中の通信でタイマーが更新される条件を落としています。"
+            },
+            {
+              "text": "通信中でも直ちに削除する",
+              "ok": false,
+              "explain": "無通信保持時間の調整は、通信中の対応を無条件に消す操作ではありません。"
+            },
+            {
+              "text": "8:03:30",
+              "ok": true,
+              "explain": "最後の通信から120秒です。作成時刻からの固定寿命ではありません。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "未使用枠を早く削除する変更はどれか。",
+          "choices": [
+            {
+              "text": "TCPの30秒だけ短くする",
+              "ok": false,
+              "explain": "HTTP/3のUDP枠の保持時間は変わりません。"
+            },
+            {
+              "text": "UDPの300秒を短くする",
+              "ok": true,
+              "explain": "無通信の状態が続いた枠を早く回収します。"
+            },
+            {
+              "text": "UDPの300秒を長くする",
+              "ok": false,
+              "explain": "未使用枠を長く残す方向です。"
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 13,
+            "top": 0.535,
+            "bottom": 0.71,
+            "label": "IPA原表2：無通信の保持時間"
+          },
+          "id": "udp-timeout-3",
+          "format": "選択",
+          "theme": "不要な変換枠を早く回収する",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "調整内容と効果を両方組み立てよ。",
+          "template": "{protocol}の保持時間を{change}。{target}によるNAPTエントリーを{effect}。",
+          "blanks": [
+            {
+              "key": "protocol",
+              "label": "プロトコル",
+              "choices": [
+                {
+                  "text": "UDP",
+                  "ok": true,
+                  "explain": "HTTP/3が利用する下位プロトコルです。"
+                },
+                {
+                  "text": "TCP",
+                  "ok": false,
+                  "explain": "HTTP/2のTCPと混同しないようにします。"
+                }
+              ],
+              "why": "HTTP/3が利用する下位プロトコルです。"
+            },
+            {
+              "key": "change",
+              "label": "変更",
+              "choices": [
+                {
+                  "text": "300秒より短くする",
+                  "ok": true,
+                  "explain": "回収までの無通信時間を短縮します。"
+                },
+                {
+                  "text": "300秒より長くする",
+                  "ok": false,
+                  "explain": "長くすると回収が遅れます。"
+                }
+              ],
+              "why": "回収までの無通信時間を短縮します。"
+            },
+            {
+              "key": "target",
+              "label": "回収対象",
+              "choices": [
+                {
+                  "text": "未使用のUDPフロー",
+                  "ok": true,
+                  "explain": "未使用のUDP対応が対象です。"
+                },
+                {
+                  "text": "通信中の全TCPフロー",
+                  "ok": false,
+                  "explain": "通信中のTCPを消す目的ではありません。"
+                }
+              ],
+              "why": "未使用のUDP対応が対象です。"
+            },
+            {
+              "key": "effect",
+              "label": "効果",
+              "choices": [
+                {
+                  "text": "早期に削除できる",
+                  "ok": true,
+                  "explain": "空いた枠を再利用できます。"
+                },
+                {
+                  "text": "永久に保持できる",
+                  "ok": false,
+                  "explain": "保持を延ばすと空きが増えません。"
+                }
+              ],
+              "why": "空いた枠を再利用できます。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "udp-timeout-4",
+          "format": "穴埋め",
+          "theme": "不要な変換枠を早く回収する",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "保持時間短縮の効果を順に並べよ。",
+          "lead": "無通信で不要になったUDPエントリーを考えます。",
+          "lines": [
+            {
+              "code": "UDPの無通信保持時間を短くする"
+            },
+            {
+              "code": "未使用エントリーが以前より早く削除される"
+            },
+            {
+              "code": "新しいフローに割り当てられる空きが増える"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "短縮の直接効果は枠の早期回収です。",
+          "ngExplain": "回線の最大速度が上がるわけではありません。",
+          "stage": "reason",
+          "id": "udp-timeout-5",
+          "format": "並べ替え",
+          "theme": "不要な変換枠を早く回収する",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "無通信が30秒続いてから再開するアプリで、保持を10秒にした。何に注意するか。",
+          "choices": [
+            {
+              "text": "消えたエントリーは必ず同じ外側ポートで復活する",
+              "ok": false,
+              "explain": "再作成時に同じ対応になるとは保証されません。"
+            },
+            {
+              "text": "まだ利用予定の対応まで削除され得る",
+              "ok": true,
+              "explain": "極端な短縮は再開時の通信に影響します。運用では利用状況を測定します。"
+            },
+            {
+              "text": "HTTP/3が必ずHTTP/1.1へ変わる",
+              "ok": false,
+              "explain": "保持時間はHTTPバージョンの切替設定ではありません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "udp-timeout-6",
+          "format": "選択",
+          "theme": "不要な変換枠を早く回収する",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "UDPの保持を短縮しても帯域の頭打ちが残る。正しい評価はどれか。",
+          "choices": [
+            {
+              "text": "変換枠の回収と帯域改善を別々に評価する",
+              "ok": true,
+              "explain": "二つの不足にそれぞれ対策が必要です。"
+            },
+            {
+              "text": "保持時間を0にすれば帯域も増える",
+              "ok": false,
+              "explain": "極端な短縮は通信を壊し得ます。帯域は増えません。"
+            },
+            {
+              "text": "PCの所属セグメントが間違っていると断定する",
+              "ok": false,
+              "explain": "帯域の観測からDHCP誤配布とは断定できません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "udp-timeout-7",
+          "format": "選択",
+          "theme": "不要な変換枠を早く回収する",
+          "scaffold": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2320 @@
+{
+  "examKey": "2025r07h/pm2/2",
+  "title": "遠隔検針の通信を、電力・確認応答・安全性から組み立てる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm2_qs.pdf",
+    "https://www.rfc-editor.org/rfc/rfc7252.html",
+    "https://www.rfc-editor.org/rfc/rfc9147.html",
+    "https://www.rfc-editor.org/rfc/rfc7296.html",
+    "https://www.rfc-editor.org/rfc/rfc7252.html",
+    "https://www.rfc-editor.org/rfc/rfc9147.html"
+  ],
+  "sections": [
+    {
+      "id": "low-power",
+      "title": "電池で動く機器に必要な通信",
+      "targets": [
+        "s1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "purpose",
+          "type": "info",
+          "title": "そもそも遠隔検針で何をしたいのか",
+          "body": "ガスの使用量を、人が現地へ行かずに集めます。IoTはInternet of Thingsの略です。機器をネットワークにつなぎ、測定値などをやり取りします。\n\n今回は電池で動くメーターです。大容量の動画ではなく、小さな測定値を長期間送り続けます。速度だけでなく、通信に使う電力が重要です。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "tradeoff",
+          "type": "quiz",
+          "title": "電池交換を減らしたい。通信方式を選ぶとき、まず重視する条件はどれか。",
+          "choices": [
+            {
+              "text": "少ない消費電力で必要な距離へ届くこと",
+              "explain": "電池には使えるエネルギーの上限があります。必要な通信を少ない電力で行えば、稼働時間を延ばせます。",
+              "ok": true
+            },
+            {
+              "text": "常に最大速度で送信できること",
+              "explain": "速度が高いことだけでは電池寿命は決まりません。今回必要なのは少量の測定値を長期間送ることです。",
+              "ok": false
+            },
+            {
+              "text": "どの端末とも常時接続しておくこと",
+              "explain": "接続の維持や待受けにも電力を使います。必要なときだけ通信する設計も検討します。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "lpwa",
+          "type": "info",
+          "title": "LPWAの名前に設計の目的が表れる",
+          "body": "LPWAはLow Power Wide Areaの略で、低消費電力で広い範囲を通信する技術の総称です。携帯電話網を使うセルラー系と、それ以外の非セルラー系に大別します。\n\nLTE（Long Term Evolution）網を用いるLTE-M（LTE for Machines）やNB-IoT（Narrowband Internet of Things）はセルラー系です。LoRaWAN（Long Range Wide Area Network）やSigfoxは非セルラー系です。LTE系の技術仕様は3GPP（3rd Generation Partnership Project）が策定します。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "分類",
+              "例",
+              "この問題での見方"
+            ],
+            "rows": [
+              [
+                "セルラー系",
+                "LTE-M、NB-IoT",
+                "通信事業者のLTE網を利用"
+              ],
+              [
+                "非セルラー系",
+                "LoRaWAN、Sigfox",
+                "LTE網を前提としない"
+              ]
+            ],
+            "caption": "分類を確認するための解説表"
+          }
+        },
+        {
+          "id": "cellular",
+          "type": "quiz",
+          "title": "全国に設置するメーターで、事業者のLTE網を利用する方式を選ぶ。組合せはどれか。",
+          "choices": [
+            {
+              "text": "セルラー系のLTE-M",
+              "explain": "セルラー系は携帯電話網を利用します。原問は全国規模で利用できるLTE-Mを選んでいます。",
+              "ok": true
+            },
+            {
+              "text": "非セルラー系のLTE-M",
+              "explain": "LTE-MはLTE網を利用するセルラー系です。低消費電力という特徴だけで非セルラー系にはなりません。",
+              "ok": false
+            },
+            {
+              "text": "セルラー系のLoRaWAN",
+              "explain": "LoRaWANは非セルラー系です。広い範囲に届くことと、LTE網を利用することは別です。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "interference",
+          "type": "info",
+          "title": "周波数を共有すると干渉を考える",
+          "body": "ISMはIndustrial, Scientific and Medicalの略です。産業・科学・医療用途に由来する周波数帯の呼び方です。無線通信でも利用されます。\n\n同じ周波数帯を近くの機器が使うと、互いの通信を妨げることがあります。これが干渉です。原問では920MHz帯は2.4GHz帯より干渉の影響が少ないとしています。干渉が全く起きないという意味ではありません。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "interference-condition",
+          "type": "quiz",
+          "title": "練習用：同じ場所・同じ周波数で送る機器が増え、互いの電波で受信しづらくなった。距離が変わらなくても起こるこの問題は？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "電池で動く機器に必要な通信",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "干渉",
+              "ok": true,
+              "explain": "複数の電波が互いを妨げます。低消費電力でも周波数を共有すれば起こり得ます。"
+            },
+            {
+              "text": "距離が伸びたことによる減衰だけ",
+              "ok": false,
+              "explain": "距離は変わらない条件です。電波同士の影響を見ます。"
+            },
+            {
+              "text": "加入者識別",
+              "ok": false,
+              "explain": "契約した機器を識別する処理であり受信品質悪化の現象名ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "terms",
+          "type": "blank",
+          "title": "無線方式の説明を完成させる（この練習のa〜cは原問の空欄記号とは別）",
+          "template": "LPWAは低{a}電力の通信技術です。LTE-Mは{b}系、LoRaWANは{c}系です。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "why": "Low Powerは消費する電力の小ささを表します。",
+              "choices": [
+                {
+                  "text": "消費",
+                  "explain": "機器が使う電力です。",
+                  "ok": true
+                },
+                {
+                  "text": "送信距離",
+                  "explain": "距離は電力の種類ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "周波数",
+                  "explain": "周波数と電力は別の量です。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "why": "LTE-Mは携帯電話網を利用します。",
+              "choices": [
+                {
+                  "text": "セルラー",
+                  "explain": "LTE網を利用する分類です。",
+                  "ok": true
+                },
+                {
+                  "text": "非セルラー",
+                  "explain": "LTE網を前提としない分類です。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "why": "LoRaWANは非セルラー系です。",
+              "choices": [
+                {
+                  "text": "非セルラー",
+                  "explain": "原問の分類と対応します。",
+                  "ok": true
+                },
+                {
+                  "text": "セルラー",
+                  "explain": "LTE網を利用するLTE-Mなどの分類です。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "format": "答案の組立て",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble"
+        },
+        {
+          "id": "spectrum",
+          "type": "quiz",
+          "title": "原問の空欄d・e・fを、役割の違いから選ぶ。",
+          "choices": [
+            {
+              "text": "ISM・干渉・3GPP",
+              "explain": "dは周波数帯の呼び方、eは電波による妨害、fは標準化プロジェクトです。何を表す語かを先に区別します。",
+              "ok": true
+            },
+            {
+              "text": "3GPP・干渉・ISM",
+              "explain": "3GPPは周波数帯の名前ではありません。ISMは標準化プロジェクトではありません。",
+              "ok": false
+            },
+            {
+              "text": "ISM・減衰・IEEE（Institute of Electrical and Electronics Engineers）",
+              "explain": "減衰は距離や障害物などによって電波が弱くなることです。ここでは混雑した周波数帯の干渉と、LTE系の3GPPを問います。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 1,
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.51,
+            "bottom": 0.83,
+            "label": "LPWAの分類と周波数帯（IPA原文）"
+          }
+        },
+        {
+          "id": "radio-original-assembly",
+          "type": "blank",
+          "title": "原問a〜fを分類・帯域名・現象・策定者へ対応させる",
+          "stage": "assemble",
+          "format": "穴埋め",
+          "theme": "電池で動く機器に必要な通信",
+          "scaffold": 2,
+          "template": "低{power}電力。LoRaWAN・Sigfoxは{noncell}系、LTE-M・NB-IoTは{cell}系。帯域の呼び方は{band}、互いの電波の妨害は{noise}、LTE系の技術仕様の策定者は{standards}。",
+          "blanks": [
+            {
+              "key": "power",
+              "label": "原問a",
+              "why": "使う電力を小さくして電池で動く時間を延ばします。",
+              "choices": [
+                {
+                  "text": "蓄積",
+                  "ok": false,
+                  "explain": "使う電力の説明でありエネルギーの蓄積ではありません。"
+                },
+                {
+                  "text": "消費",
+                  "ok": true,
+                  "explain": "使う電力を小さくして電池で動く時間を延ばします。"
+                }
+              ]
+            },
+            {
+              "key": "noncell",
+              "label": "原問b",
+              "why": "LoRaWANとSigfoxはLTE網を前提としません。",
+              "choices": [
+                {
+                  "text": "セルラー",
+                  "ok": false,
+                  "explain": "LTE網を使う分類と逆です。"
+                },
+                {
+                  "text": "非セルラー",
+                  "ok": true,
+                  "explain": "LoRaWANとSigfoxはLTE網を前提としません。"
+                }
+              ]
+            },
+            {
+              "key": "cell",
+              "label": "原問c",
+              "why": "LTE-MとNB-IoTはLTE網を利用します。",
+              "choices": [
+                {
+                  "text": "セルラー",
+                  "ok": true,
+                  "explain": "LTE-MとNB-IoTはLTE網を利用します。"
+                },
+                {
+                  "text": "非セルラー",
+                  "ok": false,
+                  "explain": "低消費電力という特徴だけで非セルラーにはなりません。"
+                }
+              ]
+            },
+            {
+              "key": "band",
+              "label": "原問d",
+              "why": "Industrial, Scientific and Medicalに由来する帯域の呼称です。",
+              "choices": [
+                {
+                  "text": "3GPP",
+                  "ok": false,
+                  "explain": "標準化プロジェクトであり帯域名ではありません。"
+                },
+                {
+                  "text": "ISM",
+                  "ok": true,
+                  "explain": "Industrial, Scientific and Medicalに由来する帯域の呼称です。"
+                }
+              ]
+            },
+            {
+              "key": "noise",
+              "label": "原問e",
+              "why": "同じ帯域の他の電波が通信を妨げることです。",
+              "choices": [
+                {
+                  "text": "干渉",
+                  "ok": true,
+                  "explain": "同じ帯域の他の電波が通信を妨げることです。"
+                },
+                {
+                  "text": "減衰",
+                  "ok": false,
+                  "explain": "電波が弱まること全般と、他の電波による妨害を分けます。"
+                }
+              ]
+            },
+            {
+              "key": "standards",
+              "label": "原問f",
+              "why": "LTE系の技術仕様を策定します。",
+              "choices": [
+                {
+                  "text": "3GPP",
+                  "ok": true,
+                  "explain": "LTE系の技術仕様を策定します。"
+                },
+                {
+                  "text": "ISM",
+                  "ok": false,
+                  "explain": "帯域の呼称であり策定者ではありません。"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vpn-policy",
+      "title": "誰の通信を保護するのか",
+      "targets": [
+        "s2"
+      ],
+      "steps": [
+        {
+          "id": "vpn",
+          "type": "info",
+          "title": "通信相手と、途中の暗号化装置を分ける",
+          "body": "メーターが測定値を送りたい相手は管理サーバです。IP（Internet Protocol）のパケットは送信元と宛先を持ちます。インターネット上にVPN（Virtual Private Network、仮想プライベート網）を作る区間で、本問はIPsec（IP Security）を使って保護します。\n\nIKE（Internet Key Exchange）は暗号化の条件や鍵を合意する仕組みです。本問のIKEv2の初期交換は二台のIPsecルータ間で要求と応答を二組行います。メーターと管理サーバのデータ通信とは別の、保護の準備です。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "roundtrips",
+          "type": "quiz",
+          "title": "Aから要求、Bから応答を2回繰り返した。メッセージ4個は何往復か。",
+          "choices": [
+            {
+              "text": "2往復",
+              "explain": "要求と応答の2メッセージで1往復です。4個を2で割ります。原問の空欄gにつながります。",
+              "ok": true
+            },
+            {
+              "text": "4往復",
+              "explain": "メッセージ数と往復数を混同しています。片道1回を1往復とは数えません。",
+              "ok": false
+            },
+            {
+              "text": "1往復",
+              "explain": "1往復では要求と応答の2個です。今回はその組が二つあります。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "spd",
+          "type": "info",
+          "title": "通信の規則と、暗号化の状態を分ける",
+          "body": "SPDはSecurity Policy Databaseの略です。どの通信を保護するか、通すか、捨てるかを決める規則です。SADはSecurity Association Databaseの略です。合意した暗号化方式や鍵などの状態を保持します。\n\nSPDのセレクターは、保護したい通信の送信元・宛先などを照合します。トンネルの外側の宛先と、元の通信の宛先は別です。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "判断",
+              "参照するもの"
+            ],
+            "rows": [
+              [
+                "このパケットを保護するか",
+                "SPDの規則"
+              ],
+              [
+                "どの鍵・方式で保護するか",
+                "SADの情報"
+              ]
+            ],
+            "caption": "IPsecの処理を分けた解説表"
+          }
+        },
+        {
+          "id": "ipsec-two-packets",
+          "type": "info",
+          "title": "トンネルの宛先と届けたい相手",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "誰の通信を保護するのか",
+          "scaffold": 5,
+          "body": "トンネルモードでは元のIPパケットを保護して別のIPパケットに包みます。内側の宛先はデータを届けたい相手、外側の宛先はトンネル終端のルータです。SPDは保護対象の内側の通信条件を照合します。原図へ進む前に二種類の宛先を分けましょう。",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "元の通信",
+                "parts": [
+                  {
+                    "t": "内側IPヘッダー",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "測定データ",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "トンネル化後",
+                "parts": [
+                  {
+                    "t": "外側IPヘッダー",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "保護された元のパケット等",
+                    "w": 5,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：二種類の宛先の位置（照合相手は未指定）"
+          }
+        },
+        {
+          "id": "inner",
+          "type": "quiz",
+          "title": "メーターから管理サーバへの通信を保護したい。元のパケットの宛先として照合するのはどれか。",
+          "choices": [
+            {
+              "text": "Gメーター管理サーバ",
+              "explain": "メーターの通信相手は管理サーバです。原問の空欄hは、保護対象となる内側のパケットの宛先です。",
+              "ok": true
+            },
+            {
+              "text": "IPsecルータ2だけ",
+              "explain": "これは外側のトンネルの終点です。元の測定通信の宛先と同じ役割ではありません。",
+              "ok": false
+            },
+            {
+              "text": "通信事業者の全ルータ",
+              "explain": "経路上の全機器を宛先にはしません。通信の終点と中継機器を区別します。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.255,
+            "bottom": 0.49,
+            "label": "図1の通信相手とIPsec区間（IPA原図）"
+          }
+        },
+        {
+          "id": "sim",
+          "type": "info",
+          "title": "事業者が契約者を識別する情報",
+          "body": "SIMはSubscriber Identity Moduleの略です。加入者を識別する情報などを扱います。原問のメーターにはSIMカードを装着します。\n\nSIMによる事業者との契約者識別と、IPsecによる通信保護は別の役割です。SIMがあるだけで、すべての通信区間が暗号化されるわけではありません。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "policy-answer",
+          "type": "blank",
+          "title": "IPsecと加入者識別の役割を整理する",
+          "template": "保護対象の通信を選ぶ規則は{a}です。合意した暗号化情報は{b}に保持します。加入者識別には{c}を使います。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "why": "規則を選ぶ段階です。",
+              "choices": [
+                {
+                  "text": "SPD",
+                  "explain": "保護・通過・破棄を判断する規則です。",
+                  "ok": true
+                },
+                {
+                  "text": "SAD",
+                  "explain": "合意した暗号化状態を保持します。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "why": "規則に従って使う暗号化情報です。",
+              "choices": [
+                {
+                  "text": "SAD",
+                  "explain": "鍵や暗号化方式などの状態を保持します。",
+                  "ok": true
+                },
+                {
+                  "text": "SIM",
+                  "explain": "加入者識別に関する情報です。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "why": "通信事業者が加入者を識別します。",
+              "choices": [
+                {
+                  "text": "SIM",
+                  "explain": "Subscriber Identity Moduleです。",
+                  "ok": true
+                },
+                {
+                  "text": "SPD",
+                  "explain": "IPsecで保護する通信を選ぶ規則です。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "format": "答案の組立て",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble"
+        },
+        {
+          "id": "ipsec-outer-change",
+          "type": "quiz",
+          "title": "練習用の変更条件：管理サーバはそのままでトンネル終端ルータだけ交換し、外側IPを変えた。変わる宛先は？",
+          "stage": "transfer",
+          "format": "選択",
+          "theme": "誰の通信を保護するのか",
+          "scaffold": 1,
+          "choices": [
+            {
+              "text": "必ず内側の管理サーバのIPも変わる",
+              "ok": false,
+              "explain": "トンネル終端とデータの終点は別です。"
+            },
+            {
+              "text": "SIMの加入者番号が宛先IPになる",
+              "ok": false,
+              "explain": "加入者識別とIPの届け先は別です。"
+            },
+            {
+              "text": "外側IPの宛先",
+              "ok": true,
+              "explain": "トンネルの終点が変わります。測定通信の相手は同じです。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "volume-cost",
+      "title": "回数・通信量・料金を分けて計算する",
+      "targets": [
+        "s2"
+      ],
+      "steps": [
+        {
+          "id": "units",
+          "type": "info",
+          "title": "料金をいきなり暗算しない",
+          "body": "原問の条件は、1回100バイト、1時間ごとの検針です。1か月を30日とし、1000バイト当たり1円です。さらに1回線当たり月額300円を加えます。\n\nまず回数、次に通信量、最後に料金へ変換します。1000バイト当たりという単位を見落とさないことが大切です。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "count",
+          "type": "quiz",
+          "title": "1時間ごとに1回、30日間通信する。回数を表す式はどれか。",
+          "choices": [
+            {
+              "text": "24 × 30",
+              "explain": "1日は24時間です。1時間ごとの回数を30日分にします。",
+              "ok": true
+            },
+            {
+              "text": "100 × 30",
+              "explain": "100は1回のバイト数です。回数を求める段階では使いません。",
+              "ok": false
+            },
+            {
+              "text": "24 ÷ 30",
+              "explain": "日数が増えると回数も増えます。割るのではなく掛けます。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "cost",
+          "type": "quiz",
+          "title": "月の通信量が72,000バイトだった。1000バイト当たり1円、基本料金300円ならいくらか。",
+          "choices": [
+            {
+              "text": "372円",
+              "explain": "通信料は72,000÷1000で72円です。基本料金300円を加えると372円です。",
+              "ok": true
+            },
+            {
+              "text": "72円",
+              "explain": "これは通信量に応じた料金だけです。回線ごとの基本料金が抜けています。",
+              "ok": false
+            },
+            {
+              "text": "72,300円",
+              "explain": "1バイト当たり1円ではありません。1000バイトを1単位として計算します。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "formula",
+          "type": "parsons",
+          "title": "料金の計算を順に組み立てる",
+          "lead": "上下のボタンで、意味がつながる順番に並べます。",
+          "lines": [
+            {
+              "code": "24回/日 × 30日で720回を求める"
+            },
+            {
+              "code": "720回 × 100バイトで72,000バイトを求める"
+            },
+            {
+              "code": "72,000バイト ÷ 1000で72円を求める"
+            },
+            {
+              "code": "基本料金300円を加えて372円にする"
+            }
+          ],
+          "shuffled": [
+            3,
+            2,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "回数、バイト数、通信料、合計料金の順です。それぞれの段階で単位を確認すると、掛け算と割り算を選べます。",
+          "ngExplain": "回数、バイト数、通信料、合計料金の順です。それぞれの段階で単位を確認すると、掛け算と割り算を選べます。",
+          "format": "並べ替え",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble"
+        },
+        {
+          "id": "changed",
+          "type": "quiz",
+          "title": "練習用の変更条件：2時間ごとに1回へ減らす。他の条件は同じなら、月額はいくらか。",
+          "choices": [
+            {
+              "text": "336円",
+              "explain": "回数が半分なので通信料は36円です。基本料金300円は半分にならず、そのまま加えます。",
+              "ok": true
+            },
+            {
+              "text": "186円",
+              "explain": "月額全体を半分にはしません。基本料金は通信回数が減っても変わりません。",
+              "ok": false
+            },
+            {
+              "text": "672円",
+              "explain": "回数を減らす条件です。通信料は増えません。固定料金と従量料金を分けます。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 1,
+          "stage": "transfer"
+        },
+        {
+          "id": "rest",
+          "type": "info",
+          "title": "データを資源として操作する",
+          "body": "CoAP（Constrained Application Protocol）は制約のある機器向けのアプリケーション層プロトコルです。URI（Uniform Resource Identifier、資源の識別子）で対象を指定し、GETで取得、POSTでデータを送るなどの操作を使います。API（Application Programming Interface）はソフトウェア同士が機能を利用する窓口です。\n\nREST（Representational State Transfer）は資源を扱う設計の考え方で、原問の空欄kはそれに沿ったRESTfulアーキテクチャを指します。GETという文字がある全APIをRESTfulと断定するものではありません。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "rest-check",
+          "type": "quiz",
+          "title": "原問は資源をURIで指定し、GETなどで操作するRESTの考え方に沿うAPIを採用する。この設計を表す語は？",
+          "choices": [
+            {
+              "text": "RESTful",
+              "explain": "資源に対する操作を扱う設計の考え方です。原問のCoAPの説明と結び付きます。",
+              "ok": true
+            },
+            {
+              "text": "セルラー",
+              "explain": "無線回線の分類です。APIの操作の設計ではありません。",
+              "ok": false
+            },
+            {
+              "text": "IPsec",
+              "explain": "IP層の保護の仕組みです。GETで資源を取得するAPIの設計とは別です。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        }
+      ]
+    },
+    {
+      "id": "udp-reliability",
+      "title": "軽い通信で、届かなかったときに備える",
+      "targets": [
+        "s3-1",
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "roles",
+          "type": "info",
+          "title": "UDPは送る。確認が必要なら上の層が補う",
+          "body": "UDP（User Datagram Protocol）はトランスポート層のプロトコルです。アプリケーションのデータをIPで運ぶときに使い、順序保証や再送制御を提供しません。CoAPは本問のUDP利用形態でも必要なメッセージに確認応答や再送を付けます。UDP自身と上位のCoAPが補う機能を分けます。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "possible",
+          "type": "quiz",
+          "title": "UDPで送った三つのデータについて、アプリケーションが備えるべきことはどれか。",
+          "choices": [
+            {
+              "text": "順番の入替わり、重複、消失",
+              "explain": "ネットワークでは順不同、重複、消失が起こり得ます。UDPにはそれらを修復する仕組みがありません。",
+              "ok": true
+            },
+            {
+              "text": "UDPが必ず元の順序に並べ直してから渡すこと",
+              "explain": "それはUDPが提供する機能ではありません。必要なら上位のプロトコル側で処理します。",
+              "ok": false
+            },
+            {
+              "text": "途中のルータが全データを再送すること",
+              "explain": "ルータは通常、そのような端点間の再送管理をしません。送信側と受信側の仕組みで対処します。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "con",
+          "type": "info",
+          "title": "確認が必要なメッセージだけ確認する",
+          "body": "CON（Confirmable）は確認応答が必要、NON（Non-confirmable）は確認応答を求めないメッセージです。ACK（Acknowledgement）はCONへの確認応答です。ACKを受け取れなければタイムアウトに従ってCONを再送します。\n\nCONやACKが失われる可能性があり、再送にも上限があります。「必ず届く」という保証ではありません。ACKは到着確認であり、求めたデータがその時点で完成したとは限りません。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "メッセージ",
+              "役割"
+            ],
+            "rows": [
+              [
+                "CON",
+                "到着を確認したいメッセージ"
+              ],
+              [
+                "NON",
+                "到着確認を求めないメッセージ"
+              ],
+              [
+                "ACK",
+                "CONを受け取ったことの確認"
+              ]
+            ],
+            "caption": "CoAPの確認応答の解説表"
+          }
+        },
+        {
+          "id": "lost-ack",
+          "type": "quiz",
+          "title": "受信側にはCONが届いたが、返したACKだけが消えた。送信側から見える状態はどれか。",
+          "choices": [
+            {
+              "text": "届いたか確認できず、タイムアウト後に再送する",
+              "explain": "送信側はACKを受け取っていません。受信側には重複が届く可能性があるので、重複検出も必要です。",
+              "ok": true
+            },
+            {
+              "text": "受信側に届いたことを自動的に知る",
+              "explain": "送信側が知るための通知がACKです。それが消えた場合、到達を確定できません。",
+              "ok": false
+            },
+            {
+              "text": "ACKだけを送信側から再送する",
+              "explain": "ACKを返すのはCONの受信側です。送信側は確認したいCONを再送します。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "backoff",
+          "type": "info",
+          "title": "再送を繰り返すほど待ち時間を延ばす",
+          "body": "指数バックオフは再送の待ち時間を指数的に増やす考え方です。混雑中に短い間隔の再送を重ねて混雑を悪化させるのを抑えます。\n\n原問の図3(i)は異なるサーバへのCONを、先のACKを待たずに送る非同期通信の例です。確認不要という意味ではなく、各CONへのACKを後で確認します。同じ相手へ未確認CONを無制限に送ってよいという意味でもありません。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "double",
+          "type": "quiz",
+          "title": "練習用の条件：最初に2秒待ち、その後の待ち時間を2倍にする。次に待つ時間はどれか。",
+          "choices": [
+            {
+              "text": "4秒",
+              "explain": "待ち時間を2倍にするので4秒です。いつ送信したかを起点に、待つ区間を分けて考えます。",
+              "ok": true
+            },
+            {
+              "text": "2秒",
+              "explain": "一定間隔での再送になります。ここで指定した指数バックオフではありません。",
+              "ok": false
+            },
+            {
+              "text": "1秒",
+              "explain": "待ち時間を短くすると再送が密になります。この条件では待ち時間を延ばします。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "udp-words",
+          "type": "blank",
+          "title": "原問の通信の性質を説明する",
+          "template": "UDPは{a}層で働きます。データが{b}で届いたり、{c}したりする場合があります。ACKを待たずに先へ進める方式を非{d}と呼び、再送には指数{e}を使います。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "why": "UDPの役割を階層で整理します。",
+              "choices": [
+                {
+                  "text": "トランスポート",
+                  "explain": "通信の端点間でデータを運ぶ層です。",
+                  "ok": true
+                },
+                {
+                  "text": "データリンク",
+                  "explain": "同じリンク内でフレームを運ぶ層です。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "why": "送信順と受信順は必ずしも一致しません。",
+              "choices": [
+                {
+                  "text": "順不同",
+                  "explain": "順序が変わる可能性があります。",
+                  "ok": true
+                },
+                {
+                  "text": "暗号化",
+                  "explain": "UDPで送るだけでは暗号化されません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "why": "同じメッセージが複数届く可能性もあります。",
+              "choices": [
+                {
+                  "text": "重複",
+                  "explain": "再送やネットワーク内の複製で起こり得ます。",
+                  "ok": true
+                },
+                {
+                  "text": "圧縮",
+                  "explain": "UDPの自動機能ではありません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "why": "応答を待って処理を進める方式と区別します。",
+              "choices": [
+                {
+                  "text": "同期",
+                  "explain": "原問では非同期という語を使います。",
+                  "ok": true
+                },
+                {
+                  "text": "確認",
+                  "explain": "非同期と確認不要は別の性質です。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "e",
+              "label": "e",
+              "why": "混雑を悪化させない再送の待ち方です。",
+              "choices": [
+                {
+                  "text": "バックオフ",
+                  "explain": "待ち時間を段階的に延ばします。",
+                  "ok": true
+                },
+                {
+                  "text": "フラグメント",
+                  "explain": "パケットを分割する処理です。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "format": "答案の組立て",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble"
+        }
+      ]
+    },
+    {
+      "id": "match-responses",
+      "title": "ACKとデータの応答を別々に対応付ける",
+      "targets": [
+        "s3-2",
+        "s3-3",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "two-identifiers",
+          "type": "info",
+          "title": "二つの識別子は、確かめることが違う",
+          "body": "IDはIdentifier、識別子の略です。CoAPのメッセージIDは同じ相手とのCON・ACKの対応や重複の検出に使います。番号だけが世界中で一意という意味ではありません。\n\nトークンは要求と、それに対するデータ応答を対応付けます。すぐデータを返せなければ空のACKを先に返せます。後で別のメッセージIDの応答が来ても、同じ相手・同じトークンを確認して元の要求へ結び付けます。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "確認したいこと",
+              "使う情報"
+            ],
+            "rows": [
+              [
+                "このCONに対するACKか",
+                "メッセージID"
+              ],
+              [
+                "どの要求に対するデータか",
+                "トークン"
+              ],
+              [
+                "同じメッセージが再び届いたか",
+                "メッセージIDなど"
+              ]
+            ],
+            "caption": "役割を分けるための解説表"
+          }
+        },
+        {
+          "id": "coap-header-meaning",
+          "type": "info",
+          "title": "メッセージの種類と応答内容を見る",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "ACKとデータの応答を別々に対応付ける",
+          "scaffold": 5,
+          "body": "CoAPの先頭4バイトは固定ヘッダーで、タイプ、コード、メッセージIDなどを持ちます。トークンは後の可変長部分に入り、長さはTKL（Token Length）で示します。ACKでもコード0.00の空の確認応答と、2.05 Contentのデータを一緒に返す応答では分かったことが異なります。データをACKに載せる方式をピギーバックと呼びます。",
+          "fig": {
+            "kind": "header",
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "Ver",
+                    "bits": 2
+                  },
+                  {
+                    "t": "T",
+                    "bits": 2
+                  },
+                  {
+                    "t": "TKL",
+                    "bits": 4
+                  },
+                  {
+                    "t": "コード",
+                    "bits": 8
+                  },
+                  {
+                    "t": "メッセージID",
+                    "bits": 16
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：Ver＝版、T＝種類、TKL＝トークン長"
+          }
+        },
+        {
+          "id": "empty",
+          "type": "quiz",
+          "title": "データの準備に時間がかかるため、サーバが空のACKを先に返した。何が分かったか。",
+          "choices": [
+            {
+              "text": "要求メッセージは届いたが、求めたデータはまだ返っていない",
+              "explain": "到着確認とデータの返送を分けます。ACKがあるからデータも受け取った、とは限りません。",
+              "ok": true
+            },
+            {
+              "text": "要求したデータを全て受け取った",
+              "explain": "空のACKにはデータがありません。後の応答を待つ必要があります。",
+              "ok": false
+            },
+            {
+              "text": "要求は届かなかった",
+              "explain": "ACKは受信の確認です。要求が届いたことと、処理結果の準備ができたことは別です。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "small-trace",
+          "type": "quiz",
+          "title": "練習用：要求はID=10・トークン=A。後でID=50・トークン=Aのデータが届いた。要求と対応すると判断する根拠はどれか。",
+          "choices": [
+            {
+              "text": "トークンAが一致すること",
+              "explain": "別のメッセージとして届いたデータでも、トークンで元の要求に対応付けられます。",
+              "ok": true
+            },
+            {
+              "text": "IDが10から50へ増えたこと",
+              "explain": "増え方から要求との対応は決まりません。メッセージIDとトークンの用途を分けます。",
+              "ok": false
+            },
+            {
+              "text": "後から届いたデータは全て最初の要求の応答であること",
+              "explain": "複数の要求があると到着順だけでは区別できません。対応付ける識別子が必要です。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "figure-token",
+          "type": "quiz",
+          "title": "図5の要求(i)のトークンは0x71。すぐには返せなかったデータを運ぶメッセージはどれか。",
+          "choices": [
+            {
+              "text": "(viii)",
+              "explain": "(viii)にはトークン0x71とデータZがあります。(iv)は到着の確認だけです。メッセージIDは異なってもトークンが一致します。",
+              "ok": true
+            },
+            {
+              "text": "(iv)",
+              "explain": "(iv)はIDが要求(i)と一致するACKですが、データを含みません。求めたデータの応答は後の(viii)です。",
+              "ok": false
+            },
+            {
+              "text": "(v)",
+              "explain": "(v)のトークンは0x82で、要求(ii)に対応します。要求(i)の0x71とは違います。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 20,
+            "top": 0.365,
+            "bottom": 0.635,
+            "label": "図5の要求と応答（IPA原図）"
+          }
+        },
+        {
+          "id": "figure-ack",
+          "type": "quiz",
+          "title": "同じ図で要求(ii)のIDは0xab20。要求(ii)を受けたサーバが返したACKはどれか。",
+          "choices": [
+            {
+              "text": "(v)",
+              "explain": "(v)のACKのIDが0xab20で一致します。この場合はデータXもACKに含まれています。",
+              "ok": true
+            },
+            {
+              "text": "(viii)",
+              "explain": "(viii)はトークン0x71の別の要求へのデータ応答です。要求(ii)のACKではありません。",
+              "ok": false
+            },
+            {
+              "text": "(ix)",
+              "explain": "(ix)は機器がサーバへ返すACKです。サーバが要求(ii)に返す向きとは逆です。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 1,
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 20,
+            "top": 0.365,
+            "bottom": 0.635,
+            "label": "図5のACKの方向と識別番号（IPA原図）"
+          }
+        },
+        {
+          "id": "token-answer-assembly",
+          "type": "blank",
+          "title": "設問3(2)はメッセージ番号だけでなく理由も答える",
+          "stage": "assemble",
+          "format": "穴埋め",
+          "theme": "ACKとデータの応答を別々に対応付ける",
+          "scaffold": 2,
+          "template": "原図の(i)へ遅れてデータを返すのは{message}。判断理由は{reason}から。",
+          "blanks": [
+            {
+              "key": "message",
+              "label": "メッセージ",
+              "why": "データZを含み、要求(i)に対応するトークンを持つ別のCONです。",
+              "choices": [
+                {
+                  "text": "(viii)",
+                  "ok": true,
+                  "explain": "データZを含み、要求(i)に対応するトークンを持つ別のCONです。"
+                },
+                {
+                  "text": "(iv)",
+                  "ok": false,
+                  "explain": "要求(i)のIDを持つACKですが、データはありません。"
+                }
+              ]
+            },
+            {
+              "key": "reason",
+              "label": "15字以内の理由",
+              "why": "データ応答はトークンで要求へ対応付けます。",
+              "choices": [
+                {
+                  "text": "メッセージIDが一致する",
+                  "ok": false,
+                  "explain": "(i)と(viii)のIDは異なります。ID一致はCONとACKの対応などを調べる観点です。"
+                },
+                {
+                  "text": "トークン値が一致する",
+                  "ok": true,
+                  "explain": "データ応答はトークンで要求へ対応付けます。"
+                }
+              ]
+            }
+          ],
+          "fig": {
+            "kind": "table",
+            "head": [
+              "原図の候補",
+              "種類",
+              "ID",
+              "トークン／データ"
+            ],
+            "rows": [
+              [
+                "(i)",
+                "要求CON",
+                "0xbc90",
+                "0x71"
+              ],
+              [
+                "(iv)",
+                "ACK",
+                "0xbc90",
+                "なし"
+              ],
+              [
+                "(viii)",
+                "応答CON",
+                "0xcdf2",
+                "0x71／データZ"
+              ]
+            ],
+            "caption": "説明用：原図の値を比較する条件表（正解強調なし）"
+          }
+        },
+        {
+          "id": "dedup",
+          "type": "info",
+          "title": "同じ応答を二重に処理しない",
+          "body": "図5の(vi)と(vii)は同じメッセージIDです。本文では途中で複製されたACKだと説明しています。すでに処理したACKなので、もう一度データを処理せず無視します。\n\nただし、重複したCONへの対応は別です。相手がACKを受け取れていない可能性があり、ACKを返す場合があります。ここでは重複したACKに対象を限定します。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "two-reasons",
+          "type": "blank",
+          "title": "重複ACKへの判断と処理を組み立てる",
+          "template": "二つのACKの{a}が同じなので重複だと判断する。既に処理済みのACKなので、受信したものを{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "why": "単なる内容の一致だけでなく識別子を確認します。",
+              "choices": [
+                {
+                  "text": "メッセージID",
+                  "explain": "同じメッセージかを確認する情報です。",
+                  "ok": true
+                },
+                {
+                  "text": "トークンだけ",
+                  "explain": "トークンは要求とデータの応答を結び付けます。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "why": "本問の対象は重複したACKです。",
+              "choices": [
+                {
+                  "text": "無視する",
+                  "explain": "すでに処理済みなので二重に処理しません。",
+                  "ok": true
+                },
+                {
+                  "text": "新しい要求として処理する",
+                  "explain": "ACKを要求として扱うことになります。",
+                  "ok": false
+                },
+                {
+                  "text": "測定値をもう一度加算する",
+                  "explain": "二重処理になり、集計結果を誤らせます。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "format": "答案の組立て",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer-token",
+          "type": "quiz",
+          "title": "別の要求のトークンはB。受信したデータはトークンCだった。届いた順番は期待どおりである。どの判断がよいか。",
+          "choices": [
+            {
+              "text": "順番だけでBへの応答とは決めず、トークンで対応を調べる",
+              "explain": "到着順ではなく要求との対応付けを確認します。原図の番号を暗記しても、条件が変われば解けません。",
+              "ok": true
+            },
+            {
+              "text": "順番が期待どおりなのでBへの応答として使う",
+              "explain": "別の要求に対するデータを取り違えるおそれがあります。識別子の不一致を無視できません。",
+              "ok": false
+            },
+            {
+              "text": "トークンが違うので必ず重複ACKである",
+              "explain": "トークン不一致と重複検出は別です。どのメッセージか、何の応答かを分けます。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "dtls-cookie",
+      "title": "偽装した送信元へ大きな応答を返さない",
+      "targets": [
+        "s3-5",
+        "s3-6"
+      ],
+      "steps": [
+        {
+          "id": "reflection",
+          "type": "info",
+          "title": "返事の送り先を悪用する攻撃",
+          "body": "送信元IPアドレスを他人のアドレスに偽装して要求を送ると、応答はその相手へ向かいます。サーバを経由して標的へ通信を向けるのがリフレクション攻撃です。\n\n要求より大きな応答なら、少ない要求から大量の通信を発生させられます。本問では、UDP上で大きな応答を返す状況を考えます。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "spoof",
+          "type": "quiz",
+          "title": "攻撃者がサーバの応答を被害者Vへ向けたい。偽装するのはどれか。",
+          "choices": [
+            {
+              "text": "要求パケットの送信元IPアドレスをVのIPアドレスにする",
+              "explain": "サーバは要求の送信元へ応答を返します。その性質を悪用して被害者へ応答を向けます。",
+              "ok": true
+            },
+            {
+              "text": "要求パケットの宛先IPアドレスをVにする",
+              "explain": "それでは要求自体がVへ向かいます。ここで使いたい中継サーバに要求が届きません。",
+              "ok": false
+            },
+            {
+              "text": "CoAPのトークンをVのIPアドレスにする",
+              "explain": "トークンはIP層の返信先ではありません。サーバの応答の宛先は送信元IPアドレスに基づきます。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "reflection-answer-assembly",
+          "type": "blank",
+          "title": "設問3(5)の偽装内容と攻撃名を組み立てる",
+          "stage": "assemble",
+          "format": "穴埋め",
+          "theme": "偽装した送信元へ大きな応答を返さない",
+          "scaffold": 2,
+          "template": "要求の{field}を{victim}に偽装してサーバへ送り、返事を標的へ向ける。攻撃名は{attack}。",
+          "blanks": [
+            {
+              "key": "field",
+              "label": "偽装する欄",
+              "why": "サーバは要求の送信元へ返事を送ります。",
+              "choices": [
+                {
+                  "text": "宛先IPアドレス",
+                  "ok": false,
+                  "explain": "これを被害者にすると中継させたいサーバへ届きません。"
+                },
+                {
+                  "text": "送信元IPアドレス",
+                  "ok": true,
+                  "explain": "サーバは要求の送信元へ返事を送ります。"
+                }
+              ]
+            },
+            {
+              "key": "victim",
+              "label": "偽装後の値",
+              "why": "応答を被害者へ向けるための値です。",
+              "choices": [
+                {
+                  "text": "攻撃者自身のIPアドレス",
+                  "ok": false,
+                  "explain": "これでは応答が攻撃者自身へ戻ります。"
+                },
+                {
+                  "text": "攻撃対象ホストのIPアドレス",
+                  "ok": true,
+                  "explain": "応答を被害者へ向けるための値です。"
+                }
+              ]
+            },
+            {
+              "key": "attack",
+              "label": "攻撃名",
+              "why": "サーバの返事を標的へ反射させる攻撃です。",
+              "choices": [
+                {
+                  "text": "総当たり",
+                  "ok": false,
+                  "explain": "パスワード等の候補を試す手法で、返信先の悪用とは異なります。"
+                },
+                {
+                  "text": "リフレクション",
+                  "ok": true,
+                  "explain": "サーバの返事を標的へ反射させる攻撃です。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "challenge",
+          "type": "info",
+          "title": "小さな確認を先に返す",
+          "body": "DTLS（Datagram Transport Layer Security）はUDPのような通信でデータを保護します。TLS（Transport Layer Security）の機能をデータグラム向けにした仕組みです。本問のDTLS 1.3はサーバが小さなcookie（確認用の値）を返し、相手に送り返させます。\n\n正しいcookieを返せれば、その送信元で返事を受け取れたと判断できます。利用者の本人確認とは別です。原問の「大きいServerHello」は比較の前提で、全実装の各メッセージが同じサイズという意味ではありません。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "cookie-order",
+          "type": "parsons",
+          "title": "送信元の確認を、大きな応答の前に置く",
+          "lead": "上下のボタンで、意味がつながる順番に並べます。",
+          "lines": [
+            {
+              "code": "クライアントがClientHelloを送る"
+            },
+            {
+              "code": "サーバがcookieを付けたHelloRetryRequestを返す"
+            },
+            {
+              "code": "クライアントが同じcookieを付けてClientHelloを再送する"
+            },
+            {
+              "code": "サーバがcookieを検証し、正しければServerHelloを返す"
+            }
+          ],
+          "shuffled": [
+            3,
+            2,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "先に到達性を確認します。正しいcookieが戻る前に大きな応答を返さないことで、偽装された送信元への反射を抑えます。",
+          "ngExplain": "先に到達性を確認します。正しいcookieが戻る前に大きな応答を返さないことで、偽装された送信元への反射を抑えます。",
+          "format": "並べ替え",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble"
+        },
+        {
+          "id": "proves",
+          "type": "quiz",
+          "title": "正しいcookieが返ってきた。サーバがここで判断できることはどれか。",
+          "choices": [
+            {
+              "text": "最初の送信元アドレスで返事を受け取れること",
+              "explain": "原問では送信元が偽装されたものでないと判断します。返事を受け取れたことが根拠です。",
+              "ok": true
+            },
+            {
+              "text": "利用者が正しいパスワードを知っていること",
+              "explain": "cookieの返送はパスワード認証ではありません。到達性の確認と本人の認証を混同しません。",
+              "ok": false
+            },
+            {
+              "text": "アプリケーションの全データが安全であること",
+              "explain": "この段階で全データの安全性は証明できません。確認しているのは送信元の到達性です。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 21,
+            "top": 0.17,
+            "bottom": 0.385,
+            "label": "図6のcookieによる確認（IPA原図）"
+          }
+        },
+        {
+          "id": "invalid",
+          "type": "blank",
+          "title": "正しい場合と不正な場合を分けて答案を作る",
+          "template": "cookieが正しければ、送信元が{a}と判断する。不正なら{b}を送らず、ハンドシェークを{c}する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "why": "返信を受け取ってcookieを返せることが根拠です。",
+              "choices": [
+                {
+                  "text": "偽装されたものでない",
+                  "explain": "原問が求める到達性の判断です。",
+                  "ok": true
+                },
+                {
+                  "text": "必ず管理者である",
+                  "explain": "権限や利用者の身元を確認したわけではありません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "why": "確認前に大きな応答を返さないようにします。",
+              "choices": [
+                {
+                  "text": "ServerHello",
+                  "explain": "原図の(iv)に対応します。",
+                  "ok": true
+                },
+                {
+                  "text": "最初のClientHello",
+                  "explain": "それを送るのはクライアント側です。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "why": "原問はServerHelloを送らず終了することが要点です。RFC 9147では不正cookieに対しillegal_parameterアラートで終了します。",
+              "choices": [
+                {
+                  "text": "終了",
+                  "explain": "ServerHelloを送って先へ進まず終了します。「一切の通知を返さない」とまでは一般化しません。",
+                  "ok": true
+                },
+                {
+                  "text": "何度でも続行",
+                  "explain": "反射や負荷の問題を抑える目的に反します。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "format": "答案の組立て",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble"
+        },
+        {
+          "id": "changed",
+          "type": "quiz",
+          "title": "練習用：cookieが不正なのに、大きな応答だけ返して接続を終了する実装にした。何が問題か。",
+          "choices": [
+            {
+              "text": "大きな応答を被害者へ反射させる余地が残る",
+              "explain": "接続を終了しても、その前に返したパケットは消えません。応答する前に確認する順番が重要です。",
+              "ok": true
+            },
+            {
+              "text": "終了するなら反射攻撃は起きない",
+              "explain": "接続の最後の状態ではなく、どこへ何を送ったかを見ます。大きな応答を先に返すことが問題です。",
+              "ok": false
+            },
+            {
+              "text": "cookieを暗号鍵として再利用できなくなる",
+              "explain": "cookieと通信の暗号鍵は役割が異なります。ここでの問題は応答パケットの反射です。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "schedule-power",
+      "title": "送信を分散し、待つ間は休ませる",
+      "targets": [
+        "s4-1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "crowding",
+          "type": "info",
+          "title": "時刻をそろえることと、送信をそろえることは別",
+          "body": "全国のメーターが一斉に送ると管理サーバと回線へ負荷が集中します。原問の最終設計では毎時測定して保存し、午前0時の測定後から1時までのランダムな時刻に、前日の24件をそれぞれ送ります。\n\n料金試算の「1時間ごとの検針」と最終設計の「まとめて送る時刻」を分けます。測定間隔や一日24件という件数を減らさず、送信開始時刻を端末ごとに分散する工夫です。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "random",
+          "type": "quiz",
+          "title": "1万台が同じサーバへ送る。送信前の待ち時間を端末ごとにランダムにする主な目的はどれか。",
+          "choices": [
+            {
+              "text": "サーバやネットワークへの負荷の集中を避ける",
+              "explain": "同時刻の要求が分散します。送信量そのものが減るわけではなく、一度に処理する量を抑えます。",
+              "ok": true
+            },
+            {
+              "text": "1日当たりの測定データの件数を減らす",
+              "explain": "待ち時間を変えても24件の測定データは残ります。件数の削減ではなく時刻の分散です。",
+              "ok": false
+            },
+            {
+              "text": "全端末の時計を同じ時刻に直す",
+              "explain": "ランダムな待ち時間は時刻同期ではありません。時計の修正は別の処理です。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "same-delay",
+          "type": "quiz",
+          "title": "練習用：全端末が必ず10分待って送る方式に変えた。元のランダムな待ち方と何が違うか。",
+          "choices": [
+            {
+              "text": "送信が10分後に再び集中する",
+              "explain": "全端末の待ち時間が同じなら、送信時刻もそろいます。負荷を分散するには端末ごとにずらす必要があります。",
+              "ok": true
+            },
+            {
+              "text": "待つので必ず負荷が分散する",
+              "explain": "全員が同じだけ待つと、混雑する時刻を移しただけです。待ち時間のばらつきが必要です。",
+              "ok": false
+            },
+            {
+              "text": "待つので1台当たりの通信量が減る",
+              "explain": "待ち時間と送るデータ量は別です。データを省略する条件は与えられていません。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 1,
+          "stage": "transfer"
+        },
+        {
+          "id": "sleep",
+          "type": "info",
+          "title": "処理しない時間にも電力を使う",
+          "body": "機器は測定や送信以外にも、動作状態を維持する電力を使います。スリープ状態は、不要な機能の動作を抑えて消費電力を減らします。\n\n原問では、測定又は送信が終わってから次の測定までスリープします。必要な測定を省略するのではなく、仕事がない時間の電力を抑えます。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "effects",
+          "type": "blank",
+          "title": "二つの工夫の効果を区別して答案にする",
+          "template": "送信前のランダムな待ち時間は{a}を避けます。測定・送信の後にスリープすることで{b}を抑えます。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "why": "ランダム化で同時刻の通信をばらけさせます。",
+              "choices": [
+                {
+                  "text": "管理サーバやネットワークへの負荷の集中",
+                  "explain": "同時に処理する通信が減ります。",
+                  "ok": true
+                },
+                {
+                  "text": "測定する時刻の誤差",
+                  "explain": "時計を修正しているわけではありません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "why": "動作を抑えて電池を長持ちさせます。",
+              "choices": [
+                {
+                  "text": "メーターの消費電力",
+                  "explain": "原問の長時間稼働の要件につながります。",
+                  "ok": true
+                },
+                {
+                  "text": "1回の測定値のバイト数",
+                  "explain": "休止状態とデータ形式は別です。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "format": "答案の組立て",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 22,
+            "top": 0.18,
+            "bottom": 0.37,
+            "label": "Gメーターの待ち時間とスリープ（IPA原文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tcp-overhead",
+      "title": "データ以外に往復するパケットを数える",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "extra",
+          "type": "info",
+          "title": "測定値だけが回線を流れるわけではない",
+          "body": "HTTPはHypertext Transfer Protocolの略です。HTTP/1.1はTCPの上で動作します。TCPはTransmission Control Protocolの略です。\n\nTCPでは、データ交換に加えて接続の確立や切断にも通信が必要です。原問の比較では、この付随する通信がIPパケット数を増やす理由になります。HTTP/1.1でも接続を再利用できる点とは分けて考えます。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "比較する部分",
+              "TCPを使うHTTP/1.1",
+              "本問のUDP上のCoAP"
+            ],
+            "rows": [
+              [
+                "接続確立・切断",
+                "必要な手順がある",
+                "TCPの手順はない"
+              ],
+              [
+                "要求と応答",
+                "測定データを交換",
+                "測定データを交換"
+              ],
+              [
+                "再送・確認",
+                "TCPが担う",
+                "必要に応じCoAPが担う"
+              ]
+            ],
+            "caption": "本問の比較を整理した解説表"
+          }
+        },
+        {
+          "id": "before-data",
+          "type": "quiz",
+          "title": "TCPで新しい接続を作る。アプリケーションのデータを送る前に必要な通信はどれか。",
+          "choices": [
+            {
+              "text": "接続を確立するための通信",
+              "explain": "TCPでは接続状態を作ってからデータをやり取りします。そのパケットも回線を使います。",
+              "ok": true
+            },
+            {
+              "text": "全ての測定値をもう一度取得する通信",
+              "explain": "接続確立は測定値の再取得ではありません。通信の状態を確立する処理です。",
+              "ok": false
+            },
+            {
+              "text": "送信先のMAC（Media Access Control）アドレスを世界中に配布する通信",
+              "explain": "MACアドレスは通常同じリンク内で使います。TCPの接続確立とは役割が異なります。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "同じ測定データなのにIPパケット数が増える理由として、最も直接的なのはどれか。",
+          "choices": [
+            {
+              "text": "TCPの接続確立・切断の通信が加わるから",
+              "explain": "原問はパケット数の違いを聞いています。データ以外の手順で追加されるパケットに着目します。",
+              "ok": true
+            },
+            {
+              "text": "HTTPという名前の文字数が長いから",
+              "explain": "プロトコル名の長さでパケット数は決まりません。実際の通信手順を考えます。",
+              "ok": false
+            },
+            {
+              "text": "TCPは必ず全データを2回送るから",
+              "explain": "TCPが常に全データを2回送るわけではありません。再送が必要な場合と通常の手順を区別します。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 23,
+            "top": 0.13,
+            "bottom": 0.4,
+            "label": "HTTP/1.1とのパケット数の比較（IPA原文）"
+          }
+        },
+        {
+          "id": "sentence",
+          "type": "parsons",
+          "title": "パケット数が増える理由を答案にする",
+          "lead": "上下のボタンで、意味がつながる順番に並べます。",
+          "lines": [
+            {
+              "code": "HTTP/1.1ではTCPを使い、"
+            },
+            {
+              "code": "データ交換の前後に接続確立と切断の処理を行うので、"
+            },
+            {
+              "code": "その処理の分だけIPパケット数が多くなる。"
+            }
+          ],
+          "shuffled": [
+            2,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "主語、追加される処理、問われた結果をつなぎます。通信時間や料金ではなく、まずパケット数が増える理由を答えます。",
+          "ngExplain": "主語、追加される処理、問われた結果をつなぎます。通信時間や料金ではなく、まずパケット数が増える理由を答えます。",
+          "format": "並べ替え",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble"
+        },
+        {
+          "id": "reuse",
+          "type": "quiz",
+          "title": "練習用：24件を一つのTCP接続で送り、接続を再利用する。正しい説明はどれか。",
+          "choices": [
+            {
+              "text": "各件で接続を作り直す場合より、確立・切断の回数を減らせる",
+              "explain": "TCPの性質と接続の使い方を分けます。HTTP/1.1だから必ず24回接続するとは限りません。",
+              "ok": true
+            },
+            {
+              "text": "HTTP/1.1では接続を再利用できない",
+              "explain": "HTTP/1.1は接続を維持して使えます。原問の答案を一般仕様の禁止事項に広げないようにします。",
+              "ok": false
+            },
+            {
+              "text": "接続を再利用するとUDPに変わる",
+              "explain": "再利用してもTCP接続です。接続回数の削減とプロトコルの変更は別です。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "security-boundary",
+      "title": "安全だと判断した範囲を限定する",
+      "targets": [
+        "s4-4"
+      ],
+      "steps": [
+        {
+          "id": "scope",
+          "type": "info",
+          "title": "閉域と暗号化は同じ意味ではない",
+          "body": "閉域網は通信できる範囲を限定したネットワークです。暗号化はデータの内容を読み取れなくする処理です。閉域網という言葉だけで、すべての区間が暗号化されるわけではありません。\n\n原問では、LPWA閉域接続と専用線、IPsecでY社向けの閉域網を構成します。その中でCoAP通信を行うという条件から、DTLSを使わない判断をしています。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "boundary",
+          "type": "quiz",
+          "title": "原問でDTLSを追加しなくてもよいと判断した根拠に、必要な条件はどれか。",
+          "choices": [
+            {
+              "text": "CoAP通信がY社向けの閉域網の中で行われること",
+              "explain": "通信範囲とIPsecによる保護など、本文で与えた構成が判断の前提です。一般にDTLSが不要だという意味ではありません。",
+              "ok": true
+            },
+            {
+              "text": "CoAPが標準で全通信を暗号化すること",
+              "explain": "CoAPを使うだけで全通信が暗号化されるわけではありません。ここでは別の構成上の前提があります。",
+              "ok": false
+            },
+            {
+              "text": "プライベートIPアドレスならデータが暗号化されること",
+              "explain": "アドレスの種類は暗号化の有無を決めません。到達範囲とデータ保護を分けて考えます。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.255,
+            "bottom": 0.58,
+            "label": "閉域接続・専用線・IPsecの組合せ（IPA原図・原文）"
+          }
+        },
+        {
+          "id": "limited-answer",
+          "type": "blank",
+          "title": "一般論ではなく、この構成の理由を答える",
+          "template": "今回DTLSを利用しないと判断したのは、{a}が{b}の中で行われるからである。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "why": "何の通信の安全性を論じているかを明記します。",
+              "choices": [
+                {
+                  "text": "CoAP通信",
+                  "explain": "原問で追加の暗号化を検討している通信です。",
+                  "ok": true
+                },
+                {
+                  "text": "全てのインターネット通信",
+                  "explain": "そのように一般化できる条件はありません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "why": "本文に示された通信範囲が理由です。",
+              "choices": [
+                {
+                  "text": "Y社向けの閉域網",
+                  "explain": "原問が前提にしている構成です。",
+                  "ok": true
+                },
+                {
+                  "text": "誰でも接続できる無線LAN（Local Area Network）",
+                  "explain": "原問の前提ではありません。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "format": "答案の組立て",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble"
+        },
+        {
+          "id": "new-route",
+          "type": "quiz",
+          "title": "練習用：今後はメーターが公共インターネットへ直接送る。元の「DTLS不要」という判断をそのまま使えるか。",
+          "choices": [
+            {
+              "text": "使えない。新しい経路と保護範囲を見直す",
+              "explain": "判断を支えた閉域網の条件が変わっています。対策の要否は、新しい脅威と通信範囲で検討します。",
+              "ok": true
+            },
+            {
+              "text": "同じCoAPなので、そのまま使える",
+              "explain": "プロトコル名が同じでも経路の安全性は同じではありません。本文の前提に依存した判断です。",
+              "ok": false
+            },
+            {
+              "text": "同じ測定値なので、そのまま使える",
+              "explain": "データの内容だけで盗聴・改ざんの危険性は決まりません。通る範囲も確認します。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "time-drift",
+      "title": "時計の誤差を業務の影響へつなげる",
+      "targets": [
+        "s4-5",
+        "s4-6"
+      ],
+      "steps": [
+        {
+          "id": "time",
+          "type": "info",
+          "title": "正しい時計も、放置すればずれる",
+          "body": "各メーターは自分の時計で測定や送信の時刻を決めます。小さな時刻のずれでも、長期間で積み重なることがあります。\n\n原問では毎時の測定と深夜の送信を予定しています。時計がずれると、測定と送信が予定した時刻からずれます。単に「時計がずれる」だけでなく、業務のどの動作へ影響するかを答えます。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "impact",
+          "type": "quiz",
+          "title": "時計が実際より20分進んだ。毎時0分の測定は実際にはどうなるか。",
+          "choices": [
+            {
+              "text": "予定の毎時0分より20分早く行われる",
+              "explain": "端末は自分の時計が0分になった時点で動きます。測定時刻のずれを、業務の動作として説明できます。",
+              "ok": true
+            },
+            {
+              "text": "測定値のバイト数が20増える",
+              "explain": "時計のずれとデータ長に、そのような対応はありません。時刻を基準にする動作に着目します。",
+              "ok": false
+            },
+            {
+              "text": "送信先IPアドレスが変わる",
+              "explain": "時計の誤差そのものが送信先アドレスを書き換えるわけではありません。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "clock-impact-assembly",
+          "type": "blank",
+          "title": "設問4(5)：時計の誤差が影響する二つの動作を答える",
+          "stage": "assemble",
+          "format": "穴埋め",
+          "theme": "時計の誤差を業務の影響へつなげる",
+          "scaffold": 2,
+          "template": "時計を基準に実行する{measure}と{send}が、{timing}ことになる。",
+          "blanks": [
+            {
+              "key": "measure",
+              "label": "動作1",
+              "why": "毎時の予定を端末の時計で判断します。",
+              "choices": [
+                {
+                  "text": "測定",
+                  "ok": true,
+                  "explain": "毎時の予定を端末の時計で判断します。"
+                },
+                {
+                  "text": "ケーブルの接続",
+                  "ok": false,
+                  "explain": "時刻で行う処理への影響を問う設問です。"
+                }
+              ]
+            },
+            {
+              "key": "send",
+              "label": "動作2",
+              "why": "深夜の送信予定も端末の時計で決まります。",
+              "choices": [
+                {
+                  "text": "送信",
+                  "ok": true,
+                  "explain": "深夜の送信予定も端末の時計で決まります。"
+                },
+                {
+                  "text": "IPの自動暗号化",
+                  "ok": false,
+                  "explain": "時計のずれでIPが暗号化されるわけではありません。"
+                }
+              ]
+            },
+            {
+              "key": "timing",
+              "label": "影響",
+              "why": "単に時計がずれると繰り返さず、測定と送信の時刻への影響を答えます。",
+              "choices": [
+                {
+                  "text": "誤った時刻に行われる",
+                  "ok": true,
+                  "explain": "単に時計がずれると繰り返さず、測定と送信の時刻への影響を答えます。"
+                },
+                {
+                  "text": "必ず完全停止する",
+                  "ok": false,
+                  "explain": "時刻がずれても動作が完全停止するとは限りません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "clock-source",
+          "type": "info",
+          "title": "現在時刻を持つ相手から取得する",
+          "body": "原問の管理サーバはNTPサーバと時刻同期します。NTPはNetwork Time Protocolの略です。管理サーバは、メーターが正しい時刻を得る相手として利用できます。\n\n設問はCoAP通信を利用した処理を求めています。メーターが管理サーバから現在時刻を取得し、自分の時計を更新する方法を考えます。「NTPを使う」とだけ書くと、指定した通信方法を外します。",
+          "format": "読む",
+          "theme": "IoT",
+          "scaffold": 5,
+          "stage": "concept",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "NTPサーバ",
+                "d": "管理サーバへ基準となる時刻を提供"
+              },
+              {
+                "t": "Gメーター管理サーバ",
+                "d": "CoAPで現在時刻を返す"
+              },
+              {
+                "t": "Gメーター",
+                "d": "取得した時刻で自分の時計を更新"
+              }
+            ],
+            "caption": "時刻を取得する相手を整理した解説図"
+          }
+        },
+        {
+          "id": "constraint",
+          "type": "quiz",
+          "title": "設問は「CoAP通信を利用した処理」を求めている。答えに入れる内容はどれか。",
+          "choices": [
+            {
+              "text": "管理サーバから現在時刻を取得し、メーターの時計を更新する",
+              "explain": "取得元、取得内容、利用方法がそろっています。原問の指定した通信方法にも沿っています。",
+              "ok": true
+            },
+            {
+              "text": "全メーターにNTPクライアントを追加する",
+              "explain": "実装案になり得ても、今回はCoAP利用という指定があります。条件に合う処理を選びます。",
+              "ok": false
+            },
+            {
+              "text": "正確な時計を買うので同期は永久に不要とする",
+              "explain": "精度が高くても長期間の誤差を考える問題です。原問は補正する仕組みを求めています。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 3,
+          "stage": "apply"
+        },
+        {
+          "id": "build",
+          "type": "parsons",
+          "title": "取得する相手・情報・処理をつなげる",
+          "lead": "上下のボタンで、意味がつながる順番に並べます。",
+          "lines": [
+            {
+              "code": "Gメーター管理サーバから、"
+            },
+            {
+              "code": "CoAP通信を使って現在時刻を取得し、"
+            },
+            {
+              "code": "Gメーターの時計を更新する。"
+            }
+          ],
+          "shuffled": [
+            2,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "どこから、何を取り、どう使うかの順に組み立てます。必要なら指定字数に合わせて助詞や重複表現を整理します。",
+          "ngExplain": "どこから、何を取り、どう使うかの順に組み立てます。必要なら指定字数に合わせて助詞や重複表現を整理します。",
+          "format": "並べ替え",
+          "theme": "IoT",
+          "scaffold": 2,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "練習用：サーバから現在時刻を取得したが、表示するだけで時計を更新しなかった。十分な対策か。",
+          "choices": [
+            {
+              "text": "不十分。測定・送信に使う時計を修正する必要がある",
+              "explain": "取得した情報を実際の動作へ反映して初めて誤差を抑えられます。取得だけで終えないことが大切です。",
+              "ok": true
+            },
+            {
+              "text": "十分。受信しただけで時計は自動的に直る",
+              "explain": "アプリケーションが受信した情報を時計へ反映する処理が必要です。情報の取得と利用は別です。",
+              "ok": false
+            },
+            {
+              "text": "十分。測定値も同時に暗号化される",
+              "explain": "時刻情報の取得は暗号化ではありません。設問が求める誤差の補正を考えます。",
+              "ok": false
+            }
+          ],
+          "format": "選択",
+          "theme": "IoT",
+          "scaffold": 1,
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 23,
+            "top": 0.44,
+            "bottom": 0.71,
+            "label": "IPA原文：時計の誤差と補正処理の検討"
+          }
+        }
+      ]
+    }
+  ]
+}

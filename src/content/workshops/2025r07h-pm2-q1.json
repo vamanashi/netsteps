@@ -1,0 +1,3164 @@
+{
+  "examKey": "2025r07h/pm2/1",
+  "title": "IPv6導入をアドレス生成・名前解決・経路設計から理解する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm2_ans.pdf",
+    "https://datatracker.ietf.org/doc/html/rfc4861",
+    "https://www.rfc-editor.org/info/rfc8201/",
+    "https://www.rfc-editor.org/rfc/rfc4862.html"
+  ],
+  "sections": [
+    {
+      "id": "link-foundation",
+      "title": "IPの宛先とリンク内の届け先",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "link-purpose",
+          "type": "info",
+          "title": "別の網へ送るときも、まず隣へ渡す",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "IPの宛先とリンク内の届け先",
+          "scaffold": 5,
+          "body": "PC（Personal Computer、パソコン）がサーバへ通信する場面です。IP（Internet Protocol）アドレスはネットワーク上の宛先を表します。一方、イーサネットなどの同じリンクではMAC（Media Access Control）アドレスで通信相手のインタフェースを見分けます。インタフェースは機器の通信口です。"
+        },
+        {
+          "id": "link-next-hop",
+          "type": "info",
+          "title": "遠くのサーバのMACを直接探さない",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "IPの宛先とリンク内の届け先",
+          "scaffold": 5,
+          "body": "同じ網のサーバならサーバ自身へ、別網のサーバなら中継ルータへ最初のデータを渡します。この次に渡す相手をネクストホップと呼びます。IPパケットの宛先はサーバのままでも、リンク内の届け先はルータになることがあります。"
+        },
+        {
+          "id": "link-next-hop-check",
+          "type": "quiz",
+          "title": "練習用：サーバは別網で、PCの中継先はルータR。最初のリンクで調べるMACは？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "IPの宛先とリンク内の届け先",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "遠くのサーバのMAC",
+              "ok": false,
+              "explain": "リンクを越えた先のMACを使ってこのリンクを送るわけではありません。"
+            },
+            {
+              "text": "全ルータで共通のMAC",
+              "ok": false,
+              "explain": "各通信口を区別する値で、全ルータ共通ではありません。"
+            },
+            {
+              "text": "RのPC側インタフェースのMAC",
+              "ok": true,
+              "explain": "最初に受け取る同じリンクの相手を調べます。"
+            }
+          ]
+        },
+        {
+          "id": "link-ip-version",
+          "type": "quiz",
+          "title": "練習用：IPv4（Internet Protocol version 4）に加えIPv6（version 6）も使う構成へ変更。同じリンクの次の相手を調べる必要は？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "IPの宛先とリンク内の届け先",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "IPv6では必ず全世界へ同報する",
+              "ok": false,
+              "explain": "同じリンクとインターネット全体を混同しています。"
+            },
+            {
+              "text": "IPv6でもある",
+              "ok": true,
+              "explain": "IPの版が変わってもリンク内で次に渡す相手を決めます。"
+            },
+            {
+              "text": "全ルータを飛び越えるのでない",
+              "ok": false,
+              "explain": "IPv6もルータを通って転送します。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arp-ndp",
+      "title": "ARPとNDPの要求・応答を区別する",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "MACアドレスを知るための二方式",
+          "body": "ARP（Address Resolution Protocol）は同じリンクの相手のIPv4からMACを調べる仕組みです。まだMACを知らないときはリンク全体へ届くブロードキャストで要求します。そのIPを使う相手が、要求元へ自身のMACをリプライ（応答）で返します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "既知の条件",
+              "求める情報"
+            ],
+            "rows": [
+              [
+                "同じリンクの次ホップのIPv4",
+                "そのインタフェースのMAC"
+              ]
+            ],
+            "caption": "説明用：ARPの入力と調べる対象"
+          },
+          "stage": "concept",
+          "id": "arp-ndp-1",
+          "format": "読む",
+          "theme": "ARPとNDPの要求・応答を区別する",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "同じリンクの相手のMACをまだ知らない。ARPリクエストの対象を指定する欄に入れるのは？",
+          "choices": [
+            {
+              "text": "宛先MACアドレス",
+              "ok": false,
+              "explain": "まだ分からない値なので要求条件にはできません。"
+            },
+            {
+              "text": "TCP（Transmission Control Protocol）のポート",
+              "ok": false,
+              "explain": "ARPはポートを解決しません。"
+            },
+            {
+              "text": "宛先IPアドレス",
+              "ok": true,
+              "explain": "このIPを持つノードへMACを尋ねます。"
+            }
+          ],
+          "stage": "check",
+          "id": "arp-ndp-2",
+          "format": "選択",
+          "theme": "ARPとNDPの要求・応答を区別する",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "IPv4側の三空欄を埋めよ。",
+          "template": "{target}をARPリクエストに入れ、{cast}で送り、ARP{reply}を受け取る。",
+          "blanks": [
+            {
+              "key": "target",
+              "label": "対象",
+              "choices": [
+                {
+                  "text": "宛先IPアドレス",
+                  "ok": true,
+                  "explain": "既知のIPで未知のMACを尋ねます。"
+                },
+                {
+                  "text": "宛先MACアドレス",
+                  "ok": false,
+                  "explain": "求めるMACを既知として扱っています。"
+                }
+              ],
+              "why": "既知のIPで未知のMACを尋ねます。"
+            },
+            {
+              "key": "cast",
+              "label": "送信",
+              "choices": [
+                {
+                  "text": "ブロードキャスト",
+                  "ok": true,
+                  "explain": "同じLAN（Local Area Network、構内網）の全端末へ要求します。"
+                },
+                {
+                  "text": "ユニキャスト",
+                  "ok": false,
+                  "explain": "送信先MACが未知なので特定端末へ送れません。"
+                }
+              ],
+              "why": "同一LANの全端末へ要求します。"
+            },
+            {
+              "key": "reply",
+              "label": "応答",
+              "choices": [
+                {
+                  "text": "リプライ",
+                  "ok": true,
+                  "explain": "ARP要求への応答名です。"
+                },
+                {
+                  "text": "リダイレクト",
+                  "ok": false,
+                  "explain": "ICMP（Internet Control Message Protocol）の経路通知と混同しています。"
+                }
+              ],
+              "why": "ARP要求への応答名です。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "arp-ndp-3",
+          "format": "穴埋め",
+          "theme": "ARPとNDPの要求・応答を区別する",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "ARPの解決順を並べよ。",
+          "lead": "練習用：同じリンクの相手のIPv4だけが分かり、MACは未学習です。",
+          "lines": [
+            {
+              "code": "宛先IPを要求へ入れる"
+            },
+            {
+              "code": "LANへブロードキャストする"
+            },
+            {
+              "code": "該当ノードがMACをリプライで返す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "要求先と送信方式を分けます。",
+          "ngExplain": "MACを得るのは応答後です。",
+          "stage": "reason",
+          "id": "arp-ndp-4",
+          "format": "並べ替え",
+          "theme": "ARPとNDPの要求・応答を区別する",
+          "scaffold": 2
+        },
+        {
+          "id": "ndp-message-meaning",
+          "type": "info",
+          "title": "IPv6でも要請と広告を分ける",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "ARPとNDPの要求・応答を区別する",
+          "scaffold": 5,
+          "body": "NDP（Neighbor Discovery Protocol、近隣探索）はIPv6で近隣の情報を得る仕組みです。NS（Neighbor Solicitation）は要請、NA（Neighbor Advertisement）は広告です。MACをまだ知らないときのNSは、同じリンクの対象グループへ送るマルチキャストを使います。NAの返し方は用途によって異なり、全てがマルチキャストとは限りません。"
+        },
+        {
+          "type": "quiz",
+          "title": "IPv6で同じ目的に使う組合せはどれか。",
+          "choices": [
+            {
+              "text": "RS（Router Solicitation）とRA（Router Advertisement）",
+              "ok": false,
+              "explain": "ルータ情報の要請と広告です。"
+            },
+            {
+              "text": "DNS（Domain Name System）のAとAAAA",
+              "ok": false,
+              "explain": "名前に対応するIPv4・IPv6を得るレコード型です。リンク内のMAC解決ではありません。"
+            },
+            {
+              "text": "NSとNA",
+              "ok": true,
+              "explain": "NSで要請しNAで広告します。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "arp-ndp-5",
+          "format": "選択",
+          "theme": "ARPとNDPの要求・応答を区別する",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "length-scope",
+      "title": "IPv6の長さとLLAの範囲を読む",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "128ビットを前半と後半に分ける",
+          "body": "IPv6は128ビットで、通常16進数4桁ずつをコロンで区切ります。16進数1桁は4ビットなので、一組は4×4＝16ビットです。/64では先頭64ビットが網を示すプレフィックス、後半64ビットがインタフェース識別子です。",
+          "fig": {
+            "kind": "header",
+            "unit": 128,
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "ネットワーク側",
+                    "bits": 64
+                  },
+                  {
+                    "t": "インタフェース側",
+                    "bits": 64
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：/64のIPv6アドレスの二部分"
+          },
+          "stage": "concept",
+          "id": "length-scope-1",
+          "format": "読む",
+          "theme": "IPv6の長さとLLAの範囲を読む",
+          "scaffold": 5
+        },
+        {
+          "id": "lla-scope-concept",
+          "type": "info",
+          "title": "同じリンクだけで使うアドレス",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "IPv6の長さとLLAの範囲を読む",
+          "scaffold": 5,
+          "body": "LLA（Link-Local Address、リンクローカルアドレス）は同じリンク内で使い、ルータを越えて転送しません。GUA（Global Unicast Address、グローバルユニキャストアドレス）はインターネットを含む範囲で利用します。同じ文字列のLLAを別リンクで使えても、一つのリンク内では区別する必要があります。"
+        },
+        {
+          "id": "lla-scope-change",
+          "type": "quiz",
+          "title": "練習用：ルータを挟んだ別々のリンクでfe80::1を使う機器がある。この一致だけで重複障害と判断する？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "IPv6の長さとLLAの範囲を読む",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "する。世界全体で一意でなければならない",
+              "ok": false,
+              "explain": "LLAの有効範囲はリンク内です。"
+            },
+            {
+              "text": "しないので、同じリンクでも何台にでも設定する",
+              "ok": false,
+              "explain": "有効範囲が狭いことは、その範囲の重複を許す意味ではありません。"
+            },
+            {
+              "text": "しない。LLAはリンクごとに区別する",
+              "ok": true,
+              "explain": "同じリンクの別機器へ同じLLAを設定すれば重複になります。"
+            }
+          ]
+        },
+        {
+          "id": "eui-length-concept",
+          "type": "info",
+          "title": "元と生成後の長さを数える",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "IPv6の長さとLLAの範囲を読む",
+          "scaffold": 5,
+          "body": "Modified EUI-64（Extended Unique Identifierを基にした64ビット識別子）の方式では、本問の48ビットMACの中央に16ビットを挿入し、先頭側の所定の1ビットを反転します。長さは48＋16＝64ビットです。名称の64は生成後の長さで、元のMAC長ではありません。"
+        },
+        {
+          "type": "quiz",
+          "title": "LLAが一意であるべき範囲はどれか。",
+          "choices": [
+            {
+              "text": "インターネット全体",
+              "ok": false,
+              "explain": "GUAの到達範囲と混同しています。"
+            },
+            {
+              "text": "ルータを越えた全拠点の範囲",
+              "ok": false,
+              "explain": "同じ組織でも別リンクならLLAの有効範囲は異なります。"
+            },
+            {
+              "text": "データリンク層で通信可能な範囲",
+              "ok": true,
+              "explain": "LLAは同一リンク内で利用します。"
+            }
+          ],
+          "stage": "check",
+          "id": "length-scope-2",
+          "format": "選択",
+          "theme": "IPv6の長さとLLAの範囲を読む",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "三つの数値を埋めよ。",
+          "template": "{group}ビットずつ表記する。{mac}ビットMACから{identifier}ビット識別子を作る。",
+          "blanks": [
+            {
+              "key": "group",
+              "label": "区切り",
+              "choices": [
+                {
+                  "text": "16",
+                  "ok": true,
+                  "explain": "16進数4桁は16ビットです。"
+                },
+                {
+                  "text": "8",
+                  "ok": false,
+                  "explain": "IPv4のオクテットと混同しています。"
+                }
+              ],
+              "why": "16進数4桁は16ビットです。"
+            },
+            {
+              "key": "mac",
+              "label": "元",
+              "choices": [
+                {
+                  "text": "48",
+                  "ok": true,
+                  "explain": "一般的なMACの長さです。"
+                },
+                {
+                  "text": "64",
+                  "ok": false,
+                  "explain": "64は生成後です。"
+                }
+              ],
+              "why": "一般的なMACの長さです。"
+            },
+            {
+              "key": "identifier",
+              "label": "後",
+              "choices": [
+                {
+                  "text": "64",
+                  "ok": true,
+                  "explain": "識別子は後半64ビットです。"
+                },
+                {
+                  "text": "128",
+                  "ok": false,
+                  "explain": "128はアドレス全体です。"
+                }
+              ],
+              "why": "識別子は後半64ビットです。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "length-scope-3",
+          "format": "穴埋め",
+          "theme": "IPv6の長さとLLAの範囲を読む",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "LLAの範囲を導け。",
+          "lead": "名称と転送範囲を結びます。",
+          "lines": [
+            {
+              "code": "Link-LocalのLocalに注目する"
+            },
+            {
+              "code": "ルータを越えない同一リンクを考える"
+            },
+            {
+              "code": "データリンク層で通信可能な範囲と答える"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "組織全体より狭い範囲です。",
+          "ngExplain": "インターネット全体ではありません。",
+          "stage": "reason",
+          "id": "length-scope-4",
+          "format": "並べ替え",
+          "theme": "IPv6の長さとLLAの範囲を読む",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "Modified EUI-64の「64」だけで、原問の元のMACも64ビットだと判断してよいか。",
+          "choices": [
+            {
+              "text": "名称だけで元も必ず64ビットと決める",
+              "ok": false,
+              "explain": "元の長さと生成後を混同しています。"
+            },
+            {
+              "text": "IPv6全体も64ビットになる",
+              "ok": false,
+              "explain": "IPv6全体は128ビットです。"
+            },
+            {
+              "text": "原問は48ビットMACから64ビットを作る条件で読む",
+              "ok": true,
+              "explain": "問題文の指定条件を使います。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "length-scope-5",
+          "format": "選択",
+          "theme": "IPv6の長さとLLAの範囲を読む",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "dad",
+      "title": "利用前に重複アドレスを検出する",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "仮アドレスへ応答があるか調べる",
+          "body": "DAD（Duplicate Address Detection、重複アドレス検出）は利用予定のIPv6が同じリンクで使われていないかを調べます。本問の図3は仮のLLAと仮のGUAそれぞれでNSを送り、NAの応答がないことを確認してから正式利用します。一般のDADは、別端末が同時に調べているNSの受信も重複判定に使います。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "入力",
+              "確認する範囲"
+            ],
+            "rows": [
+              [
+                "利用予定のIPv6アドレス",
+                "同じデータリンク上"
+              ]
+            ],
+            "caption": "説明用：DADの条件（結果は未指定）"
+          },
+          "stage": "concept",
+          "id": "dad-1",
+          "format": "読む",
+          "theme": "利用前に重複アドレスを検出する",
+          "scaffold": 5
+        },
+        {
+          "id": "dad-small-reason",
+          "type": "quiz",
+          "title": "練習用：PC-Aが仮アドレスfe80::10のNSを送り、同じリンクのPC-BからNAが返った。なぜ利用を止める？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "利用前に重複アドレスを検出する",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "同じアドレスを既に使う相手がいると分かるから",
+              "ok": true,
+              "explain": "重複するとどちらの機器へ届けるか定まらなくなります。"
+            },
+            {
+              "text": "NAが安全な利用の許可証だから",
+              "ok": false,
+              "explain": "NAは新端末への使用許可ではありません。"
+            },
+            {
+              "text": "全ルータでIPの版が変わったから",
+              "ok": false,
+              "explain": "NAからそのようなことは判断できません。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "図3で重複確認をする処理はどれか。",
+          "choices": [
+            {
+              "text": "（ii）と（vi）",
+              "ok": false,
+              "explain": "正式アドレスの通知です。"
+            },
+            {
+              "text": "（iii）と（iv）",
+              "ok": false,
+              "explain": "RSとRAの交換です。"
+            },
+            {
+              "text": "（i）と（v）",
+              "ok": true,
+              "explain": "仮のLLAとGUAのそれぞれでNSを送ります。"
+            }
+          ],
+          "stage": "check",
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.35,
+            "bottom": 0.76,
+            "label": "IPA原図3：仮アドレスの確認と通知"
+          },
+          "id": "dad-2",
+          "format": "選択",
+          "theme": "利用前に重複アドレスを検出する",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "目的を正確に埋めよ。",
+          "template": "同じ{scope}上に、同じ{address}を使うノードが{absence}ことを確認する。",
+          "blanks": [
+            {
+              "key": "scope",
+              "label": "範囲",
+              "choices": [
+                {
+                  "text": "データリンク層",
+                  "ok": true,
+                  "explain": "NSが届くリンク内です。"
+                },
+                {
+                  "text": "インターネット全体",
+                  "ok": false,
+                  "explain": "全インターネットへ探索しません。"
+                }
+              ],
+              "why": "NSが届くリンク内です。"
+            },
+            {
+              "key": "address",
+              "label": "対象",
+              "choices": [
+                {
+                  "text": "IPv6アドレス",
+                  "ok": true,
+                  "explain": "利用予定アドレスの重複を調べます。"
+                },
+                {
+                  "text": "TCPポート",
+                  "ok": false,
+                  "explain": "ポートの重複検出ではありません。"
+                }
+              ],
+              "why": "利用予定アドレスの重複を調べます。"
+            },
+            {
+              "key": "absence",
+              "label": "結果",
+              "choices": [
+                {
+                  "text": "いない",
+                  "ok": true,
+                  "explain": "NAがないことを確認します。"
+                },
+                {
+                  "text": "必ずいる",
+                  "ok": false,
+                  "explain": "応答があれば重複です。"
+                }
+              ],
+              "why": "NAがないことを確認します。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "dad-3",
+          "format": "穴埋め",
+          "theme": "利用前に重複アドレスを検出する",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "DADを並べよ。",
+          "lead": "原問の簡略化された処理です。所定の確認期間に重複が検出されなかったとします。",
+          "lines": [
+            {
+              "code": "仮アドレスを生成する"
+            },
+            {
+              "code": "NSを送信する"
+            },
+            {
+              "code": "NAがないことなどから重複なしと判断して正式利用する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "利用開始前に調べます。",
+          "ngExplain": "正式利用後では遅すぎます。",
+          "stage": "reason",
+          "id": "dad-4",
+          "format": "並べ替え",
+          "theme": "利用前に重複アドレスを検出する",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "NAが返った場合はどうするか。",
+          "choices": [
+            {
+              "text": "重複なしとして使う",
+              "ok": false,
+              "explain": "応答があるので逆です。"
+            },
+            {
+              "text": "デフォルトルータに設定する",
+              "ok": false,
+              "explain": "重複検出の結果を次ホップにはしません。"
+            },
+            {
+              "text": "その仮アドレスを利用しない",
+              "ok": true,
+              "explain": "同じアドレスの利用者がいます。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "dad-5",
+          "format": "選択",
+          "theme": "利用前に重複アドレスを検出する",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "slaac",
+      "title": "プレフィックスと識別子からGUAを作る",
+      "targets": [
+        "s2-4",
+        "s2-5"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "RAから網とルータの情報を得る",
+          "body": "SLAAC（Stateless Address Autoconfiguration）は、ルータが知らせる網の情報を使って端末がIPv6を組み立てる自動設定です。PCのRS（ルータ要請）にルータがRA（ルータ広告）を返します。本問ではRAの/64プレフィックスと自身の64ビット識別子を合わせ、RA送信元のLLAをデフォルトルータにします。",
+          "fig": {
+            "kind": "bits",
+            "cells": [
+              {
+                "top": "RAの/64",
+                "steps": [
+                  "前半64ビット"
+                ]
+              },
+              {
+                "top": "自身の識別子",
+                "steps": [
+                  "後半64ビット"
+                ]
+              }
+            ],
+            "caption": "説明用：入力の役割（完成アドレスは未記入）"
+          },
+          "stage": "concept",
+          "id": "slaac-1",
+          "format": "読む",
+          "theme": "プレフィックスと識別子からGUAを作る",
+          "scaffold": 5
+        },
+        {
+          "id": "slaac-expand",
+          "type": "quiz",
+          "title": "練習用：LLAがfe80::12:34:56:78。省略された0を補った後半64ビットは？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "プレフィックスと識別子からGUAを作る",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "fe80:0000:0000:0000",
+              "ok": false,
+              "explain": "これはGUA作成時に置き換える前半です。"
+            },
+            {
+              "text": "fe80を含む全128ビット",
+              "ok": false,
+              "explain": "識別子は後半64ビットだけです。"
+            },
+            {
+              "text": "0012:0034:0056:0078",
+              "ok": true,
+              "explain": "後半は16ビットが4組です。fe80は前半にあります。"
+            }
+          ]
+        },
+        {
+          "id": "slaac-small-build",
+          "type": "quiz",
+          "title": "練習用：RAが2001:db8:5:6::/64、識別子が12:34:56:78。仮のGUAは？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "プレフィックスと識別子からGUAを作る",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "2001:db8:5:6:12:34:56:78/64",
+              "ok": true,
+              "explain": "前半はRA、後半は自身の識別子です。"
+            },
+            {
+              "text": "fe80::12:34:56:78/64",
+              "ok": false,
+              "explain": "LLAのプレフィックスのままです。"
+            },
+            {
+              "text": "2001:db8:5:6::/128",
+              "ok": false,
+              "explain": "識別子を落としプレフィックス長も変えています。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "原問条件：LLAはfe80::8:800:200c:417a、RAは2001:db8:aabb:1::/64。仮のGUAとプレフィックス長は？",
+          "choices": [
+            {
+              "text": "fe80::8:800:200c:417a/64",
+              "ok": false,
+              "explain": "元のLLAのままです。"
+            },
+            {
+              "text": "2001:db8:aabb:1::/48",
+              "ok": false,
+              "explain": "識別子と指定長を落としています。"
+            },
+            {
+              "text": "2001:db8:aabb:1:8:800:200c:417a/64",
+              "ok": true,
+              "explain": "RAの前半と識別子を結合します。"
+            }
+          ],
+          "stage": "check",
+          "id": "slaac-2",
+          "format": "選択",
+          "theme": "プレフィックスと識別子からGUAを作る",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "二部分と次ホップを埋めよ。",
+          "template": "GUAは{prefix}と{identifier}を結合する。RA送信元LLAは{router}にする。",
+          "blanks": [
+            {
+              "key": "prefix",
+              "label": "前半",
+              "choices": [
+                {
+                  "text": "2001:db8:aabb:1::/64",
+                  "ok": true,
+                  "explain": "RAが知らせるGUAプレフィックスです。"
+                },
+                {
+                  "text": "fe80::/64",
+                  "ok": false,
+                  "explain": "こちらはLLAの前半です。"
+                }
+              ],
+              "why": "RAが知らせるGUAプレフィックスです。"
+            },
+            {
+              "key": "identifier",
+              "label": "後半",
+              "choices": [
+                {
+                  "text": "8:800:200c:417a",
+                  "ok": true,
+                  "explain": "後半の識別子です。"
+                },
+                {
+                  "text": "2001:db8:aabb:1",
+                  "ok": false,
+                  "explain": "前半と逆です。"
+                }
+              ],
+              "why": "後半の識別子です。"
+            },
+            {
+              "key": "router",
+              "label": "役割",
+              "choices": [
+                {
+                  "text": "デフォルトルータ",
+                  "ok": true,
+                  "explain": "外部への次ホップです。"
+                },
+                {
+                  "text": "DNSサーバ",
+                  "ok": false,
+                  "explain": "名前解決先ではありません。"
+                }
+              ],
+              "why": "外部への次ホップです。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "slaac-3",
+          "format": "穴埋め",
+          "theme": "プレフィックスと識別子からGUAを作る",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "SLAACの流れを並べよ。",
+          "lead": "PCが外部通信の準備をします。",
+          "lines": [
+            {
+              "code": "PCがRSを送る"
+            },
+            {
+              "code": "ルータがRAを返す"
+            },
+            {
+              "code": "PCがGUA候補を作り、重複検出後に利用し、デフォルトルータを設定する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "アドレスと次ホップを得ます。",
+          "ngExplain": "RAを受ける前にプレフィックスは分かりません。",
+          "stage": "reason",
+          "id": "slaac-4",
+          "format": "並べ替え",
+          "theme": "プレフィックスと識別子からGUAを作る",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "RAが別の/64を通知したらどうするか。",
+          "choices": [
+            {
+              "text": "以前のGUAを丸暗記して使う",
+              "ok": false,
+              "explain": "プレフィックス変更へ対応できません。"
+            },
+            {
+              "text": "識別子を128ビットにする",
+              "ok": false,
+              "explain": "後半は64ビットです。"
+            },
+            {
+              "text": "新しいプレフィックスと識別子を組み合わせる",
+              "ok": true,
+              "explain": "ネットワーク部分はRAの条件に従います。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "slaac-5",
+          "format": "選択",
+          "theme": "プレフィックスと識別子からGUAを作る",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "privacy",
+      "title": "ランダム識別子と端末管理を両立する",
+      "targets": [
+        "s2-6"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "追跡しにくさは管理者にも働く",
+          "body": "固定MACから識別子を作ると、網側が変わっても識別子が残り、同じPCを追跡する手掛かりになります。疑似乱数を利用する方式はMACとアドレスの直接の対応を避けますが、管理者もIPだけからPCを特定しづらくなります。ランダム生成でも同じ網で安定した値を使う方式があり、毎回変化するとは限りません。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "方法",
+              "外部追跡",
+              "端末管理"
+            ],
+            "rows": [
+              [
+                "固定",
+                "しやすい",
+                "対応しやすい"
+              ],
+              [
+                "ランダム",
+                "しにくい",
+                "別の対応記録が必要"
+              ]
+            ],
+            "caption": "説明用：二つの影響"
+          },
+          "stage": "concept",
+          "id": "privacy-1",
+          "format": "読む",
+          "theme": "ランダム識別子と端末管理を両立する",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "管理上の課題はどれか。",
+          "choices": [
+            {
+              "text": "ランダムなら全リンクで絶対に重複しない",
+              "ok": false,
+              "explain": "ランダム生成と重複しない保証は別です。重複アドレス検出も行います。"
+            },
+            {
+              "text": "FW（Firewall）のアクセス制御が不要になる",
+              "ok": false,
+              "explain": "アクセス制御は別に必要です。"
+            },
+            {
+              "text": "PCを特定しづらくなる",
+              "ok": true,
+              "explain": "固定識別子との単純な対応を使えません。"
+            }
+          ],
+          "stage": "check",
+          "id": "privacy-2",
+          "format": "選択",
+          "theme": "ランダム識別子と端末管理を両立する",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "理由を主語と結果で埋めよ。",
+          "template": "識別子がランダムだと、{object}を{difficulty}から。",
+          "blanks": [
+            {
+              "key": "object",
+              "label": "対象",
+              "choices": [
+                {
+                  "text": "PC",
+                  "ok": true,
+                  "explain": "管理対象の端末です。"
+                },
+                {
+                  "text": "MTU（Maximum Transmission Unit、最大転送単位）",
+                  "ok": false,
+                  "explain": "パケットサイズではありません。"
+                }
+              ],
+              "why": "管理対象の端末です。"
+            },
+            {
+              "key": "difficulty",
+              "label": "結果",
+              "choices": [
+                {
+                  "text": "特定しづらくなる",
+                  "ok": true,
+                  "explain": "MACとの単純な対応を使えず、生成方式によってはアドレスも変わります。"
+                },
+                {
+                  "text": "必ず高速化できる",
+                  "ok": false,
+                  "explain": "速度を保証しません。"
+                }
+              ],
+              "why": "MACとの直接の対応を避ける性質は管理者の端末識別にも影響します。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "privacy-3",
+          "format": "穴埋め",
+          "theme": "ランダム識別子と端末管理を両立する",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "利点と課題を並べよ。",
+          "lead": "同じ性質の二面を説明します。",
+          "lines": [
+            {
+              "code": "固定MACを識別子へ直接使わない"
+            },
+            {
+              "code": "外部から継続追跡しにくくなる"
+            },
+            {
+              "code": "管理者も別の対応記録が必要になる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "利用者と管理者の両面があります。",
+          "ngExplain": "プライバシーだけで運用課題は消えません。",
+          "stage": "reason",
+          "id": "privacy-4",
+          "format": "並べ替え",
+          "theme": "ランダム識別子と端末管理を両立する",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "実務で補う情報はどれか。",
+          "choices": [
+            {
+              "text": "現在のIPだけ",
+              "ok": false,
+              "explain": "過去の通信元を特定できない場合があります。"
+            },
+            {
+              "text": "画面サイズ",
+              "ok": false,
+              "explain": "端末とアドレスの対応になりません。"
+            },
+            {
+              "text": "端末と割当てアドレスの履歴",
+              "ok": true,
+              "explain": "変動しても端末を追跡できます。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "privacy-5",
+          "format": "選択",
+          "theme": "ランダム識別子と端末管理を両立する",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "dns-transport",
+      "title": "DNSの大きさでUDPとTCPを選ぶ",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "AAAAの内容と運搬方法は別である",
+          "body": "DNSは名前に対応する情報を問い合わせます。AはIPv4、AAAAはIPv6を返すレコード型で、IPv4の通信でもAAAAを得られます。EDNS（Extension Mechanisms for DNS）はUDP（User Datagram Protocol）で扱うDNSメッセージの上限を拡張します。上限を超えた応答は切詰めを通知し、TCPで再試行する方法があります。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "転送"
+            ],
+            "rows": [
+              [
+                "EDNS上限内",
+                "UDP"
+              ],
+              [
+                "EDNS上限超",
+                "TCP"
+              ],
+              [
+                "EDNSなしで512バイト超",
+                "TCP"
+              ]
+            ],
+            "caption": "説明用：DNS転送"
+          },
+          "stage": "concept",
+          "id": "dns-transport-1",
+          "format": "読む",
+          "theme": "DNSの大きさでUDPとTCPを選ぶ",
+          "scaffold": 5
+        },
+        {
+          "id": "dns-size-case",
+          "type": "quiz",
+          "title": "練習用：EDNS利用時のUDP応答上限1232バイトに対し、応答は1400バイト。切詰め通知後に必要なのは？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "DNSの大きさでUDPとTCPを選ぶ",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "AAAAをAに書き換える",
+              "ok": false,
+              "explain": "求めるIPv6の回答を得られなくなります。"
+            },
+            {
+              "text": "上限以降を捨てて完全な応答とする",
+              "ok": false,
+              "explain": "欠けたレコードを含む結果は完全ではありません。"
+            },
+            {
+              "text": "TCPで問い合わせ直して完全な応答を得る",
+              "ok": true,
+              "explain": "IPv6を求めるためでなく、UDP応答上限を超えたための変更です。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "EDNSで合意した上限を超えた場合はどれか。",
+          "choices": [
+            {
+              "text": "ARP",
+              "ok": false,
+              "explain": "MAC解決でありDNS転送ではありません。"
+            },
+            {
+              "text": "RA",
+              "ok": false,
+              "explain": "ルータ情報の広告です。"
+            },
+            {
+              "text": "TCP",
+              "ok": true,
+              "explain": "大きなDNSメッセージをTCPで扱います。"
+            }
+          ],
+          "stage": "check",
+          "id": "dns-transport-2",
+          "format": "選択",
+          "theme": "DNSの大きさでUDPとTCPを選ぶ",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "二条件を埋めよ。",
+          "template": "EDNSの{maximum}を超える場合、又はEDNSなしで{legacy}を超える場合はTCPを使う。",
+          "blanks": [
+            {
+              "key": "maximum",
+              "label": "合意値",
+              "choices": [
+                {
+                  "text": "最大メッセージサイズ",
+                  "ok": true,
+                  "explain": "DNSのUDP上限です。"
+                },
+                {
+                  "text": "ホップリミット",
+                  "ok": false,
+                  "explain": "転送回数ではありません。"
+                }
+              ],
+              "why": "DNSのUDP上限です。"
+            },
+            {
+              "key": "legacy",
+              "label": "従来値",
+              "choices": [
+                {
+                  "text": "512バイト",
+                  "ok": true,
+                  "explain": "原文の従来上限です。"
+                },
+                {
+                  "text": "64ビット",
+                  "ok": false,
+                  "explain": "識別子長と混同しています。"
+                }
+              ],
+              "why": "原文の従来上限です。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "dns-transport-3",
+          "format": "穴埋め",
+          "theme": "DNSの大きさでUDPとTCPを選ぶ",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "転送方法を決める順序を並べよ。",
+          "lead": "権威DNSへの問合せです。",
+          "lines": [
+            {
+              "code": "EDNS対応と上限を確認する"
+            },
+            {
+              "code": "応答サイズと上限を比べる"
+            },
+            {
+              "code": "上限超ならTCPを使う"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "AAAAだから常にTCPではありません。",
+          "ngExplain": "レコード型とメッセージサイズを分けます。",
+          "stage": "reason",
+          "id": "dns-transport-4",
+          "format": "並べ替え",
+          "theme": "DNSの大きさでUDPとTCPを選ぶ",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "DNSサーバ自身にIPv6が必要か。",
+          "choices": [
+            {
+              "text": "AAAAはIPv6でしか問い合わせられない",
+              "ok": false,
+              "explain": "IPv4上のDNSでも扱えます。"
+            },
+            {
+              "text": "AをAAAAへ変換する必要がある",
+              "ok": false,
+              "explain": "異なるレコードとして問い合わせます。"
+            },
+            {
+              "text": "AAAAを得るだけならIPv4通信でもよい",
+              "ok": true,
+              "explain": "運搬と回答内容は独立です。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "dns-transport-5",
+          "format": "選択",
+          "theme": "DNSの大きさでUDPとTCPを選ぶ",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "dns-records",
+      "title": "DNS応答の欄から全ての値を拾う",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "ANSWERとAUTHORITYを分けて読む",
+          "body": "FQDN（Fully Qualified Domain Name）は省略のないドメイン名です。CNAME（Canonical Name）は別名から正式名への対応、NS（Name Server）はゾーンの権威DNSサーバ名を示します。ここでのNSはDNSの型であり、近隣探索のNSメッセージとは別です。原問ではSaaS（Software as a Service、ネットワーク経由で利用するソフトウェア）のIPv6と権威DNS名を分けて全件読みます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "欄",
+              "型",
+              "情報"
+            ],
+            "rows": [
+              [
+                "ANSWER",
+                "AAAA",
+                "SaaSのIPv6"
+              ],
+              [
+                "AUTHORITY",
+                "NS",
+                "権威DNS名"
+              ],
+              [
+                "ADDITIONAL",
+                "A",
+                "権威DNSのIPv4"
+              ]
+            ],
+            "caption": "説明用：図5の読み方"
+          },
+          "stage": "concept",
+          "id": "dns-records-1",
+          "format": "読む",
+          "theme": "DNS応答の欄から全ての値を拾う",
+          "scaffold": 5
+        },
+        {
+          "id": "dns-alias-small",
+          "type": "quiz",
+          "title": "練習用：app.example.のCNAME先はedge.example.。edge.example.のAAAAは2001:db8::50、ns.example.のAは192.0.2.53。Web接続先のIPv6は？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "DNS応答の欄から全ての値を拾う",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "192.0.2.53",
+              "ok": false,
+              "explain": "権威DNSのIPv4でありWebのIPv6ではありません。"
+            },
+            {
+              "text": "ns.example.",
+              "ok": false,
+              "explain": "権威DNSの名前でありIPアドレスではありません。"
+            },
+            {
+              "text": "2001:db8::50",
+              "ok": true,
+              "explain": "別名の先のAAAAが目的サービスのIPv6です。"
+            }
+          ]
+        },
+        {
+          "id": "dns-original-values",
+          "type": "info",
+          "title": "原図の伏字と欄を読み分ける",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "DNS応答の欄から全ての値を拾う",
+          "scaffold": 5,
+          "body": "原図5ではANSWER欄でCNAME先のAAAAを二行、AUTHORITY欄でNSを二行読みます。xxxxやα・βは原問の伏字で、実機に入力できるアドレス文字列ではありません。IPv6二つと権威DNSのFQDN二つを、欄とレコード型を根拠に抜き出します。"
+        },
+        {
+          "type": "quiz",
+          "title": "SaaSのIPv6の組合せはどれか。",
+          "choices": [
+            {
+              "text": "198.51.100.α と β",
+              "ok": false,
+              "explain": "権威DNSのIPv4です。"
+            },
+            {
+              "text": "ns1 と ns2",
+              "ok": false,
+              "explain": "権威DNSのFQDNです。"
+            },
+            {
+              "text": "2001:db8:xxxx::10 と ::20",
+              "ok": true,
+              "explain": "CNAME先の二つのAAAA値です。"
+            }
+          ],
+          "stage": "check",
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.4,
+            "bottom": 0.8,
+            "label": "IPA原図5：DNS応答のレコード"
+          },
+          "id": "dns-records-2",
+          "format": "選択",
+          "theme": "DNS応答の欄から全ての値を拾う",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "IPv6二つと権威DNS二つを埋めよ。",
+          "template": "IPv6は{ip1}と{ip2}。権威DNSは{ns1}と{ns2}。",
+          "blanks": [
+            {
+              "key": "ip1",
+              "label": "IPv6 1",
+              "choices": [
+                {
+                  "text": "2001:db8:xxxx::10",
+                  "ok": true,
+                  "explain": "AAAAの値です。"
+                },
+                {
+                  "text": "198.51.100.α",
+                  "ok": false,
+                  "explain": "Aレコードの値です。"
+                }
+              ],
+              "why": "AAAAの値です。"
+            },
+            {
+              "key": "ip2",
+              "label": "IPv6 2",
+              "choices": [
+                {
+                  "text": "2001:db8:xxxx::20",
+                  "ok": true,
+                  "explain": "二つ目のAAAA値です。"
+                },
+                {
+                  "text": "dual-saas.example.net.",
+                  "ok": false,
+                  "explain": "CNAME先の名前です。"
+                }
+              ],
+              "why": "二つ目のAAAA値です。"
+            },
+            {
+              "key": "ns1",
+              "label": "権威1",
+              "choices": [
+                {
+                  "text": "ns1.example.net.",
+                  "ok": true,
+                  "explain": "NS行の値です。"
+                },
+                {
+                  "text": "saas.example.com.",
+                  "ok": false,
+                  "explain": "問合せ対象です。"
+                }
+              ],
+              "why": "NS行の値です。"
+            },
+            {
+              "key": "ns2",
+              "label": "権威2",
+              "choices": [
+                {
+                  "text": "ns2.example.net.",
+                  "ok": true,
+                  "explain": "二つ目のNS値です。"
+                },
+                {
+                  "text": "2001:db8:xxxx::20",
+                  "ok": false,
+                  "explain": "IPv6値です。"
+                }
+              ],
+              "why": "二つ目のNS値です。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "dns-records-3",
+          "format": "穴埋め",
+          "theme": "DNS応答の欄から全ての値を拾う",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "CNAMEをたどる順序を並べよ。",
+          "lead": "答案を整理する手順として、まず別名をたどりIPv6を集め、次に権威DNS名を集めます。NSを先に読むと通信が失敗するという意味ではありません。",
+          "lines": [
+            {
+              "code": "CNAME先を確認する"
+            },
+            {
+              "code": "CNAME先のAAAAを全て読む"
+            },
+            {
+              "code": "AUTHORITY欄のNSを全て読む"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "異なる欄から集めます。",
+          "ngExplain": "ADDITIONALのAをIPv6へ混ぜません。",
+          "stage": "reason",
+          "id": "dns-records-4",
+          "format": "並べ替え",
+          "theme": "DNS応答の欄から全ての値を拾う",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "ADDITIONAL欄のAは何に使えるか。",
+          "choices": [
+            {
+              "text": "SaaSのIPv6回答",
+              "ok": false,
+              "explain": "AAAA欄の値を使います。"
+            },
+            {
+              "text": "デフォルトルータ",
+              "ok": false,
+              "explain": "DNS応答はRAの代わりではありません。"
+            },
+            {
+              "text": "権威DNS名へ到達するIPv4情報",
+              "ok": true,
+              "explain": "NS名に対応する補助情報です。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "dns-records-5",
+          "format": "選択",
+          "theme": "DNS応答の欄から全ての値を拾う",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "fallback",
+      "title": "IPv4への切替でIPv6障害が隠れる",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "画面の成功とIPv6の正常を分ける",
+          "body": "PCはAとAAAAの両方を取得します。IPv6が失敗してもIPv4へフォールバックする実装があります。同じWebページを利用できると、利用者は異常に気付きません。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "IPv6",
+                "d": "接続失敗"
+              },
+              {
+                "t": "IPv4",
+                "d": "フォールバック"
+              },
+              {
+                "t": "同じSaaS",
+                "d": "画面表示"
+              }
+            ],
+            "caption": "説明用：条件と結果"
+          },
+          "stage": "concept",
+          "id": "fallback-1",
+          "format": "読む",
+          "theme": "IPv4への切替でIPv6障害が隠れる",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "利用者が気付かない理由はどれか。",
+          "choices": [
+            {
+              "text": "AAAAがMACへ変わる",
+              "ok": false,
+              "explain": "DNSのIPv6値はMACにはなりません。"
+            },
+            {
+              "text": "IPv6障害でIPv4も止まる",
+              "ok": false,
+              "explain": "片方だけ故障する場合があります。"
+            },
+            {
+              "text": "IPv4で同じWebページへ接続できる",
+              "ok": true,
+              "explain": "見えるサービスが継続します。"
+            }
+          ],
+          "stage": "check",
+          "id": "fallback-2",
+          "format": "選択",
+          "theme": "IPv4への切替でIPv6障害が隠れる",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "因果関係を埋めよ。",
+          "template": "IPv6が失敗しても{fallback}し、{same}へアクセスできるから。",
+          "blanks": [
+            {
+              "key": "fallback",
+              "label": "代替",
+              "choices": [
+                {
+                  "text": "IPv4にフォールバック",
+                  "ok": true,
+                  "explain": "別のIP方式を利用します。"
+                },
+                {
+                  "text": "ARPへ変換",
+                  "ok": false,
+                  "explain": "ARPは代替経路ではありません。"
+                }
+              ],
+              "why": "別のIP方式を利用します。"
+            },
+            {
+              "key": "same",
+              "label": "結果",
+              "choices": [
+                {
+                  "text": "SaaSの同じWebページ",
+                  "ok": true,
+                  "explain": "利用結果が同じです。"
+                },
+                {
+                  "text": "別会社のサイト",
+                  "ok": false,
+                  "explain": "別サービスへ移る説明ではありません。"
+                }
+              ],
+              "why": "利用結果が同じです。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "fallback-3",
+          "format": "穴埋め",
+          "theme": "IPv4への切替でIPv6障害が隠れる",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "障害が隠れる順を並べよ。",
+          "lead": "AとAAAAを取得済みです。",
+          "lines": [
+            {
+              "code": "IPv6で接続を試す"
+            },
+            {
+              "code": "失敗してIPv4へ切り替える"
+            },
+            {
+              "code": "同じページが表示される"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "IPv6だけを別に監視する理由です。",
+          "ngExplain": "画面成功だけでIPv6正常とはいえません。",
+          "stage": "reason",
+          "id": "fallback-4",
+          "format": "並べ替え",
+          "theme": "IPv4への切替でIPv6障害が隠れる",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "適切な監視はどれか。",
+          "choices": [
+            {
+              "text": "利用者申告だけ待つ",
+              "ok": false,
+              "explain": "フォールバックで申告されない場合があります。"
+            },
+            {
+              "text": "IPv4だけpingする",
+              "ok": false,
+              "explain": "IPv6の状態を確認できません。"
+            },
+            {
+              "text": "IPv6の外部アクセスと各L3SW（レイヤー3スイッチ）のGUAを個別監視する",
+              "ok": true,
+              "explain": "IPv6固有の異常を検出します。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "fallback-5",
+          "format": "選択",
+          "theme": "IPv4への切替でIPv6障害が隠れる",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "gua-policy",
+      "title": "GUAの未割当てと静的割当てを使い分ける",
+      "targets": [
+        "s4-1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "外部到達性と経路調査は目的が違う",
+          "body": "原問はa〜dへGUAを付けず、外部からルータA・B・FW自身へアクセスさせない方針です。一方、FWと拠点のL3SWの間には静的なGUAを付けます。traceroute6はIPv6の経由機器を調べるコマンドで、固定アドレスなら機器と対応付けやすくなります。GUA未割当てだけで機器全体の防御が完成するわけではなく、他のGUAや管理口へのアクセス制御も別途必要です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "場所",
+              "GUA",
+              "目的"
+            ],
+            "rows": [
+              [
+                "外側a〜d",
+                "なし",
+                "外部アクセス抑止"
+              ],
+              [
+                "社内中継網",
+                "静的",
+                "経路調査"
+              ]
+            ],
+            "caption": "説明用：割当て方針"
+          },
+          "stage": "concept",
+          "id": "gua-policy-1",
+          "format": "読む",
+          "theme": "GUAの未割当てと静的割当てを使い分ける",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "a〜dへGUAを付けない目的はどれか。",
+          "choices": [
+            {
+              "text": "OSPFv3（Open Shortest Path First version 3）の経路制御を停止する",
+              "ok": false,
+              "explain": "OSPFv3はLLAで隣接できます。"
+            },
+            {
+              "text": "SLAACを停止する",
+              "ok": false,
+              "explain": "PC側の設定とは別です。"
+            },
+            {
+              "text": "外部からルータA・B・FWへアクセスさせない",
+              "ok": true,
+              "explain": "機器自身の外部到達性を抑えます。"
+            }
+          ],
+          "stage": "check",
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.29,
+            "bottom": 0.87,
+            "label": "原図6：インタフェースとIPv6一覧"
+          },
+          "id": "gua-policy-2",
+          "format": "選択",
+          "theme": "GUAの未割当てと静的割当てを使い分ける",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "静的割当ての利点を埋めよ。",
+          "template": "{command}を使うとき、経由する{object}を{benefit}。",
+          "blanks": [
+            {
+              "key": "command",
+              "label": "コマンド",
+              "choices": [
+                {
+                  "text": "traceroute6",
+                  "ok": true,
+                  "explain": "IPv6経路を調べます。"
+                },
+                {
+                  "text": "ping4",
+                  "ok": false,
+                  "explain": "IPv4確認ではありません。"
+                }
+              ],
+              "why": "IPv6経路を調べます。"
+            },
+            {
+              "key": "object",
+              "label": "対象",
+              "choices": [
+                {
+                  "text": "ネットワーク機器",
+                  "ok": true,
+                  "explain": "経路上の中継点です。"
+                },
+                {
+                  "text": "利用者名",
+                  "ok": false,
+                  "explain": "利用者認証ではありません。"
+                }
+              ],
+              "why": "経路上の中継点です。"
+            },
+            {
+              "key": "benefit",
+              "label": "利点",
+              "choices": [
+                {
+                  "text": "識別しやすくする",
+                  "ok": true,
+                  "explain": "固定アドレスと機器を対応できます。"
+                },
+                {
+                  "text": "全て同じ値にする",
+                  "ok": false,
+                  "explain": "重複させてはいけません。"
+                }
+              ],
+              "why": "固定アドレスと機器を対応できます。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "gua-policy-3",
+          "format": "穴埋め",
+          "theme": "GUAの未割当てと静的割当てを使い分ける",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "割当て要否を決める順を並べよ。",
+          "lead": "接続場所ごとに判断します。",
+          "lines": [
+            {
+              "code": "外部からの到達要否を確認する"
+            },
+            {
+              "code": "経路調査の識別要否を確認する"
+            },
+            {
+              "code": "外側はなし、中継網は静的とする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "一律ではなく目的で分けます。",
+          "ngExplain": "全IFへ同じ方針は使いません。",
+          "stage": "reason",
+          "id": "gua-policy-4",
+          "format": "並べ替え",
+          "theme": "GUAの未割当てと静的割当てを使い分ける",
+          "scaffold": 2
+        },
+        {
+          "id": "ospfv3-lla",
+          "type": "info",
+          "title": "経路制御と調査用の識別を分ける",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "GUAの未割当てと静的割当てを使い分ける",
+          "scaffold": 5,
+          "body": "OSPFは接続状態の情報を交換して経路を計算する仕組みです。本問のOSPFv3は同じリンクのLLAで隣接関係を作れます。中継網に静的GUAを付けるのは、この条件では隣接関係の必須要件ではなく、経路調査で機器を識別するためです。"
+        },
+        {
+          "type": "quiz",
+          "title": "中継網でOSPFv3を動かすだけならGUAは必須か。",
+          "choices": [
+            {
+              "text": "GUAなしではOSPFv3は動かない",
+              "ok": false,
+              "explain": "原文はLLAを使うと説明します。"
+            },
+            {
+              "text": "GUAはNAPT（Network Address Port Translation）用に必須",
+              "ok": false,
+              "explain": "IPv6側はNAPTを使いません。"
+            },
+            {
+              "text": "必須ではないが運用識別のため付ける",
+              "ok": true,
+              "explain": "隣接関係はLLAで確立できます。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "gua-policy-5",
+          "format": "選択",
+          "theme": "GUAの未割当てと静的割当てを使い分ける",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "ra-action",
+      "title": "RSへの応答でPCの設定を支える",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "要請と広告の方向を覚えず導く",
+          "body": "PCは全ルータ向けにRSを送ります。拠点のL3SWはRAを返します。PCはRAからプレフィックスとデフォルトルータ情報を得ます。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 50,
+                "y": 65,
+                "label": "PC"
+              },
+              {
+                "id": "node1",
+                "x": 160,
+                "y": 65,
+                "label": "L3SW"
+              },
+              {
+                "id": "node2",
+                "x": 270,
+                "y": 65,
+                "label": "外部"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：RSとRA"
+          },
+          "stage": "concept",
+          "id": "ra-action-1",
+          "format": "読む",
+          "theme": "RSへの応答でPCの設定を支える",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "L3SWが受信する要請はどれか。",
+          "choices": [
+            {
+              "text": "RA",
+              "ok": false,
+              "explain": "ルータが返す広告です。"
+            },
+            {
+              "text": "NA",
+              "ok": false,
+              "explain": "近隣広告です。"
+            },
+            {
+              "text": "RS",
+              "ok": true,
+              "explain": "Router Solicitationです。"
+            }
+          ],
+          "stage": "check",
+          "id": "ra-action-2",
+          "format": "選択",
+          "theme": "RSへの応答でPCの設定を支える",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "主語と二メッセージを埋めよ。",
+          "template": "{subject}がPCの{request}に対し、{answer}を応答する。",
+          "blanks": [
+            {
+              "key": "subject",
+              "label": "主語",
+              "choices": [
+                {
+                  "text": "各拠点のL3SW",
+                  "ok": true,
+                  "explain": "リンクのルータです。"
+                },
+                {
+                  "text": "DNSサーバ",
+                  "ok": false,
+                  "explain": "DNSはRAを返しません。"
+                }
+              ],
+              "why": "リンクのルータです。"
+            },
+            {
+              "key": "request",
+              "label": "要請",
+              "choices": [
+                {
+                  "text": "RSメッセージ",
+                  "ok": true,
+                  "explain": "ルータ情報の要請です。"
+                },
+                {
+                  "text": "AAAA",
+                  "ok": false,
+                  "explain": "DNSレコードではありません。"
+                }
+              ],
+              "why": "ルータ情報の要請です。"
+            },
+            {
+              "key": "answer",
+              "label": "応答",
+              "choices": [
+                {
+                  "text": "RAメッセージ",
+                  "ok": true,
+                  "explain": "ルータ広告を返します。"
+                },
+                {
+                  "text": "TCP SYN（接続開始要求）",
+                  "ok": false,
+                  "explain": "TCP開始ではありません。"
+                }
+              ],
+              "why": "ルータ広告を返します。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "ra-action-3",
+          "format": "穴埋め",
+          "theme": "RSへの応答でPCの設定を支える",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "SLAACの設定動作を並べよ。",
+          "lead": "PCとL3SWのやり取りです。",
+          "lines": [
+            {
+              "code": "PCがRSを送る"
+            },
+            {
+              "code": "L3SWがRAを返す"
+            },
+            {
+              "code": "PCがGUA候補を作り、重複検出後に利用し、デフォルトルータを設定する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "方向と役割をそろえます。",
+          "ngExplain": "RSとRAを逆にしません。",
+          "stage": "reason",
+          "id": "ra-action-4",
+          "format": "並べ替え",
+          "theme": "RSへの応答でPCの設定を支える",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "RAを定期送信する構成でもRSへの応答は何か。",
+          "choices": [
+            {
+              "text": "ARPリプライ",
+              "ok": false,
+              "explain": "IPv4のMAC解決です。"
+            },
+            {
+              "text": "DNS応答",
+              "ok": false,
+              "explain": "名前解決ではありません。"
+            },
+            {
+              "text": "RA",
+              "ok": true,
+              "explain": "PCの要請にルータ広告で応えます。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "ra-action-5",
+          "format": "選択",
+          "theme": "RSへの応答でPCの設定を支える",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "route-table",
+      "title": "図の接続から九つの経路表空欄を埋める",
+      "targets": [
+        "s4-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "相手のLLAと自分の出口を対にする",
+          "body": "次ホップは直接接続した次の機器のLLA、出口は自分側の通信口です。同じfe80::1でもリンクが違えば別の相手なので、LLAと出口を対にします。原図6の接続情報から宛先方向へ一ホップずつたどり、原表1を完成させます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "リンク",
+              "片側の通信口・LLA",
+              "もう片側の通信口・LLA"
+            ],
+            "rows": [
+              [
+                "A―B",
+                "Aのa：fe80::1",
+                "Bのb：fe80::2"
+              ],
+              [
+                "B―FW",
+                "Bのc：fe80::1",
+                "FWのd：fe80::2"
+              ],
+              [
+                "FW―L3SW1",
+                "FWのf：fe80::1",
+                "L3SW1のg：fe80::2"
+              ]
+            ],
+            "caption": "説明用：原図6の接続条件（完成した経路行は未記入）"
+          },
+          "stage": "concept",
+          "id": "route-table-1",
+          "format": "読む",
+          "theme": "図の接続から九つの経路表空欄を埋める",
+          "scaffold": 5
+        },
+        {
+          "id": "route-local-remote",
+          "type": "quiz",
+          "title": "練習用：Rのport1（fe80::10）と上流Uのport2（fe80::20）が直結。Rの上流宛て経路の次ホップと出口は？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "図の接続から九つの経路表空欄を埋める",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "fe80::20、port1",
+              "ok": true,
+              "explain": "次ホップは相手U、出口は自分Rの口です。"
+            },
+            {
+              "text": "fe80::10、port2",
+              "ok": false,
+              "explain": "自分のIPと相手の出口を組み合わせています。"
+            },
+            {
+              "text": "fe80::20、port2",
+              "ok": false,
+              "explain": "相手のIPは正しくても、自分の出口はport1です。"
+            }
+          ]
+        },
+        {
+          "id": "route-direction-small",
+          "type": "quiz",
+          "title": "原問条件：Bのc（fe80::1）とFWのd（fe80::2）が直結。FWからBへ渡す組合せは？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "図の接続から九つの経路表空欄を埋める",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "次ホップfe80::1、出口c",
+              "ok": false,
+              "explain": "相手の通信口を自分の出口にはできません。"
+            },
+            {
+              "text": "次ホップfe80::1、出口d",
+              "ok": true,
+              "explain": "相手のBのLLAと自分のFWの口です。"
+            },
+            {
+              "text": "次ホップfe80::2、出口c",
+              "ok": false,
+              "explain": "自分のIPと相手の口を選んでいます。"
+            }
+          ]
+        },
+        {
+          "id": "route-branch-small",
+          "type": "quiz",
+          "title": "原問条件：FWのf（fe80::1）とL3SW1のg（fe80::2）が同じ広域網。FWから拠点へ渡す組合せは？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "図の接続から九つの経路表空欄を埋める",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "次ホップfe80::2、出口d",
+              "ok": false,
+              "explain": "dはBへの出口であり、L3SW1につながるリンクではありません。"
+            },
+            {
+              "text": "次ホップfe80::2、出口f",
+              "ok": true,
+              "explain": "相手のLLAと自分の出口です。"
+            },
+            {
+              "text": "次ホップfe80::1、出口g",
+              "ok": false,
+              "explain": "自身のLLAと相手の口を混同しています。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "原問条件：Bの上流はA。Aのaはfe80::1、Bのbはfe80::2で直結。Bのデフォルト経路のア・イは？",
+          "choices": [
+            {
+              "text": "ア=fe80::2、イ=a",
+              "ok": false,
+              "explain": "自分側のLLAと相手側のインタフェースを混ぜています。"
+            },
+            {
+              "text": "ア=なし、イ=Null",
+              "ok": false,
+              "explain": "これは/48廃棄経路です。"
+            },
+            {
+              "text": "ア=fe80::1、イ=b",
+              "ok": true,
+              "explain": "ルータAのLLAとB自身の出口です。"
+            }
+          ],
+          "stage": "check",
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.535,
+            "bottom": 0.76,
+            "label": "IPA原表1：次ホップと出口の空欄"
+          },
+          "id": "route-table-2",
+          "format": "選択",
+          "theme": "図の接続から九つの経路表空欄を埋める",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "原表1のウ〜ケ：B→FW、FW→B、FW→L3SW1、L3SW1→FWの順に、相手のLLAと自分の出口を選ぶ。",
+          "template": "ウ={u}、エ={e}、オ={o}、カ={ka}、キ={ki}、ク={ku}、ケ={ke}。",
+          "blanks": [
+            {
+              "key": "u",
+              "label": "ウ",
+              "choices": [
+                {
+                  "text": "fe80::2",
+                  "ok": true,
+                  "explain": "Bから見たFWのLLAです。"
+                },
+                {
+                  "text": "fe80::1",
+                  "ok": false,
+                  "explain": "B自身側です。"
+                }
+              ],
+              "why": "Bから見たFWのLLAです。"
+            },
+            {
+              "key": "e",
+              "label": "エ",
+              "choices": [
+                {
+                  "text": "c",
+                  "ok": true,
+                  "explain": "BのFW向き出口です。"
+                },
+                {
+                  "text": "d",
+                  "ok": false,
+                  "explain": "dはFW側です。"
+                }
+              ],
+              "why": "BのFW向き出口です。"
+            },
+            {
+              "key": "o",
+              "label": "オ",
+              "choices": [
+                {
+                  "text": "fe80::1",
+                  "ok": true,
+                  "explain": "FWから見たBのLLAです。"
+                },
+                {
+                  "text": "fe80::2",
+                  "ok": false,
+                  "explain": "FW自身側です。"
+                }
+              ],
+              "why": "FWから見たBのLLAです。"
+            },
+            {
+              "key": "ka",
+              "label": "カ",
+              "choices": [
+                {
+                  "text": "d",
+                  "ok": true,
+                  "explain": "FWのB向き出口です。"
+                },
+                {
+                  "text": "c",
+                  "ok": false,
+                  "explain": "cはB側です。"
+                }
+              ],
+              "why": "FWのB向き出口です。"
+            },
+            {
+              "key": "ki",
+              "label": "キ",
+              "choices": [
+                {
+                  "text": "fe80::2",
+                  "ok": true,
+                  "explain": "FWから見たL3SWのLLAです。"
+                },
+                {
+                  "text": "fe80::1",
+                  "ok": false,
+                  "explain": "FW自身側です。"
+                }
+              ],
+              "why": "FWから見たL3SWのLLAです。"
+            },
+            {
+              "key": "ku",
+              "label": "ク",
+              "choices": [
+                {
+                  "text": "f",
+                  "ok": true,
+                  "explain": "FWの拠点向き出口です。"
+                },
+                {
+                  "text": "g",
+                  "ok": false,
+                  "explain": "gはL3SW側です。"
+                }
+              ],
+              "why": "FWの拠点向き出口です。"
+            },
+            {
+              "key": "ke",
+              "label": "ケ",
+              "choices": [
+                {
+                  "text": "fe80::1",
+                  "ok": true,
+                  "explain": "L3SWから見たFWのLLAです。"
+                },
+                {
+                  "text": "fe80::2",
+                  "ok": false,
+                  "explain": "L3SW自身側です。"
+                }
+              ],
+              "why": "L3SWから見たFWのLLAです。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "route-table-3",
+          "format": "穴埋め",
+          "theme": "図の接続から九つの経路表空欄を埋める",
+          "scaffold": 4,
+          "fig": {
+            "kind": "table",
+            "head": [
+              "リンク",
+              "片側の通信口・LLA",
+              "もう片側の通信口・LLA"
+            ],
+            "rows": [
+              [
+                "A―B",
+                "Aのa：fe80::1",
+                "Bのb：fe80::2"
+              ],
+              [
+                "B―FW",
+                "Bのc：fe80::1",
+                "FWのd：fe80::2"
+              ],
+              [
+                "FW―L3SW1",
+                "FWのf：fe80::1",
+                "L3SW1のg：fe80::2"
+              ]
+            ],
+            "caption": "説明用：原図6の接続条件（完成した経路行は未記入）"
+          }
+        },
+        {
+          "type": "parsons",
+          "title": "L3SWのデフォルト行を作れ。",
+          "lead": "原問条件：L3SW1のg（fe80::2）とFWのf（fe80::1）が接続。宛先は::/0、上流へ送るデフォルト行を作ります。",
+          "lines": [
+            {
+              "code": "上流のFWへ進むと判断する"
+            },
+            {
+              "code": "FWのLLA fe80::1を読む"
+            },
+            {
+              "code": "自分側出口gを対応させる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "相手LLAと自分の出口を分けます。",
+          "ngExplain": "同じリンクの両端を混同しません。",
+          "stage": "reason",
+          "id": "route-table-4",
+          "format": "並べ替え",
+          "theme": "図の接続から九つの経路表空欄を埋める",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原問の同じ構成でBから拠点/64へ転送。Bのc（fe80::1）と次の機器FWのd（fe80::2）が直結。組合せは？",
+          "choices": [
+            {
+              "text": "Aのfe80::1、出口b",
+              "ok": false,
+              "explain": "インターネット方向です。"
+            },
+            {
+              "text": "L3SWのfe80::1、出口g",
+              "ok": false,
+              "explain": "Bと直接接続していません。"
+            },
+            {
+              "text": "FWのfe80::2、出口c",
+              "ok": true,
+              "explain": "直接接続の次ホップです。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "route-table-5",
+          "format": "選択",
+          "theme": "図の接続から九つの経路表空欄を埋める",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "loop-match",
+      "title": "未使用宛先を廃棄し最長一致を選ぶ",
+      "targets": [
+        "s4-5",
+        "s4-6"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "/48の廃棄経路が往復を止める",
+          "body": "ロンゲストマッチは、宛先に一致する経路のうちプレフィックス長が最長のものを選ぶ規則です。/0より/48、/48より/64が具体的です。Null（廃棄用インタフェース）の/48経路を置くと、有効な/64に一致しない未使用宛先を廃棄し、デフォルトでISP（Internet Service Provider、接続事業者）へ戻すループを防げます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "A",
+                "d": "/48でBへ"
+              },
+              {
+                "t": "B",
+                "d": "デフォルトでAへ"
+              },
+              {
+                "t": "反復",
+                "d": "ホップリミット0"
+              }
+            ],
+            "caption": "説明用：条件と結果"
+          },
+          "stage": "concept",
+          "id": "loop-match-1",
+          "format": "読む",
+          "theme": "未使用宛先を廃棄し最長一致を選ぶ",
+          "scaffold": 5
+        },
+        {
+          "id": "loop-real-transfer",
+          "type": "quiz",
+          "title": "練習用：::/0→上流、2001:db8:55::/48→Null、2001:db8:55:3::/64→社内。2001:db8:55:3::10の転送先は？",
+          "stage": "transfer",
+          "format": "選択",
+          "theme": "未使用宛先を廃棄し最長一致を選ぶ",
+          "scaffold": 1,
+          "choices": [
+            {
+              "text": "/64の社内経路",
+              "ok": true,
+              "explain": "/64が最長なので、/48の廃棄経路があっても利用中の網へ届きます。"
+            },
+            {
+              "text": "/48のNull",
+              "ok": false,
+              "explain": "より具体的な/64への一致を見落としています。"
+            },
+            {
+              "text": "/0の上流",
+              "ok": false,
+              "explain": "より長く一致する経路がある場合はデフォルトを使いません。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "原問条件：Aは社内/48全体をBへ、Bは未使用宛先をデフォルトでAへ戻す。BにNull経路がないとどうなる？",
+          "choices": [
+            {
+              "text": "FWがPCへ配布する",
+              "ok": false,
+              "explain": "宛先網は未使用です。"
+            },
+            {
+              "text": "ARPで世界中を探す",
+              "ok": false,
+              "explain": "ARPはルータを越えません。"
+            },
+            {
+              "text": "AとBが相互転送しホップリミット0で廃棄",
+              "ok": true,
+              "explain": "反対向きの経路で往復します。"
+            }
+          ],
+          "stage": "check",
+          "id": "loop-match-2",
+          "format": "選択",
+          "theme": "未使用宛先を廃棄し最長一致を選ぶ",
+          "scaffold": 4
+        },
+        {
+          "id": "hop-limit-concept",
+          "type": "info",
+          "title": "転送し続けないための残り回数",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "未使用宛先を廃棄し最長一致を選ぶ",
+          "scaffold": 5,
+          "body": "ホップリミットはIPv6ヘッダーにある転送回数の上限です。ルータは中継時に値を減らし、0になれば転送せず廃棄します。原問はAとBの相互転送と、この終了条件の両方を答案に入れます。"
+        },
+        {
+          "type": "blank",
+          "title": "ループの答案を埋めよ。",
+          "template": "{routers}が{action}し、{limit}が0になって廃棄する。",
+          "blanks": [
+            {
+              "key": "routers",
+              "label": "主体",
+              "choices": [
+                {
+                  "text": "ルータAとルータB",
+                  "ok": true,
+                  "explain": "経路が反対方向を示す二台です。"
+                },
+                {
+                  "text": "PCとDNS",
+                  "ok": false,
+                  "explain": "端末とDNSの処理ではありません。"
+                }
+              ],
+              "why": "経路が反対方向を示す二台です。"
+            },
+            {
+              "key": "action",
+              "label": "動作",
+              "choices": [
+                {
+                  "text": "相互に転送し合い",
+                  "ok": true,
+                  "explain": "パケットが往復します。"
+                },
+                {
+                  "text": "同じIPを配布し",
+                  "ok": false,
+                  "explain": "DHCP（Dynamic Host Configuration Protocol）のようなIP配布の重複ではありません。"
+                }
+              ],
+              "why": "パケットが往復します。"
+            },
+            {
+              "key": "limit",
+              "label": "寿命",
+              "choices": [
+                {
+                  "text": "ホップリミット",
+                  "ok": true,
+                  "explain": "IPv6の転送回数制限です。"
+                },
+                {
+                  "text": "TCPポート",
+                  "ok": false,
+                  "explain": "ポートは寿命ではありません。"
+                }
+              ],
+              "why": "IPv6の転送回数制限です。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "loop-match-3",
+          "format": "穴埋め",
+          "theme": "未使用宛先を廃棄し最長一致を選ぶ",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "Null経路の選択を並べよ。",
+          "lead": "::/0と/48の両方に一致します。",
+          "lines": [
+            {
+              "code": "二つの一致する経路を見つける"
+            },
+            {
+              "code": "ロンゲストマッチで/48を選ぶ"
+            },
+            {
+              "code": "出口Nullで廃棄する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "長いプレフィックスが具体的です。",
+          "ngExplain": "デフォルトを先に選びません。",
+          "stage": "reason",
+          "id": "loop-match-4",
+          "format": "並べ替え",
+          "theme": "未使用宛先を廃棄し最長一致を選ぶ",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "なぜ/48を選ぶか。",
+          "choices": [
+            {
+              "text": "コストが必ず0だから",
+              "ok": false,
+              "explain": "この選択理由はプレフィックス長です。"
+            },
+            {
+              "text": "LLAが短いから",
+              "ok": false,
+              "explain": "アドレス文字列の長さではありません。"
+            },
+            {
+              "text": "ロンゲストマッチだから",
+              "ok": true,
+              "explain": "/48は/0より長い一致です。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "loop-match-5",
+          "format": "選択",
+          "theme": "未使用宛先を廃棄し最長一致を選ぶ",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "NAPTとFWアクセス制御を分ける",
+      "targets": [
+        "s4-7"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "IPv6では変換に頼らず通信を制御する",
+          "body": "NAPTはIPアドレスとポートの変換です。原問のIPv4側はルータBでNAPTを使いますが、IPv6側は端末にGUAを割り当てNAPTを使わない設計です。通信を許可・拒否するFWのアクセス制御は、変換の有無と分けて設計します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "機能",
+              "役割"
+            ],
+            "rows": [
+              [
+                "NAPT",
+                "アドレス・ポート変換"
+              ],
+              [
+                "FW",
+                "許可・拒否"
+              ],
+              [
+                "GUA",
+                "グローバルな識別"
+              ]
+            ],
+            "caption": "説明用：役割の分離"
+          },
+          "stage": "concept",
+          "id": "security-1",
+          "format": "読む",
+          "theme": "NAPTとFWアクセス制御を分ける",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "本文のIPv4側にある機能はどれか。",
+          "choices": [
+            {
+              "text": "SLAAC",
+              "ok": false,
+              "explain": "IPv6の自動設定です。"
+            },
+            {
+              "text": "CNAME",
+              "ok": false,
+              "explain": "DNSの別名です。"
+            },
+            {
+              "text": "NAPT",
+              "ok": true,
+              "explain": "ルータBで変換します。"
+            }
+          ],
+          "stage": "check",
+          "id": "security-2",
+          "format": "選択",
+          "theme": "NAPTとFWアクセス制御を分ける",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "比較を埋めよ。",
+          "template": "IPv4では{v4}を使う。IPv6では使わないため、{control}を慎重に設計する。",
+          "blanks": [
+            {
+              "key": "v4",
+              "label": "IPv4",
+              "choices": [
+                {
+                  "text": "NAPT",
+                  "ok": true,
+                  "explain": "アドレスとポートを変換します。"
+                },
+                {
+                  "text": "RA",
+                  "ok": false,
+                  "explain": "RAはルータ広告です。"
+                }
+              ],
+              "why": "アドレスとポートを変換します。"
+            },
+            {
+              "key": "control",
+              "label": "IPv6",
+              "choices": [
+                {
+                  "text": "FWのアクセス制御",
+                  "ok": true,
+                  "explain": "許可と拒否を明示します。"
+                },
+                {
+                  "text": "DNSの別名",
+                  "ok": false,
+                  "explain": "名前の別名は通信許可ではありません。"
+                }
+              ],
+              "why": "許可と拒否を明示します。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "security-3",
+          "format": "穴埋め",
+          "theme": "NAPTとFWアクセス制御を分ける",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "IPv6境界防御を並べよ。",
+          "lead": "端末にはGUAがあります。",
+          "lines": [
+            {
+              "code": "NAPTを前提にしない"
+            },
+            {
+              "code": "必要・不要な通信を整理する"
+            },
+            {
+              "code": "FWで方向と種類ごとに制御する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "到達性と許可を分けます。",
+          "ngExplain": "GUAがあっても全許可にはしません。",
+          "stage": "reason",
+          "id": "security-4",
+          "format": "並べ替え",
+          "theme": "NAPTとFWアクセス制御を分ける",
+          "scaffold": 2
+        },
+        {
+          "id": "icmpv6-control",
+          "type": "info",
+          "title": "制御用の応答まで遮断しない",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "NAPTとFWアクセス制御を分ける",
+          "scaffold": 5,
+          "body": "ICMPv6（Internet Control Message Protocol for IPv6）はエラー通知や近隣探索などの制御メッセージです。NDPはリンク内探索、PMTUD（Path MTU Discovery）は経路で通せるパケットサイズを調べる仕組みです。インターネット境界で必要なエラー通知とリンク内の探索を、型・方向・範囲に応じて扱います。"
+        },
+        {
+          "type": "quiz",
+          "title": "ICMPv6は全て拒否してよいか。",
+          "choices": [
+            {
+              "text": "全拒否で問題ない",
+              "ok": false,
+              "explain": "通信障害を起こし得ます。"
+            },
+            {
+              "text": "NAPTが自動許可する",
+              "ok": false,
+              "explain": "IPv6でNAPTは使いません。"
+            },
+            {
+              "text": "必要な型を許可する",
+              "ok": true,
+              "explain": "NDPやPMTUDに必要です。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "security-5",
+          "format": "選択",
+          "theme": "NAPTとFWアクセス制御を分ける",
+          "scaffold": 2
+        }
+      ]
+    },
+    {
+      "id": "pmtud",
+      "title": "Packet Too Bigで経路MTUを知る",
+      "targets": [
+        "s4-8"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "途中で分割せず送信元へ知らせる",
+          "body": "MTUは各リンクで送れるIPパケットの最大サイズです。IPv6中継ルータはパケットを分割せず、次のリンクのMTUを超えるパケットを廃棄してICMPv6のPacket Too Bigを返します。送信元は通知のMTUを基にサイズを調整します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "送信元",
+                "d": "大きなパケット"
+              },
+              {
+                "t": "中継",
+                "d": "MTU超過"
+              },
+              {
+                "t": "送信元",
+                "d": "サイズ調整"
+              }
+            ],
+            "caption": "説明用：条件と結果"
+          },
+          "stage": "concept",
+          "id": "pmtud-1",
+          "format": "読む",
+          "theme": "Packet Too Bigで経路MTUを知る",
+          "scaffold": 5
+        },
+        {
+          "id": "pmtud-minimum-case",
+          "type": "quiz",
+          "title": "練習用：三つのリンクのMTUは1500、1400、1280バイト。分割せず全経路を通せるIPパケットの最大サイズは？",
+          "stage": "apply",
+          "format": "選択",
+          "theme": "Packet Too Bigで経路MTUを知る",
+          "scaffold": 3,
+          "choices": [
+            {
+              "text": "4180バイト",
+              "ok": false,
+              "explain": "上限は加算しません。各リンクを順に通る必要があります。"
+            },
+            {
+              "text": "1280バイト",
+              "ok": true,
+              "explain": "全リンクを通すには最小の上限に合わせます。"
+            },
+            {
+              "text": "1500バイト",
+              "ok": false,
+              "explain": "最初を通っても1280のリンクで転送できません。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "PMTUDが検出するものはどれか。",
+          "choices": [
+            {
+              "text": "通信経路における最大のMTU",
+              "ok": false,
+              "explain": "最大値では小さいMTUのリンクを通せません。"
+            },
+            {
+              "text": "送信元の直結リンクのMTUだけ",
+              "ok": false,
+              "explain": "途中のリンクがより小さい場合も調べる必要があります。"
+            },
+            {
+              "text": "通信経路における最小のMTU",
+              "ok": true,
+              "explain": "最も狭いリンクがサイズを制約します。"
+            }
+          ],
+          "stage": "check",
+          "id": "pmtud-2",
+          "format": "選択",
+          "theme": "Packet Too Bigで経路MTUを知る",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "範囲と大小を埋めよ。",
+          "template": "{path}における{minimum}MTUを検出する。",
+          "blanks": [
+            {
+              "key": "path",
+              "label": "範囲",
+              "choices": [
+                {
+                  "text": "通信経路",
+                  "ok": true,
+                  "explain": "複数リンクを含む経路です。"
+                },
+                {
+                  "text": "PCの画面",
+                  "ok": false,
+                  "explain": "画面サイズではありません。"
+                }
+              ],
+              "why": "複数リンクを含む経路です。"
+            },
+            {
+              "key": "minimum",
+              "label": "大小",
+              "choices": [
+                {
+                  "text": "最小の",
+                  "ok": true,
+                  "explain": "最小値が転送可能サイズを決めます。"
+                },
+                {
+                  "text": "最大の",
+                  "ok": false,
+                  "explain": "最大値では狭いリンクを通れません。"
+                }
+              ],
+              "why": "最小値が転送可能サイズを決めます。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "pmtud-3",
+          "format": "穴埋め",
+          "theme": "Packet Too Bigで経路MTUを知る",
+          "scaffold": 4
+        },
+        {
+          "type": "parsons",
+          "title": "PMTUDを並べよ。",
+          "lead": "初回パケットが大きすぎました。",
+          "lines": [
+            {
+              "code": "中継機器が転送不能を検出する"
+            },
+            {
+              "code": "Packet Too Bigを返す"
+            },
+            {
+              "code": "送信元がサイズを調整する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "制御メッセージが送信元を助けます。",
+          "ngExplain": "送信元が情報を得る前に調整できません。",
+          "stage": "reason",
+          "id": "pmtud-4",
+          "format": "並べ替え",
+          "theme": "Packet Too Bigで経路MTUを知る",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "Packet Too BigをFWで拒否するとどうなるか。",
+          "choices": [
+            {
+              "text": "中継が必ず分割する",
+              "ok": false,
+              "explain": "IPv6中継はこの前提で分割しません。"
+            },
+            {
+              "text": "ARP応答が増える",
+              "ok": false,
+              "explain": "IPv6のPMTUDとは別です。"
+            },
+            {
+              "text": "適切なサイズへ縮小できず通信が停滞し得る",
+              "ok": true,
+              "explain": "経路MTUを学習できません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "pmtud-5",
+          "format": "選択",
+          "theme": "Packet Too Bigで経路MTUを知る",
+          "scaffold": 2
+        }
+      ]
+    }
+  ]
+}

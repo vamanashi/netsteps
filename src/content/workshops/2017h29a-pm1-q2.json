@@ -1,0 +1,1288 @@
+{
+  "examKey": "2017h29a/pm1/2",
+  "title": "画面と印刷の流れからVDIの帯域を設計する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "remote-desktop",
+      "title": "仕事をする場所と画面を見る場所",
+      "targets": [
+        "s2-1",
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "端末は画面、処理は本社",
+          "body": "VDI（Virtual Desktop Infrastructure：仮想デスクトップ基盤）は、サーバ上の仮想PCでアプリを動かします。TC（Thin Client：シンクライアント）はその画面を表示し操作を送る端末です。原問ではVDIサーバとファイルサーバが本社、支店のプリンタは支店に残ります。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 180,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "支店TC",
+                "icon": "pc",
+                "x": 55,
+                "y": 45
+              },
+              {
+                "id": "node1",
+                "label": "広域網",
+                "icon": "cloud",
+                "x": 170,
+                "y": 45
+              },
+              {
+                "id": "node2",
+                "label": "本社仮想PC",
+                "icon": "server",
+                "x": 285,
+                "y": 45
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：画面と操作が拠点間を移動する"
+          },
+          "id": "remote-desktop-1",
+          "theme": "仕事をする場所と画面を見る場所",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "VDI導入後、支店の利用者が開くファイルを処理するPCは？",
+          "choices": [
+            {
+              "text": "支店のTC内の通常PC",
+              "explain": "この原問のTCは仮想PCの操作端末であり、実行環境は本社です。",
+              "ok": false
+            },
+            {
+              "text": "本社の仮想PC",
+              "explain": "TCが表示している画面の処理は本社の仮想PCが行います。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "remote-desktop-2",
+          "theme": "仕事をする場所と画面を見る場所",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "導入前に支店PCが本社ファイルサーバから資料を開く。広域網を流れるのは？",
+          "choices": [
+            {
+              "text": "ファイル転送通信",
+              "explain": "ファイルサーバと実行するPCが異なる拠点にあるためです。",
+              "ok": true
+            },
+            {
+              "text": "自拠点プリンタへのプリント通信",
+              "explain": "導入前の印刷は支店内で完結します。",
+              "ok": false
+            }
+          ],
+          "stage": "apply",
+          "id": "remote-desktop-3",
+          "theme": "仕事をする場所と画面を見る場所",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "quiz",
+          "title": "導入後にファイル転送が広域網から減るのはなぜ？",
+          "choices": [
+            {
+              "text": "ファイルの読み書きそのものが消滅するため",
+              "explain": "必要な読み書きは残り、通信場所が変わります。",
+              "ok": false
+            },
+            {
+              "text": "仮想PCとファイルサーバが本社内にそろうため",
+              "explain": "利用者が支店にいても、ファイルをやり取りする両端は本社です。",
+              "ok": true
+            }
+          ],
+          "stage": "reason",
+          "id": "remote-desktop-4",
+          "theme": "仕事をする場所と画面を見る場所",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "導入前後の三要素をそろえる",
+          "template": "広域網では、導入前の{a}に代わり、導入後は{b}と{c}を考える。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "導入前",
+              "why": "支店PCと本社ファイルサーバの間です。",
+              "choices": [
+                {
+                  "text": "ファイル転送通信",
+                  "explain": "実行PCが支店にあるため広域網を経由します。",
+                  "ok": true
+                },
+                {
+                  "text": "プリント通信",
+                  "explain": "導入前の印刷データは自拠点内で送られます。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "導入後・表示",
+              "why": "仮想PCの画面を支店に届けます。",
+              "choices": [
+                {
+                  "text": "画面転送通信",
+                  "explain": "本社の画面を支店TCへ送ります。",
+                  "ok": true
+                },
+                {
+                  "text": "仮想PCと本社ファイルサーバ間の通信",
+                  "explain": "両端とも本社にあり、この広域網は使いません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "導入後・印刷",
+              "why": "仮想PCから支店プリントサーバへ送ります。",
+              "choices": [
+                {
+                  "text": "プリント通信",
+                  "explain": "発生元が本社になり、印刷先は支店に残ります。",
+                  "ok": true
+                },
+                {
+                  "text": "USB通信",
+                  "explain": "プリンタとプリントサーバ間の局所的な接続で、広域網を直接流れる通信名ではありません。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "remote-desktop-5",
+          "theme": "仕事をする場所と画面を見る場所",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：プリンタも本社へ移した。支店向け広域網から減るのは？",
+          "choices": [
+            {
+              "text": "画面転送通信",
+              "explain": "画面を見るTCは支店に残るので必要です。",
+              "ok": false
+            },
+            {
+              "text": "プリント通信",
+              "explain": "仮想PCとプリントサーバが本社内で完結するためです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "remote-desktop-6",
+          "theme": "仕事をする場所と画面を見る場所",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "burst",
+      "title": "平均が小さくても一瞬で詰まる",
+      "targets": [
+        "s1",
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "印刷は短時間にまとまって流れる",
+          "body": "平均帯域が小さくても、印刷データを一斉に送る瞬間には大量のパケットが発生します。このような突発的な通信がバーストトラフィックです。原問では、プリント通信が画面転送通信を圧迫して操作を遅らせる点に着目します。",
+          "stage": "concept",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "時刻      画面転送     印刷",
+              "10:00:00  少量・継続   なし",
+              "10:00:01  少量・継続   大量到着",
+              "10:00:02  少量・継続   残りを転送"
+            ],
+            "caption": "説明用：印刷量と時刻は練習用の例"
+          },
+          "id": "burst-1",
+          "theme": "平均が小さくても一瞬で詰まる",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "数秒だけ大量の印刷データが集中する通信は？",
+          "choices": [
+            {
+              "text": "一定帯域の定常トラフィック",
+              "explain": "時間によらず同程度の量で流れるものとは違います。",
+              "ok": false
+            },
+            {
+              "text": "バーストトラフィック",
+              "explain": "突発的に大きな通信量が発生する特徴を表します。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "burst-2",
+          "theme": "平均が小さくても一瞬で詰まる",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "回線を印刷が使い切ると、TCの操作が遅く感じられる理由は？",
+          "choices": [
+            {
+              "text": "画面転送のパケットが待たされるから",
+              "explain": "入力結果の画面が届くまでの時間が増えます。",
+              "ok": true
+            },
+            {
+              "text": "TCのCPUが必ず故障するから",
+              "explain": "通信の待ち時間の問題であり、CPU故障を示す条件ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "burst-3",
+          "theme": "平均が小さくても一瞬で詰まる",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "原因と影響を短くつなぐ",
+          "template": "操作性悪化の原因は、{a}が{b}を圧迫することである。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "圧迫する側",
+              "why": "突発的に大量に流れる側です。",
+              "choices": [
+                {
+                  "text": "DNS問合せだけ",
+                  "explain": "原問で帯域を圧迫する通信として示されているのは印刷です。",
+                  "ok": false
+                },
+                {
+                  "text": "プリント通信",
+                  "explain": "原問で印刷量を把握できずバーストする通信です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "守る側",
+              "why": "画面を届ける通信の待ちが操作性に直結します。",
+              "choices": [
+                {
+                  "text": "本社内だけのファイル転送通信",
+                  "explain": "支店TCへの広域網で守る対象とは違います。",
+                  "ok": false
+                },
+                {
+                  "text": "画面転送通信",
+                  "explain": "これを待たせると操作の結果が遅れて見えます。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "burst-4",
+          "theme": "平均が小さくても一瞬で詰まる",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "障害の説明を順序立てる",
+          "lead": "発生した通信、競合、利用者への影響の順に並べます。",
+          "lines": [
+            {
+              "code": "印刷データが短時間に大量に送信される"
+            },
+            {
+              "code": "同じ回線の画面転送通信が圧迫される"
+            },
+            {
+              "code": "支店TCに画面が届くのが遅れ操作性が悪化する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "バーストという性質を、待たされる通信と体感の遅れへつなぎます。",
+          "ngExplain": "操作性の悪化は結果です。何が回線を使ったかから説明します。",
+          "stage": "assemble",
+          "id": "burst-5",
+          "theme": "平均が小さくても一瞬で詰まる",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：印刷の平均が1Mbit/sなら、10Mbit/s回線で画面保証は不要？",
+          "choices": [
+            {
+              "text": "必ず不要。平均が回線未満だから",
+              "explain": "時間平均と短時間の最大通信量を混同しています。",
+              "ok": false
+            },
+            {
+              "text": "不要とはいえない。瞬間的な集中を確認する",
+              "explain": "平均値だけではバースト時に画面通信を圧迫するか判断できません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "burst-6",
+          "theme": "平均が小さくても一瞬で詰まる",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "capacity",
+      "title": "人数から帯域を一段ずつ求める",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "通信が通る人数だけ数える",
+          "body": "本社の広域網は支店の400人分を運び、本社内の100人分は含みません。原問のTC一台は最大200kbit/s、各支店は40人、本社側の旧契約は1Gbit/sで支店分ピークは800Mbit/sです。安全率は『契約帯域÷必要帯域』で、割合として新しい帯域にも掛けます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "bits",
+            "cells": [
+              {
+                "top": "200 kbit/s",
+                "steps": [
+                  "1台の画面",
+                  "0.2 Mbit/s"
+                ]
+              },
+              {
+                "top": "40台",
+                "steps": [
+                  "1支店",
+                  "0.2 × 40"
+                ]
+              },
+              {
+                "top": "10支店",
+                "steps": [
+                  "合計400台",
+                  "0.2 × 400"
+                ]
+              }
+            ],
+            "caption": "説明用：原問の人数と単位換算"
+          },
+          "id": "capacity-1",
+          "theme": "人数から帯域を一段ずつ求める",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "現行の本社広域網の安全率を求める式は？",
+          "choices": [
+            {
+              "text": "1000 ÷ (800 + 200)",
+              "explain": "本社内の200Mbit/sはこの広域網を通らないため分母に足しません。",
+              "ok": false
+            },
+            {
+              "text": "1000 ÷ 800",
+              "explain": "契約1000Mbit/sを広域網を通る支店分800Mbit/sで割ります。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "id": "capacity-2",
+          "theme": "人数から帯域を一段ずつ求める",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "quiz",
+          "title": "1000÷800で求まる安全率は？",
+          "choices": [
+            {
+              "text": "1.25",
+              "explain": "必要量の1.25倍を契約する、25%の余裕です。",
+              "ok": true
+            },
+            {
+              "text": "0.8",
+              "explain": "必要量÷契約量であり、安全率の定義と逆です。",
+              "ok": false
+            }
+          ],
+          "stage": "check",
+          "id": "capacity-3",
+          "theme": "人数から帯域を一段ずつ求める",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "1支店40人全員の画面転送に必要な帯域を求める式は？",
+          "choices": [
+            {
+              "text": "200Mbit/s × 40",
+              "explain": "kとMを混同して1000倍大きくしています。",
+              "ok": false
+            },
+            {
+              "text": "200kbit/s × 40 ÷ 1000 = 8Mbit/s",
+              "explain": "kからMへ換算すると0.2Mbit/s/台です。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "id": "capacity-4",
+          "theme": "人数から帯域を一段ずつ求める",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "quiz",
+          "title": "本社広域網の画面転送帯域を安全率適用前に求めると？",
+          "choices": [
+            {
+              "text": "8Mbit/s × 10支店 = 80Mbit/s",
+              "explain": "本社100人分は本社内の通信なのでここには含めません。",
+              "ok": true
+            },
+            {
+              "text": "0.2Mbit/s × 500人 = 100Mbit/s",
+              "explain": "広域網を通らない本社100人まで数えています。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "capacity-5",
+          "theme": "人数から帯域を一段ずつ求める",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "原問のa・b・cを計算結果で埋める",
+          "template": "安全率a={a}。本社は80×aでb={b}Mbit/s、各支店は8×aでc={c}Mbit/s。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "安全率",
+              "why": "旧契約1000を支店分ピーク800で割ります。",
+              "choices": [
+                {
+                  "text": "1.0",
+                  "explain": "旧契約の25%の余裕を消してしまいます。",
+                  "ok": false
+                },
+                {
+                  "text": "1.25",
+                  "explain": "旧契約の余裕率を維持します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "本社",
+              "why": "400人の画面に安全率を適用します。",
+              "choices": [
+                {
+                  "text": "125",
+                  "explain": "500人を数えると本社内の通信まで含めてしまいます。",
+                  "ok": false
+                },
+                {
+                  "text": "100",
+                  "explain": "80×1.25=100です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "支店",
+              "why": "40人の画面に安全率を適用します。",
+              "choices": [
+                {
+                  "text": "8",
+                  "explain": "画面転送の最低必要量で、安全率をまだ掛けていません。",
+                  "ok": false
+                },
+                {
+                  "text": "10",
+                  "explain": "8×1.25=10です。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "capacity-6",
+          "theme": "人数から帯域を一段ずつ求める",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：一支店だけ60人。画面は同じ200kbit/s、安全率も1.25。必要契約帯域は？",
+          "choices": [
+            {
+              "text": "15Mbit/s",
+              "explain": "0.2×60=12、12×1.25=15です。",
+              "ok": true
+            },
+            {
+              "text": "12Mbit/s",
+              "explain": "最低必要量までは正しいですが、安全率が未適用です。",
+              "ok": false
+            },
+            {
+              "text": "10Mbit/s",
+              "explain": "原問の40人の値を変更後にも使ってしまっています。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "capacity-7",
+          "theme": "人数から帯域を一段ずつ求める",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "parsons",
+          "title": "数値を決める手順を組み立てる",
+          "lead": "計算前に数える対象を固定し、単位をそろえます。",
+          "lines": [
+            {
+              "code": "広域網を通る支店の人数を数える"
+            },
+            {
+              "code": "一人の画面帯域と人数を掛けてMbit/sにそろえる"
+            },
+            {
+              "code": "必要帯域に安全率1.25を掛ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "人数の範囲と単位を決めてから余裕率を適用します。",
+          "ngExplain": "安全率は通信量の代わりではありません。先に必要帯域を求めます。",
+          "stage": "assemble",
+          "id": "capacity-8",
+          "theme": "人数から帯域を一段ずつ求める",
+          "format": "並べ替え",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "shaping",
+      "title": "画面の保証と合計の平滑化",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "二つの制御は守る対象が違う",
+          "body": "クラス分けは通信を用途別の待ち行列に分けることです。画面クラスは必要帯域を確保し、印刷は余った帯域を使わせます。シェーピングは支店向け合計が契約帯域を超えないよう、パケットを一時的に待たせて送出タイミングを調整します。",
+          "stage": "concept",
+          "id": "shaping-1",
+          "theme": "画面の保証と合計の平滑化",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "原問の設計では、最初に支店を決める情報と、画面を分類する情報は？",
+          "choices": [
+            {
+              "text": "ポート番号で支店、IPアドレスで全ての用途",
+              "explain": "原問の分類順序と識別情報が逆です。",
+              "ok": false
+            },
+            {
+              "text": "IPアドレスで支店、ポート番号でクラス",
+              "explain": "宛先の拠点を分け、その後に用途を分けます。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "shaping-2",
+          "theme": "画面の保証と合計の平滑化",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "画面クラス8Mbit/sを保証し、支店向け合計10Mbit/sを上限にする理由は？",
+          "choices": [
+            {
+              "text": "画面の最低量を守りながら、支店の受信回線をあふれさせないため",
+              "explain": "用途別保証と宛先支店全体の制御を組み合わせます。",
+              "ok": true
+            },
+            {
+              "text": "本社の物理ポートが1Gbit/sなので制御は不要",
+              "explain": "本社ポートより細い支店契約回線が制約になります。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "shaping-3",
+          "theme": "画面の保証と合計の平滑化",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原問の構成図で、本社から支店へ向かうどこで帯域制御を行う？",
+          "choices": [
+            {
+              "text": "プリンタのUSB接続だけ",
+              "explain": "画面転送通信が通らない場所なので両者を制御できません。",
+              "ok": false
+            },
+            {
+              "text": "本社のL3SWと広域イーサ網の間",
+              "explain": "支店別の画面と印刷が広域網へ出る前に制御できます。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.5,
+            "bottom": 0.8,
+            "label": "IPA図2：本社側の帯域制御装置と支店の位置"
+          },
+          "id": "shaping-4",
+          "theme": "画面の保証と合計の平滑化",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "超過時の動作を埋める",
+          "template": "シェーピングでは、パケットをキューに保持し{a}を調整する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "制御するもの",
+              "why": "契約レートに合わせて時間方向に分散します。",
+              "choices": [
+                {
+                  "text": "宛先IPアドレス",
+                  "explain": "宛先を変えても支店へ必要なデータを届ける目的を満たせません。",
+                  "ok": false
+                },
+                {
+                  "text": "TCP応答の意味",
+                  "explain": "アプリやTCPの意味を変更する機能ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "送出タイミング",
+                  "explain": "パケットの内容ではなく、送り出す時刻を調整します。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "shaping-5",
+          "theme": "画面の保証と合計の平滑化",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "二段階の帯域制御を組み立てる",
+          "lead": "支店決定から送出までを並べます。",
+          "lines": [
+            {
+              "code": "宛先IPアドレスで支店を決定する"
+            },
+            {
+              "code": "ポート番号で画面とその他のクラスに分ける"
+            },
+            {
+              "code": "画面の帯域を確保し余剰をその他に割り当てる"
+            },
+            {
+              "code": "支店向け合計を契約帯域に合わせて送出する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "分類、用途別保証、合計のシェーピングの順で機能を分けます。",
+          "ngExplain": "印刷にも無制限の帯域を保証すると画面を圧迫するという問題に戻ります。",
+          "stage": "assemble",
+          "id": "shaping-6",
+          "theme": "画面の保証と合計の平滑化",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：超過パケットを待たせず直ちに捨てる方式に変えた。これは？",
+          "choices": [
+            {
+              "text": "ポリシング型の超過処理で、送出時刻を調整するシェーピングとは異なる",
+              "explain": "キューでならすか、超過を破棄するかが境界です。",
+              "ok": true
+            },
+            {
+              "text": "原問と全く同じシェーピング",
+              "explain": "原問で問う中心動作は送出タイミングの調整です。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "shaping-7",
+          "theme": "画面の保証と合計の平滑化",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "central-egress",
+      "title": "インターネットへ出る場所を追う",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "利用者の居場所と通信元は違う",
+          "body": "VDIでは支店利用者のブラウザも本社の仮想PCで動きます。したがってインターネット通信は本社から発生し、支店のインターネット接続回線は廃止できます。出口を集約すると本社で情報セキュリティ対策を集中実施できますが、感染が自動的になくなるわけではありません。",
+          "stage": "concept",
+          "id": "central-egress-1",
+          "theme": "インターネットへ出る場所を追う",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "支店のTCでWebを操作中。Webサーバと通信する主体は？",
+          "choices": [
+            {
+              "text": "画面を表示している支店TCだけ",
+              "explain": "操作端末とアプリ実行主体を混同しています。",
+              "ok": false
+            },
+            {
+              "text": "本社の仮想PC",
+              "explain": "ブラウザの実行場所が通信の発生元です。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "central-egress-2",
+          "theme": "インターネットへ出る場所を追う",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "出口の集約がセキュリティ対策に役立つ理由は？",
+          "choices": [
+            {
+              "text": "監視・遮断の設定を本社に集中して実施できる",
+              "explain": "拠点ごとに同種の対策を配備する負担をまとめられます。",
+              "ok": true
+            },
+            {
+              "text": "仮想PCはマルウェアに感染しない",
+              "explain": "仮想環境でも感染し得るため原問には隔離対策があります。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "central-egress-3",
+          "theme": "インターネットへ出る場所を追う",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "理由と利点を区別して答える",
+          "template": "廃止理由：通信は{a}から行われる。利点：対策を{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "通信元",
+              "why": "実行環境は本社に集まっています。",
+              "choices": [
+                {
+                  "text": "支店のプリンタ",
+                  "explain": "Webやメールを利用する主体ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "本社の仮想PC",
+                  "explain": "支店から直接インターネットへ出る必要がなくなります。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "運用上の利点",
+              "why": "通信元の移動から管理の集約を導きます。",
+              "choices": [
+                {
+                  "text": "全て省略できる",
+                  "explain": "集約は対策不要という意味ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "本社で集中的に行える",
+                  "explain": "同じ出口で検査と遮断をまとめられます。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "central-egress-4",
+          "theme": "インターネットへ出る場所を追う",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：TCにローカル実行のブラウザを追加し支店から直接通信させる。以前の廃止理由はそのまま使える？",
+          "choices": [
+            {
+              "text": "使えない。支店からの直接インターネット通信を再評価する",
+              "explain": "アプリの実行場所が変わったので通信元も変わります。",
+              "ok": true
+            },
+            {
+              "text": "使える。VDIという名前なら通信は必ず全て本社から出る",
+              "explain": "製品名でなく実際の実行場所と経路を確認する必要があります。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "central-egress-5",
+          "theme": "インターネットへ出る場所を追う",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "containment",
+      "title": "一台の隔離と全社の遮断を分ける",
+      "targets": [
+        "s4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "仮想PCのケーブルは論理接続",
+          "body": "仮想SW（仮想スイッチ）は仮想PCと物理NIC（Network Interface Card）をつなぎます。一台を隔離するにはその仮想PCを仮想SWから切り離します。C&C（Command & Control）サーバは攻撃者の指令先で、出口のUTM（Unified Threat Management：統合脅威管理）で全PCからその宛先への通信を止めます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 180,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "仮想PC",
+                "icon": "pc",
+                "x": 55,
+                "y": 45
+              },
+              {
+                "id": "node1",
+                "label": "仮想SW",
+                "icon": "l2sw",
+                "x": 170,
+                "y": 45
+              },
+              {
+                "id": "node2",
+                "label": "物理NIC側",
+                "icon": "server",
+                "x": 285,
+                "y": 45
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：切り離すのは一台の仮想接続"
+          },
+          "id": "containment-1",
+          "theme": "一台の隔離と全社の遮断を分ける",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "一台の感染仮想PCだけを隔離する操作は？",
+          "choices": [
+            {
+              "text": "VDIサーバの物理NICを抜く",
+              "explain": "同じサーバ内の健全な仮想PCも外部へ接続できなくなります。",
+              "ok": false
+            },
+            {
+              "text": "その仮想PCと仮想SWの接続を切る",
+              "explain": "他の仮想PCの通信を残したまま隔離できます。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "containment-2",
+          "theme": "一台の隔離と全社の遮断を分ける",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "感染を検知した一台の送信元だけを拒否するルールでは不足する理由は？",
+          "choices": [
+            {
+              "text": "別の仮想PCも同じC&Cサーバと通信する可能性がある",
+              "explain": "未検知の感染端末からの通信もまとめて遮断する必要があります。",
+              "ok": true
+            },
+            {
+              "text": "送信元IPは常にC&Cサーバと同じだから",
+              "explain": "外向き通信の送信元は社内側で、宛先がC&Cサーバです。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "containment-3",
+          "theme": "一台の隔離と全社の遮断を分ける",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "原問の隔離先・送信元・宛先を埋める",
+          "template": "隔離時は{a}から切り離す。外向き拒否は、送信元={b}、宛先={c}、ポート番号=任意。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "仮想接続",
+              "why": "一台の論理接続を切ります。",
+              "choices": [
+                {
+                  "text": "プリントサーバ",
+                  "explain": "仮想PCの全通信を隔離する接続点ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "仮想SW",
+                  "explain": "感染PCの仮想ネットワーク接続だけを止めます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "送信元範囲",
+              "why": "未発見の感染端末も対象にします。",
+              "choices": [
+                {
+                  "text": "最初の感染PCだけ",
+                  "explain": "他の感染PCが同じ宛先へ通信できてしまいます。",
+                  "ok": false
+                },
+                {
+                  "text": "任意",
+                  "explain": "どの仮想PCからでも指定C&Cへの通信を拒否します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "宛先",
+              "why": "攻撃者への指令通信先を指定します。",
+              "choices": [
+                {
+                  "text": "任意の外部サーバ全て",
+                  "explain": "原問が要求するC&C宛ての遮断より広く、正常業務まで止めます。",
+                  "ok": false
+                },
+                {
+                  "text": "C&Cサーバ",
+                  "explain": "特定された攻撃者の通信先IPを設定します。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "containment-4",
+          "theme": "一台の隔離と全社の遮断を分ける",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "原問の配置でC&C宛て遮断を実施する機器は？",
+          "choices": [
+            {
+              "text": "本社のUTM",
+              "explain": "インターネットへ出る共通出口で、全仮想PCに適用できます。",
+              "ok": true
+            },
+            {
+              "text": "支店のプリンタ",
+              "explain": "インターネット通信の共通出口ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.30,
+            "bottom": 0.40,
+            "label": "IPA本文：仮想PC間の感染拡大と物理隔離の制約"
+          },
+          "id": "containment-5",
+          "theme": "一台の隔離と全社の遮断を分ける",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "parsons",
+          "title": "検知後の対応を組み立てる",
+          "lead": "この練習では、個体隔離を決めた後に全体の出口ルールを設定する手順とします。",
+          "lines": [
+            {
+              "code": "管理者が感染仮想PCの隔離を判断する"
+            },
+            {
+              "code": "その仮想PCを仮想SWから切り離す"
+            },
+            {
+              "code": "本社UTMで任意の送信元からC&C宛てを拒否する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "一台への対処と他の仮想PCを含む出口対策を両方実施します。",
+          "ngExplain": "物理NICを外す手順ではありません。この練習で指定した対応順に並べます。",
+          "stage": "assemble",
+          "id": "containment-6",
+          "theme": "一台の隔離と全社の遮断を分ける",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：C&Cが別IPを追加した。既存IPだけの拒否で十分？",
+          "choices": [
+            {
+              "text": "不十分。追加された宛先も検知・遮断対象にする",
+              "explain": "任意なのは送信元であり、拒否する宛先はルールに設定した範囲だけです。",
+              "ok": true
+            },
+            {
+              "text": "十分。送信元が任意なら全宛先も拒否される",
+              "explain": "送信元条件と宛先条件は別に評価されます。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "containment-7",
+          "theme": "一台の隔離と全社の遮断を分ける",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "finish",
+      "title": "数値と運用を補助なしで結び付ける",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2",
+        "s2-3",
+        "s3-1",
+        "s3-2",
+        "s4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "原問を解く前の確認",
+          "body": "以後は図や計算式のヒントを外して判断します。通信の両端を見つけ、広域網を通る人数だけ数えること、画面保証とシェーピングを分けることが解答の軸です。最後は既存の原問画面で全設問に取り組んでください。",
+          "stage": "concept",
+          "id": "finish-1",
+          "theme": "数値と運用を補助なしで結び付ける",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "原問の本社・支店の新しい契約帯域と、支店画面の最低必要帯域は？",
+          "choices": [
+            {
+              "text": "本社125、支店10、支店画面10Mbit/s",
+              "explain": "本社100人を広域網へ含め、最低必要量と余裕込みの契約量も混同しています。",
+              "ok": false
+            },
+            {
+              "text": "本社100、支店10、支店画面8Mbit/s",
+              "explain": "画面0.2×40=8、10支店で80、それぞれ安全率1.25を適用します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "finish-2",
+          "theme": "数値と運用を補助なしで結び付ける",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "quiz",
+          "title": "支店の印刷が増えても画面操作を守る設計は？",
+          "choices": [
+            {
+              "text": "画面クラスの帯域確保と支店契約帯域でのシェーピング",
+              "explain": "画面を守ることと支店回線を超えないことを別の制御で満たします。",
+              "ok": true
+            },
+            {
+              "text": "全て同じ待ち行列で本社の1Gbit/sまで送出",
+              "explain": "支店の細い回線で印刷が画面を圧迫する原因を残します。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "finish-3",
+          "theme": "数値と運用を補助なしで結び付ける",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "quiz",
+          "title": "感染対策とVDIの利点を両立する説明は？",
+          "choices": [
+            {
+              "text": "VDIを導入したので出口監視と感染対策をやめる",
+              "explain": "VDIの集中管理は感染しなくなることを意味しません。",
+              "ok": false
+            },
+            {
+              "text": "出口対策を本社へ集約し、感染PCは仮想SWから個別隔離する",
+              "explain": "管理の集中と必要範囲の隔離を使い分けます。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "finish-4",
+          "theme": "数値と運用を補助なしで結び付ける",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1574 @@
+{
+  "examKey": "2019r01a/pm1/3",
+  "title": "DHCPとARPからLANの通信制限を組み立てる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm1_qs.pdf"
+  ],
+  "sections": [
+    {
+      "id": "dhcp-relay",
+      "title": "別セグメントへアドレス要求を届ける",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "PCとDHCPサーバが別のLANにある",
+          "body": "PCはまだIPアドレスを持っていません。DHCP（Dynamic Host Configuration Protocol）の要求を同じLANへ一斉送信します。L3スイッチの向こうにあるサーバへは中継機能が必要です。",
+          "fig": {
+            "kind": "net",
+            "height": 140,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 45,
+                "y": 65,
+                "label": "PCのLAN"
+              },
+              {
+                "id": "node1",
+                "x": 170,
+                "y": 65,
+                "label": "L3スイッチ"
+              },
+              {
+                "id": "node2",
+                "x": 295,
+                "y": 65,
+                "label": "DHCPサーバ"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用の構成図"
+          },
+          "format": "読む",
+          "theme": "別セグメントへアドレス要求を届ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "最初のDHCPブロードキャストを別セグメントへ届ける機能はどれか。",
+          "choices": [
+            {
+              "text": "DNSキャッシュ",
+              "ok": false,
+              "explain": "名前解決結果を保存する機能です。"
+            },
+            {
+              "text": "VLANタグの削除",
+              "ok": false,
+              "explain": "タグの有無だけでは別IPセグメントへ中継できません。"
+            },
+            {
+              "text": "DHCPリレーエージェント",
+              "ok": true,
+              "explain": "クライアント側の要求をDHCPサーバへ中継します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "別セグメントへアドレス要求を届ける",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "PC側セグメントを収容するL3SWに設定する理由は何か。",
+          "choices": [
+            {
+              "text": "DHCPサーバのMACをインターネットへ広告するため",
+              "ok": false,
+              "explain": "今回の要求はインターネット向けではありません。"
+            },
+            {
+              "text": "PCのブロードキャストをその場で受信できるため",
+              "ok": true,
+              "explain": "通常のルーティングだけでは初期要求がサーバへ届きません。"
+            },
+            {
+              "text": "全てのL2SWがサーバのIPを自動生成するため",
+              "ok": false,
+              "explain": "L2SWにその役割はありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "別セグメントへアドレス要求を届ける",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "機能名と最少の設定機器をそろえる。",
+          "template": "{a}を、{b}と{c}で有効にする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "DHCPリレーエージェント",
+                  "ok": true,
+                  "explain": "異なるセグメントのDHCPサーバへ中継します。"
+                },
+                {
+                  "text": "ARPスプーフィング",
+                  "ok": false,
+                  "explain": "偽のIPとMACの対応を通知する手法です。"
+                },
+                {
+                  "text": "リンクアグリゲーション",
+                  "ok": false,
+                  "explain": "回線の集約機能です。"
+                }
+              ],
+              "why": "異なるセグメントのDHCPサーバへ中継します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "L2SW01",
+                  "ok": false,
+                  "explain": "業務サーバ側のスイッチです。"
+                },
+                {
+                  "text": "L3SW0だけ",
+                  "ok": false,
+                  "explain": "PC側ブロードキャストはそこまで通常転送されません。"
+                },
+                {
+                  "text": "L3SW1",
+                  "ok": true,
+                  "explain": "フロア1の二つのPCセグメントを収容します。"
+                }
+              ],
+              "why": "フロア1の二つのPCセグメントを収容します。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "追加不要",
+                  "ok": false,
+                  "explain": "フロア2のセグメントにも中継が必要です。"
+                },
+                {
+                  "text": "L3SW2",
+                  "ok": true,
+                  "explain": "フロア2の二つのPCセグメントを収容します。"
+                },
+                {
+                  "text": "L2SW02",
+                  "ok": false,
+                  "explain": "サーバ側にありPCの初期要求を直接受信しません。"
+                }
+              ],
+              "why": "フロア2の二つのPCセグメントを収容します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 13,
+            "top": 0.18,
+            "bottom": 0.66,
+            "label": "図1：各フロアとDHCPサーバのセグメント（IPA原図）"
+          },
+          "format": "穴埋め",
+          "theme": "別セグメントへアドレス要求を届ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "IP割当てまでの判断を並べる。",
+          "lead": "初期要求がルータを越えない点から考えます。",
+          "lines": [
+            {
+              "code": "PCが所属LANへDHCP要求を送る"
+            },
+            {
+              "code": "そのLANを収容するL3SWのリレーがサーバへ中継する"
+            },
+            {
+              "code": "DHCPサーバからの割当て情報がPCに戻る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "各フロアのL3SWに集約すれば最少2台で対応できます。",
+          "ngExplain": "サーバ側ではなく、PCの初期要求を受け取れる場所が起点です。",
+          "format": "並べ替え",
+          "theme": "別セグメントへアドレス要求を届ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "PCとDHCPサーバを同一セグメントに置いた。別セグメント向けの中継は必要か。",
+          "choices": [
+            {
+              "text": "リレーの代わりにBGPが必要",
+              "ok": false,
+              "explain": "AS間の経路交換は関係ありません。"
+            },
+            {
+              "text": "このPCのためには不要",
+              "ok": true,
+              "explain": "初期要求が同じLANのサーバへ直接届きます。"
+            },
+            {
+              "text": "どのDHCP通信にも必ず必要",
+              "ok": false,
+              "explain": "同一セグメントではリレーなしでも動作できます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "別セグメントへアドレス要求を届ける",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "dhcp-enforcement",
+      "title": "アドレス配布と通信制限を分ける",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "配布を拒否しても手動設定できる",
+          "body": "正常PCだけにDHCPでIPアドレスを配ります。未登録PCの利用者が空きIPを手動設定する場合があります。原問の案1では、スイッチ側の通信制限も組み合わせます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "操作",
+              "DHCP配布拒否だけで防げるか"
+            ],
+            "rows": [
+              [
+                "未登録PCがDHCPで取得",
+                "防げる"
+              ],
+              [
+                "未登録PCがIPを固定設定",
+                "防げない"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "アドレス配布と通信制限を分ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "DHCPで拒否されたPCが通信できてしまう理由はどれか。",
+          "choices": [
+            {
+              "text": "DNSが自動で別IPを配布するため",
+              "ok": false,
+              "explain": "DNSはPCへのIP割当て機能ではありません。"
+            },
+            {
+              "text": "ARPでOSの検査結果が合格になるため",
+              "ok": false,
+              "explain": "ARPに検査結果を変える機能はありません。"
+            },
+            {
+              "text": "IPアドレスを固定設定できるため",
+              "ok": true,
+              "explain": "アドレスの配布拒否だけではデータ通信を禁止できません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "アドレス配布と通信制限を分ける",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "正規サーバからの応答が入るL3SW接続ポートに必要な設定はどれか。",
+          "choices": [
+            {
+              "text": "PC接続ポートも全て信頼する設定",
+              "ok": false,
+              "explain": "不正なDHCPサーバを接続される余地ができます。"
+            },
+            {
+              "text": "DHCPスヌーピングの制限を受けない信頼ポート設定",
+              "ok": true,
+              "explain": "正規のDHCP応答を受け入れるために必要です。"
+            },
+            {
+              "text": "全てのDHCP応答を破棄する設定",
+              "ok": false,
+              "explain": "正常PCにもIPを配布できなくなります。"
+            }
+          ],
+          "format": "選択",
+          "theme": "アドレス配布と通信制限を分ける",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "問題と対策を補う。",
+          "template": "DHCP配布だけでは{a}したPCも通信できる。L3SW側ポートには{b}を行う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "IPアドレスを固定設定",
+                  "ok": true,
+                  "explain": "DHCPを使わない通信を配布拒否だけでは防げません。"
+                },
+                {
+                  "text": "VLAN名を閲覧",
+                  "ok": false,
+                  "explain": "閲覧だけで通信条件は変わりません。"
+                },
+                {
+                  "text": "DNSキャッシュを削除",
+                  "ok": false,
+                  "explain": "アドレス取得制限の迂回手段ではありません。"
+                }
+              ],
+              "why": "DHCPを使わない通信を配布拒否だけでは防げません。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "全ポートの通信禁止",
+                  "ok": false,
+                  "explain": "正規の利用も止まります。"
+                },
+                {
+                  "text": "全PCポートの信頼設定",
+                  "ok": false,
+                  "explain": "信頼の対象を必要以上に広げています。"
+                },
+                {
+                  "text": "DHCPスヌーピングの制限を受けない設定",
+                  "ok": true,
+                  "explain": "正規応答が入る上位側を信頼します。"
+                }
+              ],
+              "why": "正規応答が入る上位側を信頼します。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "アドレス配布と通信制限を分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "原問の案1で制限する流れを並べる。",
+          "lead": "本問はDHCP取得情報に基づく通信制限まで含めた案です。",
+          "lines": [
+            {
+              "code": "PC管理サーバの情報で正常PCを判定する"
+            },
+            {
+              "code": "DHCPサーバが正常PCへだけIPを配布する"
+            },
+            {
+              "code": "スイッチが取得情報に基づき未許可PCの通信を制限する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "実機ではスヌーピングの学習と送信元検査の機能も確認します。",
+          "ngExplain": "配布制御だけでは手動IPを防げません。通信時の検査も必要です。",
+          "format": "並べ替え",
+          "theme": "アドレス配布と通信制限を分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "正規DHCPサーバを別ポートへ移設した。最初に見直す設定はどれか。",
+          "choices": [
+            {
+              "text": "ARPのIPアドレス長",
+              "ok": false,
+              "explain": "IPv4の長さはサーバ移設では変わりません。"
+            },
+            {
+              "text": "正規応答が入る新ポートの信頼設定",
+              "ok": true,
+              "explain": "物理的な入出力経路に合わせて変更します。"
+            },
+            {
+              "text": "全PCを正常として登録する設定",
+              "ok": false,
+              "explain": "サーバ移設のために端末の検査を省く必要はありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "アドレス配布と通信制限を分ける",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "arp-outbound",
+      "title": "PCが覚えるIPとMACの対応を読む",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "通信先IPはそのままで配送先MACを変える",
+          "body": "排除対象PCはIP-TのMACをARPで問い合わせます。ARP（Address Resolution Protocol）はIPとMACを対応付けます。通信制限装置はIP-Tに自分のMAC-Mを対応させる応答を返します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "機器",
+              "IP",
+              "MAC"
+            ],
+            "rows": [
+              [
+                "排除対象PC",
+                "IP-P",
+                "MAC-P"
+              ],
+              [
+                "本来の相手",
+                "IP-T",
+                "MAC-T"
+              ],
+              [
+                "通信制限装置",
+                "IP-M",
+                "MAC-M"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "PCが覚えるIPとMACの対応を読む",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "PCにIP-T→MAC-Mを覚えさせる応答の送信元情報はどれか。",
+          "choices": [
+            {
+              "text": "送信元IP＝IP-M、送信元MAC＝MAC-M",
+              "ok": false,
+              "explain": "装置自身の正しい対応を知らせるだけです。"
+            },
+            {
+              "text": "送信元IP＝IP-T、送信元MAC＝MAC-T",
+              "ok": false,
+              "explain": "本来の相手へ正常に届く対応です。"
+            },
+            {
+              "text": "送信元IP＝IP-T、送信元MAC＝MAC-M",
+              "ok": true,
+              "explain": "名乗るIPは相手、配送先にしたいMACは装置です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "PCが覚えるIPとMACの対応を読む",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "送信元IPに通信制限装置自身のIPを入れない理由は何か。",
+          "choices": [
+            {
+              "text": "全PCのIPを同じにするため",
+              "ok": false,
+              "explain": "目的はIPの重複ではなくMACの対応変更です。"
+            },
+            {
+              "text": "PCが解決したい相手のIPについて偽の対応を知らせるため",
+              "ok": true,
+              "explain": "別のIPの情報では対象のキャッシュを書き換えられません。"
+            },
+            {
+              "text": "ARPには送信元IP欄がないため",
+              "ok": false,
+              "explain": "ARPのデータ部には送信元プロトコルアドレスがあります。"
+            }
+          ],
+          "format": "選択",
+          "theme": "PCが覚えるIPとMACの対応を読む",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "原表のARP応答a・bを完成する。",
+          "template": "a：送信元ハードウェアアドレスは{a}。b：送信元プロトコルアドレスは{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "通信制限装置のMACアドレス（エ）",
+                  "ok": true,
+                  "explain": "排除PCからのパケットを装置へ向けます。"
+                },
+                {
+                  "text": "排除対象PCのMACアドレス（カ）",
+                  "ok": false,
+                  "explain": "これは応答の送信先側のMACです。"
+                },
+                {
+                  "text": "アドレス解決対象のMACアドレス（イ）",
+                  "ok": false,
+                  "explain": "正常な配送先のままになります。"
+                }
+              ],
+              "why": "排除PCからのパケットを装置へ向けます。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "通信制限装置のIPアドレス（ウ）",
+                  "ok": false,
+                  "explain": "別のIPの対応になってしまいます。"
+                },
+                {
+                  "text": "排除対象PCのIPアドレス（オ）",
+                  "ok": false,
+                  "explain": "相手のIPを名乗る応答になりません。"
+                },
+                {
+                  "text": "アドレス解決対象のIPアドレス（ア）",
+                  "ok": true,
+                  "explain": "解決したいIPに装置のMACを対応させます。"
+                }
+              ],
+              "why": "解決したいIPに装置のMACを対応させます。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "PCが覚えるIPとMACの対応を読む",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "排除対象PCからの通信を止める因果を並べる。",
+          "lead": "IP-Tへ送ろうとするPCを考えます。",
+          "lines": [
+            {
+              "code": "PCがIP-TのMACを問い合わせる"
+            },
+            {
+              "code": "装置がIP-TにMAC-Mを対応させるARP応答を返す"
+            },
+            {
+              "code": "PCがIP-T宛てフレームをMAC-Mへ送る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "宛先IPが同じでもL2の配送先が変わります。",
+          "ngExplain": "相手IPの解決、偽の対応学習、MAC宛て配送の順です。",
+          "format": "並べ替え",
+          "theme": "PCが覚えるIPとMACの対応を読む",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "解決対象が別サーバIP-Uへ変わった。装置の応答で変える欄はどれか。",
+          "choices": [
+            {
+              "text": "送信先IPを装置のIPへ変えるだけ",
+              "ok": false,
+              "explain": "PCの求めるIP-Uの対応を知らせていません。"
+            },
+            {
+              "text": "送信元プロトコルアドレスをIP-Uへ変える",
+              "ok": true,
+              "explain": "解決対象のIPを名乗る必要があります。装置のMACは同じです。"
+            },
+            {
+              "text": "装置のMACをPCのMACへ変える",
+              "ok": false,
+              "explain": "装置へ誘導する目的を満たしません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "PCが覚えるIPとMACの対応を読む",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "arp-return",
+      "title": "相手からPCへ戻る通信も装置へ向ける",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "片方向だけでは制限が残る",
+          "body": "PCのARP表だけを書き換えると、相手のARP表は変わりません。通信制限装置は相手へ偽のARP要求も送ります。その要求では、排除PCのIPに装置のMACを対応させます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "学習する側",
+              "覚えさせる対応"
+            ],
+            "rows": [
+              [
+                "排除PC",
+                "相手IP→装置MAC"
+              ],
+              [
+                "通信相手",
+                "排除PCのIP→装置MAC"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "相手からPCへ戻る通信も装置へ向ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "相手へ送る偽ARP要求の送信元IPはどれか。",
+          "choices": [
+            {
+              "text": "通信相手自身のIP",
+              "ok": false,
+              "explain": "排除PCの配送先を変更する情報になりません。"
+            },
+            {
+              "text": "通信制限装置のIP",
+              "ok": false,
+              "explain": "装置自身の対応を知らせるだけです。"
+            },
+            {
+              "text": "排除対象PCのIP",
+              "ok": true,
+              "explain": "相手からPCへ戻る配送先を変えるためです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "相手からPCへ戻る通信も装置へ向ける",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "ARP要求で相手の対応表に影響を与えられる理由はどれか。",
+          "choices": [
+            {
+              "text": "ARP要求はDNSのAレコードを変更する",
+              "ok": false,
+              "explain": "ARPはLAN内のIPとMACの解決です。"
+            },
+            {
+              "text": "要求にも送信元IPと送信元MACの組がある",
+              "ok": true,
+              "explain": "本問では受信側がその対応を学習する動作を利用します。"
+            },
+            {
+              "text": "要求は必ず全IPの対応を削除する",
+              "ok": false,
+              "explain": "全削除することがARPの標準動作ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "相手からPCへ戻る通信も装置へ向ける",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "原表のARP要求c・dを補う。",
+          "template": "cは{c}、dは{d}である。",
+          "blanks": [
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "通信制限装置のMACアドレス（エ）",
+                  "ok": true,
+                  "explain": "戻りのフレームも装置へ誘導します。"
+                },
+                {
+                  "text": "アドレス解決対象のMACアドレス（イ）",
+                  "ok": false,
+                  "explain": "装置へ誘導する送信元情報になりません。"
+                },
+                {
+                  "text": "排除対象PCのMACアドレス（カ）",
+                  "ok": false,
+                  "explain": "正しいPCの配送先のままです。"
+                }
+              ],
+              "why": "戻りのフレームも装置へ誘導します。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "通信制限装置のIPアドレス（ウ）",
+                  "ok": false,
+                  "explain": "PC宛ての対応を変えられません。"
+                },
+                {
+                  "text": "アドレス解決対象のIPアドレス（ア）",
+                  "ok": false,
+                  "explain": "それはARP応答b側で名乗るIPです。"
+                },
+                {
+                  "text": "排除対象PCのIPアドレス（オ）",
+                  "ok": true,
+                  "explain": "相手にPCのIPを装置MACへ対応付けさせます。"
+                }
+              ],
+              "why": "相手にPCのIPを装置MACへ対応付けさせます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.05,
+            "bottom": 0.48,
+            "label": "本文・表1：ARP応答と逆方向用のARP要求（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "相手からPCへ戻る通信も装置へ向ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "戻り方向の配送が変わる順序を並べる。",
+          "lead": "相手が排除対象PCへ返信する場面です。",
+          "lines": [
+            {
+              "code": "装置が送信元IPを排除PCのIPとしたARP要求を送る"
+            },
+            {
+              "code": "相手が排除PCのIPと装置MACの対応を学習する"
+            },
+            {
+              "code": "排除PC宛ての戻りフレームが装置へ向かう"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "応答と要求で名乗るIPが逆になる点を確認します。",
+          "ngExplain": "戻り方向では排除PCのIPの配送先を変えます。",
+          "format": "並べ替え",
+          "theme": "相手からPCへ戻る通信も装置へ向ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "相手側だけ正しいARP情報に戻った。どの向きが装置を避ける可能性があるか。",
+          "choices": [
+            {
+              "text": "排除PCから相手への向きだけ",
+              "ok": false,
+              "explain": "この向きを決めるのは排除PC側のARP表です。"
+            },
+            {
+              "text": "相手から排除PCへの向き",
+              "ok": true,
+              "explain": "相手のARP表が戻ると、PCの正しいMACを使います。"
+            },
+            {
+              "text": "必ず両方向とも変わる",
+              "ok": false,
+              "explain": "二つの機器のARP表は別々に保持されます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "相手からPCへ戻る通信も装置へ向ける",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "appliance-placement",
+      "title": "セグメントと配線条件から台数を決める",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "4ポートあっても全フロアへ届くとは限らない",
+          "body": "各フロアにPC用セグメントが二つあります。装置の各ポートは異なるセグメントへ接続します。タグVLANもフロア間の追加配線も使わない条件です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "場所",
+              "必要な接続"
+            ],
+            "rows": [
+              [
+                "フロア1",
+                "セグメントA・B"
+              ],
+              [
+                "フロア2",
+                "セグメントC・D"
+              ],
+              [
+                "装置1台",
+                "最大4ポート、各ポートは別セグメント"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "セグメントと配線条件から台数を決める",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "ARP監視の装置を1台だけフロア1へ置くと不足するものはどれか。",
+          "choices": [
+            {
+              "text": "IPv4のアドレスビット数",
+              "ok": false,
+              "explain": "アドレスの長さは台数決定の要因ではありません。"
+            },
+            {
+              "text": "サーバ室の全サーバへの直結",
+              "ok": false,
+              "explain": "設問ではサーバ室の不正PC対策は対象外です。"
+            },
+            {
+              "text": "フロア2の二つのセグメントへの接続",
+              "ok": true,
+              "explain": "ARPは通常ルータを越えません。追加配線も禁止です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "セグメントと配線条件から台数を決める",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "必要な最少台数が2台になる根拠はどれか。",
+          "choices": [
+            {
+              "text": "4ポートなので場所に関係なく1台で足りる",
+              "ok": false,
+              "explain": "フロアを越える配線が禁止されている条件を落としています。"
+            },
+            {
+              "text": "フロアごとに1台置き、2ポートずつ使う",
+              "ok": true,
+              "explain": "各フロア内で二つのセグメントに接続できます。"
+            },
+            {
+              "text": "セグメントごとに4台ずつ置く",
+              "ok": false,
+              "explain": "1台で複数セグメントに接続できるため過剰です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "セグメントと配線条件から台数を決める",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "フロア1の1台の接続先を完成する。",
+          "template": "LANポート1：{a}、2：{b}、3：{c}、4：{d}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "L3SW1",
+                  "ok": true,
+                  "explain": "フロア1を収容するL3SWへ接続します。"
+                },
+                {
+                  "text": "L3SW0",
+                  "ok": false,
+                  "explain": "サーバ室のL3SWではPC用LANに直接参加できません。"
+                },
+                {
+                  "text": "L3SW2",
+                  "ok": false,
+                  "explain": "別フロアへ追加配線が必要です。"
+                }
+              ],
+              "why": "フロア1を収容するL3SWへ接続します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "L3SW2",
+                  "ok": false,
+                  "explain": "別フロアへ追加配線が必要です。"
+                },
+                {
+                  "text": "空き",
+                  "ok": false,
+                  "explain": "フロア1のもう一つのセグメントを監視できません。"
+                },
+                {
+                  "text": "L3SW1",
+                  "ok": true,
+                  "explain": "同じスイッチの別セグメントのポートへ接続します。"
+                }
+              ],
+              "why": "同じスイッチの別セグメントのポートへ接続します。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "L3SW2",
+                  "ok": false,
+                  "explain": "フロアを越える接続は行いません。"
+                },
+                {
+                  "text": "空き",
+                  "ok": true,
+                  "explain": "このフロアには対象セグメントが二つです。"
+                },
+                {
+                  "text": "L3SW1の同一セグメント",
+                  "ok": false,
+                  "explain": "各ポートの接続先は異なるセグメントという条件に反します。"
+                }
+              ],
+              "why": "このフロアには対象セグメントが二つです。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "空き",
+                  "ok": true,
+                  "explain": "番号の小さいポートから2個使います。"
+                },
+                {
+                  "text": "L3SW0",
+                  "ok": false,
+                  "explain": "不要なサーバ室向け接続です。"
+                },
+                {
+                  "text": "L3SW2",
+                  "ok": false,
+                  "explain": "フロア間の追加配線は禁止です。"
+                }
+              ],
+              "why": "番号の小さいポートから2個使います。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.65,
+            "bottom": 0.87,
+            "label": "本文：ポート・タグVLAN・配線の制約（IPA原文）"
+          },
+          "format": "穴埋め",
+          "theme": "セグメントと配線条件から台数を決める",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "配置を決める順序を並べる。",
+          "lead": "フロア2の装置はL3SW2へ2本接続します。",
+          "lines": [
+            {
+              "code": "ARPを監視する対象セグメントをフロア別に数える"
+            },
+            {
+              "code": "フロア間の追加配線をしないため各フロアに1台置く"
+            },
+            {
+              "code": "各装置のポート1と2を異なるVLANへ接続する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "同じ機器名へ2本接続しても、所属VLANは別にします。",
+          "ngExplain": "ポート数だけでなく場所とセグメントを数えます。",
+          "format": "並べ替え",
+          "theme": "セグメントと配線条件から台数を決める",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "対象4セグメントを同じフロアへ集めた。4ポート装置の最少台数はどうなるか。",
+          "choices": [
+            {
+              "text": "4台必要",
+              "ok": false,
+              "explain": "各装置の全ポートを使えない条件はありません。"
+            },
+            {
+              "text": "1台で収容可能",
+              "ok": true,
+              "explain": "各ポートを別セグメントへ接続できれば4ポートで足ります。"
+            },
+            {
+              "text": "必ず2台のまま",
+              "ok": false,
+              "explain": "フロア間配線の制約による2台という理由がなくなります。"
+            }
+          ],
+          "format": "選択",
+          "theme": "セグメントと配線条件から台数を決める",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "remediation-access",
+      "title": "隔離したPCが復旧するための通信を残す",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "不合格PCを更新して再判定する",
+          "body": "不正PCは通常の業務LANを利用できません。対処用セグメントで更新作業を行います。更新に加え、検査結果の登録先にも到達できる必要があります。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "メンテナンスサーバ",
+                "d": "OS・定義ファイルの更新"
+              },
+              {
+                "t": "PCのSエージェント",
+                "d": "検査を実行"
+              },
+              {
+                "t": "PC管理サーバ",
+                "d": "検査結果を登録"
+              }
+            ],
+            "caption": "説明用の通信・処理の流れ"
+          },
+          "format": "読む",
+          "theme": "隔離したPCが復旧するための通信を残す",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "更新に必要な通信先はどれか。",
+          "choices": [
+            {
+              "text": "業務サーバだけ",
+              "ok": false,
+              "explain": "更新データを取得する目的を満たしません。"
+            },
+            {
+              "text": "全顧客PC",
+              "ok": false,
+              "explain": "復旧作業に不要な端末への通信まで許可します。"
+            },
+            {
+              "text": "メンテナンスサーバ",
+              "ok": true,
+              "explain": "原問ではOSや定義ファイルの更新を提供します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "隔離したPCが復旧するための通信を残す",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "PC管理サーバへの通信も許可する理由は何か。",
+          "choices": [
+            {
+              "text": "ARPのビット長を変更するため",
+              "ok": false,
+              "explain": "検査結果の登録とARP形式は無関係です。"
+            },
+            {
+              "text": "Sエージェントが検査結果を登録するため",
+              "ok": true,
+              "explain": "更新しただけでなく正常状態を管理側に反映する必要があります。"
+            },
+            {
+              "text": "業務データを全て消すため",
+              "ok": false,
+              "explain": "PC管理サーバの役割は検査結果の管理です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "隔離したPCが復旧するための通信を残す",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "許可する二つの機器を選ぶ。",
+          "template": "更新用に{a}、検査結果の登録用に{b}への通信を許可する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "メンテナンスサーバ",
+                  "ok": true,
+                  "explain": "対処に必要な更新を取得します。"
+                },
+                {
+                  "text": "業務サーバ",
+                  "ok": false,
+                  "explain": "復旧用の更新提供元ではありません。"
+                },
+                {
+                  "text": "全PC",
+                  "ok": false,
+                  "explain": "必要最小限という条件を満たしません。"
+                }
+              ],
+              "why": "対処に必要な更新を取得します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "業務サーバ",
+                  "ok": false,
+                  "explain": "Sエージェントの登録先ではありません。"
+                },
+                {
+                  "text": "通信制限装置だけ",
+                  "ok": false,
+                  "explain": "PC管理サーバへの結果登録を代替しません。"
+                },
+                {
+                  "text": "PC管理サーバ",
+                  "ok": true,
+                  "explain": "正常への復帰を判断する情報を集めます。"
+                }
+              ],
+              "why": "正常への復帰を判断する情報を集めます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.05,
+            "bottom": 0.3,
+            "label": "本文：対処用セグメントと必要最小限の許可（IPA原文）"
+          },
+          "format": "穴埋め",
+          "theme": "隔離したPCが復旧するための通信を残す",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "不正PCを正常に戻す順を並べる。",
+          "lead": "復旧のための経路を残した場合です。",
+          "lines": [
+            {
+              "code": "対処用セグメントでメンテナンスサーバから更新する"
+            },
+            {
+              "code": "Sエージェントで再検査する"
+            },
+            {
+              "code": "PC管理サーバに合格の結果を登録する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "更新と検査結果の反映がそろって正常へ戻せます。",
+          "ngExplain": "正常の登録だけを先に行うと、未対処の状態を見逃します。",
+          "format": "並べ替え",
+          "theme": "隔離したPCが復旧するための通信を残す",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "更新サーバには届くが、PC管理サーバへの通信が拒否されている。何が止まるか。",
+          "choices": [
+            {
+              "text": "全てのARP要求",
+              "ok": false,
+              "explain": "IPの通信先制限で全ARPが停止するわけではありません。"
+            },
+            {
+              "text": "検査結果の登録と管理側での正常確認",
+              "ok": true,
+              "explain": "更新できても結果を反映できません。"
+            },
+            {
+              "text": "必ずOSの起動",
+              "ok": false,
+              "explain": "OS起動を止める設定とは限りません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "隔離したPCが復旧するための通信を残す",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "remediation-network",
+      "title": "新しいLANのアドレスと戻り経路を用意する",
+      "targets": [
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "新しいセグメントへ配る情報がない",
+          "body": "対処用セグメントをL3SW1とL3SW2に追加します。経路は全て静的に設定されています。サーバ側のL3SW0とDHCPサーバにも新しいセグメントを知らせます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "機器",
+              "新しく必要な情報"
+            ],
+            "rows": [
+              [
+                "L3SW0",
+                "対処用セグメントへの経路"
+              ],
+              [
+                "DHCPサーバ",
+                "対処用セグメントのアドレスプール"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "新しいLANのアドレスと戻り経路を用意する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "DHCPサーバに新LAN用のプールがないと何が困るか。",
+          "choices": [
+            {
+              "text": "全てのVLANタグが破損する",
+              "ok": false,
+              "explain": "アドレスプールとフレームのタグ処理は別です。"
+            },
+            {
+              "text": "LACPが必ず停止する",
+              "ok": false,
+              "explain": "DHCPの設定不足でLACPは停止しません。"
+            },
+            {
+              "text": "新LANに適したIPアドレスを配布できない",
+              "ok": true,
+              "explain": "既存LANのプールをそのまま使うと所属ネットワークが合いません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "新しいLANのアドレスと戻り経路を用意する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "L3SW0に静的経路を追加する理由は何か。",
+          "choices": [
+            {
+              "text": "ARP応答をインターネットへ送るため",
+              "ok": false,
+              "explain": "対処LANへのルーティングと無関係です。"
+            },
+            {
+              "text": "サーバ側から対処用セグメントへ到達するため",
+              "ok": true,
+              "explain": "新しいLANの経路は自動では増えない前提です。"
+            },
+            {
+              "text": "L3SW0がPCへIPを配布するため",
+              "ok": false,
+              "explain": "原問でIPを配布するのはDHCPサーバです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "新しいLANのアドレスと戻り経路を用意する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "二つの機器と変更内容を対応させる。",
+          "template": "{a}に対処用セグメントへのルーティング情報を追加する。{b}にそのアドレスプールを追加する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "L3SW0",
+                  "ok": true,
+                  "explain": "各フロアの外にあるサーバ側の経路を更新します。"
+                },
+                {
+                  "text": "PC管理サーバ",
+                  "ok": false,
+                  "explain": "管理情報の登録先で、経路集約機器ではありません。"
+                },
+                {
+                  "text": "DHCPサーバ",
+                  "ok": false,
+                  "explain": "配布情報の更新対象であり、この静的経路の機器とは別です。"
+                }
+              ],
+              "why": "各フロアの外にあるサーバ側の経路を更新します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "L3SW0",
+                  "ok": false,
+                  "explain": "この機器は原問のDHCP配布元ではありません。"
+                },
+                {
+                  "text": "業務サーバ",
+                  "ok": false,
+                  "explain": "クライアントへIPを配布しません。"
+                },
+                {
+                  "text": "DHCPサーバ",
+                  "ok": true,
+                  "explain": "新しいサブネット用の割当て範囲を追加します。"
+                }
+              ],
+              "why": "新しいサブネット用の割当て範囲を追加します。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "新しいLANのアドレスと戻り経路を用意する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "新LANで復旧できるか確認する順を並べる。",
+          "lead": "経路と配布情報を設定した後の確認です。",
+          "lines": [
+            {
+              "code": "新LANのPCが適切なIPを取得できるか調べる"
+            },
+            {
+              "code": "更新先と管理先への要求と応答が通るか調べる"
+            },
+            {
+              "code": "不要な業務先への通信が拒否されるか調べる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "必要な通信の成立と制限の維持を両方確認します。",
+          "ngExplain": "まずアドレス、次に疎通、最後に許可範囲を確認します。",
+          "format": "並べ替え",
+          "theme": "新しいLANのアドレスと戻り経路を用意する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "経路を動的に広告する設計に変更した。今回と異なる判断はどれか。",
+          "choices": [
+            {
+              "text": "PC管理サーバへの通信許可は不要になる",
+              "ok": false,
+              "explain": "動的経路になっても結果登録の通信は必要です。"
+            },
+            {
+              "text": "経路広告に新LANが含まれるならL3SW0の手動追加は省ける場合がある",
+              "ok": true,
+              "explain": "原問の手動追加は全経路が静的という条件に基づきます。"
+            },
+            {
+              "text": "DHCPプールも経路広告から必ず自動生成される",
+              "ok": false,
+              "explain": "経路制御とアドレス割当ての設定は別です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "新しいLANのアドレスと戻り経路を用意する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

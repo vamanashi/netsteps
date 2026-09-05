@@ -1,0 +1,1784 @@
+{
+  "examKey": "2019r01a/pm2/2",
+  "title": "FW・DNS・SYN防御を攻撃成立条件から組み立てる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm2_qs.pdf",
+    "https://datatracker.ietf.org/doc/html/rfc3704",
+    "https://www.rfc-editor.org/info/rfc4987/",
+    "https://datatracker.ietf.org/doc/html/rfc5452"
+  ],
+  "sections": [
+    {
+      "id": "fw-basics",
+      "title": "FW表から許可通信と攻撃面を読む",
+      "targets": [
+        "s1",
+        "s2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "FW表から許可通信と攻撃面を読む",
+          "body": "ホストスキャンは到達可能な機器を探します。閉じたUDPポートはICMP Unreachableを返す場合があります。外部DNSのTCP/53はR社DNSからのゾーン転送用です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "a",
+                "ホスト"
+              ],
+              [
+                "b",
+                "ICMP Unreachable"
+              ],
+              [
+                "c",
+                "3"
+              ],
+              [
+                "d・e",
+                "FPサーバ・メール中継サーバ"
+              ],
+              [
+                "表1項番2",
+                "x.y.z.1からのゾーン転送"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "FW表から許可通信と攻撃面を読む",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "表1項番2の送信元はどれか。",
+          "choices": [
+            {
+              "text": "any",
+              "ok": false,
+              "explain": "ゾーン転送を不特定ホストへ許可しません。"
+            },
+            {
+              "text": "192.168.10.1",
+              "ok": false,
+              "explain": "内部DNSのIPです。"
+            },
+            {
+              "text": "x.y.z.1",
+              "ok": true,
+              "explain": "スレーブであるR社DNSのIPです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "FW表から許可通信と攻撃面を読む",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "TCP/53の通信名称は何か。",
+          "choices": [
+            {
+              "text": "SYNクッキー",
+              "ok": false,
+              "explain": "TCP防御技術で通信名称ではありません。"
+            },
+            {
+              "text": "ゾーン転送",
+              "ok": true,
+              "explain": "マスタからスレーブへゾーン情報を渡します。"
+            },
+            {
+              "text": "再帰問合せだけ",
+              "ok": false,
+              "explain": "この相手はスレーブDNSです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "FW表から許可通信と攻撃面を読む",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "aは{a}、bは{b}、cは{c}、項番2のアは{d}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "ホスト",
+                  "ok": true,
+                  "explain": "到達可能なホストを探すスキャンです。"
+                },
+                {
+                  "text": "Cookie",
+                  "ok": false,
+                  "explain": "Web状態情報です。"
+                },
+                {
+                  "text": "ポート",
+                  "ok": false,
+                  "explain": "別の空欄で既に示されています。"
+                }
+              ],
+              "why": "到達可能なホストを探すスキャンです。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "ARP Reply",
+                  "ok": false,
+                  "explain": "同一LANの解決です。"
+                },
+                {
+                  "text": "SIP 200 OK",
+                  "ok": false,
+                  "explain": "通話制御です。"
+                },
+                {
+                  "text": "ICMP Unreachable",
+                  "ok": true,
+                  "explain": "閉じたUDPポートへの応答です。"
+                }
+              ],
+              "why": "閉じたUDPポートへの応答です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "8",
+                  "ok": false,
+                  "explain": "FPのHTTP通信です。"
+                },
+                {
+                  "text": "3",
+                  "ok": true,
+                  "explain": "TCP/25許可の項番です。"
+                },
+                {
+                  "text": "1",
+                  "ok": false,
+                  "explain": "DNS UDP/53です。"
+                }
+              ],
+              "why": "TCP/25許可の項番です。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "x.y.z.1",
+                  "ok": true,
+                  "explain": "R社DNSのIPです。"
+                },
+                {
+                  "text": "any",
+                  "ok": false,
+                  "explain": "範囲が過大です。"
+                },
+                {
+                  "text": "α.β.γ.1",
+                  "ok": false,
+                  "explain": "外部DNS自身です。"
+                }
+              ],
+              "why": "R社DNSのIPです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.08,
+            "bottom": 0.74,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "FW表から許可通信と攻撃面を読む",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から結果までを並べる。",
+          "lead": "攻撃又は防御の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "通信方向と宛先を表1で固定する"
+            },
+            {
+              "code": "許可ルールの項番を探す"
+            },
+            {
+              "code": "相手IPと通信名を答える"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信方向と照合する項目を見直してください。",
+          "format": "並べ替え",
+          "theme": "FW表から許可通信と攻撃面を読む",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "スレーブDNSを別IPへ交換した。見直すものはどれか。",
+          "choices": [
+            {
+              "text": "内部PCのMAC",
+              "ok": false,
+              "explain": "ゾーン転送に無関係です。"
+            },
+            {
+              "text": "項番2の送信元IP",
+              "ok": true,
+              "explain": "ゾーン転送の正規相手が変わります。"
+            },
+            {
+              "text": "全UDPポート",
+              "ok": false,
+              "explain": "変更範囲が過大です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "FW表から許可通信と攻撃面を読む",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "urpf",
+      "title": "送信元アドレスと戻り経路を照合する",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "送信元アドレスと戻り経路を照合する",
+          "body": "uRPF（Unicast Reverse Path Forwarding）は受信パケットの送信元を経路表と照合します。本問の説明では、送信元への経路がないパケットを廃棄します。DMZ /28の全ホストを表すブロードキャストは末尾15です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "uRPF",
+                "送信元への経路がなければ廃棄"
+              ],
+              [
+                "α.β.γ.0/28",
+                "ブロードキャストα.β.γ.15"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "送信元アドレスと戻り経路を照合する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "uRPFで照合するものはどれか。",
+          "choices": [
+            {
+              "text": "宛先TCPポートとDNS識別子",
+              "ok": false,
+              "explain": "別の層の項目です。"
+            },
+            {
+              "text": "URLとCookie",
+              "ok": false,
+              "explain": "HTTPの情報です。"
+            },
+            {
+              "text": "受信パケットの送信元IPと経路表",
+              "ok": true,
+              "explain": "偽装元への戻り経路の有無を見ます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "送信元アドレスと戻り経路を照合する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "/28のブロードキャストが末尾15になる理由は何か。",
+          "choices": [
+            {
+              "text": "DNS TTLが15秒だから",
+              "ok": false,
+              "explain": "TTLとは無関係です。"
+            },
+            {
+              "text": "下位4ビットが全て1になるため",
+              "ok": true,
+              "explain": "/28ではホスト部が4ビットです。"
+            },
+            {
+              "text": "TCPポートが15だから",
+              "ok": false,
+              "explain": "ポート番号とは無関係です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "送信元アドレスと戻り経路を照合する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "ルータは送信元IPが{a}に存在しなければ{b}。ブロードキャストは{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "ルーティングテーブル",
+                  "ok": true,
+                  "explain": "戻り経路を照合します。"
+                },
+                {
+                  "text": "DNSキャッシュ",
+                  "ok": false,
+                  "explain": "uRPFの参照先ではありません。"
+                },
+                {
+                  "text": "ARP要求",
+                  "ok": false,
+                  "explain": "経路表ではありません。"
+                }
+              ],
+              "why": "戻り経路を照合します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "宛先を書き換える",
+                  "ok": false,
+                  "explain": "uRPFの説明ではありません。"
+                },
+                {
+                  "text": "必ず返信する",
+                  "ok": false,
+                  "explain": "不正元へ返しません。"
+                },
+                {
+                  "text": "受信パケットを廃棄する",
+                  "ok": true,
+                  "explain": "偽装の可能性を抑えます。"
+                }
+              ],
+              "why": "偽装の可能性を抑えます。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "α.β.γ.255",
+                  "ok": false,
+                  "explain": "/24なら候補です。"
+                },
+                {
+                  "text": "α.β.γ.15",
+                  "ok": true,
+                  "explain": "/28の末尾です。"
+                },
+                {
+                  "text": "α.β.γ.0",
+                  "ok": false,
+                  "explain": "ネットワークアドレスです。"
+                }
+              ],
+              "why": "/28の末尾です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.08,
+            "bottom": 0.74,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "送信元アドレスと戻り経路を照合する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から結果までを並べる。",
+          "lead": "攻撃又は防御の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "受信パケットの送信元IPを得る"
+            },
+            {
+              "code": "送信元への経路を経路表で探す"
+            },
+            {
+              "code": "経路がなければ廃棄する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信方向と照合する項目を見直してください。",
+          "format": "並べ替え",
+          "theme": "送信元アドレスと戻り経路を照合する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "非対称経路がある場合の注意はどれか。",
+          "choices": [
+            {
+              "text": "送信元IPを見ない",
+              "ok": false,
+              "explain": "中心となる照合項目です。"
+            },
+            {
+              "text": "厳格な受信IF照合では正規通信を落とす場合がある",
+              "ok": true,
+              "explain": "マルチホームでは方式選択が必要です。"
+            },
+            {
+              "text": "uRPFは常に暗号化する",
+              "ok": false,
+              "explain": "暗号機能ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "送信元アドレスと戻り経路を照合する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "syn-cookie",
+      "title": "SYNクッキーがメモリ確保を遅らせる仕組みを追う",
+      "targets": [
+        "s4-1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "SYNクッキーがメモリ確保を遅らせる仕組みを追う",
+          "body": "SYNフラッドは未完了接続の状態を大量に保持させます。SYNクッキーは最初のSYN受信時に接続用メモリを確保しません。計算値をSYN/ACKのシーケンス番号へ埋め込みます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "SYN/ACK",
+                "シーケンス番号へ計算値"
+              ],
+              [
+                "ACK",
+                "確認応答番号を計算値+1と照合"
+              ],
+              [
+                "メモリ",
+                "照合成功後に確保"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "SYNクッキーがメモリ確保を遅らせる仕組みを追う",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "図3のイとウは何か。",
+          "choices": [
+            {
+              "text": "イ＝確認応答、ウ＝送信元ポート",
+              "ok": false,
+              "explain": "番号の方向が違います。"
+            },
+            {
+              "text": "イ＝DNS、ウ＝VLAN",
+              "ok": false,
+              "explain": "TCPヘッダ項目ではありません。"
+            },
+            {
+              "text": "イ＝シーケンス、ウ＝確認応答",
+              "ok": true,
+              "explain": "送信側の番号に対しACKは次番号を返します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "SYNクッキーがメモリ確保を遅らせる仕組みを追う",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "同時接続数の制限が緩和される理由は何か。",
+          "choices": [
+            {
+              "text": "シーケンス番号を削除するため",
+              "ok": false,
+              "explain": "番号に計算値を埋め込みます。"
+            },
+            {
+              "text": "準備段階で接続ごとのメモリを確保しないため",
+              "ok": true,
+              "explain": "偽SYNごとの状態保持を避けます。"
+            },
+            {
+              "text": "全SYNをサーバへ直送するため",
+              "ok": false,
+              "explain": "サーバの負荷を増やします。"
+            }
+          ],
+          "format": "選択",
+          "theme": "SYNクッキーがメモリ確保を遅らせる仕組みを追う",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "イは{a}、ウは{b}、エは{c}。{d}まではメモリを確保しない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "シーケンス",
+                  "ok": true,
+                  "explain": "SYN/ACKに計算値を入れます。"
+                },
+                {
+                  "text": "確認応答",
+                  "ok": false,
+                  "explain": "ACK側の欄です。"
+                },
+                {
+                  "text": "識別子",
+                  "ok": false,
+                  "explain": "DNS項目です。"
+                }
+              ],
+              "why": "SYN/ACKに計算値を入れます。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "シーケンス",
+                  "ok": false,
+                  "explain": "受信ACK側では確認応答番号です。"
+                },
+                {
+                  "text": "ポート",
+                  "ok": false,
+                  "explain": "計算値+1を照合する欄ではありません。"
+                },
+                {
+                  "text": "確認応答",
+                  "ok": true,
+                  "explain": "ACKの番号を照合します。"
+                }
+              ],
+              "why": "ACKの番号を照合します。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "53",
+                  "ok": false,
+                  "explain": "DNSポートです。"
+                },
+                {
+                  "text": "1",
+                  "ok": true,
+                  "explain": "ACKは次のシーケンス番号を示します。"
+                },
+                {
+                  "text": "0",
+                  "ok": false,
+                  "explain": "SYNが1消費する点を落としています。"
+                }
+              ],
+              "why": "ACKは次のシーケンス番号を示します。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "ACKの検証成功",
+                  "ok": true,
+                  "explain": "正規の応答と分かってから確保します。"
+                },
+                {
+                  "text": "SYN受信直後",
+                  "ok": false,
+                  "explain": "SYNクッキーの利点がなくなります。"
+                },
+                {
+                  "text": "DNS応答受信",
+                  "ok": false,
+                  "explain": "TCP接続の条件ではありません。"
+                }
+              ],
+              "why": "正規の応答と分かってから確保します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 17,
+            "top": 0.08,
+            "bottom": 0.74,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "SYNクッキーがメモリ確保を遅らせる仕組みを追う",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から結果までを並べる。",
+          "lead": "攻撃又は防御の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "SYN情報からクッキーを計算する"
+            },
+            {
+              "code": "SYN/ACKのシーケンス番号へ入れる"
+            },
+            {
+              "code": "ACKの確認応答番号を検証後に状態を確保する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信方向と照合する項目を見直してください。",
+          "format": "並べ替え",
+          "theme": "SYNクッキーがメモリ確保を遅らせる仕組みを追う",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "攻撃者が正しいACKを返せない場合はどうなるか。",
+          "choices": [
+            {
+              "text": "DNSキャッシュが更新される",
+              "ok": false,
+              "explain": "TCP防御と無関係です。"
+            },
+            {
+              "text": "接続用メモリ確保へ進まない",
+              "ok": true,
+              "explain": "検証に失敗します。"
+            },
+            {
+              "text": "必ずサーバとの接続が成立する",
+              "ok": false,
+              "explain": "防御になりません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "SYNクッキーがメモリ確保を遅らせる仕組みを追う",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "server-relay",
+      "title": "DMZサーバを踏み台にしない境界を作る",
+      "targets": [
+        "s4-3",
+        "s4-4",
+        "s4-5"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "DMZサーバを踏み台にしない境界を作る",
+          "body": "FPサーバはインターネットから接続を確立できないFW設定です。メール中継サーバはW社宛て以外を外部から中継しません。DNSの再帰機能はDNSサーバ2へ分離します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "FP",
+                "外部から接続不可"
+              ],
+              [
+                "メール",
+                "W社宛て以外は中継しない"
+              ],
+              [
+                "DNS2",
+                "α.β.γ.6からanyへDNS"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "DMZサーバを踏み台にしない境界を作る",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "FPサーバが踏み台になりにくい根拠はどれか。",
+          "choices": [
+            {
+              "text": "全Webを許可している",
+              "ok": false,
+              "explain": "逆の条件です。"
+            },
+            {
+              "text": "DNS TTLが短い",
+              "ok": false,
+              "explain": "FPへの外部接続条件ではありません。"
+            },
+            {
+              "text": "インターネットからコネクションを確立できない",
+              "ok": true,
+              "explain": "外部から利用開始できません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "DMZサーバを踏み台にしない境界を作る",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "オ・カの組はどれか。",
+          "choices": [
+            {
+              "text": "any・α.β.γ.1",
+              "ok": false,
+              "explain": "インターネットからコンテンツDNSへの規則です。"
+            },
+            {
+              "text": "α.β.γ.6・any",
+              "ok": true,
+              "explain": "DNS2から外部への再帰問合せを許可します。"
+            },
+            {
+              "text": "α.β.γ.1・α.β.γ.6",
+              "ok": false,
+              "explain": "宛先をDNS2固定にしてしまいます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "DMZサーバを踏み台にしない境界を作る",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "FPは外部から{a}できない。メールは{b}以外を中継しない。オは{c}、カは{d}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "コネクションを確立",
+                  "ok": true,
+                  "explain": "外部から利用開始できません。"
+                },
+                {
+                  "text": "名前解決",
+                  "ok": false,
+                  "explain": "FPの主機能ではありません。"
+                },
+                {
+                  "text": "ゾーン転送",
+                  "ok": false,
+                  "explain": "FPへの攻撃条件ではありません。"
+                }
+              ],
+              "why": "外部から利用開始できません。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "任意の外部宛て",
+                  "ok": false,
+                  "explain": "オープンリレーになります。"
+                },
+                {
+                  "text": "DNS応答",
+                  "ok": false,
+                  "explain": "メールではありません。"
+                },
+                {
+                  "text": "W社のメールアドレス宛て",
+                  "ok": true,
+                  "explain": "正規の受信だけを中継します。"
+                }
+              ],
+              "why": "正規の受信だけを中継します。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "192.168.10.1",
+                  "ok": false,
+                  "explain": "内部DNSです。"
+                },
+                {
+                  "text": "α.β.γ.6",
+                  "ok": true,
+                  "explain": "DNSサーバ2のIPです。"
+                },
+                {
+                  "text": "α.β.γ.1",
+                  "ok": false,
+                  "explain": "DNSサーバ1です。"
+                }
+              ],
+              "why": "DNSサーバ2のIPです。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "any",
+                  "ok": true,
+                  "explain": "外部の各コンテンツサーバへ問い合わせます。"
+                },
+                {
+                  "text": "α.β.γ.6",
+                  "ok": false,
+                  "explain": "自分自身宛てになります。"
+                },
+                {
+                  "text": "FPサーバだけ",
+                  "ok": false,
+                  "explain": "再帰問合せ先ではありません。"
+                }
+              ],
+              "why": "外部の各コンテンツサーバへ問い合わせます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 18,
+            "top": 0.08,
+            "bottom": 0.74,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "DMZサーバを踏み台にしない境界を作る",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から結果までを並べる。",
+          "lead": "攻撃又は防御の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "外部から開始できる通信をFW表で確認する"
+            },
+            {
+              "code": "サーバ自身の中継制限を確認する"
+            },
+            {
+              "code": "必要な方向だけ許可する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信方向と照合する項目を見直してください。",
+          "format": "並べ替え",
+          "theme": "DMZサーバを踏み台にしない境界を作る",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "メールが任意の外部宛てを中継した場合はどうなるか。",
+          "choices": [
+            {
+              "text": "DNS識別子が固定される",
+              "ok": false,
+              "explain": "無関係です。"
+            },
+            {
+              "text": "第三者のメール送信の踏み台になり得る",
+              "ok": true,
+              "explain": "オープンリレーの問題です。"
+            },
+            {
+              "text": "SYNクッキーが必ず有効になる",
+              "ok": false,
+              "explain": "メール中継設定と別です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "DMZサーバを踏み台にしない境界を作る",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "dns-forgery",
+      "title": "正当なDNS応答の対応関係を復元する",
+      "targets": [
+        "s5-1",
+        "s5-2",
+        "s5-3"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "正当なDNS応答の対応関係を復元する",
+          "body": "応答は問合せと逆方向です。送信元・宛先IPとUDPポートを入れ替え、識別子は同じ値を返します。攻撃者は宛先ポート番号と識別子を変えて推測します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "応答元IP",
+                "コンテンツサーバ"
+              ],
+              [
+                "応答先IP",
+                "フルリゾルバ"
+              ],
+              [
+                "応答元ポート",
+                "53"
+              ],
+              [
+                "応答先ポート",
+                "n"
+              ],
+              [
+                "識別子",
+                "m"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "正当なDNS応答の対応関係を復元する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "偽応答ごとに変える項目はどれか。",
+          "choices": [
+            {
+              "text": "送信元IPとQRだけ",
+              "ok": false,
+              "explain": "正規応答に見せる値は固定します。"
+            },
+            {
+              "text": "プロトコルと宛先IP",
+              "ok": false,
+              "explain": "UDPとリゾルバIPを変えると届きません。"
+            },
+            {
+              "text": "宛先ポート番号と識別子",
+              "ok": true,
+              "explain": "正規問合せとの一致を狙って候補を変えます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "正当なDNS応答の対応関係を復元する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "外部からDNS2への攻撃要求を防げる根拠は何か。",
+          "choices": [
+            {
+              "text": "識別子が常に0になる",
+              "ok": false,
+              "explain": "その条件はありません。"
+            },
+            {
+              "text": "FWがインターネット発のDNS2宛て問合せを廃棄する",
+              "ok": true,
+              "explain": "攻撃の起点となる要求が届きません。"
+            },
+            {
+              "text": "DNS2がコンテンツ機能も公開する",
+              "ok": false,
+              "explain": "分離の目的に反します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "正当なDNS応答の対応関係を復元する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "キは{a}、クは{b}、ケは{c}、コは{d}、サは{e}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "コンテンツサーバのIP",
+                  "ok": true,
+                  "explain": "応答の送信元です。"
+                },
+                {
+                  "text": "フルリゾルバのIP",
+                  "ok": false,
+                  "explain": "応答先です。"
+                },
+                {
+                  "text": "攻撃者IP",
+                  "ok": false,
+                  "explain": "正当応答ではありません。"
+                }
+              ],
+              "why": "応答の送信元です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "コンテンツサーバのIP",
+                  "ok": false,
+                  "explain": "方向が逆です。"
+                },
+                {
+                  "text": "FWのIP",
+                  "ok": false,
+                  "explain": "問合せ端点ではありません。"
+                },
+                {
+                  "text": "フルリゾルバのIP",
+                  "ok": true,
+                  "explain": "応答の宛先です。"
+                }
+              ],
+              "why": "応答の宛先です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "443",
+                  "ok": false,
+                  "explain": "HTTPSです。"
+                },
+                {
+                  "text": "53",
+                  "ok": true,
+                  "explain": "DNSサーバの送信元ポートです。"
+                },
+                {
+                  "text": "n",
+                  "ok": false,
+                  "explain": "問合せ側の一時ポートです。"
+                }
+              ],
+              "why": "DNSサーバの送信元ポートです。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "n",
+                  "ok": true,
+                  "explain": "問合せ送信元へ返します。"
+                },
+                {
+                  "text": "53",
+                  "ok": false,
+                  "explain": "問合せの宛先側です。"
+                },
+                {
+                  "text": "25",
+                  "ok": false,
+                  "explain": "SMTPです。"
+                }
+              ],
+              "why": "問合せ送信元へ返します。"
+            },
+            {
+              "key": "e",
+              "label": "e",
+              "choices": [
+                {
+                  "text": "n",
+                  "ok": false,
+                  "explain": "ポート番号です。"
+                },
+                {
+                  "text": "1",
+                  "ok": false,
+                  "explain": "QRビットと混同しています。"
+                },
+                {
+                  "text": "m",
+                  "ok": true,
+                  "explain": "問合せ識別子を対応させます。"
+                }
+              ],
+              "why": "問合せ識別子を対応させます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 20,
+            "top": 0.08,
+            "bottom": 0.74,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "正当なDNS応答の対応関係を復元する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から結果までを並べる。",
+          "lead": "攻撃又は防御の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "問合せのIP方向を逆にする"
+            },
+            {
+              "code": "UDPポートの方向も逆にする"
+            },
+            {
+              "code": "識別子を同じmにして応答と対応させる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信方向と照合する項目を見直してください。",
+          "format": "並べ替え",
+          "theme": "正当なDNS応答の対応関係を復元する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "送信元ポートを広くランダム化すると攻撃はどうなるか。",
+          "choices": [
+            {
+              "text": "TCP SYNが不要になる",
+              "ok": false,
+              "explain": "DNS偽応答の話です。"
+            },
+            {
+              "text": "推測すべき組合せが増える",
+              "ok": true,
+              "explain": "識別子に加えポートも当てる必要があります。"
+            },
+            {
+              "text": "必ず成功する",
+              "ok": false,
+              "explain": "推測は難しくなります。"
+            }
+          ],
+          "format": "選択",
+          "theme": "正当なDNS応答の対応関係を復元する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "fast-flux",
+      "title": "名前解決と短いTTLから接続先の変化を追う",
+      "targets": [
+        "s6-1",
+        "s6-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "名前解決と短いTTLから接続先の変化を追う",
+          "body": "内部マルウェアは内部DNSへ問い合わせます。内部DNSはDNS2、DNS2は外部コンテンツサーバへ問い合わせます。応答は逆順です。AレコードのTTL 180秒は3分です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "問合せ・応答",
+                "e→g→h→f"
+              ],
+              [
+                "TTL 180秒",
+                "3分"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "名前解決と短いTTLから接続先の変化を追う",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "図4の名前解決通信順はどれか。",
+          "choices": [
+            {
+              "text": "f、h、g、e",
+              "ok": false,
+              "explain": "応答から始まる逆順です。"
+            },
+            {
+              "text": "i、k、l、j",
+              "ok": false,
+              "explain": "これはC&CへのWeb通信側です。"
+            },
+            {
+              "text": "e、g、h、f",
+              "ok": true,
+              "explain": "DNS2から外へ問い、応答後に内部へ返します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "名前解決と短いTTLから接続先の変化を追う",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "TTL 180秒を分へ直すといくつか。",
+          "choices": [
+            {
+              "text": "1.8分",
+              "ok": false,
+              "explain": "60で割る計算が違います。"
+            },
+            {
+              "text": "3分",
+              "ok": true,
+              "explain": "180÷60です。"
+            },
+            {
+              "text": "180分",
+              "ok": false,
+              "explain": "単位変換していません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "名前解決と短いTTLから接続先の変化を追う",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "名前解決は{a}の順。キャッシュ時間は{b}分。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "e、g、h、f",
+                  "ok": true,
+                  "explain": "問合せが外へ進み応答が戻ります。"
+                },
+                {
+                  "text": "e、h、g、f",
+                  "ok": false,
+                  "explain": "方向が交差します。"
+                },
+                {
+                  "text": "f、h、g、e",
+                  "ok": false,
+                  "explain": "逆順です。"
+                }
+              ],
+              "why": "問合せが外へ進み応答が戻ります。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "180",
+                  "ok": false,
+                  "explain": "秒の値です。"
+                },
+                {
+                  "text": "30",
+                  "ok": false,
+                  "explain": "計算が違います。"
+                },
+                {
+                  "text": "3",
+                  "ok": true,
+                  "explain": "180秒を60で割ります。"
+                }
+              ],
+              "why": "180秒を60で割ります。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 21,
+            "top": 0.08,
+            "bottom": 0.74,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "名前解決と短いTTLから接続先の変化を追う",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から結果までを並べる。",
+          "lead": "攻撃又は防御の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "DNS2が外部へ問合せeを送る"
+            },
+            {
+              "code": "コンテンツサーバへgが届きhが戻る"
+            },
+            {
+              "code": "DNS2から内部へ応答fを返す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信方向と照合する項目を見直してください。",
+          "format": "並べ替え",
+          "theme": "名前解決と短いTTLから接続先の変化を追う",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "TTLを600秒にした。キャッシュ時間は何分か。",
+          "choices": [
+            {
+              "text": "600分",
+              "ok": false,
+              "explain": "秒のままです。"
+            },
+            {
+              "text": "10分",
+              "ok": true,
+              "explain": "600÷60です。"
+            },
+            {
+              "text": "6分",
+              "ok": false,
+              "explain": "換算が違います。"
+            }
+          ],
+          "format": "選択",
+          "theme": "名前解決と短いTTLから接続先の変化を追う",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "domain-flux",
+      "title": "FQDNとIPを変える攻撃への観測点を選ぶ",
+      "targets": [
+        "s6-3",
+        "s6-4",
+        "s6-5"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "FQDNとIPを変える攻撃への観測点を選ぶ",
+          "body": "Domain Fluxではアクセス先ホスト名を変えます。プロキシ認証に失敗するマルウェアは短時間に認証エラーを繰り返します。FPを迂回してFQDNへ接続するにはIP解決が必要です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "Domain Flux",
+                "ホスト名をランダム変更"
+              ],
+              [
+                "ログ兆候",
+                "短時間の認証エラー反復"
+              ],
+              [
+                "FP迂回",
+                "IPを取得できず宛先を設定不能"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "FQDNとIPを変える攻撃への観測点を選ぶ",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "C&Cを隠すアクセス方法はどれか。",
+          "choices": [
+            {
+              "text": "同じFQDNだけを永続利用する",
+              "ok": false,
+              "explain": "URLフィルタで特定されやすくなります。"
+            },
+            {
+              "text": "全て同じIPに固定するだけ",
+              "ok": false,
+              "explain": "IP側の隠蔽が弱くなります。"
+            },
+            {
+              "text": "アクセス先のホスト名をランダムに変更する",
+              "ok": true,
+              "explain": "ワイルドカードで異なる名前にも応答させます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "FQDNとIPを変える攻撃への観測点を選ぶ",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "FPを経由しないFQDN宛て通信が失敗する理由は何か。",
+          "choices": [
+            {
+              "text": "認証成功が多すぎるから",
+              "ok": false,
+              "explain": "むしろ認証エラーが兆候です。"
+            },
+            {
+              "text": "C&CのIPを取得できず宛先を設定できない",
+              "ok": true,
+              "explain": "内部から外部DNSへの直接経路が許可されません。"
+            },
+            {
+              "text": "HTTPには宛先IPが不要だから",
+              "ok": false,
+              "explain": "IP通信には宛先IPが必要です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "FQDNとIPを変える攻撃への観測点を選ぶ",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "マルウェアは{a}を変える。ログには{b}が現れる。迂回時は{c}を取得できない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "アクセス先のホスト名",
+                  "ok": true,
+                  "explain": "Domain Fluxの対象です。"
+                },
+                {
+                  "text": "社内PCのMACだけ",
+                  "ok": false,
+                  "explain": "FQDN隠蔽になりません。"
+                },
+                {
+                  "text": "TCPのビット長",
+                  "ok": false,
+                  "explain": "変えません。"
+                }
+              ],
+              "why": "Domain Fluxの対象です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "常に一度だけの成功",
+                  "ok": false,
+                  "explain": "異常の根拠になりません。"
+                },
+                {
+                  "text": "DNSゾーン転送成功",
+                  "ok": false,
+                  "explain": "プロキシ認証ではありません。"
+                },
+                {
+                  "text": "短時間に繰り返す認証エラー",
+                  "ok": true,
+                  "explain": "不正な資格情報での試行を示します。"
+                }
+              ],
+              "why": "不正な資格情報での試行を示します。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "FWの製品名",
+                  "ok": false,
+                  "explain": "通信宛先ではありません。"
+                },
+                {
+                  "text": "C&CサーバのIPアドレス",
+                  "ok": true,
+                  "explain": "名前から宛先を決められません。"
+                },
+                {
+                  "text": "自分のMACアドレス",
+                  "ok": false,
+                  "explain": "ローカルで既に持ちます。"
+                }
+              ],
+              "why": "名前から宛先を決められません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 22,
+            "top": 0.08,
+            "bottom": 0.74,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "FQDNとIPを変える攻撃への観測点を選ぶ",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から結果までを並べる。",
+          "lead": "攻撃又は防御の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "ランダムなホスト名を生成する"
+            },
+            {
+              "code": "名前解決でボットIPを得る"
+            },
+            {
+              "code": "認証失敗や名前解決失敗をログで検知する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信方向と照合する項目を見直してください。",
+          "format": "並べ替え",
+          "theme": "FQDNとIPを変える攻撃への観測点を選ぶ",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "正規のプロキシ資格情報をマルウェアが得た場合はどうするか。",
+          "choices": [
+            {
+              "text": "DNSを無条件許可する",
+              "ok": false,
+              "explain": "攻撃経路を広げます。"
+            },
+            {
+              "text": "認証成功だけで安全とせず宛先や頻度も分析する",
+              "ok": true,
+              "explain": "一つの信号だけでは検知できません。"
+            },
+            {
+              "text": "ログ検査をやめる",
+              "ok": false,
+              "explain": "活動の兆候を失います。"
+            }
+          ],
+          "format": "選択",
+          "theme": "FQDNとIPを変える攻撃への観測点を選ぶ",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

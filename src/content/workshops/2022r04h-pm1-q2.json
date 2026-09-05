@@ -1,0 +1,1703 @@
+{
+  "examKey": "2022r04h/pm1/2",
+  "title": "二つの経路表からセキュアゲートウェイへつなぐ",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "egress",
+      "title": "相手に見える送信元を判断する",
+      "targets": [
+        "s1-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "相手に見える送信元を判断する",
+          "body": "営業所のPC（Personal Computer）から本社経由で外部サービスへ接続します。VPN（Virtual Private Network）は拠点間の論理的な専用通信路、IPsec（IP Security）はIP通信を保護する技術です。本社のFW（Firewall：ファイアウォール）がNAPT（Network Address Port Translation）で送信元IP（Internet Protocol）アドレスとポートを変換します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "営業所PC",
+                "d": "プライベートIP"
+              },
+              {
+                "t": "本社IPsecルータ",
+                "d": "VPNを終端"
+              },
+              {
+                "t": "本社FW",
+                "d": "NAPT後の送信元a.b.c.d"
+              },
+              {
+                "t": "P社サービス",
+                "d": "本社FWのIPを許可"
+              }
+            ],
+            "caption": "説明用の流れ"
+          },
+          "id": "egress-1",
+          "format": "読む",
+          "theme": "相手に見える送信元を判断する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "egress-7",
+          "type": "info",
+          "title": "外側はトンネル終端、内側は業務相手",
+          "body": "練習用の条件：VPNは営業所ルータから本社ルータまでです。元のPCのパケットを包む外側IPヘッダはこの二台を結びます。本社で外側を外した後、元のパケットをFWへ転送するので、P社が見る送信元は最後のNAPT後の値になります。",
+          "format": "読む",
+          "theme": "外側はトンネル終端、内側は業務相手",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "egress-8",
+          "type": "quiz",
+          "title": "VPNを本社で終端し、その後FWで送信元を変換する。P社へ届く時点の送信元を調べるにはどこを見るか。",
+          "choices": [
+            {
+              "text": "本社FWからインターネットへ出た側",
+              "ok": true,
+              "explain": "途中のVPN外側ヘッダではなく、最終相手に届くパケットを見ます。"
+            },
+            {
+              "text": "営業所PCからVPNに入る前だけ",
+              "ok": false,
+              "explain": "その後NAPTで送信元が変わります。"
+            },
+            {
+              "text": "営業所ルータと本社ルータ間だけ",
+              "ok": false,
+              "explain": "この区間で見えるのは主にトンネル外側のアドレスです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "VPNを本社で終端し、その後FWで送信元を変換する。P社へ届く時点の送信元を調べるにはどこを見るか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "type": "quiz",
+          "title": "サービス側のIP制限で許可する送信元はどれか。",
+          "choices": [
+            {
+              "text": "PCのプライベートIP",
+              "ok": false,
+              "explain": "FWで変換される前の値です。"
+            },
+            {
+              "text": "営業所ルータの外側IP",
+              "ok": false,
+              "explain": "VPNの外側で使う値であり、サービスへの送信元ではありません。"
+            },
+            {
+              "text": "最後にNAPTしたFWの外側IP",
+              "ok": true,
+              "explain": "サービスが受信するパケットの送信元です。"
+            }
+          ],
+          "id": "egress-2",
+          "format": "選択",
+          "theme": "相手に見える送信元を判断する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "本社IPsecルータの外側IPがs.t.u.vでも、FWのa.b.c.dを選ぶ理由はどれか。",
+          "choices": [
+            {
+              "text": "VPNは常に送信元をa.b.c.dにするから",
+              "ok": false,
+              "explain": "VPN自体にそのような固定値はありません。"
+            },
+            {
+              "text": "VPN終端後にFWを通って外へ出るから",
+              "ok": true,
+              "explain": "IPsecの外側パケットとサービス宛てパケットは別です。"
+            },
+            {
+              "text": "文字順でaが先だから",
+              "ok": false,
+              "explain": "アドレスの役割で判断します。"
+            }
+          ],
+          "id": "egress-3",
+          "format": "選択",
+          "theme": "相手に見える送信元を判断する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "送信元制限を組み立てる",
+          "template": "P社では{a}のINT-IFである{b}を許可する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "装置",
+              "choices": [
+                {
+                  "text": "本社FW",
+                  "ok": true,
+                  "explain": "外部へ出る最後のNAPT装置です。"
+                },
+                {
+                  "text": "本社IPsecルータ",
+                  "ok": false,
+                  "explain": "トンネルを終端する装置です。"
+                },
+                {
+                  "text": "営業所IPsecルータ",
+                  "ok": false,
+                  "explain": "VPN外側の送信元を持つ装置です。"
+                }
+              ],
+              "why": "外部へ出る最後のNAPT装置です。"
+            },
+            {
+              "key": "b",
+              "label": "IP",
+              "choices": [
+                {
+                  "text": "a.b.c.d",
+                  "ok": true,
+                  "explain": "表1のFW外側アドレスです。"
+                },
+                {
+                  "text": "172.16.0.1",
+                  "ok": false,
+                  "explain": "FWのLAN側アドレスです。"
+                },
+                {
+                  "text": "w.x.y.z",
+                  "ok": false,
+                  "explain": "営業所の動的グローバルIPです。"
+                }
+              ],
+              "why": "表1のFW外側アドレスです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.57,
+            "bottom": 0.89,
+            "label": "原表1：FWとVPNルータのアドレス"
+          },
+          "id": "egress-4",
+          "format": "穴埋め",
+          "theme": "相手に見える送信元を判断する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "営業所PCからサービスまで並べる",
+          "lead": "現行構成では本社FWを通ります。",
+          "lines": [
+            {
+              "code": "営業所IPsecルータからVPNに入る"
+            },
+            {
+              "code": "本社IPsecルータでVPNを終端する"
+            },
+            {
+              "code": "本社L3SWを通りFWでNAPTする"
+            },
+            {
+              "code": "P社サービスがa.b.c.dからの通信を受ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "トンネルの外側宛先と最終サービスの宛先を分けます。",
+          "ngExplain": "VPN終端で通信が完了するわけではありません。",
+          "id": "egress-5",
+          "format": "並べ替え",
+          "theme": "相手に見える送信元を判断する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "FWのNAPT外側IPだけを変更した。サービス側で必要なのはどれか。",
+          "choices": [
+            {
+              "text": "営業所LANのサブネットマスク変更",
+              "ok": false,
+              "explain": "NAPT後のIP変更とは無関係です。"
+            },
+            {
+              "text": "許可する送信元IPの更新",
+              "ok": true,
+              "explain": "サービスが見る値が変わります。"
+            },
+            {
+              "text": "PC全台のMAC登録",
+              "ok": false,
+              "explain": "IP制限の条件と違います。"
+            }
+          ],
+          "id": "egress-6",
+          "format": "選択",
+          "theme": "相手に見える送信元を判断する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "vrf",
+      "title": "内側と外側の経路表を使い分ける",
+      "targets": [
+        "s1-2",
+        "s1-3",
+        "s1-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "内側と外側の経路表を使い分ける",
+          "body": "LAN（Local Area Network：拠点内ネットワーク）側とインターネット側で異なるデフォルトルートを使います。VRF（Virtual Routing and Forwarding）は一台のルータの経路表を分離する仕組みです。原問のINT-IFはインターネット側、LAN-IFはLAN側、トンネルIFはVPNの内側のインタフェース（接続口）です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "VRF",
+              "インタフェース",
+              "用途"
+            ],
+            "rows": [
+              [
+                "65000:1",
+                "INT-IF",
+                "VPNの外側"
+              ],
+              [
+                "65000:2",
+                "LAN-IFとトンネルIF",
+                "業務パケット"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "vrf-1",
+          "format": "読む",
+          "theme": "内側と外側の経路表を使い分ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "VRFで別々に保持するものはどれか。",
+          "choices": [
+            {
+              "text": "MACアドレスの長さ",
+              "ok": false,
+              "explain": "VRFはMACのビット数を変えません。"
+            },
+            {
+              "text": "HTTPの認証方式",
+              "ok": false,
+              "explain": "経路表の分離と認証は別です。"
+            },
+            {
+              "text": "ルーティングテーブル",
+              "ok": true,
+              "explain": "同じデフォルト宛先でも転送先を分けられます。"
+            }
+          ],
+          "id": "vrf-2",
+          "format": "選択",
+          "theme": "内側と外側の経路表を使い分ける",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "id": "vrf-7",
+          "type": "info",
+          "title": "宛先0.0.0.0/0は最後に使う経路",
+          "body": "0.0.0.0/0は、より具体的な経路がない場合に使うデフォルトルートです。ネクストホップは次に渡す相手です。原問では、外側のVRF 65000:1はISP（Internet Service Provider：インターネット接続事業者）のルータへ、内側の65000:2は本社L3SW（Layer 3 Switch）へ渡します。",
+          "format": "読む",
+          "theme": "宛先0.0.0.0/0は最後に使う経路",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "本社でVPNを外した営業所PCのP社宛てパケットはどのVRFで扱うか。",
+          "choices": [
+            {
+              "text": "宛先が外部なので両方を同時に検索する",
+              "ok": false,
+              "explain": "この構成では所属VRFの表を使います。"
+            },
+            {
+              "text": "65000:2",
+              "ok": true,
+              "explain": "トンネルIFは業務側のVRFです。"
+            },
+            {
+              "text": "65000:1",
+              "ok": false,
+              "explain": "これはVPN外側のINT-IFのVRFです。"
+            }
+          ],
+          "id": "vrf-3",
+          "format": "選択",
+          "theme": "内側と外側の経路表を使い分ける",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "本社の業務側デフォルト経路を埋める",
+          "template": "VRFは{a}、宛先は{b}、次ホップは{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "VRF",
+              "choices": [
+                {
+                  "text": "65000:2",
+                  "ok": true,
+                  "explain": "トンネルIFの所属です。"
+                },
+                {
+                  "text": "65000:1",
+                  "ok": false,
+                  "explain": "外側パケットのVRFです。"
+                },
+                {
+                  "text": "VRFなし",
+                  "ok": false,
+                  "explain": "表2では識別子が指定されています。"
+                }
+              ],
+              "why": "トンネルIFの所属です。"
+            },
+            {
+              "key": "b",
+              "label": "宛先",
+              "choices": [
+                {
+                  "text": "0.0.0.0/0",
+                  "ok": true,
+                  "explain": "P社向けの個別経路がないためです。"
+                },
+                {
+                  "text": "172.17.1.0/24",
+                  "ok": false,
+                  "explain": "営業所LANへ戻る経路です。"
+                },
+                {
+                  "text": "172.17.0.1/32",
+                  "ok": false,
+                  "explain": "本社VPNルータ自身のアドレスです。"
+                }
+              ],
+              "why": "P社向けの個別経路がないためです。"
+            },
+            {
+              "key": "c",
+              "label": "表2のb",
+              "choices": [
+                {
+                  "text": "本社のL3SW",
+                  "ok": true,
+                  "explain": "その先のFWへ業務パケットを渡します。"
+                },
+                {
+                  "text": "営業所のL2SW",
+                  "ok": false,
+                  "explain": "本社の直接の次ホップではありません。"
+                },
+                {
+                  "text": "ISPのルータ",
+                  "ok": false,
+                  "explain": "VPN外側のVRFの次ホップです。"
+                }
+              ],
+              "why": "その先のFWへ業務パケットを渡します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.07,
+            "bottom": 0.35,
+            "label": "原表2：VRFと業務側の経路"
+          },
+          "id": "vrf-4",
+          "format": "穴埋め",
+          "theme": "内側と外側の経路表を使い分ける",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "本社ルータでの転送判断を並べる",
+          "lead": "営業所から届いた業務パケットを扱います。",
+          "lines": [
+            {
+              "code": "トンネルを終端して業務パケットを取り出す"
+            },
+            {
+              "code": "トンネルIFのVRF 65000:2を使う"
+            },
+            {
+              "code": "P社宛てにデフォルトルートを選ぶ"
+            },
+            {
+              "code": "本社のL3SWへ転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "所属VRFを先に決めて宛先を検索します。",
+          "ngExplain": "最終宛先が外部でも外側用VRFへ直接飛びません。",
+          "id": "vrf-5",
+          "format": "並べ替え",
+          "theme": "内側と外側の経路表を使い分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "本社からVPN自体の外側パケットを送る場面に変えた。使う組はどれか。",
+          "choices": [
+            {
+              "text": "65000:2と営業所L2SW",
+              "ok": false,
+              "explain": "L2SWは本社VPNルータの次ホップではありません。"
+            },
+            {
+              "text": "65000:1とISPのルータ",
+              "ok": true,
+              "explain": "外側INT-IFの経路表を使います。"
+            },
+            {
+              "text": "65000:2と本社L3SW",
+              "ok": false,
+              "explain": "こちらは業務パケットのデフォルトです。"
+            }
+          ],
+          "id": "vrf-6",
+          "format": "選択",
+          "theme": "内側と外側の経路表を使い分ける",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "routes",
+      "title": "静的経路と再配布を判断する",
+      "targets": [
+        "s1-3",
+        "s1-5",
+        "s1-6"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "静的経路と再配布を判断する",
+          "body": "営業所ルータの外側IPはISPから動的に割り当てられます。VPNの内側では営業所LAN 172.17.1.0/24への静的経路を持ちます。本社内ではOSPF（Open Shortest Path First：経路を交換するプロトコル）へその静的経路を再配布し、戻りの通信も営業所へ届くようにします。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "経路",
+              "設定方法"
+            ],
+            "rows": [
+              [
+                "本社→営業所LAN",
+                "トンネルIFへの静的経路"
+              ],
+              [
+                "営業所→全宛先",
+                "トンネルIFへの静的デフォルト"
+              ],
+              [
+                "本社内への通知",
+                "営業所LAN経路をOSPFへ再配布"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "routes-1",
+          "format": "読む",
+          "theme": "静的経路と再配布を判断する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "営業所外側IPが変わるとき、本社外側にデフォルトを置く理由はどれか。",
+          "choices": [
+            {
+              "text": "営業所LANが毎回変わるから",
+              "ok": false,
+              "explain": "動的なのは外側グローバルIPです。"
+            },
+            {
+              "text": "暗号方式を自動選択するため",
+              "ok": false,
+              "explain": "経路は暗号方式を決めません。"
+            },
+            {
+              "text": "変更後の相手IPにもISPへ送れるようにする",
+              "ok": true,
+              "explain": "固定の相手IPだけを宛先とする経路では不足します。"
+            }
+          ],
+          "id": "routes-2",
+          "format": "選択",
+          "theme": "静的経路と再配布を判断する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "本社FWが営業所LANへ戻りを送るために知るべき経路はどれか。",
+          "choices": [
+            {
+              "text": "0.0.0.0/0だけ",
+              "ok": false,
+              "explain": "インターネットへ出すだけでは営業所へ戻れません。"
+            },
+            {
+              "text": "172.17.1.0/24",
+              "ok": true,
+              "explain": "営業所PCの収容ネットワークです。"
+            },
+            {
+              "text": "w.x.y.zだけ",
+              "ok": false,
+              "explain": "VPN外側の到達先であり、業務側の戻り宛先ではありません。"
+            }
+          ],
+          "id": "routes-3",
+          "format": "選択",
+          "theme": "静的経路と再配布を判断する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "表2と再配布対象をそろえる",
+          "template": "cは{a}、dは{b}。OSPFへ知らせる営業所LANは{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "静的経路制御",
+                  "ok": true,
+                  "explain": "本文で本社のトンネルIF向けに設定しています。"
+                },
+                {
+                  "text": "動的経路制御",
+                  "ok": false,
+                  "explain": "トンネル越しのOSPFを設定する条件ではありません。"
+                },
+                {
+                  "text": "NAPT",
+                  "ok": false,
+                  "explain": "アドレス変換であり経路方式ではありません。"
+                }
+              ],
+              "why": "本文で本社のトンネルIF向けに設定しています。"
+            },
+            {
+              "key": "b",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "静的経路制御",
+                  "ok": true,
+                  "explain": "営業所のトンネルIF向けも静的です。"
+                },
+                {
+                  "text": "動的経路制御",
+                  "ok": false,
+                  "explain": "営業所でOSPFを使う条件はありません。"
+                },
+                {
+                  "text": "DNS",
+                  "ok": false,
+                  "explain": "名前解決では経路表を配布しません。"
+                }
+              ],
+              "why": "営業所のトンネルIF向けも静的です。"
+            },
+            {
+              "key": "c",
+              "label": "再配布先の宛先情報",
+              "choices": [
+                {
+                  "text": "172.17.1.0/24",
+                  "ok": true,
+                  "explain": "営業所LANへの経路です。"
+                },
+                {
+                  "text": "0.0.0.0/0",
+                  "ok": false,
+                  "explain": "本社FWが配布するデフォルトと区別します。"
+                },
+                {
+                  "text": "172.16.0.0/24",
+                  "ok": false,
+                  "explain": "本社FWのLAN側です。"
+                }
+              ],
+              "why": "営業所LANへの経路です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.08,
+            "bottom": 0.62,
+            "label": "原表2のc・dと本文：静的経路・再配布"
+          },
+          "id": "routes-4",
+          "format": "穴埋め",
+          "theme": "静的経路と再配布を判断する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "営業所への戻り経路を伝える順を並べる",
+          "lead": "本社内のOSPFへ外部の経路を取り込みます。",
+          "lines": [
+            {
+              "code": "本社VPNルータに営業所LANへの静的経路を設定する"
+            },
+            {
+              "code": "その静的経路をOSPFへ再配布する"
+            },
+            {
+              "code": "本社L3SWやFWが営業所LANへの経路を学習する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "静的経路を持つだけでは他装置へ自動通知されません。",
+          "ngExplain": "再配布するのは営業所LANの経路です。",
+          "id": "routes-5",
+          "format": "並べ替え",
+          "theme": "静的経路と再配布を判断する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "営業所の外側IPを固定し、その宛先だけの到達経路を設定した。VPN相手へ届くか。",
+          "choices": [
+            {
+              "text": "LAN側をグローバルIPにすればよい",
+              "ok": false,
+              "explain": "外側の経路不足はLAN側の変更で直りません。"
+            },
+            {
+              "text": "その固定IPへ到達できれば届く",
+              "ok": true,
+              "explain": "動的IPが理由だった点を条件変更で確かめます。"
+            },
+            {
+              "text": "デフォルトがなければ必ず届かない",
+              "ok": false,
+              "explain": "個別経路でも宛先へ到達できます。"
+            }
+          ],
+          "id": "routes-6",
+          "format": "選択",
+          "theme": "静的経路と再配布を判断する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "sa",
+      "title": "交渉用とデータ用のSAを分ける",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "交渉用とデータ用のSAを分ける",
+          "body": "IKEv2（Internet Key Exchange version 2）はIPsecの鍵や保護方式を交渉します。SA（Security Association）は鍵や方式などの合意情報です。IKE SAで後続の交渉を保護し、Child SAでESP（Encapsulating Security Payload）の業務データを保護します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "IKE SA",
+                "d": "後続の交渉を保護する"
+              },
+              {
+                "t": "認証とChild SAの交渉",
+                "d": "データ保護条件を合意する"
+              },
+              {
+                "t": "Child SA",
+                "d": "ESPの業務データを保護する"
+              }
+            ],
+            "caption": "説明用の流れ"
+          },
+          "id": "sa-1",
+          "format": "読む",
+          "theme": "交渉用とデータ用のSAを分ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "接続できず、最初の暗号条件の交渉に失敗した。先に見る状態はどれか。",
+          "choices": [
+            {
+              "text": "HTTPキャッシュ",
+              "ok": false,
+              "explain": "Web表示より前のVPN確立の段階です。"
+            },
+            {
+              "text": "VRRP優先度",
+              "ok": false,
+              "explain": "この構成のVPN交渉とは関係しません。"
+            },
+            {
+              "text": "IKE SA",
+              "ok": true,
+              "explain": "後続の交渉に使うSAができているか確認します。"
+            }
+          ],
+          "id": "sa-2",
+          "format": "選択",
+          "theme": "交渉用とデータ用のSAを分ける",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "IKE SAは確立したがデータ保護用の交渉に失敗した。見る状態はどれか。",
+          "choices": [
+            {
+              "text": "P社の画面の色",
+              "ok": false,
+              "explain": "失敗した交渉を特定できません。"
+            },
+            {
+              "text": "Child SA",
+              "ok": true,
+              "explain": "IKE SA成功だけではデータ通信用SA成功を保証しません。"
+            },
+            {
+              "text": "IKE SAだけを見て正常とする",
+              "ok": false,
+              "explain": "二つの段階を分ける必要があります。"
+            }
+          ],
+          "id": "sa-3",
+          "format": "選択",
+          "theme": "交渉用とデータ用のSAを分ける",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "切り分け対象を二つ選ぶ",
+          "template": "交渉用の{a}と、データ保護用の{b}の状態を確認する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "第一段階",
+              "choices": [
+                {
+                  "text": "IKE SA",
+                  "ok": true,
+                  "explain": "鍵管理の交渉を保護します。"
+                },
+                {
+                  "text": "ARP",
+                  "ok": false,
+                  "explain": "MACアドレスを解決します。"
+                },
+                {
+                  "text": "HTTP SA",
+                  "ok": false,
+                  "explain": "原問にそのSAはありません。"
+                }
+              ],
+              "why": "鍵管理の交渉を保護します。"
+            },
+            {
+              "key": "b",
+              "label": "第二段階",
+              "choices": [
+                {
+                  "text": "Child SA",
+                  "ok": true,
+                  "explain": "ESPでの通信を保護するSAです。"
+                },
+                {
+                  "text": "VRF",
+                  "ok": false,
+                  "explain": "ルーティングテーブルの分離です。"
+                },
+                {
+                  "text": "DNS",
+                  "ok": false,
+                  "explain": "名前解決です。"
+                }
+              ],
+              "why": "ESPでの通信を保護するSAです。"
+            }
+          ],
+          "id": "sa-4",
+          "format": "穴埋め",
+          "theme": "交渉用とデータ用のSAを分ける",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "確立の依存関係を並べる",
+          "lead": "原問の接続順を確認します。",
+          "lines": [
+            {
+              "code": "IKE SAに使う方式を交渉する"
+            },
+            {
+              "code": "IKE SAを確立する"
+            },
+            {
+              "code": "そのSAを介して認証とChild SAの条件を交渉する"
+            },
+            {
+              "code": "Child SAを確立しデータを保護する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "後段の交渉は前段の保護を利用します。",
+          "ngExplain": "Child SAの前にIKE SAの成立を確認します。",
+          "id": "sa-5",
+          "format": "並べ替え",
+          "theme": "交渉用とデータ用のSAを分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "両SAが確立したのにP社だけ接続できない。次の調査はどれか。",
+          "choices": [
+            {
+              "text": "Child SAの存在だけで全通信正常とする",
+              "ok": false,
+              "explain": "SAはアプリの正常動作を保証しません。"
+            },
+            {
+              "text": "経路とP社の送信元IP制限を確認する",
+              "ok": true,
+              "explain": "SA成功後も経路やアクセス制御で通信は止まります。"
+            },
+            {
+              "text": "必ずIKEの初期交渉だけを繰り返す",
+              "ok": false,
+              "explain": "成立済みの段階に原因を限定できません。"
+            }
+          ],
+          "id": "sa-6",
+          "format": "選択",
+          "theme": "交渉用とデータ用のSAを分ける",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "esp",
+      "title": "暗号化される内側と配送用の外側を分ける",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "暗号化される内側と配送用の外側を分ける",
+          "body": "原問の新構成では、POP（Point of Presence：サービス接続拠点）でVPNを終端します。トンネルモードでは元のIPパケットをESPで暗号化し、POPへ届ける外側IPヘッダを追加します。DH（Diffie-Hellman）グループは鍵交換に使うパラメータで、原問は有限体DHのグループ1と14を比較しています。",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "元パケット",
+                "parts": [
+                  {
+                    "t": "内側IP",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "業務データ",
+                    "w": 5,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "暗号化する部分",
+                "parts": [
+                  {
+                    "t": "内側IPと業務データ",
+                    "w": 7,
+                    "role": "data"
+                  },
+                  {
+                    "t": "ESPトレーラ",
+                    "w": 2,
+                    "role": "trailer"
+                  }
+                ]
+              },
+              {
+                "label": "外側を付加",
+                "parts": [
+                  {
+                    "t": "外側IP",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "ESPヘッダ",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "暗号化部分",
+                    "w": 4,
+                    "role": "data"
+                  },
+                  {
+                    "t": "認証データ",
+                    "w": 2,
+                    "role": "trailer"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：ESPトンネル（幅は模式的）"
+          },
+          "id": "esp-1",
+          "format": "読む",
+          "theme": "暗号化される内側と配送用の外側を分ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "途中のルータがPOPへ転送するために読むのはどれか。",
+          "choices": [
+            {
+              "text": "暗号化された元のTCPデータ",
+              "ok": false,
+              "explain": "中継ルータは復号してアプリを読みません。"
+            },
+            {
+              "text": "利用者のパスワード",
+              "ok": false,
+              "explain": "IPルーティングの材料ではありません。"
+            },
+            {
+              "text": "外側IPヘッダ",
+              "ok": true,
+              "explain": "暗号化された内側とは別に配送情報が必要です。"
+            }
+          ],
+          "id": "esp-2",
+          "format": "選択",
+          "theme": "暗号化される内側と配送用の外側を分ける",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "原問の条件：DHグループ1より鍵長が長い14を利用する。変更の狙いとして適切なのはどれか。",
+          "choices": [
+            {
+              "text": "ポート番号を14にする",
+              "ok": false,
+              "explain": "鍵交換パラメータと通信ポートは別です。"
+            },
+            {
+              "text": "より長い鍵長のグループを使う",
+              "ok": true,
+              "explain": "有限体DHの鍵交換パラメータを強める意図です。グループ番号そのものが鍵長やポート番号ではありません。"
+            },
+            {
+              "text": "IPヘッダを14バイトにする",
+              "ok": false,
+              "explain": "グループ番号はIPヘッダ長ではありません。"
+            }
+          ],
+          "id": "esp-3",
+          "format": "選択",
+          "theme": "暗号化される内側と配送用の外側を分ける",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "原文e〜hを意味で埋める",
+          "template": "元パケットを{a}化し、外側{b}ヘッダを付加する。ESPは{c} SAを識別し、DHグループは方式と{d}を定める。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "e",
+              "choices": [
+                {
+                  "text": "暗号",
+                  "ok": true,
+                  "explain": "元のIPパケットを保護します。"
+                },
+                {
+                  "text": "圧縮",
+                  "ok": false,
+                  "explain": "圧縮が主目的ではありません。"
+                },
+                {
+                  "text": "符号",
+                  "ok": false,
+                  "explain": "単なる符号化では秘匿できません。"
+                }
+              ],
+              "why": "元のIPパケットを保護します。"
+            },
+            {
+              "key": "b",
+              "label": "f",
+              "choices": [
+                {
+                  "text": "IP",
+                  "ok": true,
+                  "explain": "POPへ配送する外側ヘッダです。"
+                },
+                {
+                  "text": "HTTP",
+                  "ok": false,
+                  "explain": "Web要求のヘッダではありません。"
+                },
+                {
+                  "text": "DNS",
+                  "ok": false,
+                  "explain": "名前解決のヘッダではありません。"
+                }
+              ],
+              "why": "POPへ配送する外側ヘッダです。"
+            },
+            {
+              "key": "c",
+              "label": "g",
+              "choices": [
+                {
+                  "text": "Child",
+                  "ok": true,
+                  "explain": "ESPデータ保護用のSAです。"
+                },
+                {
+                  "text": "IKE",
+                  "ok": false,
+                  "explain": "交渉の保護用SAです。"
+                },
+                {
+                  "text": "ARP",
+                  "ok": false,
+                  "explain": "SAの種類ではありません。"
+                }
+              ],
+              "why": "ESPデータ保護用のSAです。"
+            },
+            {
+              "key": "d",
+              "label": "h",
+              "choices": [
+                {
+                  "text": "鍵長",
+                  "ok": true,
+                  "explain": "原問のグループ1と14の比較点です。"
+                },
+                {
+                  "text": "TTL",
+                  "ok": false,
+                  "explain": "パケットの生存時間とは別です。"
+                },
+                {
+                  "text": "MTU",
+                  "ok": false,
+                  "explain": "最大伝送単位とは別です。"
+                }
+              ],
+              "why": "原問のグループ1と14の比較点です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 13,
+            "top": 0.07,
+            "bottom": 0.29,
+            "label": "原文：ESP処理とDHグループ"
+          },
+          "id": "esp-4",
+          "format": "穴埋め",
+          "theme": "暗号化される内側と配送用の外側を分ける",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "原問のパケット構築順を並べる",
+          "lead": "元の業務パケットから外側配送パケットを作ります。",
+          "lines": [
+            {
+              "code": "元のパケットにESPトレーラを付ける"
+            },
+            {
+              "code": "対象を暗号化する"
+            },
+            {
+              "code": "外側IPヘッダ、ESPヘッダ、認証データを付加する"
+            },
+            {
+              "code": "POP宛てに送る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "内側の保護と外側の配送を分けます。",
+          "ngExplain": "外側IPヘッダまで隠すと途中で配送できません。",
+          "id": "esp-5",
+          "format": "並べ替え",
+          "theme": "暗号化される内側と配送用の外側を分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "元のPC宛先とPOPのアドレスが違う。トンネルモードとして正しいか。",
+          "choices": [
+            {
+              "text": "誤り。外側はMACアドレスだけでよい",
+              "ok": false,
+              "explain": "インターネット配送には外側IPが必要です。"
+            },
+            {
+              "text": "正しい。内側は業務相手、外側はトンネル終端",
+              "ok": true,
+              "explain": "二つのIPヘッダは別の目的です。"
+            },
+            {
+              "text": "誤り。両ヘッダは同じ宛先が必須",
+              "ok": false,
+              "explain": "トンネル終端と業務相手は異なり得ます。"
+            }
+          ],
+          "id": "esp-6",
+          "format": "選択",
+          "theme": "暗号化される内側と配送用の外側を分ける",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "tenant",
+      "title": "固定IPと専用IPを区別する",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "固定IPと専用IPを区別する",
+          "body": "新しいSGW（Secure Gateway：セキュアゲートウェイ）サービスを複数企業が使います。P社は送信元IPでN社からの通信を許可します。IPが固定でも他社と共用なら組織を区別できないため、出口IPの値に加えて専用性を確認します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "仕様",
+              "判定できること"
+            ],
+            "rows": [
+              [
+                "固定IP",
+                "時間が経っても値が変わらない"
+              ],
+              [
+                "N社専用IP",
+                "他社が同じ送信元IPを使わない"
+              ],
+              [
+                "必要条件",
+                "N社専用であること"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "tenant-1",
+          "format": "読む",
+          "theme": "固定IPと専用IPを区別する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "固定IPを他社と共用すると何が問題か。",
+          "choices": [
+            {
+              "text": "毎日IPが変わる",
+              "ok": false,
+              "explain": "固定という条件とは違います。"
+            },
+            {
+              "text": "VPNの暗号化が自動で無効になる",
+              "ok": false,
+              "explain": "出口IPの共用と暗号化は別です。"
+            },
+            {
+              "text": "他社の通信も同じ許可条件を満たす",
+              "ok": true,
+              "explain": "P社には同じ送信元IPとして見えます。"
+            }
+          ],
+          "id": "tenant-2",
+          "format": "選択",
+          "theme": "固定IPと専用IPを区別する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "N社限定のIP制限を維持するため、Q社に確認する仕様はどれか。",
+          "choices": [
+            {
+              "text": "全顧客が同じIPを利用すること",
+              "ok": false,
+              "explain": "それではN社だけを識別できません。"
+            },
+            {
+              "text": "割当てIPがN社専用であること",
+              "ok": true,
+              "explain": "組織を区別する前提になります。"
+            },
+            {
+              "text": "IPが数字で表せること",
+              "ok": false,
+              "explain": "全IPv4アドレスに共通で区別になりません。"
+            }
+          ],
+          "id": "tenant-3",
+          "format": "選択",
+          "theme": "固定IPと専用IPを区別する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "確認する対象と条件を埋める",
+          "template": "NAPTに使う{a}が{b}であることを確認する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "対象",
+              "choices": [
+                {
+                  "text": "グローバルIPアドレス",
+                  "ok": true,
+                  "explain": "P社が見る送信元です。"
+                },
+                {
+                  "text": "PCのMACアドレス",
+                  "ok": false,
+                  "explain": "インターネット越しの送信元制限には使いません。"
+                },
+                {
+                  "text": "VPNの内側IPだけ",
+                  "ok": false,
+                  "explain": "SGWでNAPTされた後の値を見る必要があります。"
+                }
+              ],
+              "why": "P社が見る送信元です。"
+            },
+            {
+              "key": "b",
+              "label": "条件",
+              "choices": [
+                {
+                  "text": "N社専用",
+                  "ok": true,
+                  "explain": "他社の通信と識別できます。"
+                },
+                {
+                  "text": "固定でさえあればよい",
+                  "ok": false,
+                  "explain": "固定でも他社と共用できます。"
+                },
+                {
+                  "text": "他社と共用",
+                  "ok": false,
+                  "explain": "N社だけの許可に使えません。"
+                }
+              ],
+              "why": "他社の通信と識別できます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 13,
+            "top": 0.32,
+            "bottom": 0.66,
+            "label": "原文：SGWのNAPTアドレス仕様の確認"
+          },
+          "id": "tenant-4",
+          "format": "穴埋め",
+          "theme": "固定IPと専用IPを区別する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "移行後の許可設定を並べる",
+          "lead": "IPだけで接続元を制限する条件です。",
+          "lines": [
+            {
+              "code": "SGW出口のNAPTアドレスを確認する"
+            },
+            {
+              "code": "そのアドレスがN社専用か確認する"
+            },
+            {
+              "code": "P社の許可送信元にそのアドレスを設定する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "値だけでなく、その値が誰を識別するか確認します。",
+          "ngExplain": "固定と専用は同じ条件ではありません。",
+          "id": "tenant-5",
+          "format": "並べ替え",
+          "theme": "固定IPと専用IPを区別する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "専用IPを二つ使う構成に変更した。P社側の対応はどれか。",
+          "choices": [
+            {
+              "text": "全IPを許可する",
+              "ok": false,
+              "explain": "N社限定という目的を失います。"
+            },
+            {
+              "text": "どちらもN社専用と確認し、必要な二つを許可する",
+              "ok": true,
+              "explain": "複数出口なら各出口の条件を確認します。"
+            },
+            {
+              "text": "一つだけ許可すれば全通信が通る",
+              "ok": false,
+              "explain": "もう一つからの通信は制限されます。"
+            }
+          ],
+          "id": "tenant-6",
+          "format": "選択",
+          "theme": "固定IPと専用IPを区別する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "latency",
+      "title": "経由地点による遅延を説明する",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "経由地点による遅延を説明する",
+          "body": "移行前は本社FWからP社へ接続します。移行後はQ社SGWのPOPとFW機能を経由します。同じ操作の応答時間を比べ、追加経路の影響を判断します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "PC",
+                "d": "P社への操作"
+              },
+              {
+                "t": "Q社SGW",
+                "d": "POPとFW処理を経由"
+              },
+              {
+                "t": "P社",
+                "d": "処理して応答"
+              }
+            ],
+            "caption": "説明用の流れ"
+          },
+          "id": "latency-1",
+          "format": "読む",
+          "theme": "経由地点による遅延を説明する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "移行で増える可能性がある時間はどれか。",
+          "choices": [
+            {
+              "text": "P社の画面の文字数だけ",
+              "ok": false,
+              "explain": "応答経路の変化を説明していません。"
+            },
+            {
+              "text": "PCのMAC学習時間だけ",
+              "ok": false,
+              "explain": "経由サービスの追加と直接対応しません。"
+            },
+            {
+              "text": "SGWを経由する転送や処理の時間",
+              "ok": true,
+              "explain": "追加の経由地点が遅延要因になります。"
+            }
+          ],
+          "id": "latency-2",
+          "format": "選択",
+          "theme": "経由地点による遅延を説明する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "同じP社操作を移行前後で比べる理由はどれか。",
+          "choices": [
+            {
+              "text": "SAがあれば応答時間は一定だから",
+              "ok": false,
+              "explain": "経路や負荷で時間は変わります。"
+            },
+            {
+              "text": "操作内容による差を減らし経路変更の影響を見る",
+              "ok": true,
+              "explain": "比較条件をそろえると原因を調べやすくなります。"
+            },
+            {
+              "text": "異なる操作ほど公平だから",
+              "ok": false,
+              "explain": "処理量の差が混ざってしまいます。"
+            }
+          ],
+          "id": "latency-3",
+          "format": "選択",
+          "theme": "経由地点による遅延を説明する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "遅延要因を対象と因果で埋める",
+          "template": "{a}の経由によって{b}が発生し、応答が遅くなる可能性がある。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "追加の経由先",
+              "choices": [
+                {
+                  "text": "Q社SGWサービス",
+                  "ok": true,
+                  "explain": "変更後の経由地点です。"
+                },
+                {
+                  "text": "営業所のキーボード",
+                  "ok": false,
+                  "explain": "ネットワークの変更点ではありません。"
+                },
+                {
+                  "text": "P社の新設サーバ",
+                  "ok": false,
+                  "explain": "新設という条件はありません。"
+                }
+              ],
+              "why": "変更後の経由地点です。"
+            },
+            {
+              "key": "b",
+              "label": "影響",
+              "choices": [
+                {
+                  "text": "遅延",
+                  "ok": true,
+                  "explain": "転送経路や処理が応答時間に加わります。"
+                },
+                {
+                  "text": "必ず全パケットの消失",
+                  "ok": false,
+                  "explain": "遅延と損失を同一視できません。"
+                },
+                {
+                  "text": "必ず認証失敗",
+                  "ok": false,
+                  "explain": "遅延増加だけで認証失敗とはいえません。"
+                }
+              ],
+              "why": "転送経路や処理が応答時間に加わります。"
+            }
+          ],
+          "id": "latency-4",
+          "format": "穴埋め",
+          "theme": "経由地点による遅延を説明する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "テストの比較手順を並べる",
+          "lead": "測定対象と条件をそろえます。",
+          "lines": [
+            {
+              "code": "同じP社サービスの操作を決める"
+            },
+            {
+              "code": "移行前の経路で応答時間を測る"
+            },
+            {
+              "code": "SGW経由で同じ操作の応答時間を測る"
+            },
+            {
+              "code": "増加分とSGW経由の影響を検討する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "変更した経路と測定値の対応を確認します。",
+          "ngExplain": "接続できることと応答が十分速いことは別です。",
+          "id": "latency-5",
+          "format": "並べ替え",
+          "theme": "経由地点による遅延を説明する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "SGW経由でも応答が短くなった。誤りのない判断はどれか。",
+          "choices": [
+            {
+              "text": "固定IP制限がなくなったと断定する",
+              "ok": false,
+              "explain": "応答時間からアクセス制御は分かりません。"
+            },
+            {
+              "text": "経由は遅延要因だが、実測は他の改善にも左右される",
+              "ok": true,
+              "explain": "追加要因があっても合計が必ず増えるとは限りません。"
+            },
+            {
+              "text": "SGWは経由していないと断定する",
+              "ok": false,
+              "explain": "時間だけで経由の有無は断定できません。"
+            }
+          ],
+          "id": "latency-6",
+          "format": "選択",
+          "theme": "経由地点による遅延を説明する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

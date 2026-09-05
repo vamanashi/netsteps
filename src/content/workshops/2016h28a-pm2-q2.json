@@ -1,0 +1,2924 @@
+{
+  "examKey": "2016h28a/pm2/2",
+  "title": "包む・守る・迂回するWAN設計",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm2_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "sa",
+      "title": "暗号化の約束と識別番号",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "sa-1",
+          "format": "読む",
+          "theme": "暗号化の約束と識別番号",
+          "scaffold": 5,
+          "type": "info",
+          "title": "送る方針と受け取る約束を分ける",
+          "body": "IPsec（IP Security）はIP通信の保護方式です。SA（Security Association）は暗号方式や鍵などについての約束で、SPI（Security Parameters Index）は受信パケットでSAを識別する32ビットの番号です。一方、送信パケットに適用する方針を選ぶキーはセレクタで、IP・プロトコル・ポートなどを使います。設問1のア・イはこの区別です。",
+          "stage": "concept",
+          "fig": {
+            "kind": "header",
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "SPI",
+                    "bits": 32,
+                    "hi": true
+                  }
+                ]
+              },
+              {
+                "fields": [
+                  {
+                    "t": "シーケンス番号",
+                    "bits": 32
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：ESP（Encapsulating Security Payload）ヘッダの各行32ビット"
+          }
+        },
+        {
+          "id": "sa-2",
+          "format": "選択",
+          "theme": "暗号化の約束と識別番号",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "IPアドレスやポートで送信の保護方針を選ぶキーは？",
+          "choices": [
+            {
+              "text": "SPI",
+              "explain": "受信したIPsecパケットのSA識別に使います。"
+            },
+            {
+              "text": "セレクタ",
+              "explain": "どの通信へどの方針を適用するか選びます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "sa-3",
+          "format": "選択",
+          "theme": "暗号化の約束と識別番号",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "SPIと暗号鍵そのものを混同してはいけない理由は？",
+          "choices": [
+            {
+              "text": "SPIはメールの本文だから",
+              "explain": "SPIはIPsecヘッダの情報です。"
+            },
+            {
+              "text": "SPIはSAを参照する識別子で、秘密鍵自体ではない",
+              "explain": "受信側が対応するSAの情報を取り出します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "sa-4",
+          "format": "穴埋め",
+          "theme": "暗号化の約束と識別番号",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "方針選択とSA識別",
+          "template": "送信側で方針を選ぶのは{a}。受信側のSPIは{b}ビット。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "イ",
+              "why": "通信条件を照合します。",
+              "choices": [
+                {
+                  "text": "暗号鍵そのもの",
+                  "explain": "鍵をパケット条件の検索キーにする話ではありません。"
+                },
+                {
+                  "text": "セレクタ",
+                  "explain": "IP・プロトコル・ポートなどです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "ア",
+              "why": "SPIの長さです。",
+              "choices": [
+                {
+                  "text": "16",
+                  "explain": "TCP/UDPポート番号の長さとの混同です。"
+                },
+                {
+                  "text": "32",
+                  "explain": "ESPヘッダのSPIフィールドは32ビットです。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "sa-5",
+          "format": "並べ替え",
+          "theme": "暗号化の約束と識別番号",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "方針から受信処理へ",
+          "lead": "PROTECTはIPsec適用、BYPASSは非適用、DISCARDは廃棄です。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "送信パケットのセレクタで方針を選ぶ"
+            },
+            {
+              "code": "PROTECTなら対応するSAで保護する"
+            },
+            {
+              "code": "パケットにSPIを付けて送る"
+            },
+            {
+              "code": "受信側はSPIでSAを識別して処理する"
+            }
+          ],
+          "shuffled": [
+            3,
+            0,
+            1,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "送信の方針検索と受信のSA識別を分けます。",
+          "ngExplain": "受信側へ秘密の鍵自体をSPI欄に書いて渡すのではありません。"
+        },
+        {
+          "id": "sa-6",
+          "format": "選択",
+          "theme": "暗号化の約束と識別番号",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：同じ宛先でもTCP443だけ保護しTCP80を廃棄したい。使う条件は？",
+          "choices": [
+            {
+              "text": "SPIのビット長を16へ変更する",
+              "explain": "フィールド幅の変更は通信方針の指定になりません。"
+            },
+            {
+              "text": "セレクタにプロトコルと宛先ポートを含める",
+              "explain": "同一IPでも通信サービスを区別できます。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "ike",
+      "title": "鍵更新と改ざん検出",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "ike-1",
+          "format": "読む",
+          "theme": "鍵更新と改ざん検出",
+          "scaffold": 5,
+          "type": "info",
+          "title": "一度決めた鍵を永久には使わない",
+          "body": "IKE（Internet Key Exchange）は鍵と保護方式を合意する仕組みです。原問はIKEv1のフェーズ1・2を扱い、フェーズ1のアグレッシブモードは1往復半、メインモードは3往復です。SAの有効期間に応じて鍵を更新するリキー（ReKey）を行います。フェーズ2の認証方式で確認するのは通信メッセージの改ざんの有無で、機器の本人確認とは区別します。",
+          "stage": "concept"
+        },
+        {
+          "id": "ike-2",
+          "format": "選択",
+          "theme": "鍵更新と改ざん検出",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "原問の1往復半で完了するフェーズ1のモードは？",
+          "choices": [
+            {
+              "text": "メインモード",
+              "explain": "本問では3往復の方式です。"
+            },
+            {
+              "text": "アグレッシブモード",
+              "explain": "本問のIKEv1の区分です。現行方式全般へ一般化しません。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "ike-3",
+          "format": "選択",
+          "theme": "鍵更新と改ざん検出",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "暗号化と完全性の認証を分ける理由は？",
+          "choices": [
+            {
+              "text": "認証は通信内容を必ず圧縮するから",
+              "explain": "認証は圧縮ではありません。"
+            },
+            {
+              "text": "読めなくすることと、途中で変えられていないことは別だから",
+              "explain": "秘密保持だけでは設問が問う改ざん検出の説明になりません。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "ike-4",
+          "format": "穴埋め",
+          "theme": "鍵更新と改ざん検出",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "期限と認証対象",
+          "template": "SAの期限に伴う鍵更新は{a}。認証するのは、IPsecの{b}が通信中に{c}こと。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "更新",
+              "why": "鍵を新しくします。",
+              "choices": [
+                {
+                  "text": "経路集約",
+                  "explain": "ルーティング表をまとめる操作です。"
+                },
+                {
+                  "text": "リキー（ReKey）",
+                  "explain": "同じ鍵を使い続けるのを避けます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "対象",
+              "why": "データの完全性を確認します。",
+              "choices": [
+                {
+                  "text": "装置の製造年月日",
+                  "explain": "本問の認証対象ではありません。"
+                },
+                {
+                  "text": "送受信メッセージ",
+                  "explain": "通信データが検査対象です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "内容",
+              "why": "改変の検出です。",
+              "choices": [
+                {
+                  "text": "必ず短くなった",
+                  "explain": "データ圧縮の効果ではありません。"
+                },
+                {
+                  "text": "改ざんされていない",
+                  "explain": "完全性の確認です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ike-5",
+          "format": "並べ替え",
+          "theme": "鍵更新と改ざん検出",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "保護の合意から継続まで",
+          "lead": "原問のIKEv1の流れ。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "フェーズ1で鍵交換を保護するSAを確立する"
+            },
+            {
+              "code": "フェーズ2でIPsec用SAを合意する"
+            },
+            {
+              "code": "そのSAで通信を暗号化し完全性を検証する"
+            },
+            {
+              "code": "有効期間に応じてリキーで鍵を更新する"
+            }
+          ],
+          "shuffled": [
+            2,
+            1,
+            0,
+            3
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "SAの役割と寿命を区別します。実装では期限前に更新を開始することもあります。",
+          "ngExplain": "期限切れ後も同じ鍵を無期限に使うという説明にしません。"
+        },
+        {
+          "id": "ike-6",
+          "format": "選択",
+          "theme": "鍵更新と改ざん検出",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：暗号化は有効だがメッセージの認証検査が失敗。優先する判断は？",
+          "choices": [
+            {
+              "text": "暗号化済みなら必ず正常と受け入れる",
+              "explain": "完全性の検証失敗を無視してしまいます。"
+            },
+            {
+              "text": "途中の改変など完全性の問題を疑う",
+              "explain": "『読めない』と『改ざんされていない』は別の性質です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "multicast",
+      "title": "経路情報も包んで運ぶ",
+      "targets": [
+        "s1",
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "multicast-1",
+          "format": "読む",
+          "theme": "経路情報も包んで運ぶ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "一対多の通信をトンネルへ入れる",
+          "body": "OSPF（Open Shortest Path First）はリンク状態の情報を交換して経路を選ぶ方式です。本問で検討中のIPsecルータは通常設定のOSPFが使うIPマルチキャストをそのまま包めず、ユニキャストIPを対象にします。GRE（Generic Routing Encapsulation）なら元のマルチキャストを外側のユニキャストIPで包めます。インターネットは外側の経路だけを使い、内側の宛先経路を知る必要がありません。",
+          "stage": "concept",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "元の通信",
+                "parts": [
+                  {
+                    "t": "マルチキャスト宛先",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "OSPF情報",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "GREで包む",
+                "parts": [
+                  {
+                    "t": "外側ユニキャストIP",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "GRE",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "元の通信",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：OSPFを運べる外側の形へ変える"
+          }
+        },
+        {
+          "id": "multicast-2",
+          "format": "選択",
+          "theme": "経路情報も包んで運ぶ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "本問でOSPF情報を直接IPsecへ入れられない理由は？",
+          "choices": [
+            {
+              "text": "OSPFが常にTCPだけを使うから",
+              "explain": "OSPFをTCPの通信とする説明は誤りです。"
+            },
+            {
+              "text": "リンクステート情報交換がIPマルチキャストだから",
+              "explain": "検討機器の通常設定で扱うIPsecの対象と合わないためです。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "multicast-3",
+          "format": "選択",
+          "theme": "経路情報も包んで運ぶ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "GREの外側IPを付けると内部宛先の経路をインターネットが知らなくてよい理由は？",
+          "choices": [
+            {
+              "text": "GREが全内部ルートを世界中へ公開するから",
+              "explain": "内部経路を全公開する仕組みではありません。"
+            },
+            {
+              "text": "中継網は外側のトンネル終端宛てに転送するから",
+              "explain": "内側宛先は終端で取り出した後に処理します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "multicast-4",
+          "format": "穴埋め",
+          "theme": "経路情報も包んで運ぶ",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "使えない理由と包む効果",
+          "template": "OSPFの{a}交換は{b}を使う。GREでは外側を転送するため内側宛先への{c}情報は中継網に不要。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "交換内容",
+              "why": "ネットワークの状態です。",
+              "choices": [
+                {
+                  "text": "Webページ",
+                  "explain": "OSPFの交換対象ではありません。"
+                },
+                {
+                  "text": "リンクステート情報",
+                  "explain": "設問で求める具体的な情報です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "通信種別",
+              "why": "通常設定の本問条件です。",
+              "choices": [
+                {
+                  "text": "メールのSMTP通信",
+                  "explain": "OSPFではありません。"
+                },
+                {
+                  "text": "IPマルチキャスト通信",
+                  "explain": "GREで包んで扱える形にします。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "エ",
+              "why": "宛先への転送先を示します。",
+              "choices": [
+                {
+                  "text": "暗号鍵",
+                  "explain": "経路表と鍵は役割が異なります。"
+                },
+                {
+                  "text": "経路",
+                  "explain": "外側の終端宛て経路で運べます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "multicast-5",
+          "format": "並べ替え",
+          "theme": "経路情報も包んで運ぶ",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "OSPFを保護して運ぶ",
+          "lead": "内側を包んでから暗号化。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "OSPFのリンクステート情報交換パケットを作る"
+            },
+            {
+              "code": "GREで外側のユニキャストIPを付ける"
+            },
+            {
+              "code": "IPsecでGRE通信を保護して運ぶ"
+            },
+            {
+              "code": "対向機器で保護とGREの包みを外す"
+            }
+          ],
+          "shuffled": [
+            1,
+            0,
+            3,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "GREは運べる形を作りIPsecは保護します。",
+          "ngExplain": "GRE自体の役割を暗号化と説明しないでください。"
+        },
+        {
+          "id": "multicast-6",
+          "format": "選択",
+          "theme": "経路情報も包んで運ぶ",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：別機器が別設定でOSPFを直接運べると判明。原問の結論は？",
+          "choices": [
+            {
+              "text": "仕様確認なしに全機器で不可能とする",
+              "explain": "原問の実装条件を一般仕様へ拡大しています。"
+            },
+            {
+              "text": "検討機器の通常設定に限定した理由として扱う",
+              "explain": "『IPsecはどの機器でもOSPF不可能』と一般化しません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "addresses",
+      "title": "外の住所と中の住所",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "addresses-1",
+          "format": "読む",
+          "theme": "外の住所と中の住所",
+          "scaffold": 5,
+          "type": "info",
+          "title": "二つのIPヘッダには別の両端が入る",
+          "body": "トンネルは元のIPパケットを別のIPパケットに入れます。GREのIPヘッダ1はトンネルの入口ルータと出口ルータ、IPヘッダ2は元のPCとサーバを示します。原問はPC→サーバ方向で、外側がα.0.0.1→β.0.0.1、内側が192.168.0.100→192.168.10.1です。設問3(2)は二つのヘッダの送信元・宛先の計四要素を答えます。",
+          "stage": "concept"
+        },
+        {
+          "id": "addresses-2",
+          "format": "選択",
+          "theme": "外の住所と中の住所",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "IPヘッダ1に入る両端の組合せは？",
+          "choices": [
+            {
+              "text": "元のPCと業務サーバ",
+              "explain": "それらは内側のIPヘッダ2です。"
+            },
+            {
+              "text": "GREを終端するルータ同士",
+              "explain": "インターネットはこの外側アドレスへ転送します。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "addresses-3",
+          "format": "選択",
+          "theme": "外の住所と中の住所",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "内側のPCアドレスを保持する理由は？",
+          "choices": [
+            {
+              "text": "外側IPを暗号鍵に変えるため",
+              "explain": "IPアドレスは暗号鍵ではありません。"
+            },
+            {
+              "text": "包みを外した後、元のPCとサーバ間通信を続けるため",
+              "explain": "トンネル転送と元の通信の両方を表せます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "addresses-4",
+          "format": "穴埋め",
+          "theme": "外の住所と中の住所",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "四つのアドレスを対応させる",
+          "template": "ヘッダ1：{a} → {b}。ヘッダ2：{c} → {d}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "外側送信元",
+              "why": "PC側のトンネル入口です。",
+              "choices": [
+                {
+                  "text": "192.168.0.100",
+                  "explain": "元のPCのIPで内側です。"
+                },
+                {
+                  "text": "α.0.0.1",
+                  "explain": "ルータ1のグローバルIPです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "外側宛先",
+              "why": "サーバ側のトンネル出口です。",
+              "choices": [
+                {
+                  "text": "192.168.10.1",
+                  "explain": "内側のサーバIPです。"
+                },
+                {
+                  "text": "β.0.0.1",
+                  "explain": "ルータ2のグローバルIPです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "内側送信元",
+              "why": "元の通信の送り手です。",
+              "choices": [
+                {
+                  "text": "α.0.0.1",
+                  "explain": "外側ルータのIPです。"
+                },
+                {
+                  "text": "192.168.0.100",
+                  "explain": "PCのIPを保持します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "d",
+              "label": "内側宛先",
+              "why": "元の通信の相手です。",
+              "choices": [
+                {
+                  "text": "β.0.0.1",
+                  "explain": "外側ルータのIPです。"
+                },
+                {
+                  "text": "192.168.10.1",
+                  "explain": "業務サーバのIPです。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "addresses-5",
+          "format": "並べ替え",
+          "theme": "外の住所と中の住所",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "送信側から受信側へ",
+          "lead": "二つのヘッダを使い分ける。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "PCがサーバ宛ての内側IPパケットを作る"
+            },
+            {
+              "code": "ルータ1がルータ2宛ての外側IPヘッダを付ける"
+            },
+            {
+              "code": "インターネットは外側IPで転送する"
+            },
+            {
+              "code": "ルータ2が内側を取り出しサーバへ届ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            3,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "外側は中継網、内側は元の両端のためにあります。",
+          "ngExplain": "GREを単純な宛先IPの上書きと考えると二つのヘッダを区別できません。"
+        },
+        {
+          "id": "addresses-6",
+          "format": "選択",
+          "theme": "外の住所と中の住所",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：サーバ→PCの返信方向。外側は？",
+          "choices": [
+            {
+              "text": "192.168.10.1 → 192.168.0.100",
+              "explain": "これは返信の内側ヘッダの組合せです。"
+            },
+            {
+              "text": "β.0.0.1 → α.0.0.1",
+              "explain": "トンネルを送信するルータ側が逆になります。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "gre-size",
+      "title": "入る大きさを引き算で求める",
+      "targets": [
+        "s1",
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "gre-size-1",
+          "format": "読む",
+          "theme": "入る大きさを引き算で求める",
+          "scaffold": 5,
+          "type": "info",
+          "title": "MTUとデータ量は同じではない",
+          "body": "MTU（Maximum Transmission Unit）は一度に運ぶIPパケットの最大サイズです。原問はジャンボフレームを使わず1500バイトとし、GREの外側IP20＋GRE4に加え、内側IP20とTCP/UDPヘッダ20も差し引いてデータ欄を求めます。TCP（Transmission Control Protocol）とUDP（User Datagram Protocol）は一般に同じ長さではありませんが、ここでは図の指定20を使います。サイズ調整は断片化の防止につながります。",
+          "stage": "concept"
+        },
+        {
+          "id": "gre-size-2",
+          "format": "選択",
+          "theme": "入る大きさを引き算で求める",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "GREで追加される外側の大きさは？",
+          "choices": [
+            {
+              "text": "20＋4＋20＋20＝64バイト",
+              "explain": "これは元パケットのIP・TCP/UDPも含む全ヘッダの合計です。"
+            },
+            {
+              "text": "20＋4＝24バイト",
+              "explain": "外側IPとGREヘッダです。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "gre-size-3",
+          "format": "選択",
+          "theme": "入る大きさを引き算で求める",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "最大データ量を求めるとき内側IPも引く理由は？",
+          "choices": [
+            {
+              "text": "内側IPが送信時に削除されるから",
+              "explain": "内側IPは元の通信を保つため残ります。"
+            },
+            {
+              "text": "1500バイトの中に内側ヘッダも入るから",
+              "explain": "MTUはアプリケーションデータだけの上限ではありません。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "gre-size-4",
+          "format": "穴埋め",
+          "theme": "入る大きさを引き算で求める",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "式から結果へ",
+          "template": "データ欄あ＝1500−{a}＝{b}バイト。適切なMTU設定で防ぐのは{c}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "引く合計",
+              "why": "図の全ヘッダを足します。",
+              "choices": [
+                {
+                  "text": "20＋4",
+                  "explain": "内側の40バイトを落としています。"
+                },
+                {
+                  "text": "20＋4＋20＋20",
+                  "explain": "外側IP、GRE、内側IP、指定トランスポートヘッダです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "あ",
+              "why": "1500−64です。",
+              "choices": [
+                {
+                  "text": "1,476",
+                  "explain": "トンネル内側のIPパケット全体で、データ欄ではありません。"
+                },
+                {
+                  "text": "1,436",
+                  "explain": "指定のデータ欄の大きさです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "オ",
+              "why": "大きいパケットを分けることです。",
+              "choices": [
+                {
+                  "text": "暗号鍵の更新",
+                  "explain": "MTUでは鍵の寿命を管理しません。"
+                },
+                {
+                  "text": "断片化",
+                  "explain": "オーバヘッドを見込んだサイズにします。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "gre-size-5",
+          "format": "並べ替え",
+          "theme": "入る大きさを引き算で求める",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "計算の段階を作る",
+          "lead": "枠→追加分→内側分→データ。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "外側の上限を1500バイトとする"
+            },
+            {
+              "code": "外側IP20とGRE4を引いて1476にする"
+            },
+            {
+              "code": "内側IP20と図指定のTCP/UDP20を引く"
+            },
+            {
+              "code": "データ欄の1436バイトを得る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "1476は内側パケット、1436はそのデータで別の値です。",
+          "ngExplain": "どの層のサイズを求めているかを確認します。"
+        },
+        {
+          "id": "gre-size-6",
+          "format": "選択",
+          "theme": "入る大きさを引き算で求める",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：同じヘッダ長で外側MTU1400ならデータ欄は？",
+          "choices": [
+            {
+              "text": "1,376バイト",
+              "explain": "GREの追加分だけ引き、内側ヘッダを落としています。"
+            },
+            {
+              "text": "1,336バイト",
+              "explain": "1400−64です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "l2tp-size",
+      "title": "包むものが増えるとデータは減る",
+      "targets": [
+        "s3-1",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "l2tp-size-1",
+          "format": "読む",
+          "theme": "包むものが増えるとデータは減る",
+          "scaffold": 5,
+          "type": "info",
+          "title": "L2TPはフレームを包む",
+          "body": "L2TP（Layer 2 Tunneling Protocol）はPPP（Point-to-Point Protocol）のフレームを運びます。原問の図5は外側IP20・UDP8・L2TP16・PPP2・内側IP20・TCP/UDP20なので、1500から計86を引きます。GREなら計64のため、一つのパケットで22バイト多くデータを運べます。設問3(4)は『オーバヘッドが小さい』と『運べるデータが多い』をつなげます。",
+          "stage": "concept",
+          "fig": [
+            {
+              "kind": "encap",
+              "layers": [
+                {
+                  "label": "GRE",
+                  "parts": [
+                    {
+                      "t": "外IP20",
+                      "w": 2,
+                      "role": "header"
+                    },
+                    {
+                      "t": "GRE4",
+                      "w": 1,
+                      "role": "header"
+                    },
+                    {
+                      "t": "内IP20＋TCP等20",
+                      "w": 4,
+                      "role": "header"
+                    },
+                    {
+                      "t": "データ",
+                      "w": 5,
+                      "role": "data"
+                    }
+                  ]
+                }
+              ],
+              "caption": "説明用：GREの各ヘッダ（単位バイト）"
+            },
+            {
+              "kind": "encap",
+              "layers": [
+                {
+                  "label": "L2TP",
+                  "parts": [
+                    {
+                      "t": "外IP20",
+                      "w": 2,
+                      "role": "header"
+                    },
+                    {
+                      "t": "UDP8＋L2TP16＋PPP2",
+                      "w": 3,
+                      "role": "header"
+                    },
+                    {
+                      "t": "内IP20＋TCP等20",
+                      "w": 4,
+                      "role": "header"
+                    },
+                    {
+                      "t": "データ",
+                      "w": 4,
+                      "role": "data"
+                    }
+                  ]
+                }
+              ],
+              "caption": "説明用：L2TPの各ヘッダ（幅は模式的）"
+            }
+          ]
+        },
+        {
+          "id": "l2tp-size-2",
+          "format": "選択",
+          "theme": "包むものが増えるとデータは減る",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "L2TPのデータ欄を求める式は？",
+          "choices": [
+            {
+              "text": "1500−(20＋8＋16)",
+              "explain": "PPPと元パケットのヘッダが抜けています。"
+            },
+            {
+              "text": "1500−(20＋8＋16＋2＋20＋20)",
+              "explain": "図5の全ヘッダを数えます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "l2tp-size-3",
+          "format": "選択",
+          "theme": "包むものが増えるとデータは減る",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "同じ1500の枠でGREのデータ量が多い理由は？",
+          "choices": [
+            {
+              "text": "GREは自動でデータを圧縮するため",
+              "explain": "この差は圧縮ではなく付加ヘッダ長によるものです。"
+            },
+            {
+              "text": "カプセル化のオーバヘッドがL2TPより小さいため",
+              "explain": "データ以外に使うバイトが少なくなります。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "l2tp-size-4",
+          "format": "穴埋め",
+          "theme": "包むものが増えるとデータは減る",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "両方式の比較を完成",
+          "template": "L2TPのデータ欄いは{a}バイト。GREは{b}ので、一つのパケットのデータ量が{c}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "い",
+              "why": "1500−86です。",
+              "choices": [
+                {
+                  "text": "1,454",
+                  "explain": "内側IP20とTCP/UDP20を引いていません。"
+                },
+                {
+                  "text": "1,414",
+                  "explain": "図5指定のヘッダを全て差し引きます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "原因",
+              "why": "付加するヘッダの比較です。",
+              "choices": [
+                {
+                  "text": "暗号鍵が短い",
+                  "explain": "GREとL2TP自体のヘッダ比較であり鍵の長さではありません。"
+                },
+                {
+                  "text": "オーバヘッドが小さい",
+                  "explain": "本問のGREはL2TPより22バイト小さいです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "結果",
+              "why": "同じ大きさの枠です。",
+              "choices": [
+                {
+                  "text": "常にゼロ",
+                  "explain": "トンネリングでもデータは運べます。"
+                },
+                {
+                  "text": "多い",
+                  "explain": "余った枠をデータに使えます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "l2tp-size-5",
+          "format": "並べ替え",
+          "theme": "包むものが増えるとデータは減る",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "GRE採用の理由を組み立てる",
+          "lead": "目的に必要な機能と影響を順に。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "GREでも必要なOSPFのマルチキャストを運べる"
+            },
+            {
+              "code": "GREのオーバヘッドはL2TPより小さい"
+            },
+            {
+              "code": "同じMTUでより多くのデータを運べる"
+            },
+            {
+              "code": "この目的ではGREを採用する"
+            }
+          ],
+          "shuffled": [
+            2,
+            3,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "機能が満たされることを確認してから容量の利点を比べます。",
+          "ngExplain": "L2TPが常に不要という意味ではなく本問の目的に沿った比較です。"
+        },
+        {
+          "id": "l2tp-size-6",
+          "format": "選択",
+          "theme": "包むものが増えるとデータは減る",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：PPPフレームそのものを運ぶ要件が追加された。データ量だけでGREを決めてよい？",
+          "choices": [
+            {
+              "text": "常にオーバヘッドだけで決める",
+              "explain": "運べる対象という機能要件を落としています。"
+            },
+            {
+              "text": "必要なカプセル化機能を先に再確認する",
+              "explain": "元の要件が変わったので容量比較だけでは選べません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "l2tp-address",
+      "title": "外部接続用と社内接続用のIP",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "l2tp-address-1",
+          "format": "読む",
+          "theme": "外部接続用と社内接続用のIP",
+          "scaffold": 5,
+          "type": "info",
+          "title": "PC自身がトンネルの入口になる",
+          "body": "原問図6ではPCがLAC（L2TP Access Concentrator）、VPN装置がLNS（L2TP Network Server）です。①のPPPoE（PPP over Ethernet）で得るIPはインターネット側へ届くためのもの、②のPPPセッションで得るIPはトンネル内で使うものです。外側のIPヘッダ1と内側のIPヘッダ2に分けて入ります。設問3(3)は両方の対応を答えます。",
+          "stage": "concept"
+        },
+        {
+          "id": "l2tp-address-2",
+          "format": "選択",
+          "theme": "外部接続用と社内接続用のIP",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "インターネット接続時に得たIPはどこへ？",
+          "choices": [
+            {
+              "text": "内側IPヘッダ2だけ",
+              "explain": "内側用IPだけではトンネル自体の外部経路を示せません。"
+            },
+            {
+              "text": "外側のIPヘッダ1",
+              "explain": "LNSのある外部ネットワークへ到達する通信に使います。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "l2tp-address-3",
+          "format": "選択",
+          "theme": "外部接続用と社内接続用のIP",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "二つのIPを区別する理由は？",
+          "choices": [
+            {
+              "text": "一方がMACアドレスだから",
+              "explain": "どちらも取得するIPアドレスです。"
+            },
+            {
+              "text": "インターネットへの接続と社内への仮想接続が別だから",
+              "explain": "同じPCでも異なる通信の面を持ちます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "l2tp-address-4",
+          "format": "穴埋め",
+          "theme": "外部接続用と社内接続用のIP",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "①と②をヘッダに結ぶ",
+          "template": "①PPPoEで得るIPは{a}、②PPPセッションで得るIPは{b}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "①",
+              "why": "外側の到達に使います。",
+              "choices": [
+                {
+                  "text": "PPPヘッダだけ",
+                  "explain": "IPアドレスを格納するIPヘッダの指定ではありません。"
+                },
+                {
+                  "text": "IPヘッダ1",
+                  "explain": "L2TPを運ぶ外側IPです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "②",
+              "why": "社内への元の通信に使います。",
+              "choices": [
+                {
+                  "text": "IPヘッダ1",
+                  "explain": "外部接続用の面と混同しています。"
+                },
+                {
+                  "text": "IPヘッダ2",
+                  "explain": "包まれた内側IPです。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "l2tp-address-5",
+          "format": "並べ替え",
+          "theme": "外部接続用と社内接続用のIP",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "二段階の接続を組み立てる",
+          "lead": "原問のPCからVPN装置へ。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "PPPoEでインターネット接続用IPを得る"
+            },
+            {
+              "code": "その外側IPでLNSへL2TPトンネルを作る"
+            },
+            {
+              "code": "トンネル内のPPPセッションで内部用IPを得る"
+            },
+            {
+              "code": "内部用IPを内側ヘッダに使ってサーバへ通信する"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            3,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "トンネルを運ぶ通信を確立してから内側の接続を利用します。",
+          "ngExplain": "外側・内側のIPを一つの上書き処理と考えないでください。"
+        },
+        {
+          "id": "l2tp-address-6",
+          "format": "選択",
+          "theme": "外部接続用と社内接続用のIP",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原図の①で取得するアドレスが変わっても②が同じなら、直接変わるのは？",
+          "choices": [
+            {
+              "text": "内側IPヘッダ2のサーバ宛先",
+              "explain": "②が同じという条件なのに内部宛先を変更する根拠はありません。"
+            },
+            {
+              "text": "外側IPヘッダ1のPC側アドレス",
+              "explain": "①は外部接続用です。通信再確立の要否は別に考えます。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 18,
+            "top": 0.615,
+            "bottom": 0.865,
+            "label": "図6の二つの接続（IPA原図・問題本文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "esp",
+      "title": "暗号化される範囲を見分ける",
+      "targets": [
+        "s4-1",
+        "s4-2",
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "esp-1",
+          "format": "読む",
+          "theme": "暗号化される範囲を見分ける",
+          "scaffold": 5,
+          "type": "info",
+          "title": "トンネル担当と保護担当を分ける",
+          "body": "ESP（Encapsulating Security Payload）はIPsecで通信を保護する仕組みです。本問では既にGREがトンネルを作るため、IPsecにもう一つトンネルを作らせずトランスポートモードを使います。ESPの認証データ長は選ぶ認証アルゴリズムによって変わります。設問4では、トンネリング・暗号化・認証の役割を区別します。",
+          "stage": "concept"
+        },
+        {
+          "id": "esp-2",
+          "format": "選択",
+          "theme": "暗号化される範囲を見分ける",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "本問でIPsecのトンネルモードを使う必要がない理由は？",
+          "choices": [
+            {
+              "text": "IPsecトランスポートモードには暗号化がないから",
+              "explain": "トランスポートモードでもESPの暗号化を使います。"
+            },
+            {
+              "text": "GREが既にトンネリングを行うから",
+              "explain": "外側IPで内側パケットを運ぶ役割はGREが担っています。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "esp-3",
+          "format": "選択",
+          "theme": "暗号化される範囲を見分ける",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "ESP認証データ長が固定値でない理由は？",
+          "choices": [
+            {
+              "text": "内部PCのIPが変わるたびに必ず長さが変わるから",
+              "explain": "アドレス変更そのものが認証データ長を決めるわけではありません。"
+            },
+            {
+              "text": "使用する認証アルゴリズムによって長さが変わるから",
+              "explain": "認証用の出力長は選択方式に依存します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "esp-4",
+          "format": "読む",
+          "theme": "暗号化される範囲を見分ける",
+          "scaffold": 5,
+          "type": "info",
+          "title": "外側の宛先は読めるように残す",
+          "body": "原問の暗号化範囲は、GREヘッダから内側IP・TCP/UDP・データを通り、ESPトレーラまでです。外側IPヘッダ1とESPヘッダ、後ろに付くESP認証データは暗号化範囲に含めません。『末尾にあるから全部暗号化』ではなく、暗号化する範囲と認証用情報を分けて見ます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "暗号化の対象",
+                "parts": [
+                  {
+                    "t": "GRE",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "内IP",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "TCP/UDP",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "データ",
+                    "w": 4,
+                    "role": "data"
+                  },
+                  {
+                    "t": "ESPトレーラ",
+                    "w": 2,
+                    "role": "trailer"
+                  }
+                ]
+              },
+              {
+                "label": "送信パケット",
+                "parts": [
+                  {
+                    "t": "IP1",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "ESPヘッダ",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "暗号化された範囲",
+                    "w": 6,
+                    "role": "data"
+                  },
+                  {
+                    "t": "認証データ",
+                    "w": 2,
+                    "role": "trailer"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：ESPの暗号化範囲（幅は模式的）"
+          }
+        },
+        {
+          "id": "esp-5",
+          "format": "選択",
+          "theme": "暗号化される範囲を見分ける",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "ESPトレーラとESP認証データの暗号化について正しいのは？",
+          "choices": [
+            {
+              "text": "どちらも必ず暗号化対象",
+              "explain": "認証用の付加データまで暗号化範囲に入れていません。"
+            },
+            {
+              "text": "トレーラは対象、認証データは対象外",
+              "explain": "図7の暗号化範囲はトレーラまでです。",
+              "ok": true
+            },
+            {
+              "text": "どちらも対象外",
+              "explain": "ESPトレーラを数え落としています。"
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "esp-6",
+          "format": "穴埋め",
+          "theme": "暗号化される範囲を見分ける",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "暗号化範囲の境界",
+          "template": "先頭は{a}、末尾は{b}。外側の{c}は暗号化範囲外。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "始点",
+              "why": "ESPヘッダの直後です。",
+              "choices": [
+                {
+                  "text": "IPヘッダ2",
+                  "explain": "GREヘッダを落としています。"
+                },
+                {
+                  "text": "GREヘッダ",
+                  "explain": "内側IPよりも前のGREも保護します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "終点",
+              "why": "データの後に付きます。",
+              "choices": [
+                {
+                  "text": "ESP認証データ",
+                  "explain": "認証データはこの暗号化範囲に含めません。"
+                },
+                {
+                  "text": "ESPトレーラ",
+                  "explain": "暗号化範囲の末尾です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "外側",
+              "why": "中継で使う宛先情報です。",
+              "choices": [
+                {
+                  "text": "IPヘッダ2",
+                  "explain": "これは内側なので暗号化対象です。"
+                },
+                {
+                  "text": "IPヘッダ1",
+                  "explain": "外側の経路選択に使います。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "esp-7",
+          "format": "並べ替え",
+          "theme": "暗号化される範囲を見分ける",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "暗号化される五項目を順に",
+          "lead": "図7の並びに沿って先頭から末尾まで。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "GREヘッダ"
+            },
+            {
+              "code": "IPヘッダ2"
+            },
+            {
+              "code": "TCP/UDPヘッダ"
+            },
+            {
+              "code": "データ"
+            },
+            {
+              "code": "ESPトレーラ"
+            }
+          ],
+          "shuffled": [
+            4,
+            3,
+            2,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          ],
+          "okExplain": "GREとトレーラを含む五項目がそろっています。IP1・ESPヘッダ・ESP認証データは含みません。",
+          "ngExplain": "データ本文だけでなく内側の制御情報も保護されます。項目を飛ばさず位置を確認します。"
+        },
+        {
+          "id": "esp-8",
+          "format": "選択",
+          "theme": "暗号化される範囲を見分ける",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原図で認証アルゴリズムだけを変更した。ESP認証データについて言えるのは？",
+          "choices": [
+            {
+              "text": "必ずIPヘッダ1まで暗号化するようになる",
+              "explain": "認証方式変更から外側IPの暗号化は導けません。"
+            },
+            {
+              "text": "長さが変わり得るが、それを暗号化対象に加える意味ではない",
+              "explain": "長さの選択と暗号化範囲は別の論点です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 19,
+            "top": 0.385,
+            "bottom": 0.565,
+            "label": "図7のGRE over IPsecパケット（IPA原図・問題本文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "subnets",
+      "title": "IPを変えずにサーバを移す",
+      "targets": [
+        "s5-1"
+      ],
+      "steps": [
+        {
+          "id": "subnets-1",
+          "format": "読む",
+          "theme": "IPを変えずにサーバを移す",
+          "scaffold": 5,
+          "type": "info",
+          "title": "残す機器と移す機器を分ける",
+          "body": "IPv4の/20は第三オクテットが16個分の範囲、/24は第三オクテット一つ分の範囲です。原問のDMサーバ172.16.16.1は本社に残り、社内メール172.16.17.1は移ります。同じ172.16.16.0/20を丸ごと移せないので、許された/16・/20・/24から/24を選んで17の範囲を分離します。元のDMZの172.16.128.0/20はサーバ群とともに移します。",
+          "stage": "concept",
+          "fig": {
+            "kind": "bits",
+            "cells": [
+              {
+                "top": "16.0/20",
+                "steps": [
+                  "第3値16〜31",
+                  "DM・社内メール"
+                ]
+              },
+              {
+                "top": "17.0/24",
+                "steps": [
+                  "第3値17のみ",
+                  "社内メール"
+                ]
+              },
+              {
+                "top": "128.0/20",
+                "steps": [
+                  "第3値128〜143",
+                  "DMZ"
+                ]
+              }
+            ],
+            "caption": "説明用：いずれも先頭は172.16"
+          }
+        },
+        {
+          "id": "subnets-2",
+          "format": "選択",
+          "theme": "IPを変えずにサーバを移す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "DMと社内メールを含む/20をそのまま移せない理由は？",
+          "choices": [
+            {
+              "text": "/20は一つのIPしか含まないから",
+              "explain": "/20は多数のIPを含みます。"
+            },
+            {
+              "text": "DMサーバは本社に残す要件だから",
+              "explain": "移す側と残す側を異なるネットワークとして扱います。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "subnets-3",
+          "format": "選択",
+          "theme": "IPを変えずにサーバを移す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "社内メール172.16.17.1を保ったまま分離できる選択は？",
+          "choices": [
+            {
+              "text": "172.16.16.0/20のまま",
+              "explain": "16.1のDMも同じ範囲に残ります。"
+            },
+            {
+              "text": "172.16.17.0/24",
+              "explain": "17の範囲に限定し16.1のDMを含めません。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "subnets-4",
+          "format": "穴埋め",
+          "theme": "IPを変えずにサーバを移す",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "データセンタへ移す二範囲",
+          "template": "元DMZの{a}と、社内メール用に分けた{b}を移す。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "DMZ",
+              "why": "元の範囲を保ちます。",
+              "choices": [
+                {
+                  "text": "172.16.64.0/20",
+                  "explain": "本社PC側であり移すサーバ群ではありません。"
+                },
+                {
+                  "text": "172.16.128.0/20",
+                  "explain": "Web・中継メール・プロキシの範囲です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "メール",
+              "why": "17.1を含み16.1を除きます。",
+              "choices": [
+                {
+                  "text": "172.16.0.0/16",
+                  "explain": "残す本社側を大量に含めてしまいます。"
+                },
+                {
+                  "text": "172.16.17.0/24",
+                  "explain": "許されたプレフィックス長で分離できます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "subnets-5",
+          "format": "並べ替え",
+          "theme": "IPを変えずにサーバを移す",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "移設範囲を決める",
+          "lead": "保持するIPから逆算する。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "各サーバのIPと移設有無を確認する"
+            },
+            {
+              "code": "元DMZの172.16.128.0/20を移設対象にする"
+            },
+            {
+              "code": "DMを残すため社内メールの172.16.17.0/24を分離する"
+            },
+            {
+              "code": "二つの範囲をデータセンタ側で収容する"
+            }
+          ],
+          "shuffled": [
+            1,
+            0,
+            3,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "IP変更を避けてもサブネットの分け方を再設計できます。",
+          "ngExplain": "全てを大きな/16にまとめると拠点間の経路を区別できなくなります。"
+        },
+        {
+          "id": "subnets-6",
+          "format": "選択",
+          "theme": "IPを変えずにサーバを移す",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：残すDMは172.16.16.1のまま、移すメールだけ172.16.18.1なら分離範囲は？",
+          "choices": [
+            {
+              "text": "172.16.17.0/24",
+              "explain": "原問の値を暗記しても変更後の18.1を含めません。"
+            },
+            {
+              "text": "172.16.18.0/24",
+              "explain": "変わったサーバIPを含み残すDMを除きます。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "lan-vip",
+      "title": "L2の範囲と仮想入口の数",
+      "targets": [
+        "s5-2",
+        "s5-3"
+      ],
+      "steps": [
+        {
+          "id": "lan-vip-1",
+          "format": "読む",
+          "theme": "L2の範囲と仮想入口の数",
+          "scaffold": 5,
+          "type": "info",
+          "title": "別ネットワークの間はルーティングする",
+          "body": "L2SW（Layer 2 Switch）は同じLAN内のフレームを転送し、L3SW（Layer 3 Switch）はIPでネットワーク間を転送します。原問のL2SWaとL2SWbを同じL2の範囲として橋渡しすると、複数機器を通る循環経路を作る恐れがあります。aとbを異なるサブネットとして分離し、間はL3で転送する設計にします。IPの数字だけを変え、同じブリッジ接続を残すという意味ではありません。",
+          "stage": "concept"
+        },
+        {
+          "id": "lan-vip-2",
+          "format": "選択",
+          "theme": "L2の範囲と仮想入口の数",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "原問でaとbのループを避けるサブネット設計は？",
+          "choices": [
+            {
+              "text": "aとbを同じサブネットで全面ブリッジする",
+              "explain": "複数の接続を通るL2循環を残します。"
+            },
+            {
+              "text": "L2SWaとL2SWbを異なるサブネットにする",
+              "explain": "異なるL3接続として同じL2循環を作らない設計です。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "lan-vip-3",
+          "format": "選択",
+          "theme": "L2の範囲と仮想入口の数",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "単にPCのIPだけ変えても十分ではない理由は？",
+          "choices": [
+            {
+              "text": "PCのIPは常にルータと同じ必要があるから",
+              "explain": "同じIPを重複させてはいけません。"
+            },
+            {
+              "text": "L2の転送範囲が同じままなら循環構成を解消しないから",
+              "explain": "サブネット・VLAN・L3接続を整合させる必要があります。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "lan-vip-4",
+          "format": "穴埋め",
+          "theme": "L2の範囲と仮想入口の数",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "分離の答案",
+          "template": "{a}と{b}を異なるサブネットにする。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "側a",
+              "why": "設問の機器名を使います。",
+              "choices": [
+                {
+                  "text": "インターネットだけ",
+                  "explain": "設問が問う内部二系統の分離ではありません。"
+                },
+                {
+                  "text": "L2SWa",
+                  "explain": "a側の接続範囲です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "側b",
+              "why": "対になる接続範囲です。",
+              "choices": [
+                {
+                  "text": "L2SWa自身",
+                  "explain": "同じ側を二回挙げても分離対象を説明していません。"
+                },
+                {
+                  "text": "L2SWb",
+                  "explain": "b側を別のL3範囲にします。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lan-vip-5",
+          "format": "読む",
+          "theme": "L2の範囲と仮想入口の数",
+          "scaffold": 5,
+          "type": "info",
+          "title": "仮想IPはサブネットごとに用意する",
+          "body": "VRRP（Virtual Router Redundancy Protocol）は複数機器で仮想IPの担当を引き継ぐ方式です。異なるサブネットで同じ一つの仮想IPを入口として使い回すことはできません。本社はDM側とPC側、データセンタはa側とb側の二つ、各営業所はPC側の一つに入口が必要です。設問5(3)の最少数は機器台数でなく利用側サブネットの数から求めます。",
+          "stage": "concept"
+        },
+        {
+          "id": "lan-vip-6",
+          "format": "選択",
+          "theme": "L2の範囲と仮想入口の数",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "ルータ2台が一つの利用側サブネットを冗長化。最少の仮想IPは？",
+          "choices": [
+            {
+              "text": "2個",
+              "explain": "物理機器ごとの実IPと共用する仮想IPを混同しています。"
+            },
+            {
+              "text": "1個",
+              "explain": "2台で同じ仮想入口を引き継ぎます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "lan-vip-7",
+          "format": "穴埋め",
+          "theme": "L2の範囲と仮想入口の数",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "原問の三拠点の最少数",
+          "template": "本社{a}個、各営業所{b}個、データセンタ{c}個。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "本社",
+              "why": "DM側・PC側です。",
+              "choices": [
+                {
+                  "text": "1",
+                  "explain": "二つの範囲を一つの仮想IPで扱えません。"
+                },
+                {
+                  "text": "2",
+                  "explain": "二つの利用側サブネットに入口を用意します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "営業所",
+              "why": "PC側一つです。",
+              "choices": [
+                {
+                  "text": "2",
+                  "explain": "物理ルータ数ではありません。"
+                },
+                {
+                  "text": "1",
+                  "explain": "二機器で一つを引き継ぎます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "データセンタ",
+              "why": "a側・b側です。",
+              "choices": [
+                {
+                  "text": "1",
+                  "explain": "aとbの分離条件を落としています。"
+                },
+                {
+                  "text": "2",
+                  "explain": "分離した二つの範囲それぞれに必要です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lan-vip-8",
+          "format": "並べ替え",
+          "theme": "L2の範囲と仮想入口の数",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "分離と冗長化を両立する",
+          "lead": "設計の依存順に。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "aとbを異なるサブネットとして設計する"
+            },
+            {
+              "code": "各サブネットへ二つのL3機器を接続する"
+            },
+            {
+              "code": "サブネットごとに仮想IPを一つ用意する"
+            },
+            {
+              "code": "PCやサーバが対応する仮想IPを入口に使う"
+            }
+          ],
+          "shuffled": [
+            3,
+            0,
+            1,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "L2の分離を保ったまま、その内部で入口の担当を引き継ぎます。",
+          "ngExplain": "VRRPを導入するだけで同一L2の循環が解消するわけではありません。"
+        },
+        {
+          "id": "lan-vip-9",
+          "format": "選択",
+          "theme": "L2の範囲と仮想入口の数",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：営業所の利用側を独立したPC用・電話用の二つへ分割。双方をVRRPで保護する最少数は？",
+          "choices": [
+            {
+              "text": "1個のまま",
+              "explain": "原問の一サブネットという前提が変わっています。"
+            },
+            {
+              "text": "2個",
+              "explain": "入口が必要なサブネットが二つへ増えました。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "local-failure",
+      "title": "拠点内の接続が切れたとき",
+      "targets": [
+        "s5-4"
+      ],
+      "steps": [
+        {
+          "id": "local-failure-1",
+          "format": "読む",
+          "theme": "拠点内の接続が切れたとき",
+          "scaffold": 5,
+          "type": "info",
+          "title": "入口の担当と出口の選択は別",
+          "body": "通常は拠点内でIPsecルータとL3SWがつながり、受け取った通信を適切なWAN（Wide Area Network）側へ渡せます。原問は名古屋の両機器を直接接続する経路の切断を考えます。このときPCの入口であるVRRPマスタの機器から別機器の出口へ直接渡せないので、どのサーバ宛てもマスタが動作する機器に接続されたWANを通ります。マスタがどちらかを勝手に決めないのが設問5(4)の要点です。",
+          "stage": "concept"
+        },
+        {
+          "id": "local-failure-2",
+          "format": "選択",
+          "theme": "拠点内の接続が切れたとき",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "本問の障害条件で、PCからどのWANへ出るかを決める機器は？",
+          "choices": [
+            {
+              "text": "常にIPsecルータと固定できる",
+              "explain": "設問はマスタを固定していません。"
+            },
+            {
+              "text": "VRRPのマスタルータが稼働する機器",
+              "explain": "PCの仮想入口を担当する機器から出ます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "local-failure-3",
+          "format": "選択",
+          "theme": "拠点内の接続が切れたとき",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "宛先ごとに通常どおり別機器へ渡す説明が不十分なのは？",
+          "choices": [
+            {
+              "text": "VRRPがサーバのIPを全部同じにするから",
+              "explain": "VRRPはサーバのアドレスを変更しません。"
+            },
+            {
+              "text": "その機器間の直接経路が切れているから",
+              "explain": "平常時の出口使い分けの前提が崩れています。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "local-failure-4",
+          "format": "穴埋め",
+          "theme": "拠点内の接続が切れたとき",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "条件に依存した答案",
+          "template": "どのサーバアクセスも、{a}が稼働する機器に接続された{b}を経由する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "主体",
+              "why": "仮想入口の担当です。",
+              "choices": [
+                {
+                  "text": "VRRPのバックアップだけ",
+                  "explain": "PCの入口を通常担当する側ではありません。"
+                },
+                {
+                  "text": "VRRPのマスタルータ",
+                  "explain": "機器名を一方に決め打ちしません。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "出口",
+              "why": "その機器に直接つながります。",
+              "choices": [
+                {
+                  "text": "切れた機器間の直接経路",
+                  "explain": "障害箇所を使う説明になっています。"
+                },
+                {
+                  "text": "WAN回線",
+                  "explain": "マスタ側の外向き回線を使います。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "local-failure-5",
+          "format": "並べ替え",
+          "theme": "拠点内の接続が切れたとき",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "直接経路切断の影響を追う",
+          "lead": "PCの入口から外向きへ。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "PCはVRRP仮想IPへパケットを渡す"
+            },
+            {
+              "code": "マスタルータの機器が受け取る"
+            },
+            {
+              "code": "切れた直接経路では相手機器へ渡せない"
+            },
+            {
+              "code": "マスタ機器に接続されたWAN回線から送る"
+            }
+          ],
+          "shuffled": [
+            2,
+            3,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "両WAN断ではなく拠点内の接続断を扱っています。",
+          "ngExplain": "『全サーバに必ず到達不能』とするのでなく原問の残る経路を見ます。"
+        },
+        {
+          "id": "local-failure-6",
+          "format": "選択",
+          "theme": "拠点内の接続が切れたとき",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：切断中のマスタがL3SWと明示された。営業所からの出口は？",
+          "choices": [
+            {
+              "text": "IPsecルータのVPNへ拠点内で直接渡す",
+              "explain": "その直接経路が切れたという条件と矛盾します。"
+            },
+            {
+              "text": "L3SWにつながる広域イーサ網",
+              "explain": "一般形の答案を、与えられたマスタ条件へ適用します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "cost",
+      "title": "帯域名ではなくコストを足す",
+      "targets": [
+        "s5-5"
+      ],
+      "steps": [
+        {
+          "id": "cost-1",
+          "format": "読む",
+          "theme": "帯域名ではなくコストを足す",
+          "scaffold": 5,
+          "type": "info",
+          "title": "OSPFは設定されたコストで比較する",
+          "body": "本社PCが使うVRRPマスタはL3SWと指定されています。原問では本社L3SWからの専用線が200、インターネットVPN側は拠点内10＋トンネル220で最小230です。OSPFは小さいコストを優先するので、回線速度の印象でなくこの合計で専用線を選びます。インターネット閲覧も、まずデータセンタのプロキシへ届く経路を比較するのが設問5(5)のポイントです。",
+          "stage": "concept",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "比較対象: 本社L3SWからDCへの経路",
+              "専用線: 200",
+              "VPN側: 10 + 220 = 230（最小）",
+              "200 < 230"
+            ],
+            "caption": "説明用：原問の比較に用いる設定コスト"
+          }
+        },
+        {
+          "id": "cost-2",
+          "format": "選択",
+          "theme": "帯域名ではなくコストを足す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "VPN経由で忘れてはいけないコストは？",
+          "choices": [
+            {
+              "text": "回線の100Mという数値をそのまま加算",
+              "explain": "伝送速度の数値を直接OSPFのコストに加えるのではありません。"
+            },
+            {
+              "text": "トンネル220に加えて拠点内移動の10",
+              "explain": "PCの入口がL3SWなのでIPsecルータまでの経路もあります。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "cost-3",
+          "format": "選択",
+          "theme": "帯域名ではなくコストを足す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "プロキシ経由のインターネット閲覧が専用線を使う理由は？",
+          "choices": [
+            {
+              "text": "インターネット閲覧は常にVPN禁止だから",
+              "explain": "サービス名による禁止ではなく原問のコスト比較です。"
+            },
+            {
+              "text": "プロキシへの経路は専用線200がVPN最小230より小さい",
+              "explain": "外部Webより先に通信相手のプロキシへ到達します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "cost-4",
+          "format": "穴埋め",
+          "theme": "帯域名ではなくコストを足す",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "数値を入れて説明する",
+          "template": "専用線は{a}、VPNは最小{b}なので、{c}を優先する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "専用線",
+              "why": "図9の設定です。",
+              "choices": [
+                {
+                  "text": "10",
+                  "explain": "拠点内の移動コストと混同しています。"
+                },
+                {
+                  "text": "200",
+                  "explain": "本社とデータセンタの専用線です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "VPN",
+              "why": "10＋220です。",
+              "choices": [
+                {
+                  "text": "220",
+                  "explain": "入口L3SWからIPsecルータまでの10が抜けています。"
+                },
+                {
+                  "text": "230",
+                  "explain": "トンネルだけの値にしません。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "選択",
+              "why": "小さい方を選びます。",
+              "choices": [
+                {
+                  "text": "VPN",
+                  "explain": "帯域の印象だけでは原問のコストに反します。"
+                },
+                {
+                  "text": "専用線",
+                  "explain": "200が230より小さいからです。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cost-5",
+          "format": "並べ替え",
+          "theme": "帯域名ではなくコストを足す",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "短い比較答案を作る",
+          "lead": "前提→計算→比較→選択。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "本社のVRRPマスタがL3SWであることを確認する"
+            },
+            {
+              "code": "VPN側の最小コストを10＋220＝230と求める"
+            },
+            {
+              "code": "専用線の200と比較する"
+            },
+            {
+              "code": "200の方が小さいので専用線経由となる"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            1,
+            3
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "両経路の数値を示して選択理由にします。",
+          "ngExplain": "一方の値だけや『速いから』では設定コストの根拠が欠けます。"
+        },
+        {
+          "id": "cost-6",
+          "format": "選択",
+          "theme": "帯域名ではなくコストを足す",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：専用線コストだけを260に変更、VPN最小230は同じ。選択は？",
+          "choices": [
+            {
+              "text": "専用線のまま",
+              "explain": "原問の答えを固定せず、変えたコストで比較し直します。"
+            },
+            {
+              "text": "VPN経由",
+              "explain": "230が260より小さくなります。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "backup",
+      "title": "壊れた回線を使わず目的地へ",
+      "targets": [
+        "s5-6"
+      ],
+      "steps": [
+        {
+          "id": "backup-1",
+          "format": "読む",
+          "theme": "壊れた回線を使わず目的地へ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "二つの迂回を逆向きに考える",
+          "body": "本社とデータセンタは専用線でつながり、営業所は本社へ広域イーサ網、データセンタへVPNでつながります。営業所のVPNが壊れたら本社へ出て専用線を使い、広域イーサが壊れたらデータセンタへ出て専用線で本社へ戻ります。DMサーバは本社、他の対象サーバやプロキシはデータセンタです。設問5(6)では障害箇所と目的地を一つずつ確認します。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 220,
+            "nodes": [
+              {
+                "id": "branch",
+                "label": "営業所",
+                "icon": "pc",
+                "x": 60,
+                "y": 110
+              },
+              {
+                "id": "hq",
+                "label": "本社・DM",
+                "icon": "router",
+                "x": 250,
+                "y": 45
+              },
+              {
+                "id": "dc",
+                "label": "DC・各サーバ",
+                "icon": "server",
+                "x": 250,
+                "y": 180
+              }
+            ],
+            "links": [
+              {
+                "from": "branch",
+                "to": "hq",
+                "label": "広域イーサ網"
+              },
+              {
+                "from": "branch",
+                "to": "dc",
+                "label": "VPN"
+              },
+              {
+                "from": "hq",
+                "to": "dc",
+                "label": "専用線"
+              }
+            ],
+            "caption": "説明用：拠点間の接続関係を単純化"
+          }
+        },
+        {
+          "id": "backup-2",
+          "format": "選択",
+          "theme": "壊れた回線を使わず目的地へ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "営業所VPN断でデータセンタのサーバへ行く最初の回線は？",
+          "choices": [
+            {
+              "text": "営業所からのVPN",
+              "explain": "障害のある回線を使う経路です。"
+            },
+            {
+              "text": "広域イーサ網",
+              "explain": "残っている回線でまず本社へ出ます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "backup-3",
+          "format": "選択",
+          "theme": "壊れた回線を使わず目的地へ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "営業所の広域イーサ断でDMへ行く際、データセンタで終わらない理由は？",
+          "choices": [
+            {
+              "text": "全サーバを営業所へ移したため",
+              "explain": "原問の配置と違います。"
+            },
+            {
+              "text": "DMは本社に残っているため専用線で本社へ進む必要がある",
+              "explain": "サーバ移設の範囲と経路を結び付けます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "backup-4",
+          "format": "穴埋め",
+          "theme": "壊れた回線を使わず目的地へ",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "表3の二つの経路",
+          "template": "う：{a}→{b}→専用線。え：{c}→{d}→専用線。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "うの回線",
+              "why": "営業所のVPN故障です。",
+              "choices": [
+                {
+                  "text": "インターネットVPN",
+                  "explain": "この回線が故障しています。"
+                },
+                {
+                  "text": "広域イーサ網",
+                  "explain": "残った本社への回線です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "うの拠点",
+              "why": "専用線でDCへ渡れる場所です。",
+              "choices": [
+                {
+                  "text": "別の営業所だけ",
+                  "explain": "目的地へ渡す専用線の端点ではありません。"
+                },
+                {
+                  "text": "本社",
+                  "explain": "本社からデータセンタへ専用線で進みます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "えの回線",
+              "why": "営業所の広域イーサ故障です。",
+              "choices": [
+                {
+                  "text": "広域イーサ網",
+                  "explain": "障害がある側を選んでいます。"
+                },
+                {
+                  "text": "インターネットVPN",
+                  "explain": "残るDCへの回線です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "d",
+              "label": "えの拠点",
+              "why": "専用線で本社へ戻れる場所です。",
+              "choices": [
+                {
+                  "text": "営業所内だけ",
+                  "explain": "本社へ到達する中継拠点ではありません。"
+                },
+                {
+                  "text": "データセンタ",
+                  "explain": "DMのある本社へ専用線で戻れます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "backup-5",
+          "format": "並べ替え",
+          "theme": "壊れた回線を使わず目的地へ",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "VPN断のデータセンタ向け経路",
+          "lead": "営業所から対象サーバまで。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "営業所PC"
+            },
+            {
+              "code": "広域イーサ網"
+            },
+            {
+              "code": "本社"
+            },
+            {
+              "code": "専用線"
+            },
+            {
+              "code": "データセンタのサーバ"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            4,
+            3,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          ],
+          "okExplain": "うは『広域イーサ網→本社→専用線』です。送信元と最終宛先は表側にあります。",
+          "ngExplain": "本社到着で止まると、移設したサーバやプロキシへ届きません。"
+        },
+        {
+          "id": "backup-6",
+          "format": "選択",
+          "theme": "壊れた回線を使わず目的地へ",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原図の配置で営業所の広域イーサ網だけ故障。DM以外のデータセンタ向け経路は？",
+          "choices": [
+            {
+              "text": "全通信を本社へ迂回する",
+              "explain": "本社向け回線が故障しており、DC向けまで不要に迂回させています。"
+            },
+            {
+              "text": "通常どおりVPN経由で変更なし",
+              "explain": "目的地も健全な回線もデータセンタ側だからです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 20,
+            "top": 0.57,
+            "bottom": 0.905,
+            "label": "図9の拠点とWAN回線（IPA原図・問題本文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "final",
+      "title": "条件を変えて設計を確かめる",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2",
+        "s2-3",
+        "s3-1",
+        "s3-2",
+        "s3-3",
+        "s3-4",
+        "s4-1",
+        "s4-2",
+        "s4-3",
+        "s5-1",
+        "s5-2",
+        "s5-3",
+        "s5-4",
+        "s5-5",
+        "s5-6"
+      ],
+      "steps": [
+        {
+          "id": "final-1",
+          "format": "読む",
+          "theme": "条件を変えて設計を確かめる",
+          "scaffold": 5,
+          "type": "info",
+          "title": "箱の内外と回線の状態を戻して考える",
+          "body": "GREは運べる形を作り、IPsecは保護し、OSPFは経路を選び、VRRPは利用者の入口を引き継ぎます。サーバの移設先、使える回線、コストを分けて考えると、構成変更後も理由を付けて説明できます。最後はヒントなしで範囲と条件を判断し、原問全体を解く準備を確かめます。",
+          "stage": "concept"
+        },
+        {
+          "id": "final-2",
+          "format": "選択",
+          "theme": "条件を変えて設計を確かめる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "GREの外側MTUを決めるのに、元のデータが1500バイト入ると考えた。どこが不足？",
+          "choices": [
+            {
+              "text": "IPsecが必ず全データを圧縮する想定",
+              "explain": "原問では圧縮でサイズ超過を解消する条件はありません。"
+            },
+            {
+              "text": "外側・内側の各ヘッダも1500の枠に入る",
+              "explain": "アプリのデータだけで枠を使い切るとカプセル化後に超過します。",
+              "ok": true
+            }
+          ],
+          "stage": "apply"
+        },
+        {
+          "id": "final-3",
+          "format": "選択",
+          "theme": "条件を変えて設計を確かめる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "同じ宛先IPを保ってサーバを移設しても、経路設定の検討が必要な理由は？",
+          "choices": [
+            {
+              "text": "同じIPなら世界中で同じL2接続になるから",
+              "explain": "IPが同じでも物理・論理の接続先は自動的には変わりません。"
+            },
+            {
+              "text": "アドレスを保つことと、正しい拠点へ経路を向けることは別だから",
+              "explain": "サブネットを分け、配置に合う経路を広告・選択します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "final-4",
+          "format": "穴埋め",
+          "theme": "条件を変えて設計を確かめる",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "条件付きの比較答案",
+          "template": "VPN側は最小{a}、専用線は{b}。拠点内接続断では、どのサーバ宛ても{c}の機器に接続されたWANから出る。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "VPN値",
+              "why": "原問の本社L3SW入口条件です。",
+              "choices": [
+                {
+                  "text": "220",
+                  "explain": "拠点内移動が抜けています。"
+                },
+                {
+                  "text": "230",
+                  "explain": "10と220を合計します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "専用線値",
+              "why": "図の指定値です。",
+              "choices": [
+                {
+                  "text": "100",
+                  "explain": "広域イーサ側の比較など別の数値と混同しています。"
+                },
+                {
+                  "text": "200",
+                  "explain": "VPN最小より小さいです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "担当",
+              "why": "機器名を固定しません。",
+              "choices": [
+                {
+                  "text": "常にバックアップルータ",
+                  "explain": "PCの入口の担当と逆です。"
+                },
+                {
+                  "text": "VRRPマスタルータ",
+                  "explain": "仮想入口の担当に依存します。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "final-5",
+          "format": "並べ替え",
+          "theme": "条件を変えて設計を確かめる",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "広域イーサ断で本社DMへ届ける",
+          "lead": "使えない回線を除いて送信元から宛先へ。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "営業所PC"
+            },
+            {
+              "code": "インターネットVPN"
+            },
+            {
+              "code": "データセンタ"
+            },
+            {
+              "code": "専用線"
+            },
+            {
+              "code": "本社のDMサーバ"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            1,
+            4,
+            3
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          ],
+          "okExplain": "えは『インターネットVPN→データセンタ→専用線』です。両端は表3に書かれています。",
+          "ngExplain": "データセンタに着いて終わると、移設しないDMへ届きません。"
+        },
+        {
+          "id": "final-6",
+          "format": "選択",
+          "theme": "条件を変えて設計を確かめる",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "補助なし確認：本社DMは残す。営業所VPNだけ故障。DMとデータセンタのサーバへの経路の組合せは？",
+          "choices": [
+            {
+              "text": "どちらも故障した営業所VPNを使う",
+              "explain": "故障条件を反映していません。"
+            },
+            {
+              "text": "DMは広域イーサ→本社、DCは広域イーサ→本社→専用線→DC",
+              "explain": "残る出口から出て、目的地に応じ本社で終了するか専用線へ進みます。",
+              "ok": true
+            },
+            {
+              "text": "どちらもデータセンタで終了する",
+              "explain": "本社に残したDMの所在地を無視しています。"
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1398 @@
+{
+  "examKey": "2018h30a/pm1/1",
+  "title": "SaaSへの道筋と見えるログを設計する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "proxy",
+      "title": "誰の代理で通信するか",
+      "targets": [
+        "s1-1",
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "SaaSと通信経路",
+          "body": "SaaS（Software as a Service）は、提供者が運用するソフトウェアをネットワーク経由で利用するサービスです。そこへの通信を代理する装置がプロキシです。\n\n社内利用者の外向き通信を代理するのがフォワードプロキシ、公開サーバの手前で外部からの要求を受けるのがリバースプロキシです。さらに利用者を認証すれば、通信元の端末だけでなく誰のアクセスかを記録できます。設問1の役割とログの情報を結び付けます。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "pc",
+                "label": "社内PC",
+                "icon": "pc",
+                "x": 45,
+                "y": 70
+              },
+              {
+                "id": "proxy",
+                "label": "代理",
+                "icon": "server",
+                "x": 170,
+                "y": 70
+              },
+              {
+                "id": "web",
+                "label": "外部サイト",
+                "icon": "cloud",
+                "x": 295,
+                "y": 70
+              }
+            ],
+            "links": [
+              {
+                "from": "pc",
+                "to": "proxy",
+                "label": "要求"
+              },
+              {
+                "from": "proxy",
+                "to": "web",
+                "label": "代理要求"
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "社員のPCに代わって外部サイトへアクセスし、外向き通信をまとめる装置は？",
+          "choices": [
+            {
+              "text": "フォワードプロキシ",
+              "ok": true,
+              "explain": "社内の利用者側に立って要求を代理します。"
+            },
+            {
+              "text": "リバースプロキシ",
+              "ok": false,
+              "explain": "公開サーバ側に立って外部からの要求を受ける役割です。"
+            },
+            {
+              "text": "DNSサーバ",
+              "ok": false,
+              "explain": "名前をIPアドレスへ対応付けますが、Web要求そのものの代理ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "二つの代理役を区別する",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "SaaSと通信経路",
+          "template": "社内PCの外向きアクセスは{a}、公開サーバの手前での受付は{b}プロキシを用いる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "利用者側",
+              "why": "代理する側が利用者か公開サーバかで判断します。",
+              "choices": [
+                {
+                  "text": "リバース",
+                  "ok": false,
+                  "explain": "公開サーバ側の入口に置く代理役です。"
+                },
+                {
+                  "text": "フォワード",
+                  "ok": true,
+                  "explain": "利用者側の出口に置く代理役です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "サーバ側",
+              "why": "外部要求を受け、背後のサーバへ渡す役割です。",
+              "choices": [
+                {
+                  "text": "リバース",
+                  "ok": true,
+                  "explain": "サーバ群を外部から直接見せない構成にも使います。"
+                },
+                {
+                  "text": "フォワード",
+                  "ok": false,
+                  "explain": "社内利用者の外向き通信を代理する場合です。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "1台の共有PCを複数社員が利用する。プロキシ認証でログに追加すると有効なのは？",
+          "choices": [
+            {
+              "text": "利用者ID",
+              "ok": true,
+              "explain": "認証結果をアクセスにひも付ければ、同じ端末の利用者を区別できます。"
+            },
+            {
+              "text": "PCのMACアドレスだけ",
+              "ok": false,
+              "explain": "端末の識別であり、同じ端末を使う人の区別にはなりません。"
+            },
+            {
+              "text": "接続先のポート番号だけ",
+              "ok": false,
+              "explain": "サービスの識別であり、アクセスした人を示しません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "練習用の変更条件：公開Webサーバ3台の前で要求を受け、キャッシュや振分けを行う。選ぶ役割は？",
+          "choices": [
+            {
+              "text": "フォワードプロキシ",
+              "ok": false,
+              "explain": "社内PCの代理ではなく公開サービス側の代理が必要です。"
+            },
+            {
+              "text": "利用者IDの記録だけ",
+              "ok": false,
+              "explain": "監査情報であり、公開要求を代理して分散する機能ではありません。"
+            },
+            {
+              "text": "リバースプロキシ",
+              "ok": true,
+              "explain": "外部要求の受付をサーバ側でまとめる構成です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "SaaSと通信経路",
+          "lead": "アクセスと人を結び付ける説明を組み立てる。",
+          "lines": [
+            {
+              "code": "社内PCの外向きWebアクセスを"
+            },
+            {
+              "code": "フォワードプロキシで代理し、利用者を認証して、"
+            },
+            {
+              "code": "利用者IDをアクセスログに付加する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "代理と認証は別の機能で、認証結果を使って人を記録できます。",
+          "ngExplain": "通信の向き、認証、ログに追加する情報の順に結び付けます。"
+        }
+      ]
+    },
+    {
+      "id": "connect",
+      "title": "暗号化された通路を開く",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "SaaSと通信経路",
+          "body": "HTTPSはHTTPの通信をTLS（Transport Layer Security）で保護します。明示的なプロキシ経由では、CONNECTメソッドで接続先のホスト名とポートを指定して通路を作れます。復号しないプロキシにはHTTPS内部のURLパスは見えません。設問2(1)では、この通路の悪用も考えます。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "CONNECT app.example:443 HTTP/1.1",
+              "200 Connection Established",
+              "<TLSで保護された通信>"
+            ],
+            "caption": "説明用・架空の表示"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "プロキシに『app.example:443へ通路を作って』と依頼するHTTPメソッドは？",
+          "choices": [
+            {
+              "text": "POST",
+              "ok": false,
+              "explain": "データの送信などに使い、汎用のトンネル確立要求ではありません。"
+            },
+            {
+              "text": "CONNECT",
+              "ok": true,
+              "explain": "接続先ホストとポートを指定してトンネルを要求します。"
+            },
+            {
+              "text": "GET",
+              "ok": false,
+              "explain": "Web資源の取得要求であり、通路の確立要求とは区別します。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "ログに見える範囲",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "SaaSと通信経路",
+          "template": "復号しないCONNECT中継では{a}は把握できるが、HTTPS内部の{b}は把握できない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "通路の宛先",
+              "why": "CONNECT要求自体に指定する情報です。",
+              "choices": [
+                {
+                  "text": "接続先ホスト名",
+                  "ok": true,
+                  "explain": "CONNECTの要求先から把握できます。"
+                },
+                {
+                  "text": "ファイル本文",
+                  "ok": false,
+                  "explain": "TLSで保護される内部データです。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "暗号化の内側",
+              "why": "HTTPの要求対象はTLSの内側です。",
+              "choices": [
+                {
+                  "text": "CONNECTの宛先ポート",
+                  "ok": false,
+                  "explain": "通路を作る際に指定する値です。"
+                },
+                {
+                  "text": "URLのパス",
+                  "ok": true,
+                  "explain": "ホスト名とは違い、暗号化されたHTTP要求に含まれます。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "HTTPSだけを許可したいのに、任意ポートへのCONNECTを許すと何が起こり得る？",
+          "choices": [
+            {
+              "text": "外向き通信は全て復号される",
+              "ok": false,
+              "explain": "CONNECTによる中継だけではTLSを終端しません。"
+            },
+            {
+              "text": "非HTTPSサービスへの通路に悪用される",
+              "ok": true,
+              "explain": "CONNECT自体は、その中身がWeb通信であることを保証しません。"
+            },
+            {
+              "text": "CONNECTなら中身は必ずHTTPSになる",
+              "ok": false,
+              "explain": "通路の中で何を送るかはメソッド名だけでは制限できません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "練習用の変更条件：正規HTTPSを443番だけに限定する。25番へのCONNECT要求には？",
+          "choices": [
+            {
+              "text": "拒否する",
+              "ok": true,
+              "explain": "許可したHTTPSポート以外のトンネルを遮断します。"
+            },
+            {
+              "text": "ホスト名が付いていれば許可する",
+              "ok": false,
+              "explain": "ホスト名の有無は接続先サービスを制限しません。"
+            },
+            {
+              "text": "443番も含めて全て許可する",
+              "ok": false,
+              "explain": "非HTTPSサービスへ抜ける通路が残ります。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "SaaSと通信経路",
+          "lead": "原問で求められる対策を、対象と動作が分かる文にする。",
+          "lines": [
+            {
+              "code": "CONNECTメソッドの要求について、"
+            },
+            {
+              "code": "HTTPS以外のポートを指定するものを"
+            },
+            {
+              "code": "プロキシサーバで拒否する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "メソッド名だけでなく、どの要求を拒否するかが必要です。443番上の不正通信まで安全と断言する対策ではありません。",
+          "ngExplain": "『全HTTPSを拒否』では利用要件を満たしません。対象ポートの条件を先に置きます。"
+        }
+      ]
+    },
+    {
+      "id": "trust",
+      "title": "復号する代理を信頼できるようにする",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "SaaSと通信経路",
+          "body": "通信内容を検査するプロキシは、PCとのTLSと外部サーバとのTLSを別々に終端します。PCから見た証明書の発行元は組織が管理するプロキシ側の認証局になり、その信頼の起点がルート証明書です。設問2(2)では、管理されたPCがその起点を信頼できるようにする操作を考えます。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "pc",
+                "label": "PC",
+                "icon": "pc",
+                "x": 45,
+                "y": 70
+              },
+              {
+                "id": "proxy",
+                "label": "検査プロキシ",
+                "icon": "server",
+                "x": 170,
+                "y": 70
+              },
+              {
+                "id": "web",
+                "label": "外部サーバ",
+                "icon": "server",
+                "x": 295,
+                "y": 70
+              }
+            ],
+            "links": [
+              {
+                "from": "pc",
+                "to": "proxy",
+                "label": "TLS①"
+              },
+              {
+                "from": "proxy",
+                "to": "web",
+                "label": "TLS②"
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "復号・再暗号化を始めた後、PCだけで『証明書が信頼できない』と表示された。まず確認する関係は？",
+          "choices": [
+            {
+              "text": "PCに外部サーバの秘密鍵があるか",
+              "ok": false,
+              "explain": "秘密鍵は所有者が守るもので、PCへ配布するものではありません。"
+            },
+            {
+              "text": "PCがプロキシのMACアドレスを暗記しているか",
+              "ok": false,
+              "explain": "MACアドレスの記録では証明書の信頼は確立しません。"
+            },
+            {
+              "text": "PCがプロキシ側の発行元を信頼しているか",
+              "ok": true,
+              "explain": "通信相手の証明書から信頼済みの起点へたどれるかを確認します。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "必要な証明書と場所",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "SaaSと通信経路",
+          "template": "組織が承認した検査用プロキシの{a}を、{b}へ配布する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "信頼の起点",
+              "why": "個々の接続先証明書を毎回配るのではありません。",
+              "choices": [
+                {
+                  "text": "秘密鍵",
+                  "ok": false,
+                  "explain": "流出させてはいけない情報であり配布しません。"
+                },
+                {
+                  "text": "ルート証明書",
+                  "ok": true,
+                  "explain": "プロキシ側の証明書発行元を信頼する起点です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "配布先",
+              "why": "エラーを出した検証者側で信頼を設定します。",
+              "choices": [
+                {
+                  "text": "社内PCの信頼ストア",
+                  "ok": true,
+                  "explain": "PCが受信証明書を検証できるようになります。"
+                },
+                {
+                  "text": "G社のDNSレコード",
+                  "ok": false,
+                  "explain": "名前解決の設定ではPCの信頼ストアは変わりません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "証明書の検証そのものを無効化する対応が不適切なのは？",
+          "choices": [
+            {
+              "text": "全てのURLが平文で送信されるから",
+              "ok": false,
+              "explain": "検証無効と暗号化無効は同じではありません。問題は相手の確認が失われることです。"
+            },
+            {
+              "text": "IPルートが消えるから",
+              "ok": false,
+              "explain": "証明書検証は経路表の操作ではありません。"
+            },
+            {
+              "text": "正規プロキシ以外の偽装も見逃すから",
+              "ok": true,
+              "explain": "必要なのは承認した発行元の信頼で、検証の放棄ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "練習用の変更条件：プロキシは復号せずトンネルだけを中継し、接続先証明書も正しく信頼済み。この場合は？",
+          "choices": [
+            {
+              "text": "全証明書の検証を無効化する",
+              "ok": false,
+              "explain": "正常に検証できる状態を壊す必要はありません。"
+            },
+            {
+              "text": "検査用ルート証明書の追加はこの理由では不要",
+              "ok": true,
+              "explain": "PCは外部サーバとTLS通信し、その証明書を直接検証します。"
+            },
+            {
+              "text": "必ずプロキシの秘密鍵をPCへ配る",
+              "ok": false,
+              "explain": "秘密鍵配布は不要で危険です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "SaaSと通信経路",
+          "lead": "原問の解決策を、管理対象と証明書の種類を落とさず組み立てる。",
+          "lines": [
+            {
+              "code": "復号・再暗号化するプロキシの証明書をPCが信頼できるよう、"
+            },
+            {
+              "code": "プロキシサーバのルート証明書を"
+            },
+            {
+              "code": "社内PCにインストールする。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "『証明書』だけでなく、どのルート証明書をどこへ入れるかが重要です。",
+          "ngExplain": "信頼を判断するPC側に設定します。サーバの秘密鍵配布と混同しません。"
+        }
+      ]
+    },
+    {
+      "id": "controller",
+      "title": "転送と集中制御を分ける",
+      "targets": [
+        "s3-1",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "SaaSと通信経路",
+          "body": "SDN（Software-Defined Networking）は、利用者のパケットを運ぶデータプレーンと、動作を決めるコントロールプレーンを分けて考えます。原問のSD-WANルータはコントローラが集中設定します。RSS（Really Simple Syndication）で更新を知るツールは、その制御窓口へ変更を指示します。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "パケットを運ぶルータの動作を一括して設定する側のプレーンは？",
+          "choices": [
+            {
+              "text": "コントロールプレーン",
+              "ok": true,
+              "explain": "転送方法や設定を制御する側です。"
+            },
+            {
+              "text": "データプレーン",
+              "ok": false,
+              "explain": "決められた内容に従って利用者のパケットを転送する側です。"
+            },
+            {
+              "text": "物理ケーブル",
+              "ok": false,
+              "explain": "媒体であって集中制御の役割名ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "検知から変更まで",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "SaaSと通信経路",
+          "template": "IPアドレスブロックの更新をRSSで検知したツールは{a}へ指示し、{b}の設定を更新する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "制御先",
+              "why": "全拠点の集中設定を担う機器です。",
+              "choices": [
+                {
+                  "text": "SD-WANコントローラ",
+                  "ok": true,
+                  "explain": "全ルータへの設定反映の窓口です。"
+                },
+                {
+                  "text": "出張先PC",
+                  "ok": false,
+                  "explain": "出張者の端末はルータ群の制御役ではありません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "更新される対象",
+              "why": "原問で集中設定される機器を選びます。",
+              "choices": [
+                {
+                  "text": "G社の全サーバ",
+                  "ok": false,
+                  "explain": "F社の制御装置が他社SaaSのサーバ構成を変更するわけではありません。"
+                },
+                {
+                  "text": "全社のSD-WANルータ",
+                  "ok": true,
+                  "explain": "更新された宛先集合に対応して動作させます。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "RSSを受信するだけで全ルータの設定が変わると言えない理由は？",
+          "choices": [
+            {
+              "text": "更新の通知と、機器へ設定を反映する処理は別だから",
+              "ok": true,
+              "explain": "ツールが情報を読み取り、コントローラへの指示につなげます。"
+            },
+            {
+              "text": "RSSは必ず暗号化されないから",
+              "ok": false,
+              "explain": "ここでの不足は暗号化ではなく設定反映の処理です。"
+            },
+            {
+              "text": "ルータは宛先IPを扱えないから",
+              "ok": false,
+              "explain": "ルータはIPパケットを扱います。集中制御の窓口の問題です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "練習用の変更条件：拠点が5から20へ増えたが、同じ集中管理方式を維持する。更新ツールの指示先は？",
+          "choices": [
+            {
+              "text": "20人の利用者のブラウザ",
+              "ok": false,
+              "explain": "ブラウザ設定とルータ設定は別です。"
+            },
+            {
+              "text": "プロキシのルート証明書",
+              "ok": false,
+              "explain": "証明書は設定指示を受ける制御装置ではありません。"
+            },
+            {
+              "text": "同じSD-WANコントローラ",
+              "ok": true,
+              "explain": "拠点数が変わっても集中管理の役割分担は同じです。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "SaaSと通信経路",
+          "lead": "更新の因果関係を順に説明する。",
+          "lines": [
+            {
+              "code": "RSSからG社SaaSのIPアドレスブロック更新を検知し、"
+            },
+            {
+              "code": "ツールがSD-WANコントローラに変更を指示して、"
+            },
+            {
+              "code": "コントロールプレーンの制御により各ルータへ反映する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "情報の取得、集中制御、各拠点への反映を区別できています。",
+          "ngExplain": "検知しただけで転送動作が変わるわけではありません。制御先を間に置きます。"
+        }
+      ]
+    },
+    {
+      "id": "route",
+      "title": "変わる宛先を毎回設定しない",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "SaaSと通信経路",
+          "body": "L3SW（レイヤ3スイッチ）はIPアドレスに基づいて転送先を選ぶ装置です。経路表では宛先に一致する最も具体的な経路を優先し、デフォルトルートはそれ以外の宛先を渡す最後の行き先になります。\n\n原問では通信の許可・拒否を担うFW（ファイアウォール）への従来経路を見直します。プロキシ宛ての個別経路を追加した上で、G社SaaSのIP変更にL3SWの修正を伴わせない設計にします。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "宛先: プロキシ/32 → 旧FW",
+              "宛先: 0.0.0.0/0 → 新ルータ"
+            ],
+            "caption": "説明用・経路選択の模式表示"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "新しいSaaS宛先が現れるたびにL3SWへ個別経路を追加したくない。基本となる設定は？",
+          "choices": [
+            {
+              "text": "プロキシ宛て経路を削除する",
+              "ok": false,
+              "explain": "SaaS以外のWebアクセスをプロキシ経由にする要件を損ないます。"
+            },
+            {
+              "text": "デフォルトルートをSD-WANルータへ向ける",
+              "ok": true,
+              "explain": "未知のSaaS宛先もSD-WANルータへ送り、そこで適切に処理できます。"
+            },
+            {
+              "text": "現在のSaaSのIPだけを登録する",
+              "ok": false,
+              "explain": "次の追加・変更に追従できず、その都度修正が必要です。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "経路の二つの要素",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "SaaSと通信経路",
+          "template": "L3SWの{a}について、ネクストホップを{b}とする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "経路の範囲",
+              "why": "宛先変更のたびに編集しないため広い行き先を選びます。",
+              "choices": [
+                {
+                  "text": "現在のG社IPだけのホスト経路",
+                  "ok": false,
+                  "explain": "現時点の1宛先しか扱えません。"
+                },
+                {
+                  "text": "デフォルトルート",
+                  "ok": true,
+                  "explain": "個別経路で指定されていない宛先を扱います。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "次に渡す機器",
+              "why": "図2で新しい出口機能を持つ装置です。",
+              "choices": [
+                {
+                  "text": "SD-WANルータ",
+                  "ok": true,
+                  "explain": "SaaS宛て通信の出口です。"
+                },
+                {
+                  "text": "G社SaaSサーバ",
+                  "ok": false,
+                  "explain": "遠隔の最終宛先であり、L3SWに直接つながる次ホップではありません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "プロキシ宛ての個別経路とSD-WAN向けデフォルトルートが共存してよい理由は？",
+          "choices": [
+            {
+              "text": "プロキシはIPアドレスを使わないから",
+              "ok": false,
+              "explain": "プロキシへの接続にもIP経路が必要です。"
+            },
+            {
+              "text": "プロキシ宛てには、より具体的な経路が適用されるから",
+              "ok": true,
+              "explain": "デフォルトを変えても例外の個別経路を保てます。"
+            },
+            {
+              "text": "デフォルトルートが常に全経路より優先されるから",
+              "ok": false,
+              "explain": "逆です。通常は最長一致で具体的な経路を選びます。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "練習用の変更条件：プロキシ宛て/32経路は旧FW経由、デフォルトは新ルータ経由。プロキシ宛てパケットはどこへ？",
+          "choices": [
+            {
+              "text": "旧FWへ",
+              "ok": true,
+              "explain": "/32の個別経路がデフォルトより具体的です。"
+            },
+            {
+              "text": "必ず新ルータへ",
+              "ok": false,
+              "explain": "デフォルトを設定しても個別経路は優先されます。"
+            },
+            {
+              "text": "二つへ同時複製する",
+              "ok": false,
+              "explain": "経路の長さが異なるため、ここでは複製する設計ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "SaaSと通信経路",
+          "lead": "原問図2のL3SWに必要な変更を組み立てる。",
+          "lines": [
+            {
+              "code": "G社SaaSの宛先変更ごとにL3SWを修正しないよう、"
+            },
+            {
+              "code": "デフォルトルートのネクストホップを"
+            },
+            {
+              "code": "SD-WANルータとする。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "経路種別とネクストホップの両方を記述できています。プロキシへの個別経路は別途維持します。",
+          "ngExplain": "最終宛先を次ホップにしないよう、L3SWから最初に渡す装置を選びます。",
+          "originalExcerpt": {
+            "page": 4,
+            "top": 0.53,
+            "bottom": 0.89,
+            "label": "図2：変更後の本社と営業所（IPA原図）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pac",
+      "title": "ブラウザの代理利用と経路をそろえる",
+      "targets": [
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "SaaSと通信経路",
+          "body": "PAC（Proxy Auto-Configuration）は、ブラウザが宛先ごとにプロキシを使うか直接接続するかを決める設定です。経路表だけ変えても、ブラウザがプロキシに依頼し続ければ代理経由の負荷は残ります。設問3(4)では、直接接続へ切り替える対象を限定します。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "原問はG社SaaSだけを各拠点から直接利用し、他のWebはプロキシ経由とする。PACの除外対象は？",
+          "choices": [
+            {
+              "text": "全てのHTTPS通信",
+              "ok": false,
+              "explain": "G社以外もプロキシ経由とする条件に反します。"
+            },
+            {
+              "text": "本社と営業所間の全通信",
+              "ok": false,
+              "explain": "社内拠点間通信はPACで選ぶWebプロキシの対象とは別です。"
+            },
+            {
+              "text": "G社SaaSへのHTTPS通信",
+              "ok": true,
+              "explain": "本文で負荷を分散させる対象に限定します。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "二つの出口を選び分ける",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "SaaSと通信経路",
+          "template": "G社SaaSへのHTTPSは{a}、それ以外のWebアクセスは{b}とする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "SaaS",
+              "why": "ブラウザが代理を依頼しないようにします。",
+              "choices": [
+                {
+                  "text": "プロキシを除外して直接接続",
+                  "ok": true,
+                  "explain": "各拠点のSD-WANルータへ向かう動作につながります。"
+                },
+                {
+                  "text": "常にプロキシへ依頼",
+                  "ok": false,
+                  "explain": "処理セッション数の問題が残ります。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "それ以外",
+              "why": "原問の従来の制御を残す範囲です。",
+              "choices": [
+                {
+                  "text": "全て直接接続",
+                  "ok": false,
+                  "explain": "SaaSだけを除外する要件を超えています。"
+                },
+                {
+                  "text": "プロキシを利用",
+                  "ok": true,
+                  "explain": "対象外のWebは元の経路で管理します。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "L3SWのデフォルトだけ変え、ブラウザ設定を変えない場合に残る問題は？",
+          "choices": [
+            {
+              "text": "PACがルータを自動的に変更する",
+              "ok": false,
+              "explain": "PACと経路表は独立した設定です。"
+            },
+            {
+              "text": "HTTPSがHTTPへ変わる",
+              "ok": false,
+              "explain": "ルート変更はアプリケーションの方式を変えません。"
+            },
+            {
+              "text": "ブラウザが引き続きプロキシへ接続する",
+              "ok": true,
+              "explain": "実際のTCP接続先はプロキシなので、SaaSへの直接接続になりません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "練習用の変更条件：直接接続を許すサービスがH社だけに変わった。PACで行う変更は？",
+          "choices": [
+            {
+              "text": "プロキシ認証を全廃する",
+              "ok": false,
+              "explain": "対象外通信の監査機能まで失わせる不要な変更です。"
+            },
+            {
+              "text": "H社向け通信を除外対象にし、他をプロキシ利用にする",
+              "ok": true,
+              "explain": "新しい要件の対象集合に合わせて判定を変えます。"
+            },
+            {
+              "text": "G社向けだけを除外し続ける",
+              "ok": false,
+              "explain": "元の会社名を暗記しても変更後の要件を満たしません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "SaaSと通信経路",
+          "lead": "原問の負荷軽減策を通信対象付きで組み立てる。",
+          "lines": [
+            {
+              "code": "プロキシ自動設定ファイルで、"
+            },
+            {
+              "code": "G社SaaSへのHTTPS通信をプロキシから除外し、"
+            },
+            {
+              "code": "SD-WANルータ経由で直接アクセスさせる。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "除外対象をG社SaaSに限定し、経路側の変更と整合させます。",
+          "ngExplain": "PACの設定先と経路制御の役割を混ぜず、まず除外する通信を特定します。"
+        }
+      ]
+    },
+    {
+      "id": "audit",
+      "title": "通らなくなった場所のログには残らない",
+      "targets": [
+        "s3-5"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "SaaSと通信経路",
+          "body": "ログは、その装置が観測した通信しか記録できません。G社SaaSを直接利用する社内PCも、出張先から利用するPCも、本社プロキシを通らなくなります。API（Application Programming Interface）でSaaS側の利用記録を取得すると、利用場所をまたいで追跡できます。設問3(5)は二つの理由を分けて述べます。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "社内PCをG社SaaSへの直接接続に変更すると、プロキシログには何が欠ける？",
+          "choices": [
+            {
+              "text": "社内PCによるG社SaaSアクセス",
+              "ok": true,
+              "explain": "その通信はプロキシを経由しないため観測できません。"
+            },
+            {
+              "text": "G社以外のプロキシ経由アクセス",
+              "ok": false,
+              "explain": "こちらは引き続きプロキシを通ります。"
+            },
+            {
+              "text": "全機器の経路表",
+              "ok": false,
+              "explain": "アクセスログと経路表は異なる情報です。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "社内と出張先を分ける",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "SaaSと通信経路",
+          "template": "社内PCのG社アクセスは{a}のでプロキシでは取得できない。一方、SaaS側のAPIなら{b}の利用も記録対象にできる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "社内側の理由",
+              "why": "変更後に通る場所を考えます。",
+              "choices": [
+                {
+                  "text": "必ず認証をしない",
+                  "ok": false,
+                  "explain": "SaaSでの認証はできます。原問の理由ではありません。"
+                },
+                {
+                  "text": "プロキシを経由しない",
+                  "ok": true,
+                  "explain": "本社の観測点から外れるのが原因です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "追加で見える利用者",
+              "why": "社外からSaaSへ直接入る経路です。",
+              "choices": [
+                {
+                  "text": "出張先PC",
+                  "ok": true,
+                  "explain": "社内プロキシに来ないアクセスもSaaSでは観測できます。"
+                },
+                {
+                  "text": "アクセスしていないPC",
+                  "ok": false,
+                  "explain": "実際に起きていない利用をログから取得することはできません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "『APIならHTTPSを復号しなくても全部安全になる』が理由として不十分なのは？",
+          "choices": [
+            {
+              "text": "問われているのはログの観測範囲だから",
+              "ok": true,
+              "explain": "社内の迂回と出張先の利用という二つの経路を説明すべきです。"
+            },
+            {
+              "text": "APIは必ず暗号化されないから",
+              "ok": false,
+              "explain": "APIもHTTPSなどを利用できます。ここでの論点ではありません。"
+            },
+            {
+              "text": "出張先は社内プロキシを必ず通るから",
+              "ok": false,
+              "explain": "原問では出張先から直接G社SaaSへ接続します。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "SaaSと通信経路",
+          "intro": "練習用の変更条件：社内PCはプロキシへ戻すが、出張先PCは直接利用のまま。API取得の理由として残るものは？",
+          "choices": [
+            {
+              "text": "社内PCが全てプロキシを迂回するため",
+              "ok": false,
+              "explain": "変更後は社内PCをプロキシへ戻したので成立しません。"
+            },
+            {
+              "text": "プロキシ認証で出張先も全て識別できるため",
+              "ok": false,
+              "explain": "プロキシを通らない利用者はその認証の対象になりません。"
+            },
+            {
+              "text": "出張先からの利用も記録するため",
+              "ok": true,
+              "explain": "社内ログが戻っても、出張先は本社を通りません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 2,
+            "top": 0.46,
+            "bottom": 0.79,
+            "label": "図1：出張先PCと本社の位置関係（IPA原図）"
+          }
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "SaaSと通信経路",
+          "lead": "原問の二つの理由を、一方を落とさず構成する。",
+          "lines": [
+            {
+              "code": "社内PCのG社SaaSアクセスがプロキシを経由しなくなるため、"
+            },
+            {
+              "code": "また、出張先PCのG社SaaSアクセスも記録するため、"
+            },
+            {
+              "code": "G社SaaSのAPIを通じてアクセスログを取得する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "社内の取得不能と、出張先まで含める利点を別々に説明できています。",
+          "ngExplain": "『ログを取るため』だけでなく、二つの利用経路が必要です。"
+        },
+        {
+          "id": "independent",
+          "type": "info",
+          "title": "補助なしの原問へ",
+          "stage": "transfer",
+          "scaffold": 0,
+          "format": "読む",
+          "theme": "SaaSと通信経路",
+          "body": "ここまでで部品ごとの判断を練習しました。次は「公式の原問を解く」から、教材の解説を閉じて原文・原図だけで挑戦してください。用語だけでなく、対象機器・通信方向・条件・結果を設問の指定に合わせてそろえます。原問の答案と学習記録は別に保存されます。"
+        }
+      ]
+    }
+  ]
+}

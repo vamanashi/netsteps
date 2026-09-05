@@ -1,0 +1,1238 @@
+{
+  "examKey": "2017h29a/pm1/1",
+  "title": "暗号の入口と顧客ごとの通り道をつくる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "tls-roles",
+      "title": "暗号化だけでは守れない",
+      "targets": [
+        "s1",
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "秘密・相手・改ざんを分ける",
+          "body": "VPN（Virtual Private Network）は離れた機器を論理的に接続します。SSL/TLS（Secure Sockets Layer / Transport Layer Security）を使うVPNでは、秘密を隠す暗号化に加えて、鍵を共有する手段と相手確認、メッセージの改ざん検出が必要です。原問の暗号スイートの用途を、この四つに分けます。",
+          "stage": "concept",
+          "id": "tls-roles-1",
+          "theme": "暗号化だけでは守れない",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "盗聴者に本文を読ませない役割は？",
+          "choices": [
+            {
+              "text": "経路制御",
+              "explain": "宛先へ届ける仕組みであり、内容を隠す機能ではありません。",
+              "ok": false
+            },
+            {
+              "text": "利用者の認証だけ",
+              "explain": "誰が利用するかは確認できても、転送中の本文を隠すこととは別です。",
+              "ok": false
+            },
+            {
+              "text": "データの暗号化",
+              "explain": "通信内容を読めない形に変える役割です。相手の正しさの保証とは分けます。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "tls-roles-2",
+          "theme": "暗号化だけでは守れない",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "初対面の通信相手と、本文を保護する鍵を安全に用意する用途は？",
+          "choices": [
+            {
+              "text": "鍵交換",
+              "explain": "本問でデータ暗号以外に挙げる暗号アルゴリズムの用途の一つです。",
+              "ok": true
+            },
+            {
+              "text": "メッセージ認証",
+              "explain": "改ざんなどを検証する用途であり、鍵を共有する手順そのものではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check",
+          "id": "tls-roles-3",
+          "theme": "暗号化だけでは守れない",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "偽のサーバを相手に鍵交換してしまうことを避けたい。追加で必要な用途は？",
+          "choices": [
+            {
+              "text": "圧縮",
+              "explain": "データ量を減らしても相手の正当性は確認できません。",
+              "ok": false
+            },
+            {
+              "text": "認証",
+              "explain": "相手の正当性を確認します。鍵が共有できたことだけでは相手が本物とは限りません。",
+              "ok": true
+            }
+          ],
+          "stage": "reason",
+          "id": "tls-roles-4",
+          "theme": "暗号化だけでは守れない",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "三つの用途を対応させる",
+          "template": "データ暗号とは別に、鍵を共有する{a}と相手を確認する{b}を使う。本問のハッシュアルゴリズムの用途は{c}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "鍵を用意",
+              "why": "データを暗号化する前に鍵を共有する用途です。",
+              "choices": [
+                {
+                  "text": "鍵交換",
+                  "explain": "暗号化に使う鍵を安全に共有します。",
+                  "ok": true
+                },
+                {
+                  "text": "アドレス変換",
+                  "explain": "通信先のアドレスを書き換える処理です。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "相手確認",
+              "why": "鍵交換相手を確認する用途です。",
+              "choices": [
+                {
+                  "text": "認証",
+                  "explain": "相手が正当かを確認します。",
+                  "ok": true
+                },
+                {
+                  "text": "経路広告",
+                  "explain": "到達できる宛先を知らせるだけです。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "改ざん検出",
+              "why": "本問は従来型の暗号スイートを前提にしています。",
+              "choices": [
+                {
+                  "text": "メッセージ認証",
+                  "explain": "共有秘密を用いる検証によりメッセージの改ざんなどを検出します。",
+                  "ok": true
+                },
+                {
+                  "text": "データ圧縮",
+                  "explain": "ハッシュ値を本文の代わりに送って復元することはできません。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "tls-roles-5",
+          "theme": "暗号化だけでは守れない",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：暗号化はできるが相手確認を省略した。残る問題は？",
+          "choices": [
+            {
+              "text": "暗号化した文字が必ず平文に戻る",
+              "explain": "相手認証の省略が暗号化処理を直接無効にするわけではありません。",
+              "ok": false
+            },
+            {
+              "text": "偽の相手とも秘密の通信を確立してしまう",
+              "explain": "暗号化された通信でも、相手が攻撃者なら秘密を渡してしまいます。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "tls-roles-6",
+          "theme": "暗号化だけでは守れない",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "tls-hello",
+      "title": "接続条件を相談して決める",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "最初は候補を出し合う",
+          "body": "クライアントが対応する方式を提示し、サーバがその中から利用条件を選びます。本問の2017年時点の説明では、MD5とSHA-1を避けるためTLS 1.2以上を選びます。これは当時の設問条件の学習であり、現在の安全な製品設定を一律に指定するものではありません。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 180,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "クライアント",
+                "icon": "pc",
+                "x": 55,
+                "y": 45
+              },
+              {
+                "id": "node1",
+                "label": "TLS接続",
+                "icon": "cloud",
+                "x": 170,
+                "y": 45
+              },
+              {
+                "id": "node2",
+                "label": "VPN装置",
+                "icon": "fw",
+                "x": 285,
+                "y": 45
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：接続前に方式を合意する"
+          },
+          "id": "tls-hello-1",
+          "theme": "接続条件を相談して決める",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "クライアントが対応方式を提示する最初のメッセージは？",
+          "choices": [
+            {
+              "text": "Server_Hello",
+              "explain": "サーバが選択結果を返す側のメッセージです。",
+              "ok": false
+            },
+            {
+              "text": "Client_Hello",
+              "explain": "接続を開始するクライアントの提案です。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "tls-hello-2",
+          "theme": "接続条件を相談して決める",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "サーバが共通の暗号スイートを選ぶのはなぜ？",
+          "choices": [
+            {
+              "text": "片方だけが対応する方式では通信できないから",
+              "explain": "両者が扱える方式を合意する必要があります。",
+              "ok": true
+            },
+            {
+              "text": "クライアントの提案を全て同時に使うため",
+              "explain": "提案された全方式を同時使用するわけではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "tls-hello-3",
+          "theme": "接続条件を相談して決める",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "原問の版番号と応答名を補う",
+          "template": "本問でMD5と並べて避けるハッシュは{a}。TLS {b}以上を使い、Client_Helloに{c}を返す。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ハッシュ",
+              "why": "暗号化方式とハッシュ方式を混同しません。",
+              "choices": [
+                {
+                  "text": "AES",
+                  "explain": "AESはブロック暗号で、ここで問われるハッシュではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "SHA-1",
+                  "explain": "原問がMD5とともに挙げるハッシュアルゴリズムです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "版番号",
+              "why": "当時の問題文に従う最小の版番号です。",
+              "choices": [
+                {
+                  "text": "1.0",
+                  "explain": "本問の要求する版の下限を満たしません。",
+                  "ok": false
+                },
+                {
+                  "text": "1.2",
+                  "explain": "本問の公式解答と一致する下限です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "応答",
+              "why": "サーバからの選択結果です。",
+              "choices": [
+                {
+                  "text": "Client_Hello",
+                  "explain": "こちらはクライアントからの提案です。",
+                  "ok": false
+                },
+                {
+                  "text": "Server_Hello",
+                  "explain": "クライアントの提案にサーバが応答します。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "tls-hello-4",
+          "theme": "接続条件を相談して決める",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "接続開始の流れを並べる",
+          "lead": "本問の方式合意から保護された通信までを順に並べます。",
+          "lines": [
+            {
+              "code": "Client_Helloで対応方式を提示する"
+            },
+            {
+              "code": "Server_Helloで選択した方式を返す"
+            },
+            {
+              "code": "合意した方式で後続の保護処理を進める"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "候補提示、選択応答、合意条件の利用という順序です。",
+          "ngExplain": "Server_Helloの選択より前に、その選択結果を用いた通信は始められません。",
+          "stage": "assemble",
+          "id": "tls-hello-5",
+          "theme": "接続条件を相談して決める",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：共通の暗号スイートが一つもない。どうする？",
+          "choices": [
+            {
+              "text": "自動的に平文へ切り替える",
+              "explain": "保護要件を満たさない平文への変更を当然の動作としてはいけません。",
+              "ok": false
+            },
+            {
+              "text": "接続を成立させず設定を確認する",
+              "explain": "共通方式がないのに暗号化通信は合意できません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "tls-hello-6",
+          "theme": "接続条件を相談して決める",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "virtual-interface",
+      "title": "多様な通信をトンネルに載せる",
+      "targets": [
+        "s1",
+        "s2-2",
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "Webだけか、LANの通信か",
+          "body": "リバースプロキシ方式はWebサーバ側の代理としてアクセスを受けます。H社の顧客システムは様々なプロトコルを使うため、本問ではレイヤ2のフレームを中継するL2フォワーディング方式を選びます。vNIC（virtual Network Interface Card）は、PC内に作る仮想的な通信口です。",
+          "stage": "concept",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "内側",
+                "parts": [
+                  {
+                    "t": "Ethernetフレーム",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "VPN上",
+                "parts": [
+                  {
+                    "t": "SSL/TLS保護",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "Ethernetフレーム",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：L2中継の概念。ヘッダ詳細は省略"
+          },
+          "id": "virtual-interface-1",
+          "theme": "多様な通信をトンネルに載せる",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "Webサーバ側の代理として要求を受ける方式は？",
+          "choices": [
+            {
+              "text": "ポートフォワーディング",
+              "explain": "特定ポートの通信を転送する方式で、Web代理という名称ではありません。",
+              "ok": false
+            },
+            {
+              "text": "リバースプロキシ",
+              "explain": "サーバ側の代理としてWebアクセスを中継する方式です。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "virtual-interface-2",
+          "theme": "多様な通信をトンネルに載せる",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "H社がL2フォワーディングを選ぶ根拠は？",
+          "choices": [
+            {
+              "text": "顧客システムで様々なプロトコルを利用するため",
+              "explain": "HTTPだけなどに利用範囲を狭めず、中継したいという要件につながります。",
+              "ok": true
+            },
+            {
+              "text": "顧客が全て同じWeb画面だけを使うため",
+              "explain": "それならWebに限定した方式も候補になり、原問の根拠と逆です。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "virtual-interface-3",
+          "theme": "多様な通信をトンネルに載せる",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "二つの通信口を区別する",
+          "template": "物理ネットワークへの接続はNICを使う。VPN認証後に割り当てられたIPアドレスは{a}へ設定する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "割当て先",
+              "why": "物理接続を維持しながらVPN内のアドレスを使い分けます。",
+              "choices": [
+                {
+                  "text": "物理NIC",
+                  "explain": "外側の接続用IPとVPN内の割当て先を混同しています。",
+                  "ok": false
+                },
+                {
+                  "text": "vNIC",
+                  "explain": "VPN用の仮想インタフェースに設定されます。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "virtual-interface-4",
+          "theme": "多様な通信をトンネルに載せる",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "VPN内の通信開始を組み立てる",
+          "lead": "本問でのユーザ認証とアドレス割当ての関係を並べます。",
+          "lines": [
+            {
+              "code": "VPN装置でユーザを認証する"
+            },
+            {
+              "code": "顧客番号に対応するIPアドレスプールを選ぶ"
+            },
+            {
+              "code": "割り当てたIPアドレスをPCのvNICに設定する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "認証した所属顧客からプールを選び、VPN内の通信口へ割り当てます。",
+          "ngExplain": "認証結果を確認する前に顧客のプールを確定する順序ではありません。",
+          "stage": "assemble",
+          "id": "virtual-interface-5",
+          "theme": "多様な通信をトンネルに載せる",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：用途が単一のWebアプリだけになった。方式選定で見直せる点は？",
+          "choices": [
+            {
+              "text": "物理NICを取り外してもVPN接続できる",
+              "explain": "外側のネットワーク接続自体は必要です。",
+              "ok": false
+            },
+            {
+              "text": "リバースプロキシ方式も要件に合うか検討できる",
+              "explain": "多様なプロトコルというL2方式の根拠が変わったためです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "virtual-interface-6",
+          "theme": "多様な通信をトンネルに載せる",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "firewall-scope",
+      "title": "FWでは誰がどこへ行くかを限定する",
+      "targets": [
+        "s3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "入口を公開しても内部は公開しない",
+          "body": "DMZ（DeMilitarized Zone）は内部LANと外部の間に置く公開用の領域です。FW（Firewall）は送信元・宛先・プロトコルなどで通過可否を決めます。原問の表1は内部からDMZへの通信と、外部からVPN装置への通信を別々に定義します。",
+          "stage": "concept",
+          "id": "firewall-scope-1",
+          "theme": "FWでは誰がどこへ行くかを限定する",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "内部PCがDMZのVPN装置へ接続する。通信方向は？",
+          "choices": [
+            {
+              "text": "DMZ → 内部LAN",
+              "explain": "送信開始側と宛先を逆にしています。",
+              "ok": false
+            },
+            {
+              "text": "内部LAN → DMZ",
+              "explain": "出発点は内部、到着点は公開用の領域です。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "firewall-scope-2",
+          "theme": "FWでは誰がどこへ行くかを限定する",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "VPN装置一台だけを外部へ公開したい。宛先の指定方法は？",
+          "choices": [
+            {
+              "text": "VPN装置のIPアドレス/32",
+              "explain": "IPv4の32ビット全てを固定し、一台に限定します。",
+              "ok": true
+            },
+            {
+              "text": "DMZ全体の/28",
+              "explain": "同じDMZのプロキシなども指定範囲に含めてしまいます。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "firewall-scope-3",
+          "theme": "FWでは誰がどこへ行くかを限定する",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原問の表1で、外部から許可するTCP/443の宛先は？",
+          "choices": [
+            {
+              "text": "202.y.44.1/32",
+              "explain": "こちらはプロキシサーバで、VPNの接続先ではありません。",
+              "ok": false
+            },
+            {
+              "text": "202.y.44.2/32",
+              "explain": "図2のSSL-VPN装置だけを指定します。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.17,
+            "bottom": 0.31,
+            "label": "IPA表1：通信方向と送信元・宛先の未記入欄"
+          },
+          "id": "firewall-scope-4",
+          "theme": "FWでは誰がどこへ行くかを限定する",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "表1の四要素を埋める",
+          "template": "カ={a}、キ={b}。内部の送信元ク={c}、VPN公開先ケ={d}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "出発領域",
+              "why": "開発LANを含む内部側が出発点です。",
+              "choices": [
+                {
+                  "text": "内部LAN",
+                  "explain": "PCからDMZへの通信の出発側です。",
+                  "ok": true
+                },
+                {
+                  "text": "インターネット",
+                  "explain": "別の行で扱う外部からの通信です。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "到着領域",
+              "why": "VPN装置の外側はDMZにあります。",
+              "choices": [
+                {
+                  "text": "DMZ",
+                  "explain": "表の宛先202.y.44.0/28の領域です。",
+                  "ok": true
+                },
+                {
+                  "text": "内部LAN",
+                  "explain": "内部から内部への直接通信の表ではありません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "内部アドレス",
+              "why": "原問では内部LAN全体が172.16.0.0/16です。",
+              "choices": [
+                {
+                  "text": "172.16.0.0/16",
+                  "explain": "開発LANを含む内部LAN全体を表します。",
+                  "ok": true
+                },
+                {
+                  "text": "10.100.1.0/24",
+                  "explain": "VPN接続後のE社用プールであり、内部LAN全体ではありません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "d",
+              "label": "公開先一台",
+              "why": "外部からはVPN装置だけに限定します。",
+              "choices": [
+                {
+                  "text": "202.y.44.2/32",
+                  "explain": "SSL-VPN装置一台を示します。",
+                  "ok": true
+                },
+                {
+                  "text": "202.y.44.0/28",
+                  "explain": "DMZ内の他機器まで含む範囲です。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "firewall-scope-5",
+          "theme": "FWでは誰がどこへ行くかを限定する",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：VPN装置だけが203.0.113.10へ移動した。公開ルールの宛先は？",
+          "choices": [
+            {
+              "text": "203.0.113.0/24",
+              "explain": "装置の移動だけを理由にサブネット全体を公開する必要はありません。",
+              "ok": false
+            },
+            {
+              "text": "203.0.113.10/32",
+              "explain": "機器が変わっても一台だけを許可する原則は同じです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "firewall-scope-6",
+          "theme": "FWでは誰がどこへ行くかを限定する",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "ingress-acl",
+      "title": "入口で迂回路を閉じる",
+      "targets": [
+        "s4-1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "入力方向はルータに入ってくる側",
+          "body": "VLAN（Virtual LAN）はLANを論理的に分けますが、ルータが中継すれば別VLANと通信できます。ACL（Access Control List）は条件付きの許可・禁止の一覧です。表2は内部LAN宛てを先に禁止し、それ以外を許可して、VPNを使わない直接アクセスを防ぎます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 180,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "顧客LAN",
+                "icon": "server",
+                "x": 55,
+                "y": 45
+              },
+              {
+                "id": "node1",
+                "label": "内部ルータ",
+                "icon": "l3sw",
+                "x": 170,
+                "y": 45
+              },
+              {
+                "id": "node2",
+                "label": "別顧客LAN",
+                "icon": "server",
+                "x": 285,
+                "y": 45
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：送信元VLANからルータへ入る方向"
+          },
+          "id": "ingress-acl-1",
+          "theme": "入口で迂回路を閉じる",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "送信元VLANからルータに入り、宛先VLANへ出る。入力ACLを置くのは？",
+          "choices": [
+            {
+              "text": "宛先側の出力インタフェース",
+              "explain": "これは出力方向の検査であり、原問の指定と異なります。",
+              "ok": false
+            },
+            {
+              "text": "送信元側のルータインタフェース",
+              "explain": "ルータへ入る瞬間に検査するという意味です。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "ingress-acl-2",
+          "theme": "入口で迂回路を閉じる",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "表2は『内部LAN宛て禁止→全て許可』。内部LAN宛てのパケットは？",
+          "choices": [
+            {
+              "text": "最初の禁止に一致して破棄される",
+              "explain": "先に一致したルールで決定し、後ろの許可までは進みません。",
+              "ok": true
+            },
+            {
+              "text": "最後の全て許可が上書きする",
+              "explain": "ACLは最後のルールを優先する仕組みではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "ingress-acl-3",
+          "theme": "入口で迂回路を閉じる",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図の②③④は各顧客LAN、⑤は開発LAN、⑥はVPN側。直接の内部LAN間通信を抑える入口の全組合せは？",
+          "choices": [
+            {
+              "text": "②・③・④・⑤",
+              "explain": "各顧客LANと開発LANからの直通通信を入口で止めます。",
+              "ok": true
+            },
+            {
+              "text": "⑤だけ",
+              "explain": "開発LANからは止まっても、顧客LAN同士の通信が残ります。",
+              "ok": false
+            },
+            {
+              "text": "②・③・④・⑤・⑥",
+              "explain": "⑥へ同じ表2を適用すると、認証済みVPNからの必要な内部宛て通信まで止めます。",
+              "ok": false
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.41,
+            "bottom": 0.85,
+            "label": "IPA図2：内部ルータの①～⑥と各VLAN"
+          },
+          "id": "ingress-acl-4",
+          "theme": "入口で迂回路を閉じる",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "開発LAN以外にも止めたい通信",
+          "template": "表2は、顧客システム構築ネットワークから{a}への直接通信も禁止する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "隔離対象",
+              "why": "一社の構築環境を他社の構築環境から隔離します。",
+              "choices": [
+                {
+                  "text": "他社の顧客システム構築ネットワーク",
+                  "explain": "顧客LAN間で内部ルータを通る通信も内部LAN宛てに一致します。",
+                  "ok": true
+                },
+                {
+                  "text": "DMZのVPN装置",
+                  "explain": "DMZ宛ては内部LAN宛てではなく、VPNを利用するために残す通信です。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "ingress-acl-5",
+          "theme": "入口で迂回路を閉じる",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "番号の根拠を答案にする",
+          "lead": "対象範囲、入口、禁止内容の順で説明します。",
+          "lines": [
+            {
+              "code": "開発LANだけでなく各顧客LANも送信元になる"
+            },
+            {
+              "code": "それらの入力インタフェース②③④⑤に表2を適用する"
+            },
+            {
+              "code": "VPNを経由しない内部LAN間の直接アクセスを禁止する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "番号だけでなく、全送信元を覆って直接アクセスを止める目的までつなぎます。",
+          "ngExplain": "先に送信元の範囲を決め、入力位置を特定してから効果を説明します。",
+          "stage": "assemble",
+          "id": "ingress-acl-6",
+          "theme": "入口で迂回路を閉じる",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：顧客LANが一つ増えた。表2の適用位置は？",
+          "choices": [
+            {
+              "text": "新しい顧客LANから内部ルータへ入るインタフェースにも追加",
+              "explain": "新たな送信元からの直通経路を閉じる必要があります。",
+              "ok": true
+            },
+            {
+              "text": "既存の⑤だけのままにする",
+              "explain": "新顧客LANから他社LANへの直通通信を止められません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "ingress-acl-7",
+          "theme": "入口で迂回路を閉じる",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "customer-policy",
+      "title": "認証済みでも他社へは通さない",
+      "targets": [
+        "s4-3",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "暗号化と利用許可は別の判断",
+          "body": "VPNの認証が成功しても、全ての顧客環境を使ってよいわけではありません。本問は顧客番号ごとに送信元IPのプールを分け、送信元と宛先の組を表3で許可します。表3にない通信は暗黙に禁止されます。",
+          "stage": "concept",
+          "id": "customer-policy-1",
+          "theme": "認証済みでも他社へは通さない",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "E社のVPN-PC 10.100.1.10がF社環境172.16.101.10へ送る。表3では？",
+          "choices": [
+            {
+              "text": "VPN認証済みなので許可",
+              "explain": "認証に成功したことと、他社環境の利用権限は別です。",
+              "ok": false
+            },
+            {
+              "text": "禁止",
+              "explain": "E社用10.100.1.0/24はE社構築環境172.16.100.0/24との組だけ許可されます。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "id": "customer-policy-2",
+          "theme": "認証済みでも他社へは通さない",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "quiz",
+          "title": "表3をVPN装置から来る入口に置く理由は？",
+          "choices": [
+            {
+              "text": "VPN接続後のPC通信をまとめて所属顧客別に検査できる",
+              "explain": "VPN内の送信元IPが見える共通の入口を使います。",
+              "ok": true
+            },
+            {
+              "text": "TLSの暗号スイートを選ぶため",
+              "explain": "暗号スイートはTLS接続時の合意であり、表3の処理ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "customer-policy-3",
+          "theme": "認証済みでも他社へは通さない",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "表3の位置と許可を完成する",
+          "template": "原図で表3の入力ACLは{a}に設定する。F社用10.100.2.0/24の許可宛先は{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "VPNからの入口",
+              "why": "SSL-VPN装置はVLAN201を経由して内部ルータへ接続します。",
+              "choices": [
+                {
+                  "text": "①",
+                  "explain": "VLAN200側の入口であり、VPN装置からの復号後通信の入口ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "⑥",
+                  "explain": "VLAN201から内部ルータへの入力インタフェースです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "F社構築環境",
+              "why": "送信元と所属顧客の宛先を対応させます。",
+              "choices": [
+                {
+                  "text": "172.16.0.0/16",
+                  "explain": "他社や開発LANまで含める過大な許可です。",
+                  "ok": false
+                },
+                {
+                  "text": "172.16.101.0/24",
+                  "explain": "顧客番号2のF社用構築ネットワークです。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "customer-policy-4",
+          "theme": "認証済みでも他社へは通さない",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "二つのACLの分担を組み立てる",
+          "lead": "直通経路、VPN入口、許可範囲の順で設計を説明します。",
+          "lines": [
+            {
+              "code": "表2で顧客LANと開発LANからの直通経路を止める"
+            },
+            {
+              "code": "VPN装置からは⑥で表3を使って検査する"
+            },
+            {
+              "code": "VPN-PCを対応する顧客の構築ネットワークだけへ通す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "直通の抜け道を閉じた上で、認証経路の権限を限定します。",
+          "ngExplain": "表2を⑥にも適用するのではなく、二つのACLの役割を分けます。",
+          "stage": "assemble",
+          "id": "customer-policy-5",
+          "theme": "認証済みでも他社へは通さない",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：顧客番号4を追加。本文の規則z=99+kに従う許可の組は？",
+          "choices": [
+            {
+              "text": "10.100.4.0/24 → 172.16.104.0/24",
+              "explain": "第三オクテットは100+kではなく99+kです。",
+              "ok": false
+            },
+            {
+              "text": "10.100.4.0/24 → 172.16.103.0/24",
+              "explain": "顧客番号4からプール4と第三オクテット103を導きます。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "customer-policy-6",
+          "theme": "認証済みでも他社へは通さない",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "independent",
+      "title": "補助を外して設計理由を選ぶ",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2",
+        "s2-3",
+        "s3",
+        "s4-1",
+        "s4-2",
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "原問へ戻る準備",
+          "body": "ここでは説明図を外します。暗号の役割、接続する通信口、送信元から見た検査位置を自分で使い分けてください。終わったら既存の原問画面で各設問に補助なしで取り組めます。",
+          "stage": "concept",
+          "id": "independent-1",
+          "theme": "補助を外して設計理由を選ぶ",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "H社の多様なプロトコルを扱い、VPN用IPを付ける組合せは？",
+          "choices": [
+            {
+              "text": "Web専用代理と物理NICのアドレスの置換え",
+              "explain": "Web限定では原問の根拠を満たさず、物理接続用のIPも別に必要です。",
+              "ok": false
+            },
+            {
+              "text": "L2フォワーディングとvNIC",
+              "explain": "多様な通信を中継する方式とVPN内の通信口が対応します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "independent-2",
+          "theme": "補助を外して設計理由を選ぶ",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "quiz",
+          "title": "暗号スイートでデータ暗号以外に必要な三つの用途は？",
+          "choices": [
+            {
+              "text": "鍵交換・認証・メッセージ認証",
+              "explain": "鍵の共有、相手確認、メッセージの検証をそれぞれ担います。",
+              "ok": true
+            },
+            {
+              "text": "経路広告・名前解決・アドレス変換",
+              "explain": "通信基盤の機能ですが、原問で問う暗号スイートの用途ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "independent-3",
+          "theme": "補助を外して設計理由を選ぶ",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "quiz",
+          "title": "開発PCも顧客PCも、自社の構築環境だけを使わせるH社の構成として成立するのは？",
+          "choices": [
+            {
+              "text": "⑥だけで全内部LAN宛てを禁止",
+              "explain": "認証済みの必要通信まで禁止し、VPNを経由しない直通経路は残します。",
+              "ok": false
+            },
+            {
+              "text": "②③④⑤で直通禁止、⑥で所属顧客との組だけ許可",
+              "explain": "直接アクセスとVPN経由のアクセスの両方を、それぞれの入口で制御します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "independent-4",
+          "theme": "補助を外して設計理由を選ぶ",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    }
+  ]
+}

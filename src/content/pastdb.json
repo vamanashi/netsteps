@@ -1,0 +1,578 @@
+{
+ "exams": [
+  {
+   "id": "2025r07h",
+   "label": "令和7年度 春期",
+   "page": "https://www.ipa.go.jp/shiken/mondai-kaiotu/2025r07.html"
+  },
+  {
+   "id": "2024r06h",
+   "label": "令和6年度 春期",
+   "page": "https://www.ipa.go.jp/shiken/mondai-kaiotu/2024r06.html"
+  },
+  {
+   "id": "2023r05h",
+   "label": "令和5年度 春期",
+   "page": "https://www.ipa.go.jp/shiken/mondai-kaiotu/2023r05.html"
+  },
+  {
+   "id": "2022r04h",
+   "label": "令和4年度 春期",
+   "page": "https://www.ipa.go.jp/shiken/mondai-kaiotu/2022r04.html"
+  },
+  {
+   "id": "2021r03h",
+   "label": "令和3年度 春期",
+   "page": "https://www.ipa.go.jp/shiken/mondai-kaiotu/2021r03.html"
+  },
+  {
+   "id": "2019r01a",
+   "label": "令和元年度 秋期",
+   "page": "https://www.ipa.go.jp/shiken/mondai-kaiotu/2019h31.html"
+  },
+  {
+   "id": "2018h30a",
+   "label": "平成30年度 秋期",
+   "page": "https://www.ipa.go.jp/shiken/mondai-kaiotu/2018h30.html"
+  },
+  {
+   "id": "2017h29a",
+   "label": "平成29年度 秋期",
+   "page": "https://www.ipa.go.jp/shiken/mondai-kaiotu/2017h29.html"
+  },
+  {
+   "id": "2016h28a",
+   "label": "平成28年度 秋期",
+   "page": "https://www.ipa.go.jp/shiken/mondai-kaiotu/2016h28.html"
+  },
+  {
+   "id": "2015h27a",
+   "label": "平成27年度 秋期",
+   "page": "https://www.ipa.go.jp/shiken/mondai-kaiotu/2015h27.html"
+  }
+ ],
+ "questions": [
+  {
+   "exam": "2025r07h",
+   "label": "令和7年度 春期",
+   "div": "pm1",
+   "q": 1,
+   "gist": "本問では，冗長化設計がなされた企業ネットワークにおけるルータの更改を題材として，OSPF や VRRP とい ったプロトコルの理解，及びこれらの技術を活用した企業ネットワークの停止を伴わないメンテナンスの手法 について問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2025r07h",
+   "label": "令和7年度 春期",
+   "div": "pm1",
+   "q": 2,
+   "gist": "本問では，学校のネットワークを題材として，HTTP プロトコルの知識，及びトラブルシューティングの基本 的スキルを問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2025r07h",
+   "label": "令和7年度 春期",
+   "div": "pm1",
+   "q": 3,
+   "gist": "本問では，プロキシサーバから“セキュア Web ゲートウェイサービス”への移行を題材として，移行計画に 必要なネットワーク構成やサービス仕様に関する理解，企業ネットワークの設計・運用に関する能力を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2025r07h",
+   "label": "令和7年度 春期",
+   "div": "pm2",
+   "q": 1,
+   "gist": "本問では，IPv6 の調査と社内ネットワークの IPv6 対応の検討を題材として，IPv4 及び IPv6 に関する知識 及び理解力を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2025r07h",
+   "label": "令和7年度 春期",
+   "div": "pm2",
+   "q": 2,
+   "gist": "本問では，LP ガス消費量の遠隔検針を題材として，ネットワークの設計，構築，運用に関わる受験者が，実 務や学習などを通して蓄積したネットワーク及びネットワークセキュリティ技術が，LPWA（Low Power Wide Area）を利用する無線回線の選択，CoAP（Constrained Application Protocol）の利用検討，及び IoT システ ムの情報セキュリティ対策の検討などに活用できるかどうかを問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2024r06h",
+   "label": "令和6年度 春期",
+   "div": "pm1",
+   "q": 1,
+   "gist": "本問では，ロードバランサーや BGP，CDN，DDoS 対策を題材として，コンテンツ配信ネットワークを実業務 に活用できる水準かどうかを問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2024r06h",
+   "label": "令和6年度 春期",
+   "div": "pm1",
+   "q": 2,
+   "gist": "本問では，企業ネットワークへの SD-WAN 導入を題材として，SD-WAN に関する基本的な仕組みや，SD-WAN 導 入に当たって必要となる IP ネットワーク設計と構築に必要となる基本的なスキルを問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2024r06h",
+   "label": "令和6年度 春期",
+   "div": "pm1",
+   "q": 3,
+   "gist": "本問では，ローカルブレイクアウトを題材として，IPsec VPN の基本的な知識，及びプロキシ自動設定や Web プロキシ自動検出について問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2024r06h",
+   "label": "令和6年度 春期",
+   "div": "pm2",
+   "q": 1,
+   "gist": "本問では，VXLAN を利用して構成されたネットワークに EVPN を適用する事例を通じて，VXLAN 及び EVPN を 解説した。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2024r06h",
+   "label": "令和6年度 春期",
+   "div": "pm2",
+   "q": 2,
+   "gist": "本問では，メールによるサポート業務を他社に委託する場合のなりすまし防止対策 を題材として，受験者が修得したネットワーク技術が，標的型メール攻撃の対策に有効な送信ドメイン認証の 導入検討に活用できる水準かどうかを問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2023r05h",
+   "label": "令和5年度 春期",
+   "div": "pm1",
+   "q": 1,
+   "gist": "本問ではオンプレミスシステムの一部をクラウドサービスへ移行することと，通信 の効率化のために新たなプロトコルを導入することを要件とする Web システム更改の事例を取り上げた。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2023r05h",
+   "label": "令和5年度 春期",
+   "div": "pm1",
+   "q": 2,
+   "gist": "本問では，自営ネットワークに IP マルチキャストを導入する事例を取り上げた。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2023r05h",
+   "label": "令和5年度 春期",
+   "div": "pm1",
+   "q": 3,
+   "gist": "本問では，新校舎ビル建設における LAN 商談を題材として，無線 LAN の知識及び LAN 全体の設計能力が実務 で活用できる水準かどうかを問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2023r05h",
+   "label": "令和5年度 春期",
+   "div": "pm2",
+   "q": 1,
+   "gist": "本問では，マルチクラウド利用による可用性向上を題材として，BGP や VRRP を利用した可用性向上，これら を組み合わせたネットワーク構成の考慮点及びインターネット接続の変更に伴うグローバル IP アドレスの変 更による影響と対策について問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2023r05h",
+   "label": "令和5年度 春期",
+   "div": "pm2",
+   "q": 2,
+   "gist": "本問では，サーバ負荷分散装置（以下，LB という）によってシステムの処理能力を 増強させる構成設計と，SAML2.0 を利用するための方式検討を事例として取り上げた。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2022r04h",
+   "label": "令和4年度 春期",
+   "div": "pm1",
+   "q": 1,
+   "gist": "本問では，IT システムと OT システムの接続を題材に，認証，認可及びパケット転送についての知識・経験 を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2022r04h",
+   "label": "令和4年度 春期",
+   "div": "pm1",
+   "q": 2,
+   "gist": "本問では，セキュアゲートウェイサービスの導入を事例に取り上げ，IPsec VPN を 利用した接続，及びセキュアゲートウェイサービス導入後の通信制御を解説した。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2022r04h",
+   "label": "令和4年度 春期",
+   "div": "pm1",
+   "q": 3,
+   "gist": "本問では，シングルサインオンを実現する技術の一つである，ケルベロス認証を取り上げた。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2022r04h",
+   "label": "令和4年度 春期",
+   "div": "pm2",
+   "q": 1,
+   "gist": "本問では，企業におけるテレワーク実現のための SSL-VPN 環境の構築，VDI 環境に関する技術的な考察， 及び冗長ネットワーク構築を題材に，テレワーク時代に必要となるネットワーク構築スキルを問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2022r04h",
+   "label": "令和4年度 春期",
+   "div": "pm2",
+   "q": 2,
+   "gist": "本問では，サーバ仮想化技術の利用やコンテナ仮想化技術の利用を題材に，ネットワーク構成に視点を置い て，可用性の確保方法やコンテナ仮想化技術を踏まえた監視方法，アプリケーションシステムの移行方法，移 行する上での課題について問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2021r03h",
+   "label": "令和3年度 春期",
+   "div": "pm1",
+   "q": 1,
+   "gist": "本問では，システムの全国展開を題材に，自動化する際によく使われるネットワーク，システム，及びプロ トコルに関する知識，理解を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2021r03h",
+   "label": "令和3年度 春期",
+   "div": "pm1",
+   "q": 2,
+   "gist": "本問では，OSPF プロトコルによるルーティング設計と IPsec トンネリングによるクラウド接続を題材に， ネットワーク設計と構築に必要な基本的スキルを問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2021r03h",
+   "label": "令和3年度 春期",
+   "div": "pm1",
+   "q": 3,
+   "gist": "本問では，音声クラウドサービスを利用して，音声パケットを既設の LAN に流す事例を取り上げた。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2021r03h",
+   "label": "令和3年度 春期",
+   "div": "pm2",
+   "q": 1,
+   "gist": "本問では，社内システムの更改と移行を事例に取り上げた。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2021r03h",
+   "label": "令和3年度 春期",
+   "div": "pm2",
+   "q": 2,
+   "gist": "本問では，インターネット接続環境の更改を題材にしている。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2019r01a",
+   "label": "令和元年度 秋期",
+   "div": "pm1",
+   "q": 1,
+   "gist": "本問では，ネットワークの増強を題材に，回線の広帯域化，冗長化技術として定着している LAG を用いた ネットワークの設計及び運用についての技術と経験を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2019r01a",
+   "label": "令和元年度 秋期",
+   "div": "pm1",
+   "q": 2,
+   "gist": "本問では，WAF サービスの導入と障害時の対応方法を題材に，DNS の基礎知識，負荷分散装置の応用技 術，オンプレミス環境と SaaS の構成におけるネットワークの導入・運用設計技術について，実務で活用でき る水準かを問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2019r01a",
+   "label": "令和元年度 秋期",
+   "div": "pm1",
+   "q": 3,
+   "gist": "本問では，LAN 上での IP 通信を成立させる基礎技術である DHCP，ARP に対する原理的な理解を問い，そ れを実際のネットワークにおけるセキュリティ対策へ応用できる能力を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2019r01a",
+   "label": "令和元年度 秋期",
+   "div": "pm2",
+   "q": 1,
+   "gist": "本問では，IaaS とクラウド PBX サービスを利用することによって，サーバ及び PBX を自社の拠点から一掃 する事例を取り上げた。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2019r01a",
+   "label": "令和元年度 秋期",
+   "div": "pm2",
+   "q": 2,
+   "gist": "本問では，ネットワークのセキュリティ対策を題材として，ネットワーク経由のサイバー攻撃手法とログ監 視について取り上げた。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2018h30a",
+   "label": "平成30年度 秋期",
+   "div": "pm1",
+   "q": 1,
+   "gist": "本問では，SaaS を利用する場合に密接に関連するネットワークやセキュリティの知識及び SDN の IPsec VPN への応用である SD-WAN についての知識を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2018h30a",
+   "label": "平成30年度 秋期",
+   "div": "pm1",
+   "q": 2,
+   "gist": "本問では，ある企業ネットワークを想定し，VRRP（Virtual Router Redundancy Protocol）や STP（Spanning Tree Protocol）といった冗長化に用いられる基本的な技術の理解，ICMP や SYSLOG，SNMP（Simple Network Management Protocol）といった監視に利用される基本的な技術の理解，及び，ネットワーク監視の問題に対し てどのように考え，改善できるか，について問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2018h30a",
+   "label": "平成30年度 秋期",
+   "div": "pm1",
+   "q": 3,
+   "gist": "本問では，専用線を基本的に利用している企業内ネットワークから，IP-VPN とインターネット VPN の両方 式を活用した企業内ネットワークへの再構築を通じて，複数回線サービス利用の信頼性の高いネットワークを 構築する能力を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2018h30a",
+   "label": "平成30年度 秋期",
+   "div": "pm2",
+   "q": 1,
+   "gist": "本問では，製造業のスマート化の基盤となるネットワークシステムの設計を題材にした。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2018h30a",
+   "label": "平成30年度 秋期",
+   "div": "pm2",
+   "q": 2,
+   "gist": "本問では，IaaS のサービス基盤構築を題材として，SDN 技術を用いない従来方式と SDN 方式の，それぞれ の方式による構築方法について解説した。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2017h29a",
+   "label": "平成29年度 秋期",
+   "div": "pm1",
+   "q": 1,
+   "gist": "本問では，企業の内部と複数企業の間の両方の場合における SSL-VPN の活用を通じて，SSL-VPN に備わる 認証や暗号化といった基本的な機能とネットワーク機器の機能とを組み合わせた，セキュアなネットワークの 構築を行う能力を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2017h29a",
+   "label": "平成29年度 秋期",
+   "div": "pm1",
+   "q": 2,
+   "gist": "本問では，VDI の導入を題材に，VDI 導入前後における通信の変化を把握し，それに応じた帯域制御方式や 標的型攻撃対策に関するネットワーク設計技術について問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2017h29a",
+   "label": "平成29年度 秋期",
+   "div": "pm1",
+   "q": 3,
+   "gist": "本問では，ある企業の社内ネットワークを想定し，インターネット VPN を用いた接続，BGP を用いた経路 制御，自社ネットワークとの経路情報の交換，及び ping を用いたネットワーク監視について考えられるかを問 う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2017h29a",
+   "label": "平成29年度 秋期",
+   "div": "pm2",
+   "q": 1,
+   "gist": "本問では，ネットワークの拡張を題材に，自社設備を用いたネットワークと Web システムが，SDN とクラ ウドサービスの活用によってどのように変わるのかを解説している。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2017h29a",
+   "label": "平成29年度 秋期",
+   "div": "pm2",
+   "q": 2,
+   "gist": "本問では，無線 LAN を導入してオフィスをフリーアドレスにする事例を取り上げた。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2016h28a",
+   "label": "平成28年度 秋期",
+   "div": "pm1",
+   "q": 1,
+   "gist": "本問では，企業での安全な電子メールシステム活用を目指したシステム構築を通じて，ネットワーク技術者 として必要となる能力を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2016h28a",
+   "label": "平成28年度 秋期",
+   "div": "pm1",
+   "q": 2,
+   "gist": "本問では，ある企業のモバイルネットワークを想定し，これを構成する無線 LAN 接続，LTE 回線を用いた インターネット接続，VPN 接続，プロキシサーバの各要素について，ネットワーク上のセキュリティ脅威を想 定し，取るべき対策を考えられるか，及び不正が行われた際の影響を最小限にする設計を考えられるかを問 う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2016h28a",
+   "label": "平成28年度 秋期",
+   "div": "pm1",
+   "q": 3,
+   "gist": "本問では，メールサーバ更改を題材として，電子メールサービスを支える各種技術に対する基礎的な理解及 び応用力と，利用者を含めたサービス全体を把握して，移行や運用の手順を設計・実施できる能力を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2016h28a",
+   "label": "平成28年度 秋期",
+   "div": "pm2",
+   "q": 1,
+   "gist": "本問では，Web コンピューティングにおけるリアルタイム通信を題材に，ネットワーク技術の応用力を問 う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2016h28a",
+   "label": "平成28年度 秋期",
+   "div": "pm2",
+   "q": 2,
+   "gist": "本問では，広域イーサ網とインターネット VPN によって，WAN 回線を冗長化する 事例を取り上げた。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2015h27a",
+   "label": "平成27年度 秋期",
+   "div": "pm1",
+   "q": 1,
+   "gist": "本問では，Cookie を利用したシングルサインオンについての基本的な仕組みの理解と，DSR 方式ロードバ ランサを用いたシングルサインオンサービス負荷分散について，実務上必要となる技術の理解を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2015h27a",
+   "label": "平成27年度 秋期",
+   "div": "pm1",
+   "q": 2,
+   "gist": "本問では，透過型負荷分散を題材として，TCP/IP の各レイヤの動作に関する理解と，性能設計，信頼性設 計に関する基礎的な能力を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2015h27a",
+   "label": "平成27年度 秋期",
+   "div": "pm1",
+   "q": 3,
+   "gist": "本問では，ネットワークのセキュリティ対策向上を題材に，IDS と IPS の機能と特徴について，基本的な知 識と理解力を問う。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_ans.pdf"
+  },
+  {
+   "exam": "2015h27a",
+   "label": "平成27年度 秋期",
+   "div": "pm2",
+   "q": 1,
+   "gist": "本問では，リモート保守用の情報システム開発の初期検討を題材にしている。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm2_ans.pdf"
+  },
+  {
+   "exam": "2015h27a",
+   "label": "平成27年度 秋期",
+   "div": "pm2",
+   "q": 2,
+   "gist": "本問では，インターネット接続サービスと IaaS を提供する ISP を取り上げ，インター ネット接続サービスで使用するグローバル IPv4 アドレスの節約策と IaaS の基盤ネットワークを仮想サーバの 増大に対応させる方策を題材にした。",
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm2_ans.pdf"
+  }
+ ],
+ "am2": [
+  {
+   "exam": "2025r07h",
+   "label": "令和7年度 春期",
+   "count": 25,
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_am2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_am2_ans.pdf"
+  },
+  {
+   "exam": "2024r06h",
+   "label": "令和6年度 春期",
+   "count": 25,
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_am2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_am2_ans.pdf"
+  },
+  {
+   "exam": "2023r05h",
+   "label": "令和5年度 春期",
+   "count": 25,
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_am2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_am2_ans.pdf"
+  },
+  {
+   "exam": "2022r04h",
+   "label": "令和4年度 春期",
+   "count": 25,
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_am2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_am2_ans.pdf"
+  },
+  {
+   "exam": "2021r03h",
+   "label": "令和3年度 春期",
+   "count": 25,
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_am2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_am2_ans.pdf"
+  },
+  {
+   "exam": "2019r01a",
+   "label": "令和元年度 秋期",
+   "count": 25,
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_am2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_am2_ans.pdf"
+  },
+  {
+   "exam": "2018h30a",
+   "label": "平成30年度 秋期",
+   "count": 25,
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_am2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_am2_ans.pdf"
+  },
+  {
+   "exam": "2017h29a",
+   "label": "平成29年度 秋期",
+   "count": 25,
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_am2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_am2_ans.pdf"
+  },
+  {
+   "exam": "2016h28a",
+   "label": "平成28年度 秋期",
+   "count": 25,
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_am2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_am2_ans.pdf"
+  },
+  {
+   "exam": "2015h27a",
+   "label": "平成27年度 秋期",
+   "count": 25,
+   "urlQs": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_am2_qs.pdf",
+   "urlAns": "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_am2_ans.pdf"
+  }
+ ]
+}

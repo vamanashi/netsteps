@@ -1,0 +1,1244 @@
+{
+  "examKey": "2015h27a/pm1/1",
+  "title": "ログインの記憶からDSRの転送まで",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "sso",
+      "title": "一度の認証を複数サービスで使う",
+      "targets": [
+        "s1",
+        "s2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "受付とサービスを分ける",
+          "body": "SSO（Single Sign-On、シングルサインオン）は、一度の本人確認を複数サービスで利用する仕組みです。エージェント方式では各Webサーバの補助ソフトが認証を確認し、リバースプロキシ方式ではサーバ側の代理が通信を中継します。原問の方式比較と、認証後の応答を読む土台にします。",
+          "fig": {
+            "kind": "topo",
+            "height": 170,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "ブラウザ",
+                "icon": "pc",
+                "x": 60,
+                "y": 85
+              },
+              {
+                "id": "node1",
+                "label": "サーバ側の代理",
+                "icon": "server",
+                "x": 165,
+                "y": 85
+              },
+              {
+                "id": "node2",
+                "label": "Webサーバ",
+                "icon": "server",
+                "x": 270,
+                "y": 85
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：サーバ側の代理による中継"
+          },
+          "id": "sso-1",
+          "format": "読む",
+          "theme": "一度の認証を複数サービスで使う",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "全Web通信をサーバ側の代理で受ける方式は？",
+          "choices": [
+            {
+              "text": "エージェント方式",
+              "explain": "各Webサーバに組み込んだエージェントが確認する方式です。"
+            },
+            {
+              "text": "フォワードプロキシ方式",
+              "explain": "利用者側に代わって外部へアクセスする代理です。"
+            },
+            {
+              "text": "リバースプロキシ方式",
+              "ok": true,
+              "explain": "サービス提供側の入口で代理が受けて中継します。"
+            }
+          ],
+          "id": "sso-2",
+          "format": "選択",
+          "theme": "一度の認証を複数サービスで使う",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "エージェント方式で未認証者を認証サーバへ案内するには？",
+          "choices": [
+            {
+              "text": "リダイレクトでブラウザに次のアクセス先を知らせる",
+              "ok": true,
+              "explain": "元サーバがブラウザを別URLへ誘導します。"
+            },
+            {
+              "text": "DNSで全パケットの宛先を書き換える",
+              "explain": "DNSは名前をIPへ対応させる仕組みで、HTTPの画面遷移ではありません。"
+            }
+          ],
+          "id": "sso-3",
+          "format": "選択",
+          "theme": "一度の認証を複数サービスで使う",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "役割を言葉にする",
+          "template": "全通信を中継する方式は{a}。ブラウザを別URLへ誘導する動作は{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "リバースプロキシ",
+                  "ok": true,
+                  "explain": "サーバ側の代理が通信を受けます。"
+                },
+                {
+                  "text": "リダイレクト",
+                  "explain": "中継装置の方式ではなくアクセス先の誘導です。"
+                }
+              ],
+              "why": "サーバ側の代理が通信を受けます。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "リダイレクト",
+                  "ok": true,
+                  "explain": "ブラウザが案内先へ改めて要求します。"
+                },
+                {
+                  "text": "ルーティング",
+                  "explain": "IPパケットの転送経路を決める処理です。"
+                }
+              ],
+              "why": "ブラウザが案内先へ改めて要求します。"
+            }
+          ],
+          "id": "sso-4",
+          "format": "穴埋め",
+          "theme": "一度の認証を複数サービスで使う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "初回利用の流れを組み立てる",
+          "lead": "未認証の利用者がエージェント方式でサービスを使います。",
+          "lines": [
+            {
+              "code": "サービスを要求する"
+            },
+            {
+              "code": "エージェントが未認証と判断する"
+            },
+            {
+              "code": "認証サーバへ誘導する"
+            },
+            {
+              "code": "本人確認後にサービスへ戻る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "未認証の判定が誘導の原因です。本人確認をしてから戻ります。",
+          "ngExplain": "サービスの要求より先に、その要求の未認証判定はできません。",
+          "id": "sso-5",
+          "format": "並べ替え",
+          "theme": "一度の認証を複数サービスで使う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：Webサーバにソフトを追加せず、入口で全通信を検査したい",
+          "choices": [
+            {
+              "text": "エージェント方式だけで実現する",
+              "explain": "各サーバへのソフト追加が必要な方式なので条件に反します。"
+            },
+            {
+              "text": "リバースプロキシ方式を検討する",
+              "ok": true,
+              "explain": "中継点を入口に集める条件に合います。"
+            }
+          ],
+          "id": "sso-6",
+          "format": "選択",
+          "theme": "一度の認証を複数サービスで使う",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "ticket",
+      "title": "Cookieは誰から誰へ渡るか",
+      "targets": [
+        "s1",
+        "s2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "認証結果を持ち運ぶ",
+          "body": "Cookieはブラウザが保存し、条件に合う要求に添えるデータです。HTTP（Hypertext Transfer Protocol）の応答でSet-Cookieを受け取り、次の要求ではCookieヘッダで返します。原問のアクセスチケットもこの仕組みでブラウザへ渡されます。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "応答  Set-Cookie: ticket=練習用の値",
+              "次の要求  Cookie: ticket=練習用の値"
+            ],
+            "caption": "説明用：Cookieの設定と返送"
+          },
+          "id": "ticket-1",
+          "format": "読む",
+          "theme": "Cookieは誰から誰へ渡るか",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "ブラウザへ新しいCookieを保存させるのはどちら？",
+          "choices": [
+            {
+              "text": "ブラウザの要求のCookie",
+              "explain": "こちらは既に保存した値を送り返す側です。"
+            },
+            {
+              "text": "サーバの応答のSet-Cookie",
+              "ok": true,
+              "explain": "保存の指示は応答側です。"
+            }
+          ],
+          "id": "ticket-2",
+          "format": "選択",
+          "theme": "Cookieは誰から誰へ渡るか",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "認証前の画面応答ではなく、本人確認後にチケットを発行する理由は？",
+          "choices": [
+            {
+              "text": "本人確認に成功した資格を表すから",
+              "ok": true,
+              "explain": "認証済みであることと発行条件を結び付けます。"
+            },
+            {
+              "text": "TCP接続ができれば本人確認も完了するから",
+              "explain": "TCPの接続確立は利用者のパスワード検証ではありません。"
+            }
+          ],
+          "id": "ticket-3",
+          "format": "選択",
+          "theme": "Cookieは誰から誰へ渡るか",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "発行と確認を区別する",
+          "template": "認証成功時の応答に{a}を付け、ブラウザは次の要求で{b}を送る。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "Set-Cookie",
+                  "ok": true,
+                  "explain": "サーバからブラウザへ値を設定します。"
+                },
+                {
+                  "text": "Cookie",
+                  "explain": "要求で値を提示するヘッダです。"
+                }
+              ],
+              "why": "サーバからブラウザへ値を設定します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "Cookie",
+                  "ok": true,
+                  "explain": "保存されたチケットの提示です。"
+                },
+                {
+                  "text": "UserIDとPasswordを必ず再送",
+                  "explain": "チケットによる共通認証の役割を失います。"
+                }
+              ],
+              "why": "保存されたチケットの提示です。"
+            }
+          ],
+          "id": "ticket-4",
+          "format": "穴埋め",
+          "theme": "Cookieは誰から誰へ渡るか",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "認証済みチケットの利用順",
+          "lead": "新しく発行されたチケットをWebサービスで使う順に並べてください。",
+          "lines": [
+            {
+              "code": "認証サーバが本人確認する"
+            },
+            {
+              "code": "応答でチケットを発行する"
+            },
+            {
+              "code": "ブラウザがサービス要求にチケットを添える"
+            },
+            {
+              "code": "エージェントが認証サーバへチケット確認を依頼する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "発行とエージェントからの確認要求は別の通信です。",
+          "ngExplain": "確認要求はチケットがブラウザに渡ってサービス要求に添えられた後です。",
+          "id": "ticket-5",
+          "format": "並べ替え",
+          "theme": "Cookieは誰から誰へ渡るか",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：保存済みチケットを持つ利用者が別の対象サービスへ",
+          "choices": [
+            {
+              "text": "チケットは確認せず必ず許可する",
+              "explain": "値があるだけでは正当な資格と保証できません。"
+            },
+            {
+              "text": "チケットを提示して確認を受ける",
+              "ok": true,
+              "explain": "毎回パスワード入力するのでなく、既存資格を検証します。"
+            }
+          ],
+          "id": "ticket-6",
+          "format": "選択",
+          "theme": "Cookieは誰から誰へ渡るか",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "domain",
+      "title": "Cookieを渡すホストを絞る",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "保存したのに届かない",
+          "body": "CookieにDomain属性がなければ、原則として発行元ホストへの要求にだけ送られます。兄弟ホストへ共有するときは共通の親ドメインを指定しますが、広げすぎると不要なホストにも送られます。原問の営業・広告サービスへの共有範囲を考えます。",
+          "id": "domain-1",
+          "format": "読む",
+          "theme": "Cookieを渡すホストを絞る",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用：sso.team.example.org発行でDomainなし。shop.team.example.orgへ送る？",
+          "choices": [
+            {
+              "text": "送る",
+              "explain": "末尾が似ていても、Domainなしでは兄弟ホストに共有しません。"
+            },
+            {
+              "text": "送らない",
+              "ok": true,
+              "explain": "発行元ホストと別なのでホスト限定Cookieの範囲外です。"
+            }
+          ],
+          "id": "domain-2",
+          "format": "選択",
+          "theme": "Cookieを渡すホストを絞る",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "sso・shop・ads.team.example.orgだけで共有したい。親の選び方は？",
+          "choices": [
+            {
+              "text": "team.example.orgを選ぶ",
+              "ok": true,
+              "explain": "対象に共通し、example.orgより狭い範囲です。"
+            },
+            {
+              "text": "example.orgまで広げる",
+              "explain": "共有できても無関係な配下まで範囲を広げます。"
+            }
+          ],
+          "id": "domain-3",
+          "format": "選択",
+          "theme": "Cookieを渡すホストを絞る",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "原問の名前に当てはめる",
+          "template": "sso.a-sha.example.jp、eigyou.a-sha.example.jp、koukoku.a-sha.example.jpに共通するDomainは{a}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "a-sha.example.jp",
+                  "ok": true,
+                  "explain": "3ホストの共通の親であり必要な範囲です。"
+                },
+                {
+                  "text": "sso.a-sha.example.jp",
+                  "explain": "営業と広告の兄弟ホストを含みません。"
+                },
+                {
+                  "text": "example.jp",
+                  "explain": "共通でも必要以上に範囲を広げています。"
+                }
+              ],
+              "why": "3ホストの共通の親であり必要な範囲です。"
+            }
+          ],
+          "id": "domain-4",
+          "format": "穴埋め",
+          "theme": "Cookieを渡すホストを絞る",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "届かない原因から設定へ",
+          "lead": "パスワードは正しいのに営業サーバへ資格が渡らない場合の説明を作ります。",
+          "lines": [
+            {
+              "code": "Domain未指定なので発行元ホストに限定される"
+            },
+            {
+              "code": "営業・広告ホストへの要求にチケットが付かない"
+            },
+            {
+              "code": "対象に共通する親ドメインをDomainに指定する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "認証処理そのものとCookieの送信範囲は別です。",
+          "ngExplain": "パスワードが正しいという条件を無視して認証失敗と決め付けないでください。",
+          "id": "domain-5",
+          "format": "並べ替え",
+          "theme": "Cookieを渡すホストを絞る",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：shop.other.example.netにも同じDomainで共有したい",
+          "choices": [
+            {
+              "text": "Domainをother.example.netへ変えればよい",
+              "explain": "発行元から無関係なドメインを設定することはできません。"
+            },
+            {
+              "text": "異なるドメインにはこの設定だけで共有できない",
+              "ok": true,
+              "explain": "別ドメインを任意指定してCookieを配布することはできません。"
+            }
+          ],
+          "id": "domain-6",
+          "format": "選択",
+          "theme": "Cookieを渡すホストを絞る",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "secure",
+      "title": "暗号化したページとCookieの送信条件",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "入口のHTTPにも注意する",
+          "body": "HTTPSはTLS（Transport Layer Security）でHTTP通信を保護します。しかし、ページをHTTPSにしても、ブラウザがHTTPへ要求を出せばCookieが平文送信されるおそれが残ります。Secure属性で安全な通信に送信を限定する考え方を原問へつなげます。",
+          "id": "secure-1",
+          "format": "読む",
+          "theme": "暗号化したページとCookieの送信条件",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "ページはHTTPS。古いHTTPリンクをクリックした際に防ぎたいことは？",
+          "choices": [
+            {
+              "text": "Cookieの保存領域が必ず消えること",
+              "explain": "HTTPS化の直接の論点ではありません。"
+            },
+            {
+              "text": "CookieがHTTP要求に付いて流れること",
+              "ok": true,
+              "explain": "暗号化前の要求への添付が問題です。"
+            }
+          ],
+          "id": "secure-2",
+          "format": "選択",
+          "theme": "暗号化したページとCookieの送信条件",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "HttpOnlyだけではこの問題を解決できない理由は？",
+          "choices": [
+            {
+              "text": "スクリプトからの参照制限であり、HTTP送信の制限ではない",
+              "ok": true,
+              "explain": "読み出し元と送信経路を区別します。"
+            },
+            {
+              "text": "HttpOnlyはDNSを暗号化する属性だから",
+              "explain": "Cookie属性でありDNS用の設定ではありません。"
+            }
+          ],
+          "id": "secure-3",
+          "format": "選択",
+          "theme": "暗号化したページとCookieの送信条件",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "条件を指定する",
+          "template": "Cookieに{a}属性を付け、安全な通信にだけ送信させる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "Secure",
+                  "ok": true,
+                  "explain": "HTTPへの不用意なCookie添付を防ぎます。"
+                },
+                {
+                  "text": "Domain",
+                  "explain": "送信先ホストの範囲であって暗号化の条件ではありません。"
+                },
+                {
+                  "text": "HttpOnly",
+                  "explain": "スクリプトによる参照を制限します。"
+                }
+              ],
+              "why": "HTTPへの不用意なCookie添付を防ぎます。"
+            }
+          ],
+          "id": "secure-4",
+          "format": "穴埋め",
+          "theme": "暗号化したページとCookieの送信条件",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "対策の理由を一文にする",
+          "lead": "原因、追加設定、効果の順に並べます。",
+          "lines": [
+            {
+              "code": "HTTPSページ化だけではHTTP要求が残り得るので"
+            },
+            {
+              "code": "CookieにSecure属性を付け"
+            },
+            {
+              "code": "平文のHTTP要求にはCookieを送らせない"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "安全なページを返すことと安全な要求に限定することの両方が必要です。",
+          "ngExplain": "Domainの調整では経路の暗号化を保証できません。",
+          "id": "secure-5",
+          "format": "並べ替え",
+          "theme": "暗号化したページとCookieの送信条件",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：Secure付きCookieを持ちHTTP URLへアクセスする",
+          "choices": [
+            {
+              "text": "ブラウザが必ずURLをHTTPSへ書き換える",
+              "explain": "Secure自体はURL自動書換えの仕組みではありません。"
+            },
+            {
+              "text": "そのHTTP要求にはCookieを付けない",
+              "ok": true,
+              "explain": "ページ遷移とは別にCookieの送信を制限します。"
+            }
+          ],
+          "id": "secure-6",
+          "format": "選択",
+          "theme": "暗号化したページとCookieの送信条件",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "vip",
+      "title": "名前と仮想IPと受信口",
+      "targets": [
+        "s1",
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "入口は一つ、担当は複数",
+          "body": "LB（Load Balancer、負荷分散装置）のVIP（Virtual IP、仮想IPアドレス）はサービスの入口です。DNS（Domain Name System）はサービス名をこの入口のIPへ対応させます。原問のDSR（Direct Server Return）は要求をLB経由、応答をサーバから直接返し、転送時の宛先IPをVIPのまま保ちます。",
+          "fig": {
+            "kind": "topo",
+            "height": 170,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "PC",
+                "icon": "pc",
+                "x": 60,
+                "y": 85
+              },
+              {
+                "id": "node1",
+                "label": "LB・VIP",
+                "icon": "l3sw",
+                "x": 165,
+                "y": 85
+              },
+              {
+                "id": "node2",
+                "label": "SSOサーバ",
+                "icon": "server",
+                "x": 270,
+                "y": 85
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：DSR要求経路。応答はLBを迂回"
+          },
+          "id": "vip-1",
+          "format": "読む",
+          "theme": "名前と仮想IPと受信口",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "サービス名をVIPへ対応させる設定先は？",
+          "choices": [
+            {
+              "text": "CookieのDomain属性",
+              "explain": "ブラウザのCookie送信範囲であり名前解決のIP登録ではありません。"
+            },
+            {
+              "text": "内部DNSサーバ",
+              "ok": true,
+              "explain": "社内で使う名前をVIPへ解決させます。"
+            }
+          ],
+          "id": "vip-2",
+          "format": "選択",
+          "theme": "名前と仮想IPと受信口",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "宛先IPがVIPのまま届くサーバに必要なことは？",
+          "choices": [
+            {
+              "text": "VIPを自分宛てとして受理できる設定",
+              "ok": true,
+              "explain": "通常の実IPだけでは別IP宛てと扱われます。"
+            },
+            {
+              "text": "全要求のIPをPCのIPへ変更すること",
+              "explain": "PCは送信元であり、要求先をPCへ変えるとサービスに届きません。"
+            }
+          ],
+          "id": "vip-3",
+          "format": "選択",
+          "theme": "名前と仮想IPと受信口",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "受信口を作る",
+          "template": "原問ではSSOサーバの{a}インタフェースにVIPを付与し、名前とVIPの対応は{b}へ登録する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "ループバック",
+                  "ok": true,
+                  "explain": "論理的な受信口でVIP宛てを受理します。"
+                },
+                {
+                  "text": "外部DNS",
+                  "explain": "DNSサーバはサーバ内インタフェースではありません。"
+                }
+              ],
+              "why": "論理的な受信口でVIP宛てを受理します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "内部DNSサーバ",
+                  "ok": true,
+                  "explain": "PCの名前解決をVIPへ向けます。"
+                },
+                {
+                  "text": "Cookie",
+                  "explain": "CookieはIPアドレスの名前解決表ではありません。"
+                }
+              ],
+              "why": "PCの名前解決をVIPへ向けます。"
+            }
+          ],
+          "id": "vip-4",
+          "format": "穴埋め",
+          "theme": "名前と仮想IPと受信口",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "入口から受信まで",
+          "lead": "原問のDSR方式の要求を説明します。",
+          "lines": [
+            {
+              "code": "PCが名前解決でVIPを得る"
+            },
+            {
+              "code": "PCがVIP宛てに要求する"
+            },
+            {
+              "code": "LBが担当サーバへ転送する"
+            },
+            {
+              "code": "サーバがVIP宛ての要求を受理する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "名前解決、負荷分散、サーバの受理を順に追います。",
+          "ngExplain": "LB通過で必ず宛先IPが実IPに変わると考えないでください。",
+          "id": "vip-5",
+          "format": "並べ替え",
+          "theme": "名前と仮想IPと受信口",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原問確認：図1の構成で名前解決が実サーバ1のIPのままだと？",
+          "choices": [
+            {
+              "text": "Domain属性を付ければLBへ向かう",
+              "explain": "DomainはCookieの送信範囲だけを制御します。"
+            },
+            {
+              "text": "LBを入口にする負荷分散を通らなくなる",
+              "ok": true,
+              "explain": "PCが直接実サーバを選んでしまうため、名前の対応先が重要です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.07,
+            "bottom": 0.26,
+            "label": "IPA原図1：機器配置だけを確認"
+          },
+          "id": "vip-6",
+          "format": "選択",
+          "theme": "名前と仮想IPと受信口",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "syn",
+      "title": "判断時点に存在する情報だけ使う",
+      "targets": [
+        "s4-1",
+        "s2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "まだHTTPが届いていない",
+          "body": "TCP（Transmission Control Protocol）は接続確立のためにSYNを送ります。原問のLBはその到着時に担当サーバを決め、このSYNにはCookieなどのレイヤ7情報がありません。後で届く情報を先の判断に使えないことを説明できるようにします。",
+          "fig": {
+            "kind": "header",
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "送信元ポート",
+                    "bits": 16
+                  },
+                  {
+                    "t": "宛先ポート",
+                    "bits": 16
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：TCP先頭。CookieはHTTP側"
+          },
+          "id": "syn-1",
+          "format": "読む",
+          "theme": "判断時点に存在する情報だけ使う",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "原問のSYN到着時に振り分け条件として使えないのは？",
+          "choices": [
+            {
+              "text": "IPアドレス",
+              "explain": "IPヘッダはこの時点でも存在します。"
+            },
+            {
+              "text": "HTTPのCookie",
+              "ok": true,
+              "explain": "この時点のパケットにはレイヤ7情報がありません。"
+            }
+          ],
+          "id": "syn-2",
+          "format": "選択",
+          "theme": "判断時点に存在する情報だけ使う",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "Cookie分散ができない説明として十分なのは？",
+          "choices": [
+            {
+              "text": "SYNで決定する時点にCookieが存在しない",
+              "ok": true,
+              "explain": "決定時点と必要情報の欠如を結び付けています。"
+            },
+            {
+              "text": "LBという機器は全てCookieを読めない",
+              "explain": "レイヤ7で処理する別方式のLBまで否定してはいけません。"
+            }
+          ],
+          "id": "syn-3",
+          "format": "選択",
+          "theme": "判断時点に存在する情報だけ使う",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "理由を限定して書く",
+          "template": "本問のLBは{a}の受信時に決定するが、そのパケットには{b}がない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "SYN",
+                  "ok": true,
+                  "explain": "本文で定めた判断時点です。"
+                },
+                {
+                  "text": "HTTP応答",
+                  "explain": "応答を待って分散を始める仕様ではありません。"
+                }
+              ],
+              "why": "本文で定めた判断時点です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "Cookieなどのレイヤ7情報",
+                  "ok": true,
+                  "explain": "判断材料がまだないことが理由です。"
+                },
+                {
+                  "text": "IPヘッダ",
+                  "explain": "SYNもIPで運ばれます。"
+                }
+              ],
+              "why": "判断材料がまだないことが理由です。"
+            }
+          ],
+          "id": "syn-4",
+          "format": "穴埋め",
+          "theme": "判断時点に存在する情報だけ使う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "存在しない情報を判断に使えない",
+          "lead": "理由の筋道を並べてください。",
+          "lines": [
+            {
+              "code": "SYNを受けた時点で振り分け先を決める"
+            },
+            {
+              "code": "そのSYNにはCookieが含まれない"
+            },
+            {
+              "code": "したがってCookieに基づく選択ができない"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "DSRという名前だけでなく、本問の決定時点が根拠です。",
+          "ngExplain": "HTTPデータが来てから決める別方式と混同しないでください。",
+          "id": "syn-5",
+          "format": "並べ替え",
+          "theme": "判断時点に存在する情報だけ使う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原問の図2：ブラウザへチケットを初めて渡す応答はどの区間？",
+          "choices": [
+            {
+              "text": "③",
+              "explain": "認証入力画面の送出であり、本人確認より前です。"
+            },
+            {
+              "text": "⑤",
+              "ok": true,
+              "explain": "④で資格情報を送り、⑤で認証成功後の応答を受けます。"
+            },
+            {
+              "text": "⑥",
+              "explain": "WebサーバとSSO間のチケット確認で、ブラウザへの発行ではありません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 4,
+            "top": 0.065,
+            "bottom": 0.45,
+            "label": "IPA原図2：矢印と区間番号だけで発行の位置を考える"
+          },
+          "id": "syn-6",
+          "format": "選択",
+          "theme": "判断時点に存在する情報だけ使う",
+          "stage": "transfer",
+          "scaffold": 0
+        },
+        {
+          "type": "info",
+          "title": "次は原問を補助なしで解く",
+          "body": "この教材での操作はここまでです。次は既存の原問画面を開き、解説・選択肢・解答例を見ずに、大問全体へ取り組んでください。複数の空欄や指定された回答の個数も自分で確認します。原問の答案は教材の回答とは別に保存されます。",
+          "id": "arp-original-ready",
+          "format": "読む",
+          "theme": "VIPを受理するが所有を競わない",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "arp",
+      "title": "VIPを受理するが所有を競わない",
+      "targets": [
+        "s4-2",
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "IPとMACの対応を一つにする",
+          "body": "ARP（Address Resolution Protocol）は同じLANでIPに対応するMACアドレスを調べます。Gratuitous ARP（GARP）は自分のIPに関する通知や重複確認に用いられます。DSRでは複数サーバがVIPを受理しても、LANへのVIPのARP応答まで競うとLBを入口にできません。",
+          "id": "arp-1",
+          "format": "読む",
+          "theme": "VIPを受理するが所有を競わない",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "LB再起動時にVIPの存在を通知・確認するARPの名称は？",
+          "choices": [
+            {
+              "text": "DNS問い合わせ",
+              "explain": "名前からIPを引く通信で、IPとMACの重複検知ではありません。"
+            },
+            {
+              "text": "Gratuitous ARP（GARP）",
+              "ok": true,
+              "explain": "自分のIPに関するARPで周囲へ通知し、重複も検知できます。"
+            }
+          ],
+          "id": "arp-2",
+          "format": "選択",
+          "theme": "VIPを受理するが所有を競わない",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "SSOサーバがVIPのARP要求へ応答すると困る理由は？",
+          "choices": [
+            {
+              "text": "VIPの対応先が実サーバのMACになり、LBを迂回し得る",
+              "ok": true,
+              "explain": "サーバでのVIP受理とLANへの所有応答を分ける必要があります。"
+            },
+            {
+              "text": "CookieのDomainが自動変更される",
+              "explain": "ARPはCookie属性を変更しません。"
+            }
+          ],
+          "id": "arp-3",
+          "format": "選択",
+          "theme": "VIPを受理するが所有を競わない",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "設定対象を絞る",
+          "template": "SSOサーバでは{a}に対するARP要求へ{b}ようにする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "VIPアドレス",
+                  "ok": true,
+                  "explain": "実IPを含む全ARPの禁止ではありません。"
+                },
+                {
+                  "text": "全IPアドレス",
+                  "explain": "実IPの通常通信まで妨げる過剰な対策です。"
+                }
+              ],
+              "why": "実IPを含む全ARPの禁止ではありません。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "応答しない",
+                  "ok": true,
+                  "explain": "VIPは受理しつつ、入口のMAC解決はLBに任せます。"
+                },
+                {
+                  "text": "必ず応答する",
+                  "explain": "複数サーバとLBが所有を競う原因になります。"
+                }
+              ],
+              "why": "VIPは受理しつつ、入口のMAC解決はLBに任せます。"
+            }
+          ],
+          "id": "arp-4",
+          "format": "穴埋め",
+          "theme": "VIPを受理するが所有を競わない",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "DSRのARP対策を組み立てる",
+          "lead": "必要な動作を残し、競合だけを抑えます。",
+          "lines": [
+            {
+              "code": "サーバがVIP宛てを受理する設定は維持する"
+            },
+            {
+              "code": "サーバのVIP宛てARP要求への応答を抑制する"
+            },
+            {
+              "code": "VIPのMAC解決をLBへ集約する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "ループバックのVIPを削除するとDSRの受信条件も失います。",
+          "ngExplain": "ARPを全停止するのではなくVIPに限定してください。",
+          "id": "arp-5",
+          "format": "並べ替え",
+          "theme": "VIPを受理するが所有を競わない",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：LBが2台で待機系へ切替。新しい入口のMACを周囲へ知らせたい",
+          "choices": [
+            {
+              "text": "各実サーバからVIPのARP応答を出す",
+              "explain": "再び複数の所有者を作り、LBへの集約を壊します。"
+            },
+            {
+              "text": "新しい稼働LBからVIPのGARPを送る",
+              "ok": true,
+              "explain": "入口のIPとMAC対応の更新に使えます。"
+            }
+          ],
+          "id": "arp-6",
+          "format": "選択",
+          "theme": "VIPを受理するが所有を競わない",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    }
+  ]
+}

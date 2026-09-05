@@ -1,0 +1,1632 @@
+{
+  "examKey": "2023r05h/pm1/1",
+  "title": "Web更改を要求・合意・往復経路から考える",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm1_qs.pdf",
+    "https://www.rfc-editor.org/rfc/rfc7301"
+  ],
+  "sections": [
+    {
+      "id": "reverse-proxy",
+      "title": "動的コンテンツの中継先を決める",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "reverse-proxy-1",
+          "format": "読む",
+          "theme": "動的コンテンツの中継先を決める",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "商品画像はWebサーバにあります。在庫画面はアプリケーションサーバが生成します。ブラウザには同じWebサイトとして見せたい状況です。原問の空欄aにつながる中継の役割を確かめます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "ブラウザ",
+                "d": "商品画像か在庫画面を要求"
+              },
+              {
+                "t": "Webサーバ",
+                "d": "画像は自身で返し、在庫要求を中継"
+              },
+              {
+                "t": "APサーバ",
+                "d": "AP＝アプリケーション。動的な在庫画面を生成"
+              }
+            ],
+            "caption": "説明用：変更前の役割分担"
+          }
+        },
+        {
+          "id": "reverse-proxy-2",
+          "format": "選択",
+          "theme": "動的コンテンツの中継先を決める",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "在庫画面を生成する処理を担当する機器はどれか。",
+          "choices": [
+            {
+              "text": "DNSサーバ",
+              "explain": "名前からIPアドレスを調べる機器です。画面は生成しません。"
+            },
+            {
+              "text": "ブラウザの次ホップルータ",
+              "explain": "IPパケットを転送します。在庫アプリケーションは実行しません。"
+            },
+            {
+              "text": "APサーバ",
+              "explain": "要求に応じて動的コンテンツを作る役割です。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "reverse-proxy-3",
+          "format": "選択",
+          "theme": "動的コンテンツの中継先を決める",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "WebサーバがAPサーバへの要求を中継する方式はどれか。",
+          "choices": [
+            {
+              "text": "DNSラウンドロビン",
+              "explain": "名前解決で複数アドレスを返す方法です。HTTP要求自体は中継しません。"
+            },
+            {
+              "text": "リバースプロキシ",
+              "explain": "公開サーバ側で要求を受け、背後のサーバへ中継します。",
+              "ok": true
+            },
+            {
+              "text": "フォワードプロキシ",
+              "explain": "利用者側を代表して外部へアクセスする中継です。"
+            }
+          ]
+        },
+        {
+          "id": "reverse-proxy-4",
+          "format": "穴埋め",
+          "theme": "動的コンテンツの中継先を決める",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "役割と対象を組み合わせる。",
+          "template": "{a}が、{b}の動的コンテンツを中継する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "中継する機器",
+              "choices": [
+                {
+                  "text": "Webサーバ",
+                  "explain": "ブラウザからの入口です。",
+                  "ok": true
+                },
+                {
+                  "text": "DNSサーバ",
+                  "explain": "名前解決を担当します。"
+                },
+                {
+                  "text": "ブラウザ",
+                  "explain": "コンテンツを要求する側です。"
+                }
+              ],
+              "why": "公開側のWebサーバがリバースプロキシになります。"
+            },
+            {
+              "key": "b",
+              "label": "生成する機器",
+              "choices": [
+                {
+                  "text": "L2スイッチ",
+                  "explain": "フレームを転送します。"
+                },
+                {
+                  "text": "キャッシュDNSサーバ",
+                  "explain": "名前解決結果を保存します。"
+                },
+                {
+                  "text": "APサーバ",
+                  "explain": "アプリケーションが内容を生成します。",
+                  "ok": true
+                }
+              ],
+              "why": "生成する機器と中継する機器を区別します。"
+            }
+          ]
+        },
+        {
+          "id": "reverse-proxy-5",
+          "format": "並べ替え",
+          "theme": "動的コンテンツの中継先を決める",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "在庫画面が届くまでを並べる。",
+          "lead": "画像を直接返す経路ではなく、在庫画面の経路です。",
+          "lines": [
+            {
+              "code": "ブラウザが在庫画面をWebサーバへ要求する"
+            },
+            {
+              "code": "Webサーバが要求をAPサーバへ中継する"
+            },
+            {
+              "code": "APサーバが生成した画面をWebサーバ経由で返す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "要求の中継と、生成した応答の中継を対応させます。",
+          "ngExplain": "原因から動作、結果へつなげます。要求の中継と、生成した応答の中継を対応させます。"
+        },
+        {
+          "id": "reverse-proxy-6",
+          "format": "選択",
+          "theme": "動的コンテンツの中継先を決める",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "商品画像もAPサーバで生成する構成に変えた。中継はどうなるか。",
+          "choices": [
+            {
+              "text": "画像の生成をDNSに移す",
+              "explain": "名前解決とコンテンツ生成は別の機能です。"
+            },
+            {
+              "text": "画像の要求もAPサーバへ中継する",
+              "explain": "静的か動的かという処理の配置に応じて中継先を変えます。",
+              "ok": true
+            },
+            {
+              "text": "画像という拡張子なら常にWebサーバだけで返す",
+              "explain": "今回の条件では画像生成処理がAPサーバに移っています。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dns-roles",
+      "title": "名前を公開する役割と調べる役割を分ける",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "dns-roles-1",
+          "format": "読む",
+          "theme": "名前を公開する役割と調べる役割を分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "社外へ公開する自社サイトの名前を管理します。同じ機器が、社内サーバの外部サイト検索も受け付けます。DNS（Domain Name System）の二つの役割を分けます。原問の空欄bとcに対応します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "要求",
+              "参照する情報"
+            ],
+            "rows": [
+              [
+                "自社サイトのIPを知りたい",
+                "自分が管理するゾーン"
+              ],
+              [
+                "外部サイトのIPを知りたい",
+                "他のDNSへの問合せ結果"
+              ]
+            ],
+            "caption": "説明用：同じ機器が二役をもつ場合"
+          }
+        },
+        {
+          "id": "dns-roles-2",
+          "format": "選択",
+          "theme": "名前を公開する役割と調べる役割を分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "管理する自社ドメインについて正式な回答を返す役割はどれか。",
+          "choices": [
+            {
+              "text": "キャッシュDNSサーバ",
+              "explain": "他のDNSから得た結果を保存し、名前解決を代行します。"
+            },
+            {
+              "text": "リバースプロキシ",
+              "explain": "HTTP要求を背後のサーバへ中継します。"
+            },
+            {
+              "text": "権威DNSサーバ",
+              "explain": "担当するゾーンの情報を保持して回答します。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "dns-roles-3",
+          "format": "選択",
+          "theme": "名前を公開する役割と調べる役割を分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "外部サイトの名前解決結果を保存する利点はどれか。",
+          "choices": [
+            {
+              "text": "HTTP/2のストリーム数が増える",
+              "explain": "DNSキャッシュとHTTPの多重化は別の機能です。"
+            },
+            {
+              "text": "有効期間内は外部への問合せを省ける",
+              "explain": "保存済みの結果を再利用できるためです。",
+              "ok": true
+            },
+            {
+              "text": "その外部ドメインの管理権限を得られる",
+              "explain": "キャッシュしても権威を得ることはありません。"
+            }
+          ]
+        },
+        {
+          "id": "dns-roles-4",
+          "format": "穴埋め",
+          "theme": "名前を公開する役割と調べる役割を分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "公開と再帰的な名前解決を分ける。",
+          "template": "サービス公開用は{b}DNS、外部アクセスの名前解決用は{c}DNSである。",
+          "blanks": [
+            {
+              "key": "b",
+              "label": "公開用",
+              "choices": [
+                {
+                  "text": "権威",
+                  "explain": "管理ゾーンに基づき回答します。",
+                  "ok": true
+                },
+                {
+                  "text": "キャッシュ",
+                  "explain": "外部の問合せ結果を再利用する役割です。"
+                },
+                {
+                  "text": "リバース",
+                  "explain": "HTTP中継の用語です。"
+                }
+              ],
+              "why": "原問は同じ機器の異なる役割を問います。"
+            },
+            {
+              "key": "c",
+              "label": "外部検索用",
+              "choices": [
+                {
+                  "text": "権威",
+                  "explain": "管理していないゾーンの正式な情報は持ちません。"
+                },
+                {
+                  "text": "ストリーム",
+                  "explain": "HTTP/2の仮想通信路です。"
+                },
+                {
+                  "text": "キャッシュ",
+                  "explain": "外部DNSへの問合せを代行します。",
+                  "ok": true
+                }
+              ],
+              "why": "どの情報を基に回答するかで区別します。"
+            }
+          ]
+        },
+        {
+          "id": "dns-roles-5",
+          "format": "並べ替え",
+          "theme": "名前を公開する役割と調べる役割を分ける",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "外部名の情報が未保存の場合を並べる。",
+          "lead": "社内APサーバが外部サイトのIPアドレスを調べます。",
+          "lines": [
+            {
+              "code": "APサーバがキャッシュDNSサーバに問い合わせる"
+            },
+            {
+              "code": "キャッシュDNSサーバが外部DNSから結果を得る"
+            },
+            {
+              "code": "結果を保存し、APサーバへ回答する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "未保存なら問い合わせ、保存後は有効期間内で再利用します。",
+          "ngExplain": "原因から動作、結果へつなげます。未保存なら問い合わせ、保存後は有効期間内で再利用します。"
+        },
+        {
+          "id": "dns-roles-6",
+          "format": "選択",
+          "theme": "名前を公開する役割と調べる役割を分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "クラウドのWebサーバも従来のDNSで外部名を調べる。必要な役割はどれか。",
+          "choices": [
+            {
+              "text": "APサーバのリバースプロキシ化",
+              "explain": "HTTPの中継ではDNSの名前解決を代行できません。"
+            },
+            {
+              "text": "キャッシュDNSの役割",
+              "explain": "置き場所が変わっても、外部名の検索という目的は同じです。",
+              "ok": true
+            },
+            {
+              "text": "Webサーバの権威DNS化",
+              "explain": "利用者が名前解決するだけで権威DNSになるわけではありません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pipeline-order",
+      "title": "要求順と処理完了順を区別する",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "pipeline-order-1",
+          "format": "読む",
+          "theme": "要求順と処理完了順を区別する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "HTTP/1.1の一つのTCP接続で、要求AとBを順に送ります。Aの処理は遅く、Bの処理は先に終わります。パイプラインでは、応答を要求の受付順に返します。原問ではこの順序制約を説明します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "要求",
+              "受付順",
+              "処理完了"
+            ],
+            "rows": [
+              [
+                "A：重い集計",
+                "1",
+                "遅い"
+              ],
+              [
+                "B：小さな画像",
+                "2",
+                "早い"
+              ]
+            ],
+            "caption": "説明用：HTTP/1.1パイプライン"
+          }
+        },
+        {
+          "id": "pipeline-order-2",
+          "format": "選択",
+          "theme": "要求順と処理完了順を区別する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "Bの処理が先に終わった。応答の送信順はどうなるか。",
+          "choices": [
+            {
+              "text": "B、Aの順",
+              "explain": "HTTP/1.1パイプラインでは先行要求を追い越せません。"
+            },
+            {
+              "text": "Bの応答を破棄する",
+              "explain": "応答を待たせる必要はありますが、破棄する決まりではありません。"
+            },
+            {
+              "text": "A、Bの順",
+              "explain": "処理完了順ではなく、要求受付順を維持します。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "pipeline-order-3",
+          "format": "選択",
+          "theme": "要求順と処理完了順を区別する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "小さな画像Bまで待たされる直接の理由はどれか。",
+          "choices": [
+            {
+              "text": "TCPが二つ目の要求を受信できないから",
+              "explain": "パイプラインでは応答前に次の要求を送れます。"
+            },
+            {
+              "text": "先行要求Aへの応答を先に返す制約",
+              "explain": "応答の順序制約が待ち時間を発生させます。",
+              "ok": true
+            },
+            {
+              "text": "画像の容量がAより大きいから",
+              "explain": "Bは小さな画像という条件です。容量差とは逆です。"
+            }
+          ]
+        },
+        {
+          "id": "pipeline-order-4",
+          "format": "穴埋め",
+          "theme": "要求順と処理完了順を区別する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "順序制約の答案を組み立てる。",
+          "template": "サーバはリクエストを{a}順序で、{b}を返す必要がある。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "基準",
+              "choices": [
+                {
+                  "text": "受けたのと同じ",
+                  "explain": "受信順に対応させます。",
+                  "ok": true
+                },
+                {
+                  "text": "処理し終えた",
+                  "explain": "完了順だと要求を追い越します。"
+                },
+                {
+                  "text": "データ量の少ない",
+                  "explain": "大きさは順序基準ではありません。"
+                }
+              ],
+              "why": "基準となるのは要求の受付順です。"
+            },
+            {
+              "key": "b",
+              "label": "返す対象",
+              "choices": [
+                {
+                  "text": "TCPのSYN",
+                  "explain": "接続確立時のパケットです。"
+                },
+                {
+                  "text": "DNSのレコード",
+                  "explain": "名前解決の情報です。"
+                },
+                {
+                  "text": "各リクエストへのレスポンス",
+                  "explain": "HTTP応答の順序が対象です。",
+                  "ok": true
+                }
+              ],
+              "why": "TCPのACKの順序を説明する設問ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "pipeline-order-5",
+          "format": "並べ替え",
+          "theme": "要求順と処理完了順を区別する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "遅い先行要求が後続へ及ぼす影響を並べる。",
+          "lead": "同じTCP接続でA、Bの順に要求しました。",
+          "lines": [
+            {
+              "code": "Aの処理中にBの処理が終わる"
+            },
+            {
+              "code": "Bの応答はAの応答を追い越せない"
+            },
+            {
+              "code": "Aの応答を返した後でBの応答を返す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "処理自体の並列性と応答の順序を分けて考えます。",
+          "ngExplain": "原因から動作、結果へつなげます。処理自体の並列性と応答の順序を分けて考えます。"
+        },
+        {
+          "id": "pipeline-order-6",
+          "format": "選択",
+          "theme": "要求順と処理完了順を区別する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "AとBが独立したHTTP/2ストリームに変わると、この制約はどうなるか。",
+          "choices": [
+            {
+              "text": "TCPの再送も不要になる",
+              "explain": "HTTP/2もTCP上で動作します。TCPの損失回復は残ります。"
+            },
+            {
+              "text": "Bの応答をAより先に返せる",
+              "explain": "ストリームを識別できるため、要求順の応答制約がなくなります。",
+              "ok": true
+            },
+            {
+              "text": "HTTP/2でもAが必ず先になる",
+              "explain": "HTTP/1.1パイプラインの制約との混同です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "http2-stream",
+      "title": "同じ接続内の通信を識別する",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "http2-stream-1",
+          "format": "読む",
+          "theme": "同じ接続内の通信を識別する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "一つのTCP（Transmission Control Protocol）接続で複数の要求を運びます。HTTP/2はストリームという仮想的な通信路で要求と応答を識別します。メソッドは疑似ヘッダで表します。空欄dとeをこの役割から選びます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "情報",
+              "例",
+              "目的"
+            ],
+            "rows": [
+              [
+                "ストリームID",
+                "1、3",
+                "要求と応答の通信路を識別"
+              ],
+              [
+                ":method",
+                "GET",
+                "処理の種類"
+              ],
+              [
+                ":path",
+                "/items",
+                "要求先のパス"
+              ],
+              [
+                ":scheme",
+                "https",
+                "URIスキーム"
+              ]
+            ],
+            "caption": "説明用：HTTP/2の識別情報"
+          }
+        },
+        {
+          "id": "http2-stream-2",
+          "format": "選択",
+          "theme": "同じ接続内の通信を識別する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ストリームIDが1と3であるとき、IDが識別する対象はどれか。",
+          "choices": [
+            {
+              "text": "二つの物理回線",
+              "explain": "ストリームは物理ケーブルではありません。"
+            },
+            {
+              "text": "二つのDNSサーバ",
+              "explain": "名前解決の相手を表す番号ではありません。"
+            },
+            {
+              "text": "一つのTCP接続内の仮想的な通信路",
+              "explain": "別の要求と応答を区別するための番号です。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "http2-stream-3",
+          "format": "選択",
+          "theme": "同じ接続内の通信を識別する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "GETかPOSTかを伝える疑似ヘッダはどれか。",
+          "choices": [
+            {
+              "text": ":path",
+              "explain": "要求先のパスを表します。"
+            },
+            {
+              "text": ":method",
+              "explain": "要求のメソッドを表します。",
+              "ok": true
+            },
+            {
+              "text": ":scheme",
+              "explain": "httpsなどのURIスキームを表します。"
+            }
+          ]
+        },
+        {
+          "id": "http2-stream-4",
+          "format": "穴埋め",
+          "theme": "同じ接続内の通信を識別する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "通信路と操作を分ける。",
+          "template": "HTTP/2は{d}で通信を多重化し、操作の種類は{e}で示す。",
+          "blanks": [
+            {
+              "key": "d",
+              "label": "通信路",
+              "choices": [
+                {
+                  "text": "ストリーム",
+                  "explain": "要求と応答を区別します。",
+                  "ok": true
+                },
+                {
+                  "text": "サブネット",
+                  "explain": "IPネットワークの区分です。"
+                },
+                {
+                  "text": "DNSゾーン",
+                  "explain": "管理する名前の範囲です。"
+                }
+              ],
+              "why": "同じTCP接続内の通信路です。"
+            },
+            {
+              "key": "e",
+              "label": "疑似ヘッダ",
+              "choices": [
+                {
+                  "text": ":path",
+                  "explain": "パスを格納します。"
+                },
+                {
+                  "text": ":scheme",
+                  "explain": "スキームを格納します。"
+                },
+                {
+                  "text": ":method",
+                  "explain": "GETやPOSTを格納します。",
+                  "ok": true
+                }
+              ],
+              "why": "動詞に相当する操作と、対象のパスを混同しません。"
+            }
+          ]
+        },
+        {
+          "id": "http2-stream-5",
+          "format": "並べ替え",
+          "theme": "同じ接続内の通信を識別する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "多重化した応答を整理する。",
+          "lead": "ID 3の応答がID 1より先に届く場合です。",
+          "lines": [
+            {
+              "code": "サーバがID 3のストリームで応答する"
+            },
+            {
+              "code": "ブラウザがストリームIDを確認する"
+            },
+            {
+              "code": "ID 3に対応する要求への応答として処理する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "到着順だけに依存せず、ストリームを識別します。",
+          "ngExplain": "原因から動作、結果へつなげます。到着順だけに依存せず、ストリームを識別します。"
+        },
+        {
+          "id": "http2-stream-6",
+          "format": "選択",
+          "theme": "同じ接続内の通信を識別する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "要求先が /items から /orders に変わり、GETのままだった。変わる情報はどれか。",
+          "choices": [
+            {
+              "text": ":schemeがhttpになる",
+              "explain": "要求先パスの変更は暗号化方式を変えません。"
+            },
+            {
+              "text": ":path",
+              "explain": "要求先のパスだけが変わっています。",
+              "ok": true
+            },
+            {
+              "text": ":methodがPOSTになる",
+              "explain": "処理の種類はGETのままという条件です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "alpn-purpose",
+      "title": "接続開始時にHTTPの方式を合わせる",
+      "targets": [
+        "s1",
+        "s2-2",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "alpn-purpose-1",
+          "format": "読む",
+          "theme": "接続開始時にHTTPの方式を合わせる",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "同じhttpsのURLでHTTP/1.1とHTTP/2を提供します。ポート番号だけではどちらを使うか決まりません。TLS（Transport Layer Security）の拡張ALPNで方式を合意します。ALPNはApplication-Layer Protocol Negotiationの略です。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "TCP接続を確立",
+                "d": "まず通信路を作る"
+              },
+              {
+                "t": "TLSでALPNを交換",
+                "d": "利用するアプリケーションプロトコルを合意"
+              },
+              {
+                "t": "HTTPを開始",
+                "d": "合意した方式で要求する"
+              }
+            ],
+            "caption": "説明用：合意が必要になる位置"
+          }
+        },
+        {
+          "id": "alpn-purpose-2",
+          "format": "選択",
+          "theme": "接続開始時にHTTPの方式を合わせる",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "httpsと443番だけで決定できない情報はどれか。",
+          "choices": [
+            {
+              "text": "宛先までのMACアドレス全て",
+              "explain": "ALPNも途中の機器のMACアドレスは決めません。"
+            },
+            {
+              "text": "APサーバの在庫数",
+              "explain": "アプリケーションのデータであり、通信方式の合意とは別です。"
+            },
+            {
+              "text": "HTTP/1.1とHTTP/2のどちらを使うか",
+              "explain": "同じスキームとポート番号を共有するためです。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "alpn-purpose-3",
+          "format": "選択",
+          "theme": "接続開始時にHTTPの方式を合わせる",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "ALPNでクライアントが提示する情報はどれか。",
+          "choices": [
+            {
+              "text": "利用可能なルータのIP一覧",
+              "explain": "経路制御ではなく、TLS上のプロトコル選択です。"
+            },
+            {
+              "text": "利用可能なアプリケーション層プロトコルの一覧",
+              "explain": "サーバは提示された候補から対応可能なものを選びます。",
+              "ok": true
+            },
+            {
+              "text": "利用者のパスワード",
+              "explain": "ALPNは利用者認証の仕組みではありません。"
+            }
+          ]
+        },
+        {
+          "id": "alpn-purpose-4",
+          "format": "穴埋め",
+          "theme": "接続開始時にHTTPの方式を合わせる",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "目的と利用する仕組みを組み立てる。",
+          "template": "{f}の拡張ALPNを使い、通信開始時にTCPの{a}を決定する。",
+          "blanks": [
+            {
+              "key": "f",
+              "label": "拡張元",
+              "choices": [
+                {
+                  "text": "TLS",
+                  "explain": "暗号化接続の開始処理で合意します。",
+                  "ok": true
+                },
+                {
+                  "text": "DNS",
+                  "explain": "名前解決の仕組みです。"
+                },
+                {
+                  "text": "OSPF",
+                  "explain": "ルータ間の経路交換です。"
+                }
+              ],
+              "why": "HTTP/2のh2はTLS上で利用します。"
+            },
+            {
+              "key": "a",
+              "label": "決める対象",
+              "choices": [
+                {
+                  "text": "送信元IPアドレス",
+                  "explain": "ALPNはIPアドレスを割り当てません。"
+                },
+                {
+                  "text": "デフォルトゲートウェイ",
+                  "explain": "IP転送先の設定ではありません。"
+                },
+                {
+                  "text": "上位のアプリケーションプロトコル",
+                  "explain": "HTTP/2などの方式を決めます。",
+                  "ok": true
+                }
+              ],
+              "why": "通信開始時・上位プロトコルの二点を含めます。"
+            }
+          ]
+        },
+        {
+          "id": "alpn-purpose-5",
+          "format": "並べ替え",
+          "theme": "接続開始時にHTTPの方式を合わせる",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "合意してから通信を始める。",
+          "lead": "クライアントはh2とhttp/1.1、サーバは両方に対応します。",
+          "lines": [
+            {
+              "code": "クライアントが利用可能なプロトコル一覧を提示する"
+            },
+            {
+              "code": "サーバが共通で使えるプロトコルを選択して通知する"
+            },
+            {
+              "code": "合意したプロトコルでHTTP通信を行う"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "片側の能力だけでは決まりません。双方の対応が必要です。",
+          "ngExplain": "原因から動作、結果へつなげます。片側の能力だけでは決まりません。双方の対応が必要です。"
+        },
+        {
+          "id": "alpn-purpose-6",
+          "format": "選択",
+          "theme": "接続開始時にHTTPの方式を合わせる",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "クライアントはh2とhttp/1.1、サーバはhttp/1.1だけに対応する。合意可能なのはどれか。",
+          "choices": [
+            {
+              "text": "h3",
+              "explain": "どちらからも提示されていないプロトコルです。"
+            },
+            {
+              "text": "http/1.1",
+              "explain": "両者に共通する候補を使います。",
+              "ok": true
+            },
+            {
+              "text": "h2",
+              "explain": "クライアントだけの対応では使えません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "alpn-sequence",
+      "title": "原図の送信者とメッセージを対応させる",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "alpn-sequence-1",
+          "format": "読む",
+          "theme": "原図の送信者とメッセージを対応させる",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "TLSの通信開始時には、クライアントとサーバがHelloを交換します。原問の図3はClientHelloとServerHelloでALPNを交換する流れです。候補の提示と選択結果の通知を区別します。TLS 1.3の全メッセージ配置を示した図ではありません。"
+        },
+        {
+          "id": "alpn-sequence-2",
+          "format": "選択",
+          "theme": "原図の送信者とメッセージを対応させる",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "候補一覧を送る側とメッセージの組合せはどれか。",
+          "choices": [
+            {
+              "text": "サーバのServerHello",
+              "explain": "原図ではサーバが選択結果を返す側です。"
+            },
+            {
+              "text": "クライアントのTCP ACK",
+              "explain": "TCP接続確認であり、ALPN一覧は含めません。"
+            },
+            {
+              "text": "クライアントのClientHello",
+              "explain": "クライアントが使えるプロトコルを提示します。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "alpn-sequence-3",
+          "format": "選択",
+          "theme": "原図の送信者とメッセージを対応させる",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "原図でALPNの合意に使う記号を全て選んだ組合せはどれか。",
+          "choices": [
+            {
+              "text": "(f)と(g)",
+              "explain": "合意後のHTTP要求と応答です。"
+            },
+            {
+              "text": "(d)と(e)",
+              "explain": "ClientHelloで候補を送り、ServerHelloで結果を返します。",
+              "ok": true
+            },
+            {
+              "text": "(a)、(b)、(c)",
+              "explain": "これらはTCPの3ウェイハンドシェイクです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.07,
+            "bottom": 0.48,
+            "label": "図3：TCP、TLS、HTTP/2の順序（IPA原図）"
+          }
+        },
+        {
+          "id": "alpn-sequence-4",
+          "format": "穴埋め",
+          "theme": "原図の送信者とメッセージを対応させる",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "提示内容を主語から組み立てる。",
+          "template": "{a}が、利用可能な{b}を提示する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "提示者",
+              "choices": [
+                {
+                  "text": "クライアント",
+                  "explain": "使える候補を知らせる側です。",
+                  "ok": true
+                },
+                {
+                  "text": "DNSサーバ",
+                  "explain": "ALPNの候補を決める主体ではありません。"
+                },
+                {
+                  "text": "途中のL3SW",
+                  "explain": "転送機器はこの合意を行いません。"
+                }
+              ],
+              "why": "サーバによる選択結果と区別します。"
+            },
+            {
+              "key": "b",
+              "label": "内容",
+              "choices": [
+                {
+                  "text": "IPアドレスの空き一覧",
+                  "explain": "DHCPの話ではありません。"
+                },
+                {
+                  "text": "HTTPレスポンス本文",
+                  "explain": "本文は合意後の通信で送ります。"
+                },
+                {
+                  "text": "アプリケーション層のプロトコル",
+                  "explain": "h2などの候補です。",
+                  "ok": true
+                }
+              ],
+              "why": "暗号スイート一覧とは役割が異なります。"
+            }
+          ]
+        },
+        {
+          "id": "alpn-sequence-5",
+          "format": "並べ替え",
+          "theme": "原図の送信者とメッセージを対応させる",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "図3の主要な開始処理を並べる。",
+          "lead": "原図の表現に従い、細かいTLSメッセージは省略します。",
+          "lines": [
+            {
+              "code": "(a)〜(c)でTCP接続を確立する"
+            },
+            {
+              "code": "(d)でアプリケーションプロトコルの候補を提示する"
+            },
+            {
+              "code": "(e)で選択結果を通知し、TLS開始処理を進める"
+            },
+            {
+              "code": "(f)以降でHTTP/2要求と応答を交換する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "TCP接続、TLS上の合意、HTTP要求の順です。",
+          "ngExplain": "原因から動作、結果へつなげます。TCP接続、TLS上の合意、HTTP要求の順です。"
+        },
+        {
+          "id": "alpn-sequence-6",
+          "format": "選択",
+          "theme": "原図の送信者とメッセージを対応させる",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "SYNとSYN/ACKだけ採取できた。この時点でh2の合意を確認できるか。",
+          "choices": [
+            {
+              "text": "SYN/ACKがサーバのALPN回答である",
+              "explain": "SYN/ACKはTCPの接続応答です。"
+            },
+            {
+              "text": "確認できない。TLSのALPNを確認する",
+              "explain": "TCPの確立と上位方式の合意は別です。",
+              "ok": true
+            },
+            {
+              "text": "443番ならh2で確定する",
+              "explain": "HTTP/1.1も443番を利用します。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "private-routes",
+      "title": "宛先ネットワークと次ホップを分ける",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "private-routes-1",
+          "format": "読む",
+          "theme": "宛先ネットワークと次ホップを分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "クラウド側は172.21.10.0/24です。専用線の端点は自社L3SWが172.21.11.1、仮想ルータが172.21.11.2です。遠い宛先へ送る経路には、直接届く隣のルータを次ホップとして指定します。原問の表1を往復で埋めます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "場所",
+              "IPアドレス"
+            ],
+            "rows": [
+              [
+                "クラウドのVPC",
+                "172.21.10.0/24"
+              ],
+              [
+                "自社L3SWの専用線側",
+                "172.21.11.1"
+              ],
+              [
+                "仮想ルータの専用線側",
+                "172.21.11.2"
+              ]
+            ],
+            "caption": "説明用：VPC＝Virtual Private Cloud、接続条件の整理"
+          }
+        },
+        {
+          "id": "private-routes-2",
+          "format": "選択",
+          "theme": "宛先ネットワークと次ホップを分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "L3SWからクラウドへ送る経路の宛先はどれか。",
+          "choices": [
+            {
+              "text": "172.21.11.0/24",
+              "explain": "専用線の接続用ネットワークです。"
+            },
+            {
+              "text": "172.21.11.1",
+              "explain": "自分自身の端点であり、遠隔の宛先ではありません。"
+            },
+            {
+              "text": "172.21.10.0/24",
+              "explain": "送信したいクラウド側ネットワークです。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "private-routes-3",
+          "format": "選択",
+          "theme": "宛先ネットワークと次ホップを分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "クラウドから自社側へ戻す仮想ルータの次ホップはどれか。",
+          "choices": [
+            {
+              "text": "172.21.10.0",
+              "explain": "ネットワークを表す値で、隣接ルータのアドレスではありません。"
+            },
+            {
+              "text": "172.21.11.1",
+              "explain": "専用線の反対側にあるL3SWへ渡します。",
+              "ok": true
+            },
+            {
+              "text": "172.21.11.2",
+              "explain": "仮想ルータ自身のアドレスです。"
+            }
+          ]
+        },
+        {
+          "id": "private-routes-4",
+          "format": "穴埋め",
+          "theme": "宛先ネットワークと次ホップを分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "表1の三つの空欄を埋める。",
+          "template": "L3SW：宛先{a}、次ホップ{b}。仮想ルータ：宛先0.0.0.0/0、次ホップ{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ア",
+              "choices": [
+                {
+                  "text": "172.21.10.0/24",
+                  "explain": "クラウド側のネットワークです。",
+                  "ok": true
+                },
+                {
+                  "text": "172.21.11.0/24",
+                  "explain": "これは専用線用です。"
+                },
+                {
+                  "text": "172.21.11.2/32",
+                  "explain": "隣接端点だけを宛先にしてもVPC全体への経路になりません。"
+                }
+              ],
+              "why": "宛先欄には到達させたいネットワークを入れます。"
+            },
+            {
+              "key": "b",
+              "label": "イ",
+              "choices": [
+                {
+                  "text": "172.21.11.1",
+                  "explain": "L3SW自身です。"
+                },
+                {
+                  "text": "172.21.10.0",
+                  "explain": "VPCのネットワークアドレスです。"
+                },
+                {
+                  "text": "172.21.11.2",
+                  "explain": "クラウド側の隣接ルータです。",
+                  "ok": true
+                }
+              ],
+              "why": "自分ではなく専用線の相手を指定します。"
+            },
+            {
+              "key": "c",
+              "label": "ウ",
+              "choices": [
+                {
+                  "text": "0.0.0.0",
+                  "explain": "宛先プレフィックスと次ホップを混同しています。"
+                },
+                {
+                  "text": "172.21.11.1",
+                  "explain": "自社側への出口です。",
+                  "ok": true
+                },
+                {
+                  "text": "172.21.11.2",
+                  "explain": "仮想ルータ自身です。"
+                }
+              ],
+              "why": "戻り方向も別に設定します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.1,
+            "bottom": 0.49,
+            "label": "専用線のIPアドレスと表1（IPA原文・原表）"
+          }
+        },
+        {
+          "id": "private-routes-5",
+          "format": "並べ替え",
+          "theme": "宛先ネットワークと次ホップを分ける",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "APサーバからクラウドへ応答を返す。",
+          "lead": "自社側のAPサーバが応答を生成したところから並べます。",
+          "lines": [
+            {
+              "code": "L3SWが宛先172.21.10.0/24の経路を選ぶ"
+            },
+            {
+              "code": "次ホップ172.21.11.2へパケットを送る"
+            },
+            {
+              "code": "仮想ルータがVPC側へ転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "宛先の検索と、選ばれた次ホップへの転送を分けます。",
+          "ngExplain": "原因から動作、結果へつなげます。宛先の検索と、選ばれた次ホップへの転送を分けます。"
+        },
+        {
+          "id": "private-routes-6",
+          "format": "選択",
+          "theme": "宛先ネットワークと次ホップを分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "専用線の仮想ルータ側だけ172.21.11.9に変わった。L3SWで変える欄はどれか。",
+          "choices": [
+            {
+              "text": "自分の次ホップを172.21.11.1にする",
+              "explain": "自分自身へ渡してもクラウドへ進めません。"
+            },
+            {
+              "text": "次ホップを172.21.11.9にする",
+              "explain": "遠隔ネットワークは変わらず、隣の端点だけが変わっています。",
+              "ok": true
+            },
+            {
+              "text": "宛先を172.21.11.9/32にする",
+              "explain": "それではVPCへの経路になりません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lb-mode",
+      "title": "異なるHTTP方式をつなぐ装置を選ぶ",
+      "targets": [
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "lb-mode-1",
+          "format": "読む",
+          "theme": "異なるHTTP方式をつなぐ装置を選ぶ",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "ブラウザ側はHTTP/2、Web・APサーバ側はHTTP/1.1です。LB（Load Balancer）は要求URLも見て振り分けます。IPやポートだけの転送ではHTTP方式の変換ができません。最後に原問のモード名と理由を組み合わせます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "ブラウザ",
+                "d": "HTTP/2"
+              },
+              {
+                "t": "仮想LB",
+                "d": "URLによる振分けと方式変換"
+              },
+              {
+                "t": "Web又はAPサーバ",
+                "d": "HTTP/1.1"
+              }
+            ],
+            "caption": "説明用：更改後のプロトコル境界"
+          }
+        },
+        {
+          "id": "lb-mode-2",
+          "format": "選択",
+          "theme": "異なるHTTP方式をつなぐ装置を選ぶ",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "HTTP/2要求をHTTP/1.1へ変換する処理に必要な層はどれか。",
+          "choices": [
+            {
+              "text": "レイヤー4だけ",
+              "explain": "TCPのポート情報だけではHTTP方式を変換できません。"
+            },
+            {
+              "text": "レイヤー2だけ",
+              "explain": "MACアドレスによる転送ではHTTPを解釈しません。"
+            },
+            {
+              "text": "レイヤー7",
+              "explain": "HTTPのメッセージ構造を扱う必要があります。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "lb-mode-3",
+          "format": "選択",
+          "theme": "異なるHTTP方式をつなぐ装置を選ぶ",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "表2から、今回の要件を満たす動作モードを選ぶ。",
+          "choices": [
+            {
+              "text": "どちらでも同じ",
+              "explain": "方式変換という要件が、選択に影響します。"
+            },
+            {
+              "text": "アプリケーションモード",
+              "explain": "レイヤー7で処理し、HTTP/2からHTTP/1.1へ変換します。",
+              "ok": true
+            },
+            {
+              "text": "ネットワークモード",
+              "explain": "表2ではレイヤー4です。今回必要なHTTP変換を扱えません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.66,
+            "bottom": 0.91,
+            "label": "表2：仮想LBのモード（IPA原文・原表）"
+          }
+        },
+        {
+          "id": "lb-mode-4",
+          "format": "穴埋め",
+          "theme": "異なるHTTP方式をつなぐ装置を選ぶ",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "装置の動作と理由を組み立てる。",
+          "template": "{a}を選ぶ。HTTP/2のリクエストを{b}へ変換して負荷分散するためである。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "モード",
+              "choices": [
+                {
+                  "text": "アプリケーションモード",
+                  "explain": "HTTP処理を扱えるモードです。",
+                  "ok": true
+                },
+                {
+                  "text": "ネットワークモード",
+                  "explain": "原表ではレイヤー4のモードです。"
+                },
+                {
+                  "text": "透過ブリッジだけ",
+                  "explain": "MAC転送だけでは方式変換できません。"
+                }
+              ],
+              "why": "モード名だけでなく理由も必要です。"
+            },
+            {
+              "key": "b",
+              "label": "サーバ側の方式",
+              "choices": [
+                {
+                  "text": "HTTP/2",
+                  "explain": "クライアント側と同じままでは要件を満たしません。"
+                },
+                {
+                  "text": "DNS",
+                  "explain": "名前解決へ変換するわけではありません。"
+                },
+                {
+                  "text": "HTTP/1.1",
+                  "explain": "サーバ側で指定された方式です。",
+                  "ok": true
+                }
+              ],
+              "why": "変換元と変換先を両方書きます。"
+            }
+          ]
+        },
+        {
+          "id": "lb-mode-5",
+          "format": "並べ替え",
+          "theme": "異なるHTTP方式をつなぐ装置を選ぶ",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "LBでの処理を並べる。",
+          "lead": "ブラウザから動的コンテンツを要求した場合です。",
+          "lines": [
+            {
+              "code": "HTTP/2の要求を受け付ける"
+            },
+            {
+              "code": "URLからAPサーバ宛ての要求と判断する"
+            },
+            {
+              "code": "HTTP/1.1の要求に変換してAPサーバへ送る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "URL判断とHTTP方式変換がレイヤー7を必要とする根拠です。",
+          "ngExplain": "原因から動作、結果へつなげます。URL判断とHTTP方式変換がレイヤー7を必要とする根拠です。",
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.5,
+            "bottom": 0.93,
+            "label": "更改方針と図2の通信方式（IPA原文・原図）"
+          }
+        },
+        {
+          "id": "lb-mode-6",
+          "format": "選択",
+          "theme": "異なるHTTP方式をつなぐ装置を選ぶ",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "前後ともHTTP/1.1で、URLも見ずTCP接続を分散するだけになった。判断はどれか。",
+          "choices": [
+            {
+              "text": "負荷分散装置は不要と断定できる",
+              "explain": "複数サーバへの分散という要件は残っています。"
+            },
+            {
+              "text": "レイヤー4のモードも候補になる",
+              "explain": "HTTP変換やURL判断の要件がなくなっています。",
+              "ok": true
+            },
+            {
+              "text": "HTTPという語があれば必ずレイヤー7だけ",
+              "explain": "必要な処理で選びます。HTTP通信でもL4で分散する構成はあります。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

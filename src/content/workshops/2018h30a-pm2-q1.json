@@ -1,0 +1,2693 @@
+{
+  "examKey": "2018h30a/pm2/1",
+  "title": "工場のメッセージを安全に届けてAPIへつなぐ",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm2_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "tls",
+      "title": "秘密・改ざん・相手を別々に守る",
+      "targets": [
+        "s1-1",
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "原問のデバイスは工場の装置を制御する機構、エッジサーバは工場の近くで情報を処理するサーバです。これらの通信を守るためにTLS（Transport Layer Security）を使います。\n\nTLSは通信を暗号化し、改ざんを検知し、証明書などで相手を認証します。この三つは別の働きです。機器のなりすまし対策も必要なので、クライアント側の証明書を使う認証を考えます。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "dev",
+                "label": "機器",
+                "icon": "server",
+                "x": 50,
+                "y": 70
+              },
+              {
+                "id": "fw",
+                "label": "工場FW",
+                "icon": "fw",
+                "x": 170,
+                "y": 70
+              },
+              {
+                "id": "srv",
+                "label": "X社サーバ",
+                "icon": "server",
+                "x": 290,
+                "y": 70
+              }
+            ],
+            "links": [
+              {
+                "from": "dev",
+                "to": "fw",
+                "label": "TLS"
+              },
+              {
+                "from": "fw",
+                "to": "srv",
+                "label": "相互の認証"
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "第三者に通信内容を読まれにくくする機能は？",
+          "choices": [
+            {
+              "text": "暗号化",
+              "ok": true,
+              "explain": "機密性の保護です。改ざんの検知や相手の認証とは目的が異なります。"
+            },
+            {
+              "text": "経路の短縮",
+              "ok": false,
+              "explain": "通信距離が短いだけで内容を読めなくなるわけではありません。"
+            },
+            {
+              "text": "メッセージの複製",
+              "ok": false,
+              "explain": "同じデータを増やしても機密性は守れません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "TLSの三つの働き",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "TLSは情報を{a}し、改ざんを{b}し、通信相手を{c}する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "内容を守る",
+              "why": "漏えい対策の働きです。",
+              "choices": [
+                {
+                  "text": "認可",
+                  "ok": false,
+                  "explain": "操作を許すかという別の判断です。"
+                },
+                {
+                  "text": "暗号化",
+                  "ok": true,
+                  "explain": "内容をそのまま読めない形に保護します。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "変更を見つける",
+              "why": "正しくないデータを検出します。",
+              "choices": [
+                {
+                  "text": "検知",
+                  "ok": true,
+                  "explain": "通信途中の不正な変更を検出します。"
+                },
+                {
+                  "text": "自動的に元の内容へ修復",
+                  "ok": false,
+                  "explain": "TLSが元の業務データを推測して修復するわけではありません。"
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "相手を確認する",
+              "why": "なりすましへの対策です。",
+              "choices": [
+                {
+                  "text": "負荷分散",
+                  "ok": false,
+                  "explain": "相手を本人と確認する機能ではありません。"
+                },
+                {
+                  "text": "認証",
+                  "ok": true,
+                  "explain": "提示された証明書などで相手を確認します。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "サーバ証明書だけで工場の偽デバイスも排除できる、と言えないのは？",
+          "choices": [
+            {
+              "text": "暗号化すればどんな機器でも正規品になるから",
+              "ok": false,
+              "explain": "暗号化は正規機器であることの証明ではありません。"
+            },
+            {
+              "text": "TLSは証明書を扱えないから",
+              "ok": false,
+              "explain": "TLSは証明書による認証を利用できます。"
+            },
+            {
+              "text": "サーバの認証とクライアントの認証は別だから",
+              "ok": true,
+              "explain": "機器側を確認するにはクライアント認証も必要です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：正規の機器だけにクライアント証明書と対応する秘密鍵を安全に配備し、サーバが検証する。証明書を持たない偽機器は？",
+          "choices": [
+            {
+              "text": "IPがプライベートなら必ず認証成功する",
+              "ok": false,
+              "explain": "アドレス種別は機器の正当性を証明しません。"
+            },
+            {
+              "text": "クライアント認証で拒否できる",
+              "ok": true,
+              "explain": "正規機器に限定した認証情報の提示・検証を条件にしています。"
+            },
+            {
+              "text": "サーバ名を知るだけで必ず認証成功する",
+              "ok": false,
+              "explain": "接続先の知識はクライアント資格の証明になりません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問のなりすまし対策を配備から検証へ並べる。",
+          "lines": [
+            {
+              "code": "デバイス及びエッジサーバにクライアント証明書を配布し、"
+            },
+            {
+              "code": "TLS接続時にそれを使ったクライアント認証を行って、"
+            },
+            {
+              "code": "接続してきた機器の正当性を確認する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "『TLSを使う』だけでなく、配布物と認証対象を特定できています。",
+          "ngExplain": "サーバ証明書だけを配る説明では、機器側のなりすまし対策が欠けます。"
+        }
+      ]
+    },
+    {
+      "id": "direction",
+      "title": "接続開始の向きで入口を絞る",
+      "targets": [
+        "s1-1",
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "TCP（Transmission Control Protocol）は接続を確立して双方向にデータを運びます。『接続を始める側』と『データを送る向き』は同じ意味ではありません。原問の工場機器はクライアントとしてX社側へ接続するので、通信装置内のFWで許可する開始方向を限定できます。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "工場 → X社 : 新規TCP接続を許可",
+              "X社 → 工場 : 確立済み接続の応答",
+              "外部 → 工場 : 新規TCP接続を拒否"
+            ],
+            "caption": "説明用：接続開始方向と戻り通信"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "工場の機器がX社へ開始したTCP接続で、X社から設定情報を返すことはできる？",
+          "choices": [
+            {
+              "text": "できる",
+              "ok": true,
+              "explain": "確立済みTCP接続は双方向にデータを流せます。"
+            },
+            {
+              "text": "できず、X社から別の新規接続が必須",
+              "ok": false,
+              "explain": "開始方向とデータの方向を混同しています。"
+            },
+            {
+              "text": "UDPへ切り替えない限り不可能",
+              "ok": false,
+              "explain": "TCP自体に双方向の通信機能があります。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "許可する新規接続",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "通信装置内のFWは、{a}から{b}の方向に確立する{c}コネクションだけを許可する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "開始側",
+              "why": "原問の管理対象に限定します。",
+              "choices": [
+                {
+                  "text": "インターネット上の任意の機器",
+                  "ok": false,
+                  "explain": "不用な侵入を許すことになります。"
+                },
+                {
+                  "text": "X社が運用・保守する工場内機器",
+                  "ok": true,
+                  "explain": "本文のクライアントに当たります。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "接続先方向",
+              "why": "本文のクライアントサーバ関係です。",
+              "choices": [
+                {
+                  "text": "X社FW",
+                  "ok": true,
+                  "explain": "工場からX社側への方向です。"
+                },
+                {
+                  "text": "任意の工場内PC",
+                  "ok": false,
+                  "explain": "原問の接続先ではありません。"
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "プロトコル",
+              "why": "原問で接続確立を行うトランスポートです。",
+              "choices": [
+                {
+                  "text": "ICMP",
+                  "ok": false,
+                  "explain": "TCPのようなコネクションを確立しません。"
+                },
+                {
+                  "text": "TCP",
+                  "ok": true,
+                  "explain": "MQTTやこのHTTP通信の基礎になる接続です。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "『X社から届くパケットは全て拒否』では困る理由は？",
+          "choices": [
+            {
+              "text": "全通信が必ずブロードキャストになるから",
+              "ok": false,
+              "explain": "フィルタでブロードキャストへ変わるわけではありません。"
+            },
+            {
+              "text": "認可トークンが必ず永久になるから",
+              "ok": false,
+              "explain": "FWの方向制御と有効期間は無関係です。"
+            },
+            {
+              "text": "工場から開始した接続の応答まで止まるから",
+              "ok": true,
+              "explain": "新規接続の向きと確立済み接続の戻り通信を区別します。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：工場からX社へ確立済みの接続がある一方、外部の第三者が工場へ新規接続を試みる。正しい区別は？",
+          "choices": [
+            {
+              "text": "両方とも一律に遮断する",
+              "ok": false,
+              "explain": "必要な双方向の情報交換まで壊します。"
+            },
+            {
+              "text": "確立済みの戻りは許可し、外部からの新規開始は拒否する",
+              "ok": true,
+              "explain": "必要な応答を残しつつ侵入経路を絞ります。"
+            },
+            {
+              "text": "両方とも外からなので一律に許可する",
+              "ok": false,
+              "explain": "新規侵入と正規接続の応答の区別がありません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問のFW対策を開始方向まで含めて構成する。",
+          "lines": [
+            {
+              "code": "X社が運用・保守を行う機器から、"
+            },
+            {
+              "code": "X社FWの方向に確立されるTCPコネクションだけを、"
+            },
+            {
+              "code": "通信装置内のFWで許可する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "管理対象、方向、TCP接続という三つの限定が必要です。",
+          "ngExplain": "単に『外向き通信を許可』では対象や接続の意味が曖昧です。"
+        }
+      ]
+    },
+    {
+      "id": "qos-zero",
+      "title": "TCPの再送にも接続の境界がある",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "MQTT（Message Queuing Telemetry Transport）はメッセージを配信するプロトコルです。QoS（Quality of Service）0ではMQTT層の送達確認を行わず、TCPに任せます。しかし送信途中に電源断などでTCP接続が失われると、TCPの再送だけで次の接続へメッセージを引き継げるわけではありません。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "QoS0でTCP接続が正常に続いているとき、バイトの再送を担う層は？",
+          "choices": [
+            {
+              "text": "TCP層",
+              "ok": true,
+              "explain": "この条件ではTCPが確認・再送を行います。MQTT層でPUBLISH確認はしません。"
+            },
+            {
+              "text": "MQTTのPUBREC",
+              "ok": false,
+              "explain": "PUBRECを使うのは原問のQoS2の手順です。"
+            },
+            {
+              "text": "DNS層",
+              "ok": false,
+              "explain": "名前解決はメッセージの再送を担いません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "消失し得る条件を限定する",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "TCPの{a}にデバイスが電源断し、{b}が失われると、TCPの再送だけではメッセージ消失を防げない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "処理の時点",
+              "why": "送信完了後とは区別します。",
+              "choices": [
+                {
+                  "text": "何も送っていない時間だけ",
+                  "ok": false,
+                  "explain": "未送達メッセージの説明になりません。"
+                },
+                {
+                  "text": "送信処理中",
+                  "ok": true,
+                  "explain": "まだ送信中のメッセージがある状態を具体化します。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "失われる状態",
+              "why": "再送処理の前提となる接続です。",
+              "choices": [
+                {
+                  "text": "TCPコネクション",
+                  "ok": true,
+                  "explain": "旧接続の送信状態を次の接続へ自動的に移す保証はありません。"
+                },
+                {
+                  "text": "VLAN番号だけ",
+                  "ok": false,
+                  "explain": "この設問で問う電源断時のTCPの限界と違います。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "『TCPには再送があるから、電源断を含めメッセージは絶対消えない』が誤りなのは？",
+          "choices": [
+            {
+              "text": "TCP接続を越える保存・再送は別の仕組みだから",
+              "ok": true,
+              "explain": "アプリ側で保持し再送する設計がなければ、接続喪失をまたげません。"
+            },
+            {
+              "text": "TCPに再送が全くないから",
+              "ok": false,
+              "explain": "TCPにも再送はあります。その適用範囲が論点です。"
+            },
+            {
+              "text": "QoS0はIPアドレスを使わないから",
+              "ok": false,
+              "explain": "通信の宛先はIPで指定します。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：一時的なパケット損失だけで、TCP接続も両端の状態も正常に維持された。考え方は？",
+          "choices": [
+            {
+              "text": "必ずMQTTメッセージが永久に消える",
+              "ok": false,
+              "explain": "一時損失だけで消失を断定しません。"
+            },
+            {
+              "text": "TCP接続を必ず張り直す必要がある",
+              "ok": false,
+              "explain": "再送で回復できる接続維持中の損失です。"
+            },
+            {
+              "text": "TCPの再送で回復できる範囲にある",
+              "ok": true,
+              "explain": "接続が失われる電源断の条件とは分けて考えます。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問の消失条件を具体的に構成する。",
+          "lines": [
+            {
+              "code": "TCPの送信処理中に、"
+            },
+            {
+              "code": "デバイスの電源断などによって、"
+            },
+            {
+              "code": "TCPコネクションが開放された場合。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "時点、原因、接続喪失がそろった説明です。",
+          "ngExplain": "『電源断』だけでなく、送信中の接続が失われることまで書きます。"
+        }
+      ]
+    },
+    {
+      "id": "qos-two",
+      "title": "処理開始の合図で重複を防ぐ",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "原問のQoS2手順はPUBLISH、PUBREC、PUBREL、PUBCOMPです。受信者はPUBLISHを保存し、PUBRECの後でPUBRELを受けるまで業務処理を待ちます。原図注記では、処理開始後のPUBLISHを新しいものと扱うので、送信側がPUBLISH再送段階を抜けたことを確認してから処理するのが重要です。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "送信者 → 受信者 : PUBLISH",
+              "受信者 → 送信者 : PUBREC",
+              "送信者 → 受信者 : PUBREL",
+              "受信者 → 送信者 : PUBCOMP"
+            ],
+            "caption": "説明用：原問のQoS2手順"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "原問の受信者がメッセージ処理を開始する契機は？",
+          "choices": [
+            {
+              "text": "TCP接続が切れた瞬間",
+              "ok": false,
+              "explain": "切断は処理を始める合図ではありません。"
+            },
+            {
+              "text": "PUBRELを受け取る",
+              "ok": true,
+              "explain": "送信側がPUBLISHの受信を把握し、次の段階へ進んだ後です。"
+            },
+            {
+              "text": "PUBLISHを見た瞬間に毎回処理する",
+              "ok": false,
+              "explain": "再送を含むPUBLISHで業務処理が重複する危険があります。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "待つ理由と合図",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "受信者はPUBRECを送り、{a}を受けるまで処理を保留する。目的は{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "次の合図",
+              "why": "送信側がリリースを指示する段階です。",
+              "choices": [
+                {
+                  "text": "PUBREL",
+                  "ok": true,
+                  "explain": "原図で受信者のメッセージ処理に先立つ合図です。"
+                },
+                {
+                  "text": "SUBACK",
+                  "ok": false,
+                  "explain": "購読要求への応答でありQoS2の処理開始合図ではありません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "保留の目的",
+              "why": "再送されたメッセージを再処理しないためです。",
+              "choices": [
+                {
+                  "text": "トピック名の暗号化",
+                  "ok": false,
+                  "explain": "送達確認の順序は暗号化機能ではありません。"
+                },
+                {
+                  "text": "メッセージの重複処理を防ぐこと",
+                  "ok": true,
+                  "explain": "業務処理を二重に行わないようにします。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "PUBRECを受けた送信者が以後PUBRELの再送段階へ進むことが重要なのは？",
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.075,
+            "bottom": 0.42,
+            "label": "図3：保存期間と処理開始の関係を読む（IPA原図）"
+          },
+          "choices": [
+            {
+              "text": "宛先IPをなくすため",
+              "ok": false,
+              "explain": "通信先の指定は依然必要です。"
+            },
+            {
+              "text": "受信側が処理を始めた後のPUBLISH再送を避けるため",
+              "ok": true,
+              "explain": "原図の『処理開始後のPUBLISHは新しいもの』という条件と結び付きます。"
+            },
+            {
+              "text": "全てのTCP確認応答が不要になるため",
+              "ok": false,
+              "explain": "MQTTの確認はTCPの送達確認を消しません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：設定適用をPUBLISH受信直後に実行し、その後同じPUBLISHが再送された。原図の受信側条件では？",
+          "choices": [
+            {
+              "text": "新しいメッセージとして二重に適用する危険がある",
+              "ok": true,
+              "explain": "PUBRELまで保留する必要性を逆の条件から確認できます。"
+            },
+            {
+              "text": "必ず暗号化に失敗する",
+              "ok": false,
+              "explain": "重複処理と暗号化は別です。"
+            },
+            {
+              "text": "SUBSCRIBEが自動で取り消される",
+              "ok": false,
+              "explain": "購読の取り消しはこの条件からは導けません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問の順序と目的を再構成する。",
+          "lines": [
+            {
+              "code": "PUBLISHを保存し、PUBRECを送信して、"
+            },
+            {
+              "code": "PUBRELを受信するまで処理を保留し、"
+            },
+            {
+              "code": "メッセージの重複を防いで処理した後、PUBCOMPを返す。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "原問の実装上の仮定に沿った順序です。QoS2の一般的な全実装にこの処理時点を一律に当てはめません。",
+          "ngExplain": "PUBRECとPUBRELを逆にしないこと、保存と業務処理を区別することが重要です。"
+        }
+      ]
+    },
+    {
+      "id": "topics",
+      "title": "欲しい情報を購読し送り手で保存する",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "MQTTでは、受信したい種類をトピック名で購読し、配信元はPUBLISHでメッセージを出します。原問のconfig/DiはデバイスDiへの設定情報、status/DiはDiからの稼働情報です。交換サーバが配信を仲介し、接続ごとの送信者・受信者を分けて考えます。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "biz",
+                "label": "業務サーバ",
+                "icon": "server",
+                "x": 45,
+                "y": 65
+              },
+              {
+                "id": "broker",
+                "label": "交換サーバ",
+                "icon": "server",
+                "x": 170,
+                "y": 65
+              },
+              {
+                "id": "dev",
+                "label": "デバイスDi",
+                "icon": "server",
+                "x": 295,
+                "y": 65
+              },
+              {
+                "id": "edge",
+                "label": "エッジ",
+                "icon": "server",
+                "x": 170,
+                "y": 155
+              }
+            ],
+            "links": [
+              {
+                "from": "biz",
+                "to": "broker",
+                "label": "config / status"
+              },
+              {
+                "from": "broker",
+                "to": "dev",
+                "label": "config / status"
+              },
+              {
+                "from": "broker",
+                "to": "edge",
+                "label": "status"
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "デバイスD7が設定情報を受けたいとき、事前に交換サーバへ送る要求は？",
+          "choices": [
+            {
+              "text": "PUBLISHだけ",
+              "ok": false,
+              "explain": "情報を発行する行為であり、購読登録にはなりません。"
+            },
+            {
+              "text": "PUBCOMP",
+              "ok": false,
+              "explain": "QoS2送信完了の確認で、購読要求ではありません。"
+            },
+            {
+              "text": "SUBSCRIBE",
+              "ok": true,
+              "explain": "購読するトピックを指定して配信先になります。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "購読と保存の担当",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "Diは{a}を購読する。配信中に{b}が電源断したら、送信者である{c}がPUBLISHを保存して再送する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "設定トピック",
+              "why": "機器iへの設定が対象です。",
+              "choices": [
+                {
+                  "text": "status/Di",
+                  "ok": false,
+                  "explain": "機器から送る稼働情報のトピックです。"
+                },
+                {
+                  "text": "config/Di",
+                  "ok": true,
+                  "explain": "業務サーバから特定機器への設定情報です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "停止した受信側",
+              "why": "交換サーバから送っている区間です。",
+              "choices": [
+                {
+                  "text": "デバイスDi",
+                  "ok": true,
+                  "explain": "設定を受け取る側の電源断を考えています。"
+                },
+                {
+                  "text": "業務サーバ",
+                  "ok": false,
+                  "explain": "上流の発行元であり、この区間の受信者ではありません。"
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "保存する送信側",
+              "why": "再送できるように保持する側です。",
+              "choices": [
+                {
+                  "text": "電源断したDiだけ",
+                  "ok": false,
+                  "explain": "受信していない情報を停止機器だけに任せられません。"
+                },
+                {
+                  "text": "交換サーバ",
+                  "ok": true,
+                  "explain": "停止したDiへ送る側なので、その送信メッセージを保存します。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "原問で稼働情報にQoS0を採る判断の根拠として、安定稼働を見込む受信先は？",
+          "choices": [
+            {
+              "text": "任意の出張先PC",
+              "ok": false,
+              "explain": "原問の稼働情報の配信先ではありません。"
+            },
+            {
+              "text": "業務サーバ及びエッジサーバ",
+              "ok": true,
+              "explain": "稼働情報を受け取る側が安定しているという本文の仮定です。必達を保証するわけではありません。"
+            },
+            {
+              "text": "電源断し得るデバイスだけ",
+              "ok": false,
+              "explain": "設定情報と稼働情報の配信方向を逆にしています。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：D8ではなくD9だけの設定情報を受ける機器に変わる。購読対象は？",
+          "choices": [
+            {
+              "text": "config/D9",
+              "ok": true,
+              "explain": "用途のconfigと機器識別子D9の両方を合わせます。"
+            },
+            {
+              "text": "status/D9",
+              "ok": false,
+              "explain": "同じ機器でも情報の用途が違います。"
+            },
+            {
+              "text": "config/D8",
+              "ok": false,
+              "explain": "対象デバイスが変更前のままです。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問の設定情報が届くまでを並べる。",
+          "lines": [
+            {
+              "code": "DiがSUBSCRIBEでconfig/Diを購読し、"
+            },
+            {
+              "code": "業務サーバが発行した設定を交換サーバがDiへ配信し、"
+            },
+            {
+              "code": "Diが停止している場合は交換サーバが保存して再送する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "購読要求、トピック、受信機器、保存機器がそろっています。",
+          "ngExplain": "一つの通信全体で送信者が固定なのではなく、交換サーバ以降では交換サーバが送信者です。"
+        }
+      ]
+    },
+    {
+      "id": "latency",
+      "title": "繰り返す待ち時間を短くする",
+      "targets": [
+        "s2-4"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "RTT（Round Trip Time）は通信の往復時間です。原問はT=m×t1+t2、t1は業務サーバと交換サーバ間の2RTT、t2は交換サーバとデバイス間の2RTTと近似します。m回繰り返す区間が遅いと全体が大きく遅れるので、配置の判断は掛け算される部分から行います。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "6,000回繰り返す区間と最後に1回だけ加わる区間がある。先に短くしたいのは？",
+          "choices": [
+            {
+              "text": "最後の1回だけの区間",
+              "ok": false,
+              "explain": "影響はありますが、この式では繰返し区間の影響が大きいです。"
+            },
+            {
+              "text": "メッセージと無関係なDNS名の文字数",
+              "ok": false,
+              "explain": "この近似式の時間要素ではありません。"
+            },
+            {
+              "text": "6,000回繰り返す区間",
+              "ok": true,
+              "explain": "1回の差が6,000倍で効くためです。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "式から同一拠点の機器を選ぶ",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "原問の4分程度という概算には、m×t1の両端である{a}と{b}が同一拠点であることが必要。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "発行元側",
+              "why": "図5のm回送る側です。",
+              "choices": [
+                {
+                  "text": "全デバイス",
+                  "ok": false,
+                  "explain": "工場側のデバイスを全て同一拠点に集める条件ではありません。"
+                },
+                {
+                  "text": "業務サーバ",
+                  "ok": true,
+                  "explain": "多数の設定を交換サーバへ順に送ります。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "中継側",
+              "why": "業務サーバから繰り返し受信する相手です。",
+              "choices": [
+                {
+                  "text": "交換サーバ",
+                  "ok": true,
+                  "explain": "こことのRTTをLANの20ミリ秒とします。"
+                },
+                {
+                  "text": "顧客サーバ",
+                  "ok": false,
+                  "explain": "図5のt1を形成する機器ではありません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "t1がLANの40msからWANの400msへ変わると、Tが大きく増える理由は？",
+          "choices": [
+            {
+              "text": "t2が6,000倍になるから",
+              "ok": false,
+              "explain": "式でmが掛かるのはt1です。"
+            },
+            {
+              "text": "TCPはWAN上では使えないから",
+              "ok": false,
+              "explain": "利用可否ではなく待ち時間が問題です。"
+            },
+            {
+              "text": "t1の差360msが6,000回分加算されるから",
+              "ok": true,
+              "explain": "頻出区間の遅延が全体の支配要因です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：m=100、t1=40ms、t2=400ms。T=m×t1+t2はいくつ？",
+          "choices": [
+            {
+              "text": "440ms",
+              "ok": false,
+              "explain": "m回という繰返しを落としています。"
+            },
+            {
+              "text": "4,400ms",
+              "ok": true,
+              "explain": "100×40+400です。繰り返しの外にt2を1回だけ加えます。"
+            },
+            {
+              "text": "44,000ms",
+              "ok": false,
+              "explain": "100×(40+400)としてt2も100回数えています。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "配置の根拠を式から答案へつなぐ。",
+          "lines": [
+            {
+              "code": "業務サーバと交換サーバ間の往復をデバイス数だけ繰り返すので、"
+            },
+            {
+              "code": "そのRTTをLANの値に抑えるため、"
+            },
+            {
+              "code": "業務サーバと交換サーバを同一拠点に設置する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "必要な二つの機器と、その配置が時間へ効く理由を説明できています。",
+          "ngExplain": "全デバイスを集める話ではなく、多数回繰り返す上流区間を見ます。"
+        }
+      ]
+    },
+    {
+      "id": "authorization",
+      "title": "コード・利用券・更新券を分ける",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "認証は相手を確認すること、認可は操作やアクセスを許すことです。API（Application Programming Interface）はプログラムから機能や情報を利用する窓口です。\n\n原問のWebAP（Webアプリケーション）は、認可サーバで発行された認可コードをトークンに交換し、アクセストークンを使って業務サーバのAPIへ要求します。期限切れ時の更新に使うのがリフレッシュトークンです。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "アクセストークンがまだないWebAPへの要求を、許可を得るためにリダイレクトする先は？",
+          "choices": [
+            {
+              "text": "認可サーバ",
+              "ok": true,
+              "explain": "APIのアクセス範囲を許可する役割を持ちます。"
+            },
+            {
+              "text": "交換サーバ",
+              "ok": false,
+              "explain": "MQTTメッセージの仲介先で、ここでの認可処理担当ではありません。"
+            },
+            {
+              "text": "任意のデバイス",
+              "ok": false,
+              "explain": "機器を自由に選んで認可させる構成ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "コードの受取先と更新方法",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "認可応答でコードを渡す相手は{a}。API要求には{b}を使い、その期限切れ後は有効な{c}で更新できる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "戻り先",
+              "why": "ブラウザ経由で顧客側のアプリへ戻ります。",
+              "choices": [
+                {
+                  "text": "WebAP",
+                  "ok": true,
+                  "explain": "コードを受けてトークン要求を行うアプリです。"
+                },
+                {
+                  "text": "デバイスDi",
+                  "ok": false,
+                  "explain": "工場機器へ認可コードを渡す流れではありません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "APIの利用券",
+              "why": "情報要求の資格として提示します。",
+              "choices": [
+                {
+                  "text": "認可コードを何度も直接提示",
+                  "ok": false,
+                  "explain": "コードはトークンと交換するものでAPI要求用ではありません。"
+                },
+                {
+                  "text": "アクセストークン",
+                  "ok": true,
+                  "explain": "許されたAPI範囲や有効期間を判断する情報です。"
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "更新券",
+              "why": "有効な期間内なら利用者確認なしに新しい利用券を得ます。",
+              "choices": [
+                {
+                  "text": "リフレッシュトークン",
+                  "ok": true,
+                  "explain": "アクセストークンの再発行に利用します。"
+                },
+                {
+                  "text": "失効したアクセストークンだけ",
+                  "ok": false,
+                  "explain": "原問の再発行の資格ではありません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "リフレッシュトークンを業務サーバのAPIに直接出すのではない理由は？",
+          "choices": [
+            {
+              "text": "リフレッシュトークンはIPアドレスだから",
+              "ok": false,
+              "explain": "トークンは認可の情報でありネットワーク宛先ではありません。"
+            },
+            {
+              "text": "認可コードと必ず同じ値だから",
+              "ok": false,
+              "explain": "原問では別の役割の情報として扱います。"
+            },
+            {
+              "text": "API利用とトークン更新は要求先も目的も異なるから",
+              "ok": true,
+              "explain": "更新は認可サーバ、API利用は業務サーバです。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：アクセストークンは期限切れだが、リフレッシュトークンは有効。原問の仕組みでは？",
+          "choices": [
+            {
+              "text": "MQTTのSUBSCRIBEでトークンを更新する",
+              "ok": false,
+              "explain": "別のプロトコルの機能を混同しています。"
+            },
+            {
+              "text": "認可サーバへ更新要求し、新アクセストークンでAPIへ再要求する",
+              "ok": true,
+              "explain": "有効な更新資格を使う流れです。"
+            },
+            {
+              "text": "期限切れのアクセストークンを永久に使う",
+              "ok": false,
+              "explain": "APIアクセスの有効期間を守っていません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "最初の認可からAPI利用までの順序を並べる。",
+          "lines": [
+            {
+              "code": "認可サーバへ要求し、認可応答でWebAPが認可コードを受け、"
+            },
+            {
+              "code": "そのコードを用いてアクセストークンとリフレッシュトークンを取得し、"
+            },
+            {
+              "code": "アクセストークンで業務サーバのAPIへアクセスする。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "認可サーバ、WebAP、二つのトークンの役割が区別できています。",
+          "ngExplain": "コードを取得する前にトークン交換せず、更新券で直接APIを呼ばない順序にします。"
+        }
+      ]
+    },
+    {
+      "id": "expiry",
+      "title": "古い権限が残る時間を求める",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "原問のアクセストークンにはアクセス可能なAPIと有効期間が含まれます。認可サーバ上の定義を変更しても、すでに発行済みで有効なアクセストークンが直ちに書き換わるとはしません。古い権限が残り得る最長時間は、アクセストークンの有効期間から考えます。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "00:00直前 旧トークン発行",
+              "00:00     API範囲を変更",
+              "10:00まで 旧トークンが期限切れ"
+            ],
+            "caption": "説明用：変更直前に発行された場合"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "原問のアクセストークンは10分、更新用トークンは60分有効。API利用時に提示される旧権限の期限は？",
+          "choices": [
+            {
+              "text": "アクセストークンの10分",
+              "ok": true,
+              "explain": "利用中のAPI権限を持つトークンの残り時間が効きます。"
+            },
+            {
+              "text": "必ず60分",
+              "ok": false,
+              "explain": "60分は更新資格の期限であり、旧アクセストークンの期限ではありません。"
+            },
+            {
+              "text": "必ず70分",
+              "ok": false,
+              "explain": "二つの有効期間を足す設計ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "最悪の発行時刻を考える",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "権限変更の{a}に旧アクセストークンが発行されていたとき、変更反映まで最長{b}分を見込む。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "時刻",
+              "why": "旧権限が最も長く残る条件です。",
+              "choices": [
+                {
+                  "text": "直前",
+                  "ok": true,
+                  "explain": "有効期間がほぼ丸ごと残ります。"
+                },
+                {
+                  "text": "10分以上前",
+                  "ok": false,
+                  "explain": "そのトークンはすでに期限切れで、最長の条件ではありません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "上限",
+              "why": "原問のアクセストークンの期間を使います。",
+              "choices": [
+                {
+                  "text": "60",
+                  "ok": false,
+                  "explain": "更新用トークンの期間を使っています。"
+                },
+                {
+                  "text": "10",
+                  "ok": true,
+                  "explain": "古い利用券の期限が切れるまでです。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "リフレッシュトークンが60分有効でも、旧API範囲が60分残るとはしない理由は？",
+          "choices": [
+            {
+              "text": "更新では変更後の定義による新アクセストークンを得るから",
+              "ok": true,
+              "explain": "旧権限を使い続ける期間は旧アクセストークンの期限で区切られます。"
+            },
+            {
+              "text": "更新時に必ず顧客工場を停止するから",
+              "ok": false,
+              "explain": "そのような操作は本文の条件にありません。"
+            },
+            {
+              "text": "60分という値は通信時間だから",
+              "ok": false,
+              "explain": "有効期間であってRTTではありません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：アクセストークン5分、更新用トークン30分で同じ仕組み。最長の反映待ちは？",
+          "choices": [
+            {
+              "text": "30分",
+              "ok": false,
+              "explain": "更新券の期限と旧API権限の期限を混同しています。"
+            },
+            {
+              "text": "35分",
+              "ok": false,
+              "explain": "二つの時間を直列に加える問題ではありません。"
+            },
+            {
+              "text": "5分",
+              "ok": true,
+              "explain": "旧アクセストークンの有効期間を使います。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問の10分を理由付きで導く。",
+          "lines": [
+            {
+              "code": "変更直前に発行された旧アクセストークンを想定すると、"
+            },
+            {
+              "code": "その有効期間の10分間は旧権限が残り得るため、"
+            },
+            {
+              "code": "API範囲の変更が有効になるのは最長で10分後である。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "前提は本文のトークン運用です。即時失効機能を使う別の設計まで一般化しません。",
+          "ngExplain": "有効期間は二つありますが、APIに提示する方を基準にします。"
+        }
+      ]
+    },
+    {
+      "id": "redirect",
+      "title": "コードを渡す先を固定する",
+      "targets": [
+        "s3-1",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "redirect_uriは、認可結果を返すWebAPの場所を指定します。ここを書き換えられると、認可応答に含むコードを別の場所へ送ってしまう危険があります。原問では認可サーバが登録済みの絶対URIと照合するので、顧客には戻り先の固定と事前通知を依頼します。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "書換えられたredirect_uriによって漏れ得る認可コードが含まれるのは？",
+          "choices": [
+            {
+              "text": "IPsecの外側IPヘッダ",
+              "ok": false,
+              "explain": "Webのリダイレクト結果を格納する場所ではありません。"
+            },
+            {
+              "text": "認可応答",
+              "ok": true,
+              "explain": "本文の302応答のLocationにコードが含まれます。"
+            },
+            {
+              "text": "MQTTのPUBREC",
+              "ok": false,
+              "explain": "MQTTの送達確認であり、認可コードを運びません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "誰が何を照合するか",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "{a}サーバが、要求中のURIと事前登録の{b}を一致確認する。顧客にはWebAPのURIを{c}して通知してもらう。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "検査側",
+              "why": "コードを発行し戻り先を選ぶ側です。",
+              "choices": [
+                {
+                  "text": "交換",
+                  "ok": false,
+                  "explain": "MQTTブローカの役割とは別です。"
+                },
+                {
+                  "text": "認可",
+                  "ok": true,
+                  "explain": "不正な戻り先にコードを送る前に確認します。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "比較する情報",
+              "why": "スキームやホストも含めて場所を特定します。",
+              "choices": [
+                {
+                  "text": "絶対URI",
+                  "ok": true,
+                  "explain": "戻り先を十分に特定できる登録情報です。"
+                },
+                {
+                  "text": "ページの表示名だけ",
+                  "ok": false,
+                  "explain": "同名の別サイトなどを区別できません。"
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "顧客への依頼",
+              "why": "要求のたびに任意のURIへ変えない条件です。",
+              "choices": [
+                {
+                  "text": "毎回ランダムに変更",
+                  "ok": false,
+                  "explain": "事前登録した値との一致確認に合いません。"
+                },
+                {
+                  "text": "固定",
+                  "ok": true,
+                  "explain": "固定した絶対URIを事前通知し登録します。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "『URLを教えて』だけでなく、固定と事前登録を求める理由は？",
+          "choices": [
+            {
+              "text": "要求の値を無条件に信頼せず、既知の戻り先と比較するため",
+              "ok": true,
+              "explain": "登録済みの正規WebAP以外へコードを送らない設計です。"
+            },
+            {
+              "text": "URIをIPアドレスへ必ず変えるため",
+              "ok": false,
+              "explain": "名前解決の依頼ではありません。"
+            },
+            {
+              "text": "APIを常に匿名で開放するため",
+              "ok": false,
+              "explain": "認可結果を安全に渡すための対策です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.66,
+            "bottom": 0.84,
+            "label": "図6：認可要求・応答のURI欄（IPA原図）"
+          }
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：登録先はhttps://client.example/callback、要求先はhttps://other.example/callback。パスは同じ。対応は？",
+          "choices": [
+            {
+              "text": "callbackが同じなので許可する",
+              "ok": false,
+              "explain": "攻撃者のサイトへコードを送る可能性があります。"
+            },
+            {
+              "text": "HTTPSなら全て許可する",
+              "ok": false,
+              "explain": "暗号化は正しい戻り先であることを保証しません。"
+            },
+            {
+              "text": "一致しないので拒否する",
+              "ok": true,
+              "explain": "ホストが違うため別の絶対URIです。パスだけでは不十分です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問の顧客への依頼を二つの条件付きで構成する。",
+          "lines": [
+            {
+              "code": "WebAPのURIを固定し、"
+            },
+            {
+              "code": "その絶対URIを事前に通知してもらい、"
+            },
+            {
+              "code": "認可サーバの照合対象として登録する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "固定することと事前に絶対URIを通知することの両方が必要です。",
+          "ngExplain": "『HTTPSにする』だけでは書換えられた宛先を排除できません。"
+        }
+      ]
+    },
+    {
+      "id": "nat",
+      "title": "境界の前後で送信元と宛先を読む",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "NAT（Network Address Translation）はアドレスの対応付けを行います。原問では顧客網とXシステムの間で1:1静的双方向NATを使い、送信元と宛先の両方を変換します。PはXシステム側、P′は顧客網側のプライベートIPを表します。",
+          "fig": {
+            "kind": "header",
+            "unit": 32,
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "送信元IP（変換する）",
+                    "bits": 32,
+                    "hi": true
+                  }
+                ]
+              },
+              {
+                "fields": [
+                  {
+                    "t": "宛先IP（変換する）",
+                    "bits": 32,
+                    "hi": true
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：IPヘッダのアドレス欄だけを抜粋"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "顧客サーバからエッジサーバへ送るとき、NATを越えたXシステム側で使える宛先は？",
+          "choices": [
+            {
+              "text": "NATルータ-P′をそのまま使う",
+              "ok": false,
+              "explain": "顧客網側で見える入口のアドレスと変換後を混同しています。"
+            },
+            {
+              "text": "エッジサーバ-P",
+              "ok": true,
+              "explain": "受信する実体をXシステム側のアドレスで指定します。"
+            },
+            {
+              "text": "顧客サーバ-P′",
+              "ok": false,
+              "explain": "これは変換前の送信者側アドレスです。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "変換後の二つのIP",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "顧客網からXシステム方向の通信では、送信元IPを{a}へ、宛先IPを{b}へ変換する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "送信元",
+              "why": "Xシステム側から見える送信者の対応アドレスです。",
+              "choices": [
+                {
+                  "text": "エッジサーバ-P",
+                  "ok": false,
+                  "explain": "こちらは宛先なので逆です。"
+                },
+                {
+                  "text": "NATルータ-P",
+                  "ok": true,
+                  "explain": "元の顧客網アドレスをそのまま持ち込みません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "宛先",
+              "why": "Xシステム内で受け取る相手です。",
+              "choices": [
+                {
+                  "text": "エッジサーバ-P",
+                  "ok": true,
+                  "explain": "MQTTサーバ機能を持つ受信先です。"
+                },
+                {
+                  "text": "NATルータ-P",
+                  "ok": false,
+                  "explain": "こちらはこの変換後の送信元です。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "宛先変換だけ書いても原問の答案として不足する理由は？",
+          "choices": [
+            {
+              "text": "NATがTLS証明書も全て書き換えるから",
+              "ok": false,
+              "explain": "証明書の書換えはNATの説明ではありません。"
+            },
+            {
+              "text": "原問は送信元と宛先の両方を変換する条件だから",
+              "ok": true,
+              "explain": "元の顧客網とXシステムをまたぐ二つの対応を説明します。"
+            },
+            {
+              "text": "NATは必ずMACアドレスだけを変換するから",
+              "ok": false,
+              "explain": "この設問ではIPアドレスの変換です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：顧客側10.0.0.9→入口10.0.0.1を、X側の送信元172.16.0.1、受信先172.16.0.8へ対応させる。変換後は？",
+          "choices": [
+            {
+              "text": "172.16.0.1 → 172.16.0.8",
+              "ok": true,
+              "explain": "送信者の対応アドレスと実際の受信先の順です。"
+            },
+            {
+              "text": "172.16.0.8 → 172.16.0.1",
+              "ok": false,
+              "explain": "送信元と宛先を反転しています。"
+            },
+            {
+              "text": "10.0.0.9 → 10.0.0.1",
+              "ok": false,
+              "explain": "変換前のままです。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問図8を見て、変換後の送信元から記述する。",
+          "lines": [
+            {
+              "code": "顧客ネットワークからXシステムへの通信では、"
+            },
+            {
+              "code": "送信元IPアドレスをNATルータ-Pに、"
+            },
+            {
+              "code": "宛先IPアドレスをエッジサーバ-Pに変換する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "二つのアドレスと向きが一致しています。PとP′を混ぜないことが重要です。",
+          "ngExplain": "変換前に見える入口と、変換後に届く相手を区別します。",
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.3,
+            "bottom": 0.675,
+            "label": "図8：PとP′の境界、NATとFW（IPA原図）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "customer-fw",
+      "title": "FWの置かれた側のアドレスで書く",
+      "targets": [
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "顧客FWはNATより顧客ネットワーク側にあるので、変換前のアドレスで通信を見ます。顧客サーバはNATルータの顧客側アドレスへ接続し、その先でエッジサーバへ対応付けられます。原問のMQTT over TLSはTCPの8883番を使います。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "顧客FWが顧客サーバからの最初の接続で見る宛先は？",
+          "choices": [
+            {
+              "text": "エッジサーバ-P",
+              "ok": false,
+              "explain": "NAT通過後のXシステム側の宛先です。"
+            },
+            {
+              "text": "X社の交換サーバだけ",
+              "ok": false,
+              "explain": "将来構想の顧客サーバはローカルのエッジへ接続します。"
+            },
+            {
+              "text": "NATルータ-P′",
+              "ok": true,
+              "explain": "顧客網から見える入口であり、まだ宛先変換前です。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "許可ルールの三要素",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "顧客FWには、{a}から{b}のTCP{c}番へ向かう通信を許可する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "送信元",
+              "why": "顧客網側のクライアントです。",
+              "choices": [
+                {
+                  "text": "顧客サーバ-P′",
+                  "ok": true,
+                  "explain": "変換前に存在する送信者です。"
+                },
+                {
+                  "text": "NATルータ-P",
+                  "ok": false,
+                  "explain": "変換後にXシステム側で使う送信元です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "宛先",
+              "why": "顧客FWから見える入口です。",
+              "choices": [
+                {
+                  "text": "エッジサーバ-P",
+                  "ok": false,
+                  "explain": "顧客FWでの観測位置が違います。"
+                },
+                {
+                  "text": "NATルータ-P′",
+                  "ok": true,
+                  "explain": "顧客網側のNATアドレスです。"
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "ポート",
+              "why": "原問が指定するMQTT接続先です。",
+              "choices": [
+                {
+                  "text": "8883",
+                  "ok": true,
+                  "explain": "この原問でTLSを使うMQTTサーバのTCPポートです。"
+                },
+                {
+                  "text": "443",
+                  "ok": false,
+                  "explain": "HTTPSの代表的ポートですがMQTTの本文指定と違います。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "送信元をNATルータ-Pにして顧客FWの許可ルールを書くと合わない理由は？",
+          "choices": [
+            {
+              "text": "TLSを使うとFWがIPを見られないから",
+              "ok": false,
+              "explain": "TLSで保護しても転送用のIP情報は必要です。"
+            },
+            {
+              "text": "その送信元になるのはNAT変換後だから",
+              "ok": true,
+              "explain": "顧客FWでは元の顧客サーバ-P′として見えます。"
+            },
+            {
+              "text": "NATのPはMACアドレスだから",
+              "ok": false,
+              "explain": "Pは原図でIPアドレスを表す記号です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：FWをNATよりXシステム側へ置き、変換後の通信を見るなら宛先は？",
+          "choices": [
+            {
+              "text": "エッジサーバ-P",
+              "ok": true,
+              "explain": "観測地点が変換後へ移ったので宛先も変わります。"
+            },
+            {
+              "text": "常にNATルータ-P′",
+              "ok": false,
+              "explain": "どの地点で見ているかを無視しています。"
+            },
+            {
+              "text": "常に顧客サーバ-P′",
+              "ok": false,
+              "explain": "クライアントの変換前送信元であり宛先ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問の顧客FWの許可対象を一文にする。",
+          "lines": [
+            {
+              "code": "顧客サーバ-P′から、"
+            },
+            {
+              "code": "NATルータ-P′のTCPポート8883番への、"
+            },
+            {
+              "code": "通信を顧客FWで許可する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "送信元、宛先、ポートが全て顧客FWの観測位置に合っています。",
+          "ngExplain": "エッジサーバ-Pをここに直接書くとNAT前後が混ざります。"
+        }
+      ]
+    },
+    {
+      "id": "bridge",
+      "title": "外へ出すトピックを限定する",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "将来構想ではエッジサーバがMQTTサーバとなり、機密情報は工場内で交換します。デバイスは複数の相手とTCP接続できないので、エッジのMQTTブリッジで必要なトピックだけX社の交換サーバへ橋渡しします。config/Di・status/DiとConfidential/Diの扱いを分けます。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "dev",
+                "label": "デバイス",
+                "icon": "server",
+                "x": 40,
+                "y": 70
+              },
+              {
+                "id": "edge",
+                "label": "エッジ",
+                "icon": "server",
+                "x": 160,
+                "y": 70
+              },
+              {
+                "id": "x",
+                "label": "交換サーバ",
+                "icon": "server",
+                "x": 290,
+                "y": 70
+              },
+              {
+                "id": "customer",
+                "label": "顧客サーバ",
+                "icon": "server",
+                "x": 160,
+                "y": 155
+              }
+            ],
+            "links": [
+              {
+                "from": "dev",
+                "to": "edge",
+                "label": "全情報"
+              },
+              {
+                "from": "edge",
+                "to": "customer",
+                "label": "工場内"
+              },
+              {
+                "from": "edge",
+                "to": "x",
+                "label": "config/status"
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "機密情報Confidential/Diを工場に閉じるには、ブリッジの対象をどうする？",
+          "choices": [
+            {
+              "text": "全トピックを無条件に転送する",
+              "ok": false,
+              "explain": "内部情報までX社へ出てしまいます。"
+            },
+            {
+              "text": "デバイスに外部との2本目の接続を必ず作る",
+              "ok": false,
+              "explain": "複数の相手と接続できないという原問の制約に反します。"
+            },
+            {
+              "text": "Confidential/Diを外部転送対象から外す",
+              "ok": true,
+              "explain": "機密情報を工場内のエッジとクライアントの間にとどめます。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "外部連携に必要な二つ",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "原問で交換サーバと送受信するトピックは{a}と{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "設定情報",
+              "why": "業務サーバから機器への従来の情報交換です。",
+              "choices": [
+                {
+                  "text": "config/Di",
+                  "ok": true,
+                  "explain": "既存の設定情報を引き続き橋渡しします。"
+                },
+                {
+                  "text": "Confidential/Di",
+                  "ok": false,
+                  "explain": "工場内に限定する機密情報です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "稼働情報",
+              "why": "機器から業務サーバへの従来の情報交換です。",
+              "choices": [
+                {
+                  "text": "全トピック",
+                  "ok": false,
+                  "explain": "機密情報も含める広すぎる指定です。"
+                },
+                {
+                  "text": "status/Di",
+                  "ok": true,
+                  "explain": "従来の稼働情報をX社へ伝えます。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "ブリッジを置く理由は、単にデバイスの台数が多いからではない。原問の制約は？",
+          "choices": [
+            {
+              "text": "TLSが工場内で使えない",
+              "ok": false,
+              "explain": "そのような制約は原問にありません。"
+            },
+            {
+              "text": "業務サーバはIPを持たない",
+              "ok": false,
+              "explain": "業務サーバはネットワーク上の通信相手です。"
+            },
+            {
+              "text": "デバイスが複数機器とTCP接続できない",
+              "ok": true,
+              "explain": "エッジに接続をまとめ、エッジが外部との中継を担います。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：新しいローカル専用トピックsecret/D9が追加された。外へ出してはいけない場合は？",
+          "choices": [
+            {
+              "text": "config/Diも必ず削除する",
+              "ok": false,
+              "explain": "設定情報の外部連携まで止める理由はありません。"
+            },
+            {
+              "text": "ブリッジの外部転送対象に追加しない",
+              "ok": true,
+              "explain": "名前を暗記せず、情報の持出し条件で判断します。"
+            },
+            {
+              "text": "新しいので自動的に全部転送する",
+              "ok": false,
+              "explain": "ローカル限定の条件を無視しています。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問の連携方針を内部と外部で分ける。",
+          "lines": [
+            {
+              "code": "Confidential/Diの交換は工場内にとどめ、"
+            },
+            {
+              "code": "MQTTブリッジにはconfig/Diとstatus/Diを定義して、"
+            },
+            {
+              "code": "交換サーバとの従来の情報交換を維持する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "二つの必要トピックと、転送しない機密情報を区別できています。",
+          "ngExplain": "単にブリッジを有効にするだけでなく、転送する集合を限定します。"
+        }
+      ]
+    },
+    {
+      "id": "add-client",
+      "title": "変換設定と許可設定は両方必要",
+      "targets": [
+        "s4-4"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "アドレス変換は行き先を対応付ける機能で、通信許可とは別です。原問の将来構想に顧客サーバをもう1台追加すると、Xシステム側ではそのサーバに対応するNAT設定とFW許可の追加が必要になります。既存サーバ用の設定が自動的に新サーバへ広がるとは考えません。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "新サーバのNAT対応を作ったのに通信装置内のFWが拒否する。足りない作業は？",
+          "choices": [
+            {
+              "text": "新しい通信を許可するFWルールの追加",
+              "ok": true,
+              "explain": "NATによる変換はFWの許可を意味しません。"
+            },
+            {
+              "text": "全ての証明書検証を停止する",
+              "ok": false,
+              "explain": "拒否の原因がFWルールである条件と合いません。"
+            },
+            {
+              "text": "顧客網の全IPを同じ値へ変える",
+              "ok": false,
+              "explain": "アドレス重複を招き、必要な許可設定にもなりません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "原問が求める二つの対応",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "工場の安全な情報交換",
+          "template": "NATルータに{a}の設定を追加し、通信装置内のFWに{b}を追加する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "変換の方式",
+              "why": "原問で採用した対応付け方式です。",
+              "choices": [
+                {
+                  "text": "VLAN IDだけ",
+                  "ok": false,
+                  "explain": "IPアドレスの静的対応付けが欠けます。"
+                },
+                {
+                  "text": "1:1静的双方向NAT",
+                  "ok": true,
+                  "explain": "新規サーバの通信に対応する変換設定を追加します。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "許可の設定",
+              "why": "変換できてもフィルタを越えなければ通信できません。",
+              "choices": [
+                {
+                  "text": "通信を許可するルール",
+                  "ok": true,
+                  "explain": "新規サーバの必要な通信を通す設定です。"
+                },
+                {
+                  "text": "全トラフィックの無条件許可",
+                  "ok": false,
+                  "explain": "必要以上の範囲を開放する対策ではありません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "『顧客サーバが増えただけだからXシステム側は変更不要』が原問で不適切なのは？",
+          "choices": [
+            {
+              "text": "静的な対応付けと許可範囲の対象が増えるから",
+              "ok": true,
+              "explain": "追加したサーバも既存の機器間境界を越えて利用します。"
+            },
+            {
+              "text": "顧客サーバが自動的に交換サーバになるから",
+              "ok": false,
+              "explain": "追加しても顧客サーバの役割は変わりません。"
+            },
+            {
+              "text": "MQTTがTCPを使わなくなるから",
+              "ok": false,
+              "explain": "台数によってプロトコルが変わることはありません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "工場の安全な情報交換",
+          "intro": "練習用の変更条件：必要なNAT設定は確認済み、FWの追加だけ未実施。次に行うべきことは？",
+          "choices": [
+            {
+              "text": "NAT設定を繰り返し増やすだけ",
+              "ok": false,
+              "explain": "FWの拒否はNAT設定の追加では解消しません。"
+            },
+            {
+              "text": "Confidentialを外部転送する",
+              "ok": false,
+              "explain": "通信許可の不足と情報公開方針は別です。"
+            },
+            {
+              "text": "通信装置内FWへ対象通信の許可ルールを追加する",
+              "ok": true,
+              "explain": "未完了の境界処理だけを具体的に補います。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "工場の安全な情報交換",
+          "lead": "原問の追加作業を二つとも挙げる。",
+          "lines": [
+            {
+              "code": "新しい顧客サーバに対応する1:1静的双方向NATをNATルータに追加し、"
+            },
+            {
+              "code": "次に、その通信を許可するルールを通信装置内のFWに追加して、"
+            },
+            {
+              "code": "アドレス変換と通信許可の両方を満たす。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "二つは独立に必要な対応です。ここでは説明を変換→許可→結果の順に構成しています。",
+          "ngExplain": "顧客FWだけの説明では、問われているXシステム側の対応を満たしません。"
+        },
+        {
+          "id": "independent",
+          "type": "info",
+          "title": "補助なしの原問へ",
+          "stage": "transfer",
+          "scaffold": 0,
+          "format": "読む",
+          "theme": "工場の安全な情報交換",
+          "body": "ここまでで部品ごとの判断を練習しました。次は「公式の原問を解く」から、教材の解説を閉じて原文・原図だけで挑戦してください。用語だけでなく、対象機器・通信方向・条件・結果を設問の指定に合わせてそろえます。原問の答案と学習記録は別に保存されます。"
+        }
+      ]
+    }
+  ]
+}

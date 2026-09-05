@@ -1,0 +1,2407 @@
+{
+  "examKey": "2021r03h/pm2/2",
+  "title": "二回線のBGP経路と監視を段階的に導入する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm2_ans.pdf",
+    "https://www.rfc-editor.org/rfc/rfc4271",
+    "https://www.rfc-editor.org/rfc/rfc2863"
+  ],
+  "sections": [
+    {
+      "id": "counter",
+      "title": "累積カウンタから通信量を求める",
+      "targets": [
+        "s1-1",
+        "s1-2",
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "counter-purpose",
+          "type": "info",
+          "title": "回線が混んでいるか、何を数えれば分かるか",
+          "format": "読む",
+          "theme": "累積カウンタから通信量を求める",
+          "scaffold": 5,
+          "stage": "concept",
+          "body": "回線は、1秒間に運べるデータ量に上限があります。実際に流れた量を比べると、混雑の目安になります。ルータのインタフェースは通信の接続口です。接続口ごとに、受信したデータ量を積み上げて記録できます。この数値が累積カウンタです。\n\n監視サーバはSNMP（Simple Network Management Protocol）というプロトコルで値を読みます。値そのものは『今の速度』ではありません。前回から増えた量と、経過した時間から速度を計算します。次の図は原問とは別の、練習用の数値です。",
+          "fig": {
+            "kind": "console",
+            "lines": ["説明用：同じ受信カウンタを2回読む", "10:00:00  1000 octets", "10:00:03  4000 octets", "差分      3000 octets / 3秒"],
+            "highlight": [1, 2],
+            "caption": "取得間隔中の再起動・カウンタ一周はない"
+          }
+        },
+        {
+          "id": "counter-difference",
+          "type": "quiz",
+          "title": "累積値が1000から4000へ増えた。この間に受信した量はどれか。",
+          "format": "選択",
+          "theme": "累積カウンタから通信量を求める",
+          "scaffold": 5,
+          "stage": "check",
+          "choices": [
+            {"text": "3000オクテット", "ok": true, "explain": "4000−1000で、この区間に増えた量だけを求めます。リセットや一周がないという条件です。"},
+            {"text": "4000オクテット", "ok": false, "explain": "最新の値には、前回の取得前に受信した1000オクテットも含まれます。"},
+            {"text": "5000オクテット", "ok": false, "explain": "二つの累積値を足すと、前回までの量を二重に数えます。取得値は区間ごとの量ではありません。"}
+          ]
+        },
+        {
+          "id": "counter-units",
+          "type": "info",
+          "title": "量を時間で割ると、平均の速さになる",
+          "format": "読む",
+          "theme": "累積カウンタから通信量を求める",
+          "scaffold": 5,
+          "stage": "concept",
+          "body": "1オクテットは8ビットです。ネットワークの仕様では、8ビットをまとめた単位にこの名前を使います。通常の1バイトも8ビットです。\n\n3秒間で3000オクテット増えたなら、1秒当たりの平均は1000オクテットです。これを8倍すると8000ビット／秒になります。『ビット／秒』と『オクテット／秒』を同じ数値のまま比べないことが大切です。\n\nこれは3秒間の平均です。最初の1秒に集中して流れたのか、3秒間に均等に流れたのかまでは分かりません。原問では、この取得間隔と見逃す変化も考えます。"
+        },
+        {
+          "id": "counter-unit-check",
+          "type": "quiz",
+          "title": "3秒で3000オクテット増えた。平均ビット／秒への計算として正しいものはどれか。",
+          "format": "選択",
+          "theme": "累積カウンタから通信量を求める",
+          "scaffold": 5,
+          "stage": "apply",
+          "choices": [
+            {"text": "3000×8÷3＝8000ビット／秒", "ok": true, "explain": "8倍でオクテットをビットへ直し、3秒で割って1秒当たりにします。割ってから8倍しても同じです。"},
+            {"text": "3000÷3＝1000ビット／秒", "ok": false, "explain": "この式の結果は1000オクテット／秒です。ビットへの変換が残っています。"},
+            {"text": "3000×8＝24000ビット／秒", "ok": false, "explain": "24000ビットは3秒間に流れた合計量です。1秒当たりの値ではないので、3で割ります。"}
+          ]
+        },
+        {
+          "id": "counter-1",
+          "format": "読む",
+          "theme": "累積カウンタから通信量を求める",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "二回の値の差が五分間の量",
+          "body": "ifHCInOctetsは受信したオクテット数を積算する64ビットのカウンタです。原問の5分間隔では、増分を8倍して300秒で割ります。これで平均ビット／秒になります。\n\n原問では、32ビットのカウンタが上限を超えて一周する場合も考えます。取得間隔中に一周だけしたなら、現在値に2の32乗を足してから前回値を引きます。再起動によるリセットや複数回の一周には、この計算をそのまま使えません。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "Xt−1：5分前の累積値"
+              },
+              {
+                "t": "Xt：現在の累積値"
+              },
+              {
+                "t": "差×8÷300：平均ビット/秒"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "counter-2",
+          "format": "選択",
+          "theme": "累積カウンタから通信量を求める",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "5分間の平均ビット/秒を求める式はどれか。",
+          "choices": [
+            {
+              "text": "(Xt−Xt−1)÷8×300",
+              "ok": false,
+              "explain": "ビット変換と時間平均が逆です。"
+            },
+            {
+              "text": "(Xt−Xt−1)×8÷300",
+              "ok": true,
+              "explain": "増分オクテットをビットへ変換し、300秒で割ります。"
+            },
+            {
+              "text": "Xt×8÷5",
+              "ok": false,
+              "explain": "起動後の累積値を使い、分と秒も混同しています。"
+            }
+          ]
+        },
+        {
+          "id": "counter-3",
+          "format": "選択",
+          "theme": "累積カウンタから通信量を求める",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "5分平均だけを見る問題点はどれか。",
+          "choices": [
+            {
+              "text": "取得間隔内の短いバーストが分からなくなる",
+              "ok": true,
+              "explain": "300秒の合計が同じなら瞬間的な集中は見えません。"
+            },
+            {
+              "text": "累積カウンタを取得できなくなる",
+              "ok": false,
+              "explain": "平均計算しても元の取得は可能です。"
+            },
+            {
+              "text": "必ずカウンタが一周する",
+              "ok": false,
+              "explain": "時間平均そのものがラップを発生させるわけではありません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.2,
+            "bottom": 0.83,
+            "label": "通信量MIBと5分取得の説明（IPA原典）"
+          }
+        },
+        {
+          "id": "counter-4",
+          "format": "穴埋め",
+          "theme": "累積カウンタから通信量を求める",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "単位変換とラップ補正を補え。",
+          "template": "増分オクテットを{a}倍し、{b}秒で割る。1回ラップしたら現在値Xtに{c}を足す。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "300",
+                  "ok": false,
+                  "explain": "これは時間の秒数です。"
+                },
+                {
+                  "text": "32",
+                  "ok": false,
+                  "explain": "カウンタ幅であり単位変換倍率ではありません。"
+                },
+                {
+                  "text": "8",
+                  "ok": true,
+                  "explain": "1オクテットは8ビットです。"
+                }
+              ],
+              "why": "1オクテットは8ビットです。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "5",
+                  "ok": false,
+                  "explain": "分のままではビット/秒になりません。"
+                },
+                {
+                  "text": "8",
+                  "ok": false,
+                  "explain": "ビット変換の倍率です。"
+                },
+                {
+                  "text": "300",
+                  "ok": true,
+                  "explain": "5分は300秒です。"
+                }
+              ],
+              "why": "5分は300秒です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "2^32−1",
+                  "ok": false,
+                  "explain": "値の個数は0を含め2^32個です。"
+                },
+                {
+                  "text": "300",
+                  "ok": false,
+                  "explain": "取得間隔ではラップを補正できません。"
+                },
+                {
+                  "text": "2^32",
+                  "ok": true,
+                  "explain": "32ビットカウンタの一周分です。"
+                }
+              ],
+              "why": "32ビットカウンタの一周分です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 24,
+            "top": 0.12,
+            "bottom": 0.51,
+            "label": "設問1の式とラップ選択肢（IPA原典）"
+          }
+        },
+        {
+          "id": "counter-5",
+          "format": "並べ替え",
+          "theme": "累積カウンタから通信量を求める",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "ラップを含む増分計算を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "現在値Xtに2^32を加えて一周分を補う"
+            },
+            {
+              "code": "補正したXtからXt−1を引く"
+            },
+            {
+              "code": "8倍して300秒で割る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "カウンタ最大値は2^32−1ですが、一周で進む値の個数は2^32です。",
+          "ngExplain": "カウンタ最大値は2^32−1ですが、一周で進む値の個数は2^32です。"
+        },
+        {
+          "id": "counter-6",
+          "format": "選択",
+          "theme": "累積カウンタから通信量を求める",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "取得間隔を1分へ短縮した。同じ平均式の分母はどれか。",
+          "choices": [
+            {
+              "text": "60",
+              "ok": true,
+              "explain": "単位をビット/秒にするため60秒で割ります。"
+            },
+            {
+              "text": "1",
+              "ok": false,
+              "explain": "分のままでは秒当たりになりません。"
+            },
+            {
+              "text": "300",
+              "ok": false,
+              "explain": "5分取得のときの分母です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "loopback",
+      "title": "物理リンク障害でもBGPピアを保つ",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "loopback-1",
+          "format": "読む",
+          "theme": "物理リンク障害でもBGPピアを保つ",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "ピアの住所を物理ポートに固定しない",
+          "body": "ルータ10と11はFWとの間に二つのOSPF経路を持ちます。ループバックIPをiBGPの接続先にすると、一方の物理経路が壊れても別経路で到達できます。FWは接続インタフェースが一つなので同じ効果はありません。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "ルータ",
+              "iBGP用IP",
+              "到達経路"
+            ],
+            "rows": [
+              [
+                "10",
+                "α.β.γ.8/32",
+                "a側またはc側"
+              ],
+              [
+                "11",
+                "α.β.γ.9/32",
+                "b側またはd側"
+              ],
+              [
+                "FW10",
+                "eのα.β.γ.19",
+                "一つの論理IF"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "loopback-2",
+          "format": "選択",
+          "theme": "物理リンク障害でもBGPピアを保つ",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ルータ10のループバックをiBGPに使う利点はどれか。",
+          "choices": [
+            {
+              "text": "物理IF一つの障害でも別のOSPF経路でピアへ到達できる",
+              "ok": true,
+              "explain": "接続先アドレスを物理リンクから独立させます。"
+            },
+            {
+              "text": "全てのeBGP障害を隠す",
+              "ok": false,
+              "explain": "外部専用線の障害とは別です。"
+            },
+            {
+              "text": "BGPがMACだけで動く",
+              "ok": false,
+              "explain": "BGPピアはIPで接続します。"
+            }
+          ]
+        },
+        {
+          "id": "loopback-3",
+          "format": "選択",
+          "theme": "物理リンク障害でもBGPピアを保つ",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "NEXT_HOPを書き換えず、FWが外部隣接IPへ到達するため追加する経路はどれか。",
+          "choices": [
+            {
+              "text": "α.β.γ.8/32だけ",
+              "ok": false,
+              "explain": "ルータ10のループバックだけでは外部隣接IPへ届きません。"
+            },
+            {
+              "text": "0.0.0.0/0だけ削除",
+              "ok": false,
+              "explain": "必要な具体経路を追加する設問です。"
+            },
+            {
+              "text": "α.β.γ.0/30とα.β.γ.4/30",
+              "ok": true,
+              "explain": "eBGP区間のα.β.γ.2と6を含むサブネットです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 17,
+            "top": 0.22,
+            "bottom": 0.74,
+            "label": "BGP構成図とアドレス一覧（IPA原典）"
+          }
+        },
+        {
+          "id": "loopback-4",
+          "format": "穴埋め",
+          "theme": "物理リンク障害でもBGPピアを保つ",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "理由と追加経路を補え。",
+          "template": "ルータはOSPFを構成する物理IFが{a}あり、{b}を構成できる。追加経路は{c}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "四つ",
+                  "ok": false,
+                  "explain": "各ルータが持つ対象IFの数ではありません。"
+                },
+                {
+                  "text": "二つ",
+                  "ok": true,
+                  "explain": "aとc、またはbとdの二経路です。"
+                },
+                {
+                  "text": "一つ",
+                  "ok": false,
+                  "explain": "FW側との差を説明できません。"
+                }
+              ],
+              "why": "aとc、またはbとdの二経路です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "NAT変換",
+                  "ok": false,
+                  "explain": "経路冗長化の説明ではありません。"
+                },
+                {
+                  "text": "迂回路",
+                  "ok": true,
+                  "explain": "一方の物理経路障害時に別経路を使います。"
+                },
+                {
+                  "text": "DNSゾーン",
+                  "ok": false,
+                  "explain": "BGPピアの到達性とは無関係です。"
+                }
+              ],
+              "why": "一方の物理経路障害時に別経路を使います。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "α.β.γ.8/31",
+                  "ok": false,
+                  "explain": "ループバック二つを一つの直結網として扱いません。"
+                },
+                {
+                  "text": "α.β.γ.0/30とα.β.γ.4/30",
+                  "ok": true,
+                  "explain": "二本のeBGP接続サブネットです。"
+                },
+                {
+                  "text": "α.β.γ.16/29だけ",
+                  "ok": false,
+                  "explain": "A社内部のルータ・FW間です。"
+                }
+              ],
+              "why": "二本のeBGP接続サブネットです。"
+            }
+          ]
+        },
+        {
+          "id": "loopback-5",
+          "format": "並べ替え",
+          "theme": "物理リンク障害でもBGPピアを保つ",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "ピア継続の仕組みを並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "iBGPの接続先にループバックIPを使う"
+            },
+            {
+              "code": "OSPFでそのIPへの複数経路を持つ"
+            },
+            {
+              "code": "一方の物理IF障害時に別経路でBGP接続を保つ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "BGPピアのアドレスと、それへ到達する下位の経路を分離します。",
+          "ngExplain": "BGPピアのアドレスと、それへ到達する下位の経路を分離します。"
+        },
+        {
+          "id": "loopback-6",
+          "format": "選択",
+          "theme": "物理リンク障害でもBGPピアを保つ",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "二つの物理IFが同時に使えなくなった。ループバック指定だけでピアを維持できるか。",
+          "choices": [
+            {
+              "text": "ループバックは物理経路なしでも遠隔到達できる",
+              "ok": false,
+              "explain": "IP到達性を提供する経路が必要です。"
+            },
+            {
+              "text": "DNSが自動で転送する",
+              "ok": false,
+              "explain": "BGPピアの到達性をDNSが中継しません。"
+            },
+            {
+              "text": "できない",
+              "ok": true,
+              "explain": "ループバックIPへ到達する経路自体がなくなります。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "attributes",
+      "title": "BGPのループ防止と経路評価を理解する",
+      "targets": [
+        "s2-3",
+        "s2-4"
+      ],
+      "steps": [
+        {
+          "id": "attributes-1",
+          "format": "読む",
+          "theme": "BGPのループ防止と経路評価を理解する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "経由ASと出口の優先度を分ける",
+          "body": "AS_PATHは経由したAS番号の並びです。自AS番号を含む経路を捨てると、外部経路の循環を防げます。LOCAL_PREFは大きい方、AS_PATHは短い方、MEDは小さい方を優先します。KEEPALIVEでピアの生存を確認します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "属性",
+              "選び方"
+            ],
+            "rows": [
+              [
+                "LOCAL_PREF",
+                "大きい"
+              ],
+              [
+                "AS_PATH長",
+                "短い"
+              ],
+              [
+                "MED",
+                "小さい"
+              ],
+              [
+                "KEEPALIVE",
+                "受信停止でピア断"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "attributes-2",
+          "format": "選択",
+          "theme": "BGPのループ防止と経路評価を理解する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "受信経路のAS_PATHに自AS番号がある。破棄する目的はどれか。",
+          "choices": [
+            {
+              "text": "DNS応答を短くする",
+              "ok": false,
+              "explain": "BGP経路情報の処理です。"
+            },
+            {
+              "text": "経路ループを避ける",
+              "ok": true,
+              "explain": "自ASを既に通った経路を再受信しません。"
+            },
+            {
+              "text": "帯域を必ず均等化する",
+              "ok": false,
+              "explain": "AS_PATH破棄は負荷分散の機能ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "attributes-3",
+          "format": "選択",
+          "theme": "BGPのループ防止と経路評価を理解する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "LOCAL_PREFが同じ二経路で、AS_PATH長が2と3。どちらを選ぶか。",
+          "choices": [
+            {
+              "text": "長さ2",
+              "ok": true,
+              "explain": "評価順で短いAS_PATHを優先します。"
+            },
+            {
+              "text": "長さ3",
+              "ok": false,
+              "explain": "長いほど優先ではありません。"
+            },
+            {
+              "text": "MEDを見るまで選べない",
+              "ok": false,
+              "explain": "AS_PATHで差がついた時点で評価を終了します。"
+            }
+          ]
+        },
+        {
+          "id": "attributes-4",
+          "format": "穴埋め",
+          "theme": "BGPのループ防止と経路評価を理解する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "表3と表4の空欄を補え。",
+          "template": "AS_PATHは{a}経路を選び、MEDは{b}経路を選ぶ。BGP表のNEXT_HOPは{c}と{d}で、FWからそこへ届く経路のネクストホップは{e}と{f}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "長い",
+                  "ok": false,
+                  "explain": "選択条件と逆です。"
+                },
+                {
+                  "text": "新しい",
+                  "ok": false,
+                  "explain": "更新時刻はここでの属性ではありません。"
+                },
+                {
+                  "text": "短い",
+                  "ok": true,
+                  "explain": "通過AS数が少ない方です。"
+                }
+              ],
+              "why": "通過AS数が少ない方です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "大きい",
+                  "ok": false,
+                  "explain": "LOCAL_PREFと混同しています。"
+                },
+                {
+                  "text": "文字列の長い",
+                  "ok": false,
+                  "explain": "MEDは数値です。"
+                },
+                {
+                  "text": "小さい",
+                  "ok": true,
+                  "explain": "MEDは小さい値を優先します。"
+                }
+              ],
+              "why": "MEDは小さい値を優先します。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "α.β.γ.17",
+                  "ok": false,
+                  "explain": "FWからルータ10へ届く内部ネクストホップです。"
+                },
+                {
+                  "text": "α.β.γ.2",
+                  "ok": false,
+                  "explain": "外部eBGP隣接のIPです。"
+                },
+                {
+                  "text": "α.β.γ.8",
+                  "ok": true,
+                  "explain": "LOCAL_PREF 200のルータ10側です。"
+                }
+              ],
+              "why": "LOCAL_PREF 200のルータ10側です。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "α.β.γ.18",
+                  "ok": false,
+                  "explain": "ルータ11内部物理IFです。"
+                },
+                {
+                  "text": "α.β.γ.6",
+                  "ok": false,
+                  "explain": "外部eBGP隣接のIPです。"
+                },
+                {
+                  "text": "α.β.γ.9",
+                  "ok": true,
+                  "explain": "LOCAL_PREF 100のルータ11側です。"
+                }
+              ],
+              "why": "LOCAL_PREF 100のルータ11側です。"
+            },
+            {
+              "key": "e",
+              "label": "e",
+              "choices": [
+                {
+                  "text": "α.β.γ.17",
+                  "ok": true,
+                  "explain": "FWからルータ10側ループバックへ届く内部物理IFです。"
+                },
+                {
+                  "text": "α.β.γ.8",
+                  "ok": false,
+                  "explain": "これはBGP表で示すルータ10のループバックです。"
+                },
+                {
+                  "text": "α.β.γ.2",
+                  "ok": false,
+                  "explain": "Z社側のeBGP隣接IPです。"
+                }
+              ],
+              "why": "FWからルータ10側ループバックへ届く内部物理IFです。"
+            },
+            {
+              "key": "f",
+              "label": "f",
+              "choices": [
+                {
+                  "text": "α.β.γ.18",
+                  "ok": true,
+                  "explain": "FWからルータ11側ループバックへ届く内部物理IFです。"
+                },
+                {
+                  "text": "α.β.γ.9",
+                  "ok": false,
+                  "explain": "これはBGP表で示すルータ11のループバックです。"
+                },
+                {
+                  "text": "α.β.γ.6",
+                  "ok": false,
+                  "explain": "Z社側のeBGP隣接IPです。"
+                }
+              ],
+              "why": "FWからルータ11側ループバックへ届く内部物理IFです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 19,
+            "top": 0.12,
+            "bottom": 0.78,
+            "label": "BGP属性と最適経路選択表（IPA原典）"
+          }
+        },
+        {
+          "id": "attributes-5",
+          "format": "並べ替え",
+          "theme": "BGPのループ防止と経路評価を理解する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "専用線障害の検知から更新まで並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "BGPがKEEPALIVEを定期送信する"
+            },
+            {
+              "code": "障害側でKEEPALIVEを受信できなくなる"
+            },
+            {
+              "code": "ピアを切断し、その経路情報を取り除いて再選択する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "リンク状態が上がったままでも、BGPメッセージの停止から障害を判断できます。",
+          "ngExplain": "リンク状態が上がったままでも、BGPメッセージの停止から障害を判断できます。"
+        },
+        {
+          "id": "attributes-6",
+          "format": "選択",
+          "theme": "BGPのループ防止と経路評価を理解する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "LOCAL_PREF 100の経路だけAS_PATHが短い。LOCAL_PREF 200経路とどちらを選ぶか。",
+          "choices": [
+            {
+              "text": "LOCAL_PREF 200",
+              "ok": true,
+              "explain": "評価順で最初の属性に差があるため、そこで決まります。"
+            },
+            {
+              "text": "AS_PATHが短い100",
+              "ok": false,
+              "explain": "AS_PATHはLOCAL_PREFが同値のときに比較します。"
+            },
+            {
+              "text": "必ず両方",
+              "ok": false,
+              "explain": "標準の一経路選択では一つだけです。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bestpath",
+      "title": "BGP表と経路表の違いを説明する",
+      "targets": [
+        "s2-5"
+      ],
+      "steps": [
+        {
+          "id": "bestpath-1",
+          "format": "読む",
+          "theme": "BGP表と経路表の違いを説明する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "候補を全部持ち、転送用には一つ選ぶ",
+          "body": "BGPテーブルには同じ宛先の複数候補が存在できます。標準の最適経路選択では、その中から一つを選びます。選んだ経路をルーティングテーブルへ反映して転送に使います。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "表",
+              "内容"
+            ],
+            "rows": [
+              [
+                "BGPテーブル",
+                "受信した複数候補"
+              ],
+              [
+                "ルーティングテーブル",
+                "選ばれた転送経路"
+              ],
+              [
+                "BGPマルチパス時",
+                "条件を満たす複数経路"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "bestpath-2",
+          "format": "選択",
+          "theme": "BGP表と経路表の違いを説明する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "BGP標準仕様で同じ宛先に二つ候補がある。通常どうするか。",
+          "choices": [
+            {
+              "text": "最適経路を一つ選び経路表へ反映する",
+              "ok": true,
+              "explain": "候補表と転送表を分けます。"
+            },
+            {
+              "text": "受信した順に全て同時転送する",
+              "ok": false,
+              "explain": "標準の最適経路選択は一つです。"
+            },
+            {
+              "text": "二つとも破棄する",
+              "ok": false,
+              "explain": "属性を評価して一つ選びます。"
+            }
+          ]
+        },
+        {
+          "id": "bestpath-3",
+          "format": "選択",
+          "theme": "BGP表と経路表の違いを説明する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "BGPテーブルには二つ、経路表には一つ。異常か。",
+          "choices": [
+            {
+              "text": "必ず設定漏れ",
+              "ok": false,
+              "explain": "一経路だけ反映するのが本文の標準仕様です。"
+            },
+            {
+              "text": "BGPが停止している証拠",
+              "ok": false,
+              "explain": "候補を受信しているので停止とは限りません。"
+            },
+            {
+              "text": "通常の最適経路選択では正常",
+              "ok": true,
+              "explain": "候補を保持し、選択結果だけを転送表へ入れます。"
+            }
+          ]
+        },
+        {
+          "id": "bestpath-4",
+          "format": "穴埋め",
+          "theme": "BGP表と経路表の違いを説明する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "二つの表を補え。",
+          "template": "{a}から最適経路を一つ選び、{b}に反映する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "DNSキャッシュ",
+                  "ok": false,
+                  "explain": "名前解決結果の保持です。"
+                },
+                {
+                  "text": "BGPテーブル",
+                  "ok": true,
+                  "explain": "受信した候補を保持します。"
+                },
+                {
+                  "text": "MACアドレス表",
+                  "ok": false,
+                  "explain": "レイヤ2の転送先一覧です。"
+                }
+              ],
+              "why": "受信した候補を保持します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "VLANタグ",
+                  "ok": false,
+                  "explain": "経路の格納場所ではありません。"
+                },
+                {
+                  "text": "ルーティングテーブル",
+                  "ok": true,
+                  "explain": "パケット転送に使う経路表です。"
+                },
+                {
+                  "text": "ARP要求",
+                  "ok": false,
+                  "explain": "表ではなくメッセージです。"
+                }
+              ],
+              "why": "パケット転送に使う経路表です。"
+            }
+          ]
+        },
+        {
+          "id": "bestpath-5",
+          "format": "並べ替え",
+          "theme": "BGP表と経路表の違いを説明する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "経路選択の順を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "BGPピアから同じ宛先の候補を受信する"
+            },
+            {
+              "code": "属性の評価順に最適経路を一つ決める"
+            },
+            {
+              "code": "その経路をルーティングテーブルへ反映する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "受信、候補管理、転送表への採用の三段階です。",
+          "ngExplain": "受信、候補管理、転送表への採用の三段階です。"
+        },
+        {
+          "id": "bestpath-6",
+          "format": "選択",
+          "theme": "BGP表と経路表の違いを説明する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "BGPマルチパスを有効にし、属性が同じでNEXT_HOPだけ違う。何が変わるか。",
+          "choices": [
+            {
+              "text": "BGPテーブルを使わなくなる",
+              "ok": false,
+              "explain": "候補と属性の管理は引き続き必要です。"
+            },
+            {
+              "text": "AS_PATHのループ検査を停止する",
+              "ok": false,
+              "explain": "マルチパスでもBGPの基本検査は必要です。"
+            },
+            {
+              "text": "複数経路を経路表へ反映できる",
+              "ok": true,
+              "explain": "本文ではECMPにより分散します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 21,
+            "top": 0.1,
+            "bottom": 0.56,
+            "label": "BGP標準仕様とマルチパスの説明（IPA原典）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "install-order",
+      "title": "依存関係に沿ってプロトコルを導入する",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "install-order-1",
+          "format": "読む",
+          "theme": "依存関係に沿ってプロトコルを導入する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "到達性を作ってからピアを張る",
+          "body": "物理IF設定後、ループバックを作ります。次にOSPFで内部の到達性を作り、iBGP、eBGPの順に導入します。外部ピアより先に内部で経路を共有できる状態にします。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "物理IFと疎通"
+              },
+              {
+                "t": "ループバック作成"
+              },
+              {
+                "t": "OSPF導入"
+              },
+              {
+                "t": "iBGP導入"
+              },
+              {
+                "t": "eBGP導入"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "install-order-2",
+          "format": "選択",
+          "theme": "依存関係に沿ってプロトコルを導入する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "物理疎通の次に行う手順4はどれか。",
+          "choices": [
+            {
+              "text": "静的経路の削除",
+              "ok": false,
+              "explain": "動的経路の準備後に行います。"
+            },
+            {
+              "text": "ループバックIFの作成とIP設定",
+              "ok": true,
+              "explain": "iBGPの接続先を先に用意します。"
+            },
+            {
+              "text": "eBGPの導入",
+              "ok": false,
+              "explain": "内部到達性とiBGPを先に整えます。"
+            }
+          ]
+        },
+        {
+          "id": "install-order-3",
+          "format": "選択",
+          "theme": "依存関係に沿ってプロトコルを導入する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "OSPFをiBGPより先に入れる理由はどれか。",
+          "choices": [
+            {
+              "text": "ループバックのBGP接続先へ到達可能にする",
+              "ok": true,
+              "explain": "BGPセッションの下位IP経路を用意します。"
+            },
+            {
+              "text": "OSPFで外部AS番号を配る",
+              "ok": false,
+              "explain": "AS番号の交換機能ではありません。"
+            },
+            {
+              "text": "DNSを停止する",
+              "ok": false,
+              "explain": "名前解決の手順ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "install-order-4",
+          "format": "穴埋め",
+          "theme": "依存関係に沿ってプロトコルを導入する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "手順4〜7を補え。",
+          "template": "{a}→{b}→{c}→{d}の順で導入する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "eBGP",
+                  "ok": false,
+                  "explain": "最後の外部ピアです。"
+                },
+                {
+                  "text": "静的経路削除",
+                  "ok": false,
+                  "explain": "手順8です。"
+                },
+                {
+                  "text": "ループバックIF作成",
+                  "ok": true,
+                  "explain": "ピアの安定した接続先を作ります。"
+                }
+              ],
+              "why": "ピアの安定した接続先を作ります。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "iBGP",
+                  "ok": false,
+                  "explain": "OSPFの後です。"
+                },
+                {
+                  "text": "NAT",
+                  "ok": false,
+                  "explain": "表6の選択肢ではありません。"
+                },
+                {
+                  "text": "OSPF",
+                  "ok": true,
+                  "explain": "内部到達性を作ります。"
+                }
+              ],
+              "why": "内部到達性を作ります。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "eBGP",
+                  "ok": false,
+                  "explain": "外部ピアは次です。"
+                },
+                {
+                  "text": "RSTP",
+                  "ok": false,
+                  "explain": "この冗長化手順では使いません。"
+                },
+                {
+                  "text": "iBGP",
+                  "ok": true,
+                  "explain": "AS内部で経路を交換します。"
+                }
+              ],
+              "why": "AS内部で経路を交換します。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "DHCP",
+                  "ok": false,
+                  "explain": "経路制御の導入順ではありません。"
+                },
+                {
+                  "text": "SNMP",
+                  "ok": false,
+                  "explain": "監視情報取得です。"
+                },
+                {
+                  "text": "eBGP",
+                  "ok": true,
+                  "explain": "外部ASとの経路交換を開始します。"
+                }
+              ],
+              "why": "外部ASとの経路交換を開始します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 21,
+            "top": 0.56,
+            "bottom": 0.89,
+            "label": "表6の手順1〜9（IPA原典）"
+          }
+        },
+        {
+          "id": "install-order-5",
+          "format": "並べ替え",
+          "theme": "依存関係に沿ってプロトコルを導入する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "BGP導入の依存関係を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "ループバックアドレスを作成する"
+            },
+            {
+              "code": "OSPFでループバック間の到達性を作る"
+            },
+            {
+              "code": "iBGPを張り、その後eBGPで外部経路を受ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "上位のBGPセッションには下位のIP到達性が必要です。",
+          "ngExplain": "上位のBGPセッションには下位のIP到達性が必要です。"
+        },
+        {
+          "id": "install-order-6",
+          "format": "選択",
+          "theme": "依存関係に沿ってプロトコルを導入する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "OSPFが未成立のままループバック同士でiBGPを開始した。結果はどれか。",
+          "choices": [
+            {
+              "text": "相手IPへ到達できずセッションが成立しない",
+              "ok": true,
+              "explain": "接続先への経路が必要です。"
+            },
+            {
+              "text": "BGPが自動で物理配線を作る",
+              "ok": false,
+              "explain": "経路制御は物理リンクを新設しません。"
+            },
+            {
+              "text": "必ずeBGPだけ成立する",
+              "ok": false,
+              "explain": "外部ピアも別途設定と到達性が必要です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "static-cutover",
+      "title": "静的経路を消す対象と切替理由を説明する",
+      "targets": [
+        "s3-2",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "static-cutover-1",
+          "format": "読む",
+          "theme": "静的経路を消す対象と切替理由を説明する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "動的経路を準備してから古い固定経路を外す",
+          "body": "手順8では、既存の静的経路を持つルータ10Z、ルータ10、FW10が対象です。動的経路は手順4〜7で既に学習済みです。一般に同じ宛先なら、静的経路がBGP経路より優先される設定があります。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "機器",
+              "削除前の役割"
+            ],
+            "rows": [
+              [
+                "ルータ10Z",
+                "A社プレフィックスへの静的経路"
+              ],
+              [
+                "ルータ10",
+                "デフォルトなどの静的経路"
+              ],
+              [
+                "FW10",
+                "インターネット向け静的経路"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "static-cutover-2",
+          "format": "選択",
+          "theme": "静的経路を消す対象と切替理由を説明する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "手順8の静的経路削除対象はどれか。",
+          "choices": [
+            {
+              "text": "ルータ10Z、ルータ10、FW10",
+              "ok": true,
+              "explain": "現行構成から固定経路を利用していた機器です。"
+            },
+            {
+              "text": "ルータ11Zだけ",
+              "ok": false,
+              "explain": "新設機器には削除する旧静的経路がありません。"
+            },
+            {
+              "text": "全L2SW",
+              "ok": false,
+              "explain": "レイヤ2スイッチのIP経路表ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "static-cutover-3",
+          "format": "選択",
+          "theme": "静的経路を消す対象と切替理由を説明する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "静的経路削除で動的経路へ切り替わる理由はどれか。",
+          "choices": [
+            {
+              "text": "BGP経路が削除されるから",
+              "ok": false,
+              "explain": "使いたいのはBGP側です。"
+            },
+            {
+              "text": "MAC表が空になるから",
+              "ok": false,
+              "explain": "IP経路選択とMAC学習は別です。"
+            },
+            {
+              "text": "静的経路がBGP経路より優先されていたから",
+              "ok": true,
+              "explain": "優先経路を削除すると準備済みBGP経路が使われます。"
+            }
+          ]
+        },
+        {
+          "id": "static-cutover-4",
+          "format": "穴埋め",
+          "theme": "静的経路を消す対象と切替理由を説明する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "対象と優先関係を補え。",
+          "template": "{a}の静的経路を削除する。削除前は静的経路が{b}より優先される。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "管理サーバ",
+                  "ok": false,
+                  "explain": "経路転送機器ではありません。"
+                },
+                {
+                  "text": "ルータ10Z、ルータ10、FW10",
+                  "ok": true,
+                  "explain": "三機器全てが公式の対象です。"
+                },
+                {
+                  "text": "ルータ11と11Zだけ",
+                  "ok": false,
+                  "explain": "新設側だけではありません。"
+                }
+              ],
+              "why": "三機器全てが公式の対象です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "通信ログ",
+                  "ok": false,
+                  "explain": "経路選択の候補ではありません。"
+                },
+                {
+                  "text": "BGP経路",
+                  "ok": true,
+                  "explain": "動的経路への切替対象です。"
+                },
+                {
+                  "text": "ARP表",
+                  "ok": false,
+                  "explain": "同種のIP経路ではありません。"
+                }
+              ],
+              "why": "動的経路への切替対象です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 22,
+            "top": 0.08,
+            "bottom": 0.46,
+            "label": "静的経路削除と動的経路切替の本文（IPA原典）"
+          }
+        },
+        {
+          "id": "static-cutover-5",
+          "format": "並べ替え",
+          "theme": "静的経路を消す対象と切替理由を説明する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "影響を抑えた切替を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "BGPとOSPFを導入して動的経路を準備する"
+            },
+            {
+              "code": "各機器で新経路が学習されていることを確認する"
+            },
+            {
+              "code": "優先されていた静的経路を削除する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "先に新しい経路制御を成立させてから、古い優先経路を外します。",
+          "ngExplain": "先に新しい経路制御を成立させてから、古い優先経路を外します。"
+        },
+        {
+          "id": "static-cutover-6",
+          "format": "選択",
+          "theme": "静的経路を消す対象と切替理由を説明する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "BGP経路が未学習の機器で静的経路を先に消した。リスクはどれか。",
+          "choices": [
+            {
+              "text": "自動で最適BGP経路が作られる",
+              "ok": false,
+              "explain": "未学習なら候補がありません。"
+            },
+            {
+              "text": "SNMPカウンタが必ずラップする",
+              "ok": false,
+              "explain": "経路削除とカウンタ幅は無関係です。"
+            },
+            {
+              "text": "該当宛先への経路を失う",
+              "ok": true,
+              "explain": "代替経路がまだないため通信断になります。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "maintenance",
+      "title": "交換前に通信を別回線へ逃がす",
+      "targets": [
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "maintenance-1",
+          "format": "読む",
+          "theme": "交換前に通信を別回線へ逃がす",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "撤去する回線を経路候補から外す",
+          "body": "ルータ10を交換する前に、その側のeBGPピアを無効にします。するとルータ10側の外部経路が撤回され、ルータ11側へ通信が移ります。通信が迂回したことを確認してから機器を交換します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "ルータ10側eBGPを無効化"
+              },
+              {
+                "t": "経路情報を撤回"
+              },
+              {
+                "t": "ルータ11側を選択"
+              },
+              {
+                "t": "ルータ10を交換"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "maintenance-2",
+          "format": "選択",
+          "theme": "交換前に通信を別回線へ逃がす",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "交換前にルータ10へ行う操作はどれか。",
+          "choices": [
+            {
+              "text": "eBGPピアを無効にする",
+              "ok": true,
+              "explain": "その専用線の経路を利用対象から外します。"
+            },
+            {
+              "text": "iBGPを全社で削除する",
+              "ok": false,
+              "explain": "内部経路共有まで壊す必要はありません。"
+            },
+            {
+              "text": "全ての物理IFを同時に外す",
+              "ok": false,
+              "explain": "経路を移す確認前に通信断を起こし得ます。"
+            }
+          ]
+        },
+        {
+          "id": "maintenance-3",
+          "format": "選択",
+          "theme": "交換前に通信を別回線へ逃がす",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "eBGP無効化後に確認することはどれか。",
+          "choices": [
+            {
+              "text": "DNSゾーンの全削除",
+              "ok": false,
+              "explain": "経路退避の確認ではありません。"
+            },
+            {
+              "text": "FWの給電電圧",
+              "ok": false,
+              "explain": "交換対象経路とは無関係です。"
+            },
+            {
+              "text": "通信がルータ11側へ切り替わったこと",
+              "ok": true,
+              "explain": "交換対象を通らない状態を確かめます。"
+            }
+          ]
+        },
+        {
+          "id": "maintenance-4",
+          "format": "穴埋め",
+          "theme": "交換前に通信を別回線へ逃がす",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "操作と目的を補え。",
+          "template": "ルータ10側の{a}を無効にし、通信を{b}側へ移す。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "DHCPスコープ",
+                  "ok": false,
+                  "explain": "IP配布設定ではありません。"
+                },
+                {
+                  "text": "eBGPピア",
+                  "ok": true,
+                  "explain": "外部専用線から受ける経路を止めます。"
+                },
+                {
+                  "text": "SNMP MIB",
+                  "ok": false,
+                  "explain": "監視を止めても転送経路は移りません。"
+                }
+              ],
+              "why": "外部専用線から受ける経路を止めます。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "L2SW40",
+                  "ok": false,
+                  "explain": "社内サーバ側で外部専用線ではありません。"
+                },
+                {
+                  "text": "ルータ11",
+                  "ok": true,
+                  "explain": "冗長なもう一方の専用線です。"
+                },
+                {
+                  "text": "ルータ10Zだけ",
+                  "ok": false,
+                  "explain": "交換する10側の対向です。"
+                }
+              ],
+              "why": "冗長なもう一方の専用線です。"
+            }
+          ]
+        },
+        {
+          "id": "maintenance-5",
+          "format": "並べ替え",
+          "theme": "交換前に通信を別回線へ逃がす",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "無停止交換の流れを並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "交換対象側のeBGPピアを無効にする"
+            },
+            {
+              "code": "経路更新後、通信が冗長側へ移ったことを確認する"
+            },
+            {
+              "code": "ルータ10を後継機へ交換する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "制御面で経路を外してから物理作業に入ります。",
+          "ngExplain": "制御面で経路を外してから物理作業に入ります。"
+        },
+        {
+          "id": "maintenance-6",
+          "format": "選択",
+          "theme": "交換前に通信を別回線へ逃がす",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "交換後に元の二回線分散へ戻すには何を確認するか。",
+          "choices": [
+            {
+              "text": "ケーブル接続だけで十分",
+              "ok": false,
+              "explain": "BGPピアと経路の確認も必要です。"
+            },
+            {
+              "text": "ルータ11側を永久停止する",
+              "ok": false,
+              "explain": "冗長・分散構成を失います。"
+            },
+            {
+              "text": "設定と疎通後にeBGPを再有効化し、経路分散を確認する",
+              "ok": true,
+              "explain": "新機器を経路候補へ戻す段階が必要です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 22,
+            "top": 0.23,
+            "bottom": 0.47,
+            "label": "交換前に経路を退避する下線⑧（IPA原典）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ping-limits",
+      "title": "ping監視で輻輳を断定しない",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "ping-limits-1",
+          "format": "読む",
+          "theme": "ping監視で輻輳を断定しない",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "応答の有無と回線利用率は違う",
+          "body": "監視は1分ごとにエコー要求を3個送ります。5回連続で一つも応答がないと障害にします。輻輳しても小さな応答が一つ届けば検知しません。対向ルータ自体の障害でも応答がなくなり、専用線輻輳と誤認します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "状況",
+              "ping結果",
+              "判定の問題"
+            ],
+            "rows": [
+              [
+                "輻輳中に1応答",
+                "死活あり",
+                "輻輳を見逃す"
+              ],
+              [
+                "対向ルータ故障",
+                "全て無応答",
+                "専用線輻輳と区別不能"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "ping-limits-2",
+          "format": "選択",
+          "theme": "ping監視で輻輳を断定しない",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "専用線が輻輳してもping監視が検知しない場合はどれか。",
+          "choices": [
+            {
+              "text": "少なくとも一つエコー応答が届く",
+              "ok": true,
+              "explain": "全て無応答というアラート条件を満たしません。"
+            },
+            {
+              "text": "通信量が上限を超える",
+              "ok": false,
+              "explain": "ping監視は通信量カウンタを見ていません。"
+            },
+            {
+              "text": "BGP表に二経路ある",
+              "ok": false,
+              "explain": "経路候補数だけでping結果は決まりません。"
+            }
+          ]
+        },
+        {
+          "id": "ping-limits-3",
+          "format": "選択",
+          "theme": "ping監視で輻輳を断定しない",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "ルータ10Z自体が故障して無応答になった。なぜ輻輳検知に不向きか。",
+          "choices": [
+            {
+              "text": "故障時は必ずエコー応答する",
+              "ok": false,
+              "explain": "故障すれば応答しない場合があります。"
+            },
+            {
+              "text": "SNMPが暗号化される",
+              "ok": false,
+              "explain": "pingの原因識別とは無関係です。"
+            },
+            {
+              "text": "回線輻輳以外の故障でも同じ無応答になる",
+              "ok": true,
+              "explain": "原因を区別できず誤検知します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 22,
+            "top": 0.49,
+            "bottom": 0.86,
+            "label": "ping死活監視と問題の本文（IPA原典）"
+          }
+        },
+        {
+          "id": "ping-limits-4",
+          "format": "穴埋め",
+          "theme": "ping監視で輻輳を断定しない",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "二つの問題を補え。",
+          "template": "輻輳時でも{a}を受信して見逃すことがある。また、{b}の障害を輻輳と誤認する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "DNSゾーン",
+                  "ok": false,
+                  "explain": "受信パケットではありません。"
+                },
+                {
+                  "text": "エコー応答",
+                  "ok": true,
+                  "explain": "一つでも届くと全無応答条件になりません。"
+                },
+                {
+                  "text": "BGP UPDATE",
+                  "ok": false,
+                  "explain": "ping監視の判定対象ではありません。"
+                }
+              ],
+              "why": "一つでも届くと全無応答条件になりません。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "eLNサーバ",
+                  "ok": false,
+                  "explain": "この構成に登場しません。"
+                },
+                {
+                  "text": "ルータ10Z・11Z",
+                  "ok": true,
+                  "explain": "監視対象そのものの障害でも無応答です。"
+                },
+                {
+                  "text": "PCだけ",
+                  "ok": false,
+                  "explain": "専用線対向の監視対象ではありません。"
+                }
+              ],
+              "why": "監視対象そのものの障害でも無応答です。"
+            }
+          ]
+        },
+        {
+          "id": "ping-limits-5",
+          "format": "並べ替え",
+          "theme": "ping監視で輻輳を断定しない",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "ping監視の限界を説明する順に並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "アラート条件が連続した全無応答であると確認する"
+            },
+            {
+              "code": "輻輳中でも一部応答が届けば条件外と判断する"
+            },
+            {
+              "code": "対向機器故障でも全無応答となり原因を区別できないと示す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "見逃しと誤検知の二つを別々に答えます。",
+          "ngExplain": "見逃しと誤検知の二つを別々に答えます。"
+        },
+        {
+          "id": "ping-limits-6",
+          "format": "選択",
+          "theme": "ping監視で輻輳を断定しない",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "通信量カウンタの上限監視を併用する効果はどれか。",
+          "choices": [
+            {
+              "text": "対向機器故障の原因を常に断定できる",
+              "ok": false,
+              "explain": "複数情報を組み合わせて判断します。"
+            },
+            {
+              "text": "カウンタラップが絶対になくなる",
+              "ok": false,
+              "explain": "監視方式でカウンタ幅は変わりません。"
+            },
+            {
+              "text": "応答有無だけでなく回線利用の増大を観測できる",
+              "ok": true,
+              "explain": "pingと異なる指標を加えられます。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "threshold",
+      "title": "一回線障害に備えて平常時を抑える",
+      "targets": [
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "threshold-1",
+          "format": "読む",
+          "theme": "一回線障害に備えて平常時を抑える",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "二回線の合計を一回線へ収められる上限",
+          "body": "二回線へ通信を均等分散します。一回線当たりの契約帯域を100%とします。片方が故障すると、平常時の両回線分が残る一回線へ集まります。平常時に各回線50%以下なら、合計は残存回線100%以下です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "状態",
+              "回線10",
+              "回線11"
+            ],
+            "rows": [
+              [
+                "平常時",
+                "50%",
+                "50%"
+              ],
+              [
+                "片系障害",
+                "0%",
+                "100%"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "threshold-2",
+          "format": "選択",
+          "theme": "一回線障害に備えて平常時を抑える",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "片系障害後も契約帯域を超えない平常時の各回線上限はどれか。",
+          "choices": [
+            {
+              "text": "100%",
+              "ok": false,
+              "explain": "障害後は最大200%相当が一回線へ集まります。"
+            },
+            {
+              "text": "25%",
+              "ok": false,
+              "explain": "安全側ですが、原問の均等分散条件から求める上限ではありません。"
+            },
+            {
+              "text": "50%",
+              "ok": true,
+              "explain": "二回線分を一回線に集めても100%になります。"
+            }
+          ]
+        },
+        {
+          "id": "threshold-3",
+          "format": "選択",
+          "theme": "一回線障害に備えて平常時を抑える",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "平常時に各回線60%を使う。片系障害で均等分が一回線へ集まると何%か。",
+          "choices": [
+            {
+              "text": "30%",
+              "ok": false,
+              "explain": "回線が減って利用率が半分にはなりません。"
+            },
+            {
+              "text": "120%",
+              "ok": true,
+              "explain": "60＋60で一回線容量を超えます。"
+            },
+            {
+              "text": "60%",
+              "ok": false,
+              "explain": "故障回線の通信も残存側へ移ります。"
+            }
+          ]
+        },
+        {
+          "id": "threshold-4",
+          "format": "穴埋め",
+          "theme": "一回線障害に備えて平常時を抑える",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "しきい値の根拠を補え。",
+          "template": "平常時の各回線を{a}%以下にすれば、一回線障害時の残存側は最大{b}%になる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "50",
+                  "ok": true,
+                  "explain": "二回線の合計を一回線容量に収めます。"
+                },
+                {
+                  "text": "75",
+                  "ok": false,
+                  "explain": "合計150%となり超過します。"
+                },
+                {
+                  "text": "100",
+                  "ok": false,
+                  "explain": "合計200%となります。"
+                }
+              ],
+              "why": "二回線の合計を一回線容量に収めます。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "100",
+                  "ok": true,
+                  "explain": "50%ずつを合計します。"
+                },
+                {
+                  "text": "50",
+                  "ok": false,
+                  "explain": "障害側の通信が移る分を落としています。"
+                },
+                {
+                  "text": "200",
+                  "ok": false,
+                  "explain": "平常時100%ずつの場合です。"
+                }
+              ],
+              "why": "50%ずつを合計します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 22,
+            "top": 0.73,
+            "bottom": 0.98,
+            "label": "二回線分散としきい値の条件（IPA原典）"
+          }
+        },
+        {
+          "id": "threshold-5",
+          "format": "並べ替え",
+          "theme": "一回線障害に備えて平常時を抑える",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "しきい値50%を導く順に並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "一回線の契約帯域を100%とする"
+            },
+            {
+              "code": "平常時は二回線へ均等に分散すると仮定する"
+            },
+            {
+              "code": "片系障害時に二回線分を一回線へ集めるため50%を上限にする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "故障後の容量を基準に、平常時の各回線上限を逆算します。",
+          "ngExplain": "故障後の容量を基準に、平常時の各回線上限を逆算します。"
+        },
+        {
+          "id": "threshold-6",
+          "format": "選択",
+          "theme": "一回線障害に備えて平常時を抑える",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "三回線へ均等分散し、一回線障害後は二回線で受ける。単純な同容量条件の上限はどれか。",
+          "choices": [
+            {
+              "text": "100%",
+              "ok": false,
+              "explain": "障害後は各150%になります。"
+            },
+            {
+              "text": "約66.7%",
+              "ok": true,
+              "explain": "平常時3×66.7%を残る2回線で分けると各100%です。"
+            },
+            {
+              "text": "50%",
+              "ok": false,
+              "explain": "二回線から一回線になる原問の値です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "logs",
+      "title": "通信量以外の異常をログから検知する",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "logs-1",
+          "format": "読む",
+          "theme": "通信量以外の異常をログから検知する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "量のカウンタと通信の記録を組み合わせる",
+          "body": "管理サーバには統計データのほか、FWとプロキシサーバの通信ログがあります。機械学習監視は時系列の傾向や周期性から予測します。ログデータ量の突発的な増減を見れば、通信量異常とは異なる利用状況の変化を検知できます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "データ",
+              "見えること"
+            ],
+            "rows": [
+              [
+                "SNMP統計",
+                "インタフェースの通信量"
+              ],
+              [
+                "FW・プロキシログ",
+                "許可・拒否やWeb通信の記録"
+              ],
+              [
+                "ログ量の時系列",
+                "突発的な増減"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "logs-2",
+          "format": "選択",
+          "theme": "通信量以外の異常をログから検知する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "統計データ以外に管理サーバへ保存される対象はどれか。",
+          "choices": [
+            {
+              "text": "全機器の電源そのもの",
+              "ok": false,
+              "explain": "データとして保存する対象の表現ではありません。"
+            },
+            {
+              "text": "FWとプロキシサーバの通信ログデータ",
+              "ok": true,
+              "explain": "本文でSYSLOGにより収集しています。"
+            },
+            {
+              "text": "全社員の電話音声",
+              "ok": false,
+              "explain": "このシステムで収集するデータではありません。"
+            }
+          ]
+        },
+        {
+          "id": "logs-3",
+          "format": "選択",
+          "theme": "通信量以外の異常をログから検知する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "通信ログデータ量の時系列で検知する内容はどれか。",
+          "choices": [
+            {
+              "text": "単位時間当たりのログ量の突発的な増減",
+              "ok": true,
+              "explain": "通常傾向から外れた利用や記録停止を捉えます。"
+            },
+            {
+              "text": "BGPのAS番号が必ず重複したこと",
+              "ok": false,
+              "explain": "ログ量だけで原因を一意に断定できません。"
+            },
+            {
+              "text": "カウンタが常に2^64になったこと",
+              "ok": false,
+              "explain": "別の統計カウンタの話です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 23,
+            "top": 0.06,
+            "bottom": 0.71,
+            "label": "機械学習監視と別データの本文（IPA原典）"
+          }
+        },
+        {
+          "id": "logs-4",
+          "format": "穴埋め",
+          "theme": "通信量以外の異常をログから検知する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "データと検知内容を補え。",
+          "template": "監視する別データは{a}であり、{b}が突発的に増減したことを検知する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "ルータの筐体色",
+                  "ok": false,
+                  "explain": "管理データとして示されていません。"
+                },
+                {
+                  "text": "専用線の契約書",
+                  "ok": false,
+                  "explain": "時系列監視の入力ではありません。"
+                },
+                {
+                  "text": "FWとプロキシの通信ログデータ",
+                  "ok": true,
+                  "explain": "管理サーバに保存される本文中の字句です。"
+                }
+              ],
+              "why": "管理サーバに保存される本文中の字句です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "IPアドレスの桁数",
+                  "ok": false,
+                  "explain": "通常は時系列で増減する指標ではありません。"
+                },
+                {
+                  "text": "AS_PATHの文字幅",
+                  "ok": false,
+                  "explain": "監視対象のログ量ではありません。"
+                },
+                {
+                  "text": "単位時間当たりの通信ログデータ量",
+                  "ok": true,
+                  "explain": "時系列として予測値と実測値を比べられます。"
+                }
+              ],
+              "why": "時系列として予測値と実測値を比べられます。"
+            }
+          ]
+        },
+        {
+          "id": "logs-5",
+          "format": "並べ替え",
+          "theme": "通信量以外の異常をログから検知する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "複数データで状況を絞る順に並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "SNMP統計で通信量の異常を検知する"
+            },
+            {
+              "code": "同時刻のFW・プロキシログ量の異常を確認する"
+            },
+            {
+              "code": "両方の変化からネットワーク状況を詳しく調べる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "一つの予測だけで原因を断定せず、異なる観測情報を組み合わせます。",
+          "ngExplain": "一つの予測だけで原因を断定せず、異なる観測情報を組み合わせます。"
+        },
+        {
+          "id": "logs-6",
+          "format": "選択",
+          "theme": "通信量以外の異常をログから検知する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "通信量は平常だがプロキシログ量だけ急に0になった。考えるべきことはどれか。",
+          "choices": [
+            {
+              "text": "ログ送信やプロキシ処理の異常",
+              "ok": true,
+              "explain": "通信全体が平常でも記録系だけの異常はあり得ます。"
+            },
+            {
+              "text": "必ず専用線が100%輻輳した",
+              "ok": false,
+              "explain": "通信量の観測と矛盾します。"
+            },
+            {
+              "text": "BGPマルチパスが自動解除されたと断定する",
+              "ok": false,
+              "explain": "ログ量だけで経路原因を一意に決められません。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2426 @@
+{
+  "examKey": "2015h27a/pm2/1",
+  "title": "遠隔保守の要求・キャッシュ・接続数を設計する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm2_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "nat",
+      "title": "返事も負荷分散装置へ戻す",
+      "targets": [
+        "s1-1",
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "入口のIPと実際のIP",
+          "body": "LB（Load Balancer、負荷分散装置）はVIP（Virtual IP、仮想IP）宛ての要求を実サーバへ振り分け、IP（Internet Protocol）アドレスを変換します。Webと業務サーバが同じLANにあると、返事がLBを通らず直帰してしまうことがあります。原問では要求の送信元IPもLBのIPへ変えて返事をLBに戻します。",
+          "fig": {
+            "kind": "topo",
+            "height": 170,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "Webサーバ",
+                "icon": "server",
+                "x": 60,
+                "y": 85
+              },
+              {
+                "id": "node1",
+                "label": "LB",
+                "icon": "l3sw",
+                "x": 165,
+                "y": 85
+              },
+              {
+                "id": "node2",
+                "label": "業務サーバ",
+                "icon": "server",
+                "x": 270,
+                "y": 85
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：同じLANでもLB経由で往復"
+          },
+          "id": "nat-1",
+          "format": "読む",
+          "theme": "返事も負荷分散装置へ戻す",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "業務サーバが要求元Webサーバへ直接返事すると困ることは？",
+          "choices": [
+            {
+              "text": "物理的に近いのでDNSが停止する",
+              "explain": "原因はアドレス変換経路で、DNS停止ではありません。"
+            },
+            {
+              "text": "LBで逆変換されず、要求時の相手VIPと整合しない",
+              "ok": true,
+              "explain": "変換した通信の復路もLBを通す必要があります。"
+            }
+          ],
+          "id": "nat-2",
+          "format": "選択",
+          "theme": "返事も負荷分散装置へ戻す",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "送信元IPもLBのIPへ変える理由は？",
+          "choices": [
+            {
+              "text": "業務サーバから見た返送先をLBにするため",
+              "ok": true,
+              "explain": "同一LANでも返事をLBへ向けられます。"
+            },
+            {
+              "text": "業務サーバのMACを暗号化するため",
+              "explain": "IP変換はMAC暗号化ではありません。"
+            }
+          ],
+          "id": "nat-3",
+          "format": "選択",
+          "theme": "返事も負荷分散装置へ戻す",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "変換箇所と担当を選ぶ",
+          "template": "同じLANのWeb→業務アクセスでは宛先IPに加えて{a}も変換する。通常時の変換担当は{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "送信元IPアドレス",
+                  "ok": true,
+                  "explain": "返送先をLBにします。"
+                },
+                {
+                  "text": "送信元MACアドレスだけ",
+                  "explain": "IPで見た応答先を変えられません。"
+                }
+              ],
+              "why": "返送先をLBにします。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "LB正",
+                  "ok": true,
+                  "explain": "原問の通常時は稼働系LBが両サービスを担当します。"
+                },
+                {
+                  "text": "LB副",
+                  "explain": "待機系へ通常通信を振るという条件ではありません。"
+                }
+              ],
+              "why": "原問の通常時は稼働系LBが両サービスを担当します。"
+            }
+          ],
+          "id": "nat-4",
+          "format": "穴埋め",
+          "theme": "返事も負荷分散装置へ戻す",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "同一LANでの往復を作る",
+          "lead": "要求元Web、応答元業務サーバの順です。",
+          "lines": [
+            {
+              "code": "Webサーバが業務VIPへ要求する"
+            },
+            {
+              "code": "LBが宛先を業務実IP、送信元をLBのIPに変える"
+            },
+            {
+              "code": "業務サーバがLBへ応答する"
+            },
+            {
+              "code": "LBが逆変換してWebサーバへ返す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "同じLANだからこそ直接戻らない工夫が必要です。",
+          "ngExplain": "宛先IPだけの変換では復路がLBを迂回し得ます。",
+          "id": "nat-5",
+          "format": "並べ替え",
+          "theme": "返事も負荷分散装置へ戻す",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：応答が必ずLBを通る別ネットワーク構成になった",
+          "choices": [
+            {
+              "text": "全ての負荷分散では送信元変換が絶対必要",
+              "explain": "経路と方式によって必要性は異なります。"
+            },
+            {
+              "text": "送信元変換が必要かは復路条件から再評価する",
+              "ok": true,
+              "explain": "原問の同一LANという理由を別構成へ無条件に広げません。"
+            }
+          ],
+          "id": "nat-6",
+          "format": "選択",
+          "theme": "返事も負荷分散装置へ戻す",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "packet-trace",
+      "title": "変換前後の送信元・宛先を追う",
+      "targets": [
+        "s1-2",
+        "s1-3",
+        "s1-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "同じ線でも違うIPを比べる",
+          "body": "記号を用いると、外部要求元C、Web実IP=W、WebのVIP=VW、業務実IP=B、業務VIP=VB、LB実IP=Lと整理できます。C→VWをLBでC→Wへ、W→VBをL→Bへ変換し、応答時は逆変換します。原問の②との比較は送信元と宛先を別々に行います。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "説明用記号：外部要求 C → VW",
+              "LB後：C → W",
+              "Webから業務：W → VB",
+              "LB後：L → B",
+              "業務の返事：B → L →（逆変換）VB → W"
+            ],
+            "caption": "説明用：IP対とLBでの変換"
+          },
+          "id": "packet-trace-1",
+          "format": "読む",
+          "theme": "変換前後の送信元・宛先を追う",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "外部要求C→VWで宛先だけを変換したC→W。変換前後で等しいのは？",
+          "choices": [
+            {
+              "text": "宛先IP",
+              "explain": "VWからWへ変わっています。"
+            },
+            {
+              "text": "送信元IPのC",
+              "ok": true,
+              "explain": "Webへの入口では送信元IPは変換されません。"
+            }
+          ],
+          "id": "packet-trace-2",
+          "format": "選択",
+          "theme": "変換前後の送信元・宛先を追う",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "業務サーバの応答B→Lを逆変換したVB→W。この宛先が外部要求のLB通過後と同じ理由は？",
+          "choices": [
+            {
+              "text": "どちらも実WebサーバWへ届ける通信だから",
+              "ok": true,
+              "explain": "要求の送信元を比較する問題とは別です。"
+            },
+            {
+              "text": "どちらも外部利用者Cへの応答だから",
+              "explain": "業務処理の返事はWebサーバへ戻ります。"
+            }
+          ],
+          "id": "packet-trace-3",
+          "format": "選択",
+          "theme": "変換前後の送信元・宛先を追う",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "原問の番号で比較",
+          "template": "②と送信元IPが等しいのは{a}。②と宛先IPが等しいのは{b}。図3の空欄いは{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "①",
+                  "ok": true,
+                  "explain": "①と②は外部利用者の送信元IPを保持します。"
+                },
+                {
+                  "text": "④",
+                  "explain": "④の送信元はLBの実IPへ変換済みです。"
+                },
+                {
+                  "text": "⑦",
+                  "explain": "⑦はWebサーバから外部への返事で送信元が異なります。"
+                }
+              ],
+              "why": "①と②は外部利用者の送信元IPを保持します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "⑥",
+                  "ok": true,
+                  "explain": "②も⑥も実Webサーバへ届けます。"
+                },
+                {
+                  "text": "⑧",
+                  "explain": "⑧は外部利用者宛てです。"
+                },
+                {
+                  "text": "⑤",
+                  "explain": "⑤は送信元変換をしたLBへの応答です。"
+                }
+              ],
+              "why": "②も⑥も実Webサーバへ届けます。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "LB正",
+                  "ok": true,
+                  "explain": "Web→業務間でも通常時の同じ稼働LBを通ります。"
+                },
+                {
+                  "text": "FW正",
+                  "explain": "業務サーバ向けVIPの変換担当ではありません。"
+                }
+              ],
+              "why": "Web→業務間でも通常時の同じ稼働LBを通ります。"
+            }
+          ],
+          "id": "packet-trace-4",
+          "format": "穴埋め",
+          "theme": "変換前後の送信元・宛先を追う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "番号を暗記せず比較する",
+          "lead": "図3の全通信を調べる手順です。",
+          "lines": [
+            {
+              "code": "要求の変換前後のIP対を記録する"
+            },
+            {
+              "code": "応答側は逆変換したIP対を記録する"
+            },
+            {
+              "code": "②の送信元と①～⑧の送信元を比較する"
+            },
+            {
+              "code": "②の宛先と①～⑧の宛先を比較する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "①C→VW、②C→W、③W→VB、④L→B、⑤B→L、⑥VB→W、⑦W→C、⑧VW→Cとなり、①と⑥だけがそれぞれ一致します。",
+          "ngExplain": "MACアドレスや矢印の方向の一致ではなく、指定されたIPの欄を比較してください。",
+          "id": "packet-trace-5",
+          "format": "並べ替え",
+          "theme": "変換前後の送信元・宛先を追う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図で確認：練習用変更条件として、④で送信元を変えずW→Bとしたら？",
+          "choices": [
+            {
+              "text": "業務サーバの送信元が外部利用者Cになる",
+              "explain": "送信元変換をやめても業務サーバのIPがCにはなりません。"
+            },
+            {
+              "text": "⑤相当の返事がB→Wで直接戻り得る",
+              "ok": true,
+              "explain": "同一LANにいるWebを返送先として見るからです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.705,
+            "bottom": 0.821,
+            "label": "IPA原図3：①～⑧とLBの位置。本文の変換条件は図の上を含めず補足済み"
+          },
+          "id": "packet-trace-6",
+          "format": "選択",
+          "theme": "変換前後の送信元・宛先を追う",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "proxy-pull",
+      "title": "収集の開始点と代理の向き",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "定期収集を中央で始める",
+          "body": "HTTP（Hypertext Transfer Protocol）のクライアントは要求を始め、サーバは応答します。原問では新業務サーバが収集を開始し、中継装置がクライアント側のフォワードプロキシ、通信アダプタが設備側のリバースプロキシになります。中央から取りに行くと設備ごとの設定変更なしに収集周期を変えやすくなります。",
+          "id": "proxy-pull-1",
+          "format": "読む",
+          "theme": "収集の開始点と代理の向き",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "顧客側の多数の設備を一台ずつ設定し直さず、取得を頻繁にしたい",
+          "choices": [
+            {
+              "text": "各設備の送信タイマを全部変更する",
+              "explain": "設備側を起動点にする運用で、原問の利点を失います。"
+            },
+            {
+              "text": "中央の新業務サーバ側で起動周期を変更する",
+              "ok": true,
+              "explain": "収集のトリガを中央に置く利点です。"
+            }
+          ],
+          "id": "proxy-pull-2",
+          "format": "選択",
+          "theme": "収集の開始点と代理の向き",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "通信アダプタをリバースプロキシとみなす理由は？",
+          "choices": [
+            {
+              "text": "設備側の入口として複数設備への要求を受けるから",
+              "ok": true,
+              "explain": "サービス提供側の代理という向きです。"
+            },
+            {
+              "text": "PCがインターネットへ出るための代理だから",
+              "explain": "それはクライアント側のフォワードプロキシの説明です。"
+            }
+          ],
+          "id": "proxy-pull-3",
+          "format": "選択",
+          "theme": "収集の開始点と代理の向き",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "三つの語を役割に対応させる",
+          "template": "フォワードプロキシは{a}。設備側の{b}は{c}プロキシ。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "中継装置",
+                  "ok": true,
+                  "explain": "要求元の新業務サーバ等に代わって要求を中継します。"
+                },
+                {
+                  "text": "通信アダプタ",
+                  "explain": "原問では設備側を代表する代理です。"
+                }
+              ],
+              "why": "要求元の新業務サーバ等に代わって要求を中継します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "通信アダプタ",
+                  "ok": true,
+                  "explain": "設備群への入口になります。"
+                },
+                {
+                  "text": "新業務サーバ",
+                  "explain": "収集を開始する側です。"
+                }
+              ],
+              "why": "設備群への入口になります。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "リバース",
+                  "ok": true,
+                  "explain": "サーバとなる設備側の代理です。"
+                },
+                {
+                  "text": "フォワード",
+                  "explain": "要求元側の代理とは役割が異なります。"
+                }
+              ],
+              "why": "サーバとなる設備側の代理です。"
+            }
+          ],
+          "id": "proxy-pull-4",
+          "format": "穴埋め",
+          "theme": "収集の開始点と代理の向き",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "運用上の利点を一文にする",
+          "lead": "開始点から変更の容易さへ。",
+          "lines": [
+            {
+              "code": "稼働情報取得の起動をデータセンタ側に置く"
+            },
+            {
+              "code": "中央で要求の間隔を調整する"
+            },
+            {
+              "code": "設備ごとの変更を避けて収集周期を変更できる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "原問の利点は収集周期の変更が容易になることです。",
+          "ngExplain": "中央に置くだけで設備の電源断がなくなるわけではありません。",
+          "id": "proxy-pull-5",
+          "format": "並べ替え",
+          "theme": "収集の開始点と代理の向き",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：設備が自分の固定タイマだけで送信する方式になった",
+          "choices": [
+            {
+              "text": "中央のタイマだけを変えれば送信間隔も必ず変わる",
+              "explain": "設備の送信タイマとは独立です。"
+            },
+            {
+              "text": "収集周期変更に設備側の設定変更が必要になり得る",
+              "ok": true,
+              "explain": "起動点の移動により運用負担が変わります。"
+            }
+          ],
+          "id": "proxy-pull-6",
+          "format": "選択",
+          "theme": "収集の開始点と代理の向き",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "cache-time",
+      "title": "取得時刻とデータ更新時刻を分ける",
+      "targets": [
+        "s2-3",
+        "s2-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "キャッシュは最新とは限らない",
+          "body": "キャッシュは取得済みの内容を一時保存する機能です。If-Modified-Sinceは手元の更新時刻より新しい内容を要求し、Last-Modifiedは返された内容の更新時刻を示します。原問では通信アダプタが1分間隔で取得し、中継装置より高頻度で更新するので、両者の保存時刻が異なり得ます。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "練習用：If-Modified-Since: 10:00",
+              "設備の応答：Last-Modified: 10:03",
+              "応答を受け取った時刻：10:05"
+            ],
+            "caption": "説明用の時刻表記。HTTPの実際の日付構文を省略。"
+          },
+          "id": "cache-time-1",
+          "format": "読む",
+          "theme": "取得時刻とデータ更新時刻を分ける",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "10:05に受け取ったデータのLast-Modifiedが10:03なら保存する更新時刻は？",
+          "choices": [
+            {
+              "text": "10:05",
+              "explain": "転送や受信の時刻と内容の更新時刻を混同しています。"
+            },
+            {
+              "text": "10:03",
+              "ok": true,
+              "explain": "受信時刻ではなく内容の最終更新時刻です。"
+            }
+          ],
+          "id": "cache-time-2",
+          "format": "選択",
+          "theme": "取得時刻とデータ更新時刻を分ける",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "通信アダプタのキャッシュが中継装置より新しいことが多い理由は？",
+          "choices": [
+            {
+              "text": "通信アダプタが1分間隔で設備から取得するから",
+              "ok": true,
+              "explain": "中継装置の更新より頻度が高い条件です。"
+            },
+            {
+              "text": "通信アダプタのIPが常に小さいから",
+              "explain": "アドレスの大小とデータの鮮度に関係はありません。"
+            }
+          ],
+          "id": "cache-time-3",
+          "format": "選択",
+          "theme": "取得時刻とデータ更新時刻を分ける",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "原問のタイムスタンプ",
+          "template": "例Ⅱで設備からLast-Modified:Tcを受けた後、通信アダプタの最新時刻は{a}。TbよりTb′が新しいことが多いのは{b}から。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "Tc",
+                  "ok": true,
+                  "explain": "設備が返した内容の更新時刻で置き換えます。"
+                },
+                {
+                  "text": "Ta",
+                  "explain": "クライアントの要求開始時刻です。"
+                },
+                {
+                  "text": "Tb′",
+                  "explain": "新しい応答を得る前のキャッシュの時刻です。"
+                }
+              ],
+              "why": "設備が返した内容の更新時刻で置き換えます。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "通信アダプタの更新頻度が高い",
+                  "ok": true,
+                  "explain": "単独の1分周期の収集があるためです。"
+                },
+                {
+                  "text": "中継装置が必ず毎秒更新する",
+                  "explain": "本文にない条件で、原問と逆です。"
+                }
+              ],
+              "why": "単独の1分周期の収集があるためです。"
+            }
+          ],
+          "id": "cache-time-4",
+          "format": "穴埋め",
+          "theme": "取得時刻とデータ更新時刻を分ける",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "条件付きGETで更新する",
+          "lead": "GETは内容取得の要求です。",
+          "lines": [
+            {
+              "code": "手元キャッシュの更新時刻を読む"
+            },
+            {
+              "code": "If-Modified-Sinceにその時刻を付けて要求する"
+            },
+            {
+              "code": "設備から新しい内容とLast-Modifiedを受ける"
+            },
+            {
+              "code": "キャッシュ内容と更新時刻を置き換える"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "新しい応答を得たとき、要求開始時刻ではなくLast-Modifiedを使います。",
+          "ngExplain": "条件付き要求を出しただけでは新データを取得したとは限りません。",
+          "id": "cache-time-5",
+          "format": "並べ替え",
+          "theme": "取得時刻とデータ更新時刻を分ける",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図6の例Ⅱ：Tb≦Tb′＜Tc。更新後の次の要求に使う時刻は？",
+          "choices": [
+            {
+              "text": "Ta",
+              "explain": "要求の開始時刻でありキャッシュ内容の更新時刻ではありません。"
+            },
+            {
+              "text": "Tc",
+              "ok": true,
+              "explain": "取得した最新版を基準に、さらに新しい内容を求めます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.405,
+            "bottom": 0.553,
+            "label": "IPA原図6の例Ⅱ：更新を取得できた場合だけの切抜き"
+          },
+          "id": "cache-time-6",
+          "format": "選択",
+          "theme": "取得時刻とデータ更新時刻を分ける",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "cache-failure",
+      "title": "更新が得られない二つの場合",
+      "targets": [
+        "s2-5",
+        "s2-6"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "返事がない場合と変更なしの返事",
+          "body": "TCP（Transmission Control Protocol）接続が確立できなければ新しいデータを取りに行けません。接続できてもNot Modifiedという応答なら内容は変更されていません。原問の取得案はどちらも既存キャッシュを使うので、電源断に備えた保存データの鮮度が大切です。",
+          "id": "cache-failure-1",
+          "format": "読む",
+          "theme": "更新が得られない二つの場合",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "設備からNot Modifiedを受信。どの状態か？",
+          "choices": [
+            {
+              "text": "TCP接続が確立できなかった",
+              "explain": "HTTPの応答を受けているため、接続自体はできています。"
+            },
+            {
+              "text": "通信できたが、条件で指定した時刻より新しい内容がない",
+              "ok": true,
+              "explain": "無応答や接続失敗とは異なります。"
+            }
+          ],
+          "id": "cache-failure-2",
+          "format": "選択",
+          "theme": "更新が得られない二つの場合",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "1分周期を2分に延ばすと電源断中の応答が古くなり得る理由は？",
+          "choices": [
+            {
+              "text": "最後に成功した取得から長い時間が経つ可能性が増す",
+              "ok": true,
+              "explain": "設備から更新できない間は保存したデータに頼ります。"
+            },
+            {
+              "text": "2分周期ではCookieが必ず消える",
+              "explain": "Cookieではなくキャッシュの更新頻度が論点です。"
+            }
+          ],
+          "id": "cache-failure-3",
+          "format": "選択",
+          "theme": "更新が得られない二つの場合",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "更新できない二つの条件",
+          "template": "設備と{a}場合、又は設備が{b}場合は保存済み情報を利用する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "TCPコネクションを確立できない",
+                  "ok": true,
+                  "explain": "電源断などで新しい内容を要求できない場合です。"
+                },
+                {
+                  "text": "TCP接続に成功して新しい内容を得た",
+                  "explain": "その場合はキャッシュを更新できます。"
+                }
+              ],
+              "why": "電源断などで新しい内容を要求できない場合です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "Not Modifiedを応答した",
+                  "ok": true,
+                  "explain": "変更がないので保存済みの内容を利用します。"
+                },
+                {
+                  "text": "新しい内容を応答した",
+                  "explain": "新しい内容があれば更新する条件です。"
+                }
+              ],
+              "why": "変更がないので保存済みの内容を利用します。"
+            }
+          ],
+          "id": "cache-failure-4",
+          "format": "穴埋め",
+          "theme": "更新が得られない二つの場合",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "周期延長の影響を条件付きで書く",
+          "lead": "設備が停止しているときの応答への影響を組みます。",
+          "lines": [
+            {
+              "code": "通信アダプタの定期取得周期を長くする"
+            },
+            {
+              "code": "キャッシュの更新機会が少なくなる"
+            },
+            {
+              "code": "電源断などで設備と通信できないとき"
+            },
+            {
+              "code": "クライアントへ渡す稼働情報が古くなり得る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "『常に古い』でなく設備から更新が取れない条件を入れます。",
+          "ngExplain": "通信できる設備から新しい応答を得られる場合まで古いと断定しないでください。",
+          "id": "cache-failure-5",
+          "format": "並べ替え",
+          "theme": "更新が得られない二つの場合",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：キャッシュが古いが設備は起動中で新データを応答した",
+          "choices": [
+            {
+              "text": "必ず古いキャッシュを返す",
+              "explain": "本取得案は新しい稼働情報が得られれば更新します。"
+            },
+            {
+              "text": "新しい内容へ更新できる",
+              "ok": true,
+              "explain": "キャッシュの古さを引き継ぐとは限りません。"
+            }
+          ],
+          "id": "cache-failure-6",
+          "format": "選択",
+          "theme": "更新が得られない二つの場合",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "coap-boundary",
+      "title": "プロトコルを変える境界を決める",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "設備側だけを軽くする",
+          "body": "CoAP（Constrained Application Protocol）は制約のある機器向けの通信プロトコルです。原問ではUDP（User Datagram Protocol）で使い、通信アダプタでHTTPと相互変換してFWを通る側をHTTPのままにします。設備側フレームのデータ部にはCoAPだけでなくIPヘッダとUDPヘッダも入ります。",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "アプリケーション",
+                "parts": [
+                  {
+                    "t": "CoAP",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "IP/UDP",
+                "parts": [
+                  {
+                    "t": "IP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "UDP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "CoAP",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：設備側での包含関係。実際のバイト長比率ではない。"
+          },
+          "id": "coap-boundary-1",
+          "format": "読む",
+          "theme": "プロトコルを変える境界を決める",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "FW（Firewall）の既存HTTP許可設定を変えずに済ませる変換場所は？",
+          "choices": [
+            {
+              "text": "データセンタ側の中継装置だけ",
+              "explain": "そこから設備までCoAPにするとFWを通るプロトコルも変わります。"
+            },
+            {
+              "text": "設備側の通信アダプタ",
+              "ok": true,
+              "explain": "FWを通る通信は従来のHTTPのままにできます。"
+            }
+          ],
+          "id": "coap-boundary-2",
+          "format": "選択",
+          "theme": "プロトコルを変える境界を決める",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "CoAP以外にIPとUDPヘッダが必要な理由は？",
+          "choices": [
+            {
+              "text": "ネットワークの届け先と通信ポート等を表すため",
+              "ok": true,
+              "explain": "CoAPの情報だけでは下位層の配送を表せません。"
+            },
+            {
+              "text": "CoAPがTCP接続を確立するため",
+              "explain": "原問はUDP上のCoAPです。"
+            }
+          ],
+          "id": "coap-boundary-3",
+          "format": "選択",
+          "theme": "プロトコルを変える境界を決める",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "境界と包含を組む",
+          "template": "変換は{a}へ実装。IEEE 802.15.4のデータ部にはCoAP以外に{b}と{c}が含まれる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "通信アダプタ",
+                  "ok": true,
+                  "explain": "FWより設備側で変換します。"
+                },
+                {
+                  "text": "新業務サーバ",
+                  "explain": "FWを通る通信も変更することになります。"
+                }
+              ],
+              "why": "FWより設備側で変換します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "IPヘッダ",
+                  "ok": true,
+                  "explain": "IPによる配送の情報です。"
+                },
+                {
+                  "text": "Ethernetヘッダ",
+                  "explain": "IEEE 802.15.4の中にEthernetを包む条件ではありません。"
+                }
+              ],
+              "why": "IPによる配送の情報です。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "UDPヘッダ",
+                  "ok": true,
+                  "explain": "UDP上でCoAPを運びます。"
+                },
+                {
+                  "text": "TCPヘッダ",
+                  "explain": "今回はTCPを使いません。"
+                }
+              ],
+              "why": "UDP上でCoAPを運びます。"
+            }
+          ],
+          "id": "coap-boundary-4",
+          "format": "穴埋め",
+          "theme": "プロトコルを変える境界を決める",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "HTTPからCoAPへ要求をつなぐ",
+          "lead": "FW設定を変えない原問の案です。",
+          "lines": [
+            {
+              "code": "新業務サーバからHTTP要求を送る"
+            },
+            {
+              "code": "FWをHTTPとして通過する"
+            },
+            {
+              "code": "通信アダプタでCoAPへ変換する"
+            },
+            {
+              "code": "設備へUDP上で送る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "変換点の配置とFWが見る通信を結び付けます。",
+          "ngExplain": "FWの手前で変換するとFWがCoAP側を見ることになります。",
+          "id": "coap-boundary-5",
+          "format": "並べ替え",
+          "theme": "プロトコルを変える境界を決める",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：変換をFWよりデータセンタ側へ移す",
+          "choices": [
+            {
+              "text": "変換場所はFW設定と無関係",
+              "explain": "どの通信が境界を通るかが変わります。"
+            },
+            {
+              "text": "FWのUDP・CoAP通過条件を再確認する必要がある",
+              "ok": true,
+              "explain": "FWが見るプロトコルが変わります。"
+            }
+          ],
+          "id": "coap-boundary-6",
+          "format": "選択",
+          "theme": "プロトコルを変える境界を決める",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "coap-efficiency",
+      "title": "少量データの手続とヘッダを減らす",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "本文より封筒が大きくならないように",
+          "body": "少量の稼働情報を送るとき、接続の開始・終了手順やヘッダは相対的に大きな負担になります。原問のCoAP基本ヘッダは4バイトで、UDPではTCPの接続確立・終了が不要です。TAT（Turn Around Time、処理開始から結果を得るまでの時間）を改善する理由を二つに分けます。",
+          "fig": {
+            "kind": "header",
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "Ver",
+                    "bits": 2
+                  },
+                  {
+                    "t": "T",
+                    "bits": 2
+                  },
+                  {
+                    "t": "TKL",
+                    "bits": 4
+                  },
+                  {
+                    "t": "Code",
+                    "bits": 8
+                  },
+                  {
+                    "t": "Message ID",
+                    "bits": 16
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：CoAP基本ヘッダは4バイト"
+          },
+          "id": "coap-efficiency-1",
+          "format": "読む",
+          "theme": "少量データの手続とヘッダを減らす",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "UDPを使うことで省ける手続は？",
+          "choices": [
+            {
+              "text": "全ての再送処理",
+              "explain": "UDPを使ってもCoAP側で確認や再送を行うことがあります。"
+            },
+            {
+              "text": "TCPの接続確立と終了",
+              "ok": true,
+              "explain": "TCPの握手や切断手順を必要としません。"
+            }
+          ],
+          "id": "coap-efficiency-2",
+          "format": "選択",
+          "theme": "少量データの手続とヘッダを減らす",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "短いフレームでCoAPの小さいヘッダが役立つ理由は？",
+          "choices": [
+            {
+              "text": "同じデータ部に実データを効率よく格納できる",
+              "ok": true,
+              "explain": "制御情報の割合を小さくできます。"
+            },
+            {
+              "text": "IPヘッダまで不要になる",
+              "explain": "CoAPとは別にIP・UDPヘッダも必要です。"
+            }
+          ],
+          "id": "coap-efficiency-3",
+          "format": "選択",
+          "theme": "少量データの手続とヘッダを減らす",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "異なる二つの根拠",
+          "template": "UDPでは{a}が不要。CoAPでは{b}のでデータ格納効率が良い。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "TCP接続の確立と終了の手順",
+                  "ok": true,
+                  "explain": "手続に必要な通信を減らします。"
+                },
+                {
+                  "text": "宛先の指定",
+                  "explain": "UDPでも宛先IPやポートは必要です。"
+                }
+              ],
+              "why": "手続に必要な通信を減らします。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "ヘッダ長が短い",
+                  "ok": true,
+                  "explain": "通信量の面での理由です。"
+                },
+                {
+                  "text": "データが必ずゼロになる",
+                  "explain": "稼働情報そのものは送ります。"
+                }
+              ],
+              "why": "通信量の面での理由です。"
+            }
+          ],
+          "id": "coap-efficiency-4",
+          "format": "穴埋め",
+          "theme": "少量データの手続とヘッダを減らす",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "二つの観点でTATを説明",
+          "lead": "手続面、格納面、効果の順にします。",
+          "lines": [
+            {
+              "code": "UDPでTCP接続の確立・終了を省く"
+            },
+            {
+              "code": "CoAPの短いヘッダで少量データを効率よく運ぶ"
+            },
+            {
+              "code": "通信の手間を減らしてTATの改善を期待する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "単に『UDPは速い』では二つの理由を示せません。",
+          "ngExplain": "パケット損失などに関係なく必ず速くなるという保証ではありません。",
+          "id": "coap-efficiency-5",
+          "format": "並べ替え",
+          "theme": "少量データの手続とヘッダを減らす",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：無線の損失が多くCoAPで再送が繰り返される",
+          "choices": [
+            {
+              "text": "UDPには絶対に再送がないので影響しない",
+              "explain": "UDP自体の再送がなくてもアプリ層で再送できます。"
+            },
+            {
+              "text": "小さいヘッダだけでは実TATの短縮を保証できない",
+              "ok": true,
+              "explain": "手続の削減と通信品質の影響は別に評価します。"
+            }
+          ],
+          "id": "coap-efficiency-6",
+          "format": "選択",
+          "theme": "少量データの手続とヘッダを減らす",
+          "stage": "transfer",
+          "scaffold": 0
+        },
+        {
+          "type": "info",
+          "title": "次は原問を補助なしで解く",
+          "body": "この教材での操作はここまでです。次は既存の原問画面を開き、解説・選択肢・解答例を見ずに、大問全体へ取り組んでください。複数の空欄や指定された回答の個数も自分で確認します。原問の答案は教材の回答とは別に保存されます。",
+          "id": "reuse-original-ready",
+          "format": "読む",
+          "theme": "一つの接続で複数設備を扱う",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "vlan",
+      "title": "LBを使う通信と使わない通信を分ける",
+      "targets": [
+        "s4-1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "同じ筐体の中でも経路は分ける",
+          "body": "VLAN（Virtual LAN）はLANを論理的に分離する仕組みです。原問の新業務サーバはLBによる振り分けを使い、中継装置はFWへ直接向かうので別VLANに置きます。新業務サーバのデフォルトゲートウェイはLB、中継装置のデフォルトゲートウェイはFWです。",
+          "id": "vlan-1",
+          "format": "読む",
+          "theme": "LBを使う通信と使わない通信を分ける",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "新業務サーバの戻り通信も負荷分散の変換を経由させる出口は？",
+          "choices": [
+            {
+              "text": "FWだけ",
+              "explain": "LBを通るべき復路を迂回するおそれがあります。"
+            },
+            {
+              "text": "LB",
+              "ok": true,
+              "explain": "原問で負荷分散の担当となる装置を通します。"
+            }
+          ],
+          "id": "vlan-2",
+          "format": "選択",
+          "theme": "LBを使う通信と使わない通信を分ける",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "新業務サーバと中継装置を別VLANにする理由は？",
+          "choices": [
+            {
+              "text": "LB経由とFW直接という異なる接続先を分離するため",
+              "ok": true,
+              "explain": "同じブレードでもネットワーク上の役割は異なります。"
+            },
+            {
+              "text": "仮想サーバはVLANを一切使えないため",
+              "explain": "仮想NICや内部スイッチでVLANを利用する条件です。"
+            }
+          ],
+          "id": "vlan-3",
+          "format": "選択",
+          "theme": "LBを使う通信と使わない通信を分ける",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "ゲートウェイと接続段",
+          "template": "新業務サーバのGWは{a}で、外部のL2SW-30/31側へつなぐ。中継装置は{b}をGWとしL2SW-20/21側へつなぐ。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "LB",
+                  "ok": true,
+                  "explain": "LBの下側に新業務サーバ用VLANを接続します。"
+                },
+                {
+                  "text": "FW",
+                  "explain": "中継装置側の出口です。"
+                }
+              ],
+              "why": "LBの下側に新業務サーバ用VLANを接続します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "FW",
+                  "ok": true,
+                  "explain": "LBを通さずFWの内側へ接続します。"
+                },
+                {
+                  "text": "LB",
+                  "explain": "中継装置はLB利用なしの条件です。"
+                }
+              ],
+              "why": "LBを通さずFWの内側へ接続します。"
+            }
+          ],
+          "id": "vlan-4",
+          "format": "穴埋め",
+          "theme": "LBを使う通信と使わない通信を分ける",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "VLANごとの道筋を決める",
+          "lead": "線を引く前に役割を確認します。",
+          "lines": [
+            {
+              "code": "新業務サーバと中継装置のVLANを分ける"
+            },
+            {
+              "code": "新業務サーバVLANをLB下の段へ対応させる"
+            },
+            {
+              "code": "中継装置VLANをFW下・LB上の段へ対応させる"
+            },
+            {
+              "code": "それぞれのデフォルトゲートウェイを設定する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "物理配線だけで二つの異なるLANを混ぜないことが重要です。",
+          "ngExplain": "外部L2SW-10/11はFWの外側なので、どちらの接続段とも異なります。",
+          "id": "vlan-5",
+          "format": "並べ替え",
+          "theme": "LBを使う通信と使わない通信を分ける",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：中継装置もLBで振り分ける設計へ変えたい",
+          "choices": [
+            {
+              "text": "通信量だけ変えれば配線条件は不変",
+              "explain": "経路の役割を変えたため構成の見直しが必要です。"
+            },
+            {
+              "text": "LB利用の有無が変わるのでVLANとGW設計を再検討する",
+              "ok": true,
+              "explain": "原問の配線をそのまま適用できるとは限りません。"
+            }
+          ],
+          "id": "vlan-6",
+          "format": "選択",
+          "theme": "LBを使う通信と使わない通信を分ける",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "redundant-wires",
+      "title": "原図に四つの接続を加える",
+      "targets": [
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "二つの経路を両方のVLANで持つ",
+          "body": "内部L2SW-0と1は冗長な接続口です。新業務用と中継装置用の各VLANについて、片側のスイッチが故障しても別経路が必要です。公式解答例の配線は内部0を外部20・30へ、内部1を外部21・31へ接続する四本です。",
+          "id": "redundant-wires-1",
+          "format": "読む",
+          "theme": "原図に四つの接続を加える",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "内部0だけに外部20と30を接続し、内部1は未接続なら？",
+          "choices": [
+            {
+              "text": "内部1が自動的に無線で接続する",
+              "explain": "配線されていない経路は使えません。"
+            },
+            {
+              "text": "内部0の故障で両VLANの外部経路を失う",
+              "ok": true,
+              "explain": "仮想NICだけ冗長でも外部への代替経路がありません。"
+            }
+          ],
+          "id": "redundant-wires-2",
+          "format": "選択",
+          "theme": "原図に四つの接続を加える",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "内部1を外部21にだけ接続した場合、足りないのは？",
+          "choices": [
+            {
+              "text": "新業務サーバ用VLANの外部31側への経路",
+              "ok": true,
+              "explain": "FW側の経路だけでなくLB側の経路も必要です。"
+            },
+            {
+              "text": "外部10への接続",
+              "explain": "FW外側へ抜ける経路は求められていません。"
+            }
+          ],
+          "id": "redundant-wires-3",
+          "format": "選択",
+          "theme": "原図に四つの接続を加える",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "公式解答例の四本を組み立てる",
+          "template": "内部0はL2SW-{a}とL2SW-{b}へ。内部1はL2SW-{c}とL2SW-{d}へ。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "20",
+                  "ok": true,
+                  "explain": "中継装置用のFW下側です。"
+                },
+                {
+                  "text": "10",
+                  "explain": "FWの外側であり誤った段です。"
+                }
+              ],
+              "why": "中継装置用のFW下側です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "30",
+                  "ok": true,
+                  "explain": "新業務用のLB下側です。"
+                },
+                {
+                  "text": "10",
+                  "explain": "LB経由のサーバ段につながりません。"
+                }
+              ],
+              "why": "新業務用のLB下側です。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "21",
+                  "ok": true,
+                  "explain": "内部1にもFW下側の経路を用意します。"
+                },
+                {
+                  "text": "11",
+                  "explain": "FW外側への接続は不適切です。"
+                }
+              ],
+              "why": "内部1にもFW下側の経路を用意します。"
+            },
+            {
+              "key": "d",
+              "label": "空欄4",
+              "choices": [
+                {
+                  "text": "31",
+                  "ok": true,
+                  "explain": "内部1にもLB下側の経路を用意します。"
+                },
+                {
+                  "text": "11",
+                  "explain": "新業務用VLANの接続段ではありません。"
+                }
+              ],
+              "why": "内部1にもLB下側の経路を用意します。"
+            }
+          ],
+          "id": "redundant-wires-4",
+          "format": "穴埋め",
+          "theme": "原図に四つの接続を加える",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "冗長性を確認する",
+          "lead": "二つの用途を混ぜずに確認します。",
+          "lines": [
+            {
+              "code": "中継装置VLANが20・21側へ出られると確認する"
+            },
+            {
+              "code": "新業務サーバVLANが30・31側へ出られると確認する"
+            },
+            {
+              "code": "内部0故障時に内部1の両経路を確認する"
+            },
+            {
+              "code": "内部1故障時に内部0の両経路を確認する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "片側故障ごとに両方の役割を検査します。",
+          "ngExplain": "四本あるだけで十分とせず、接続段とVLAN分離も確認してください。",
+          "id": "redundant-wires-5",
+          "format": "並べ替え",
+          "theme": "原図に四つの接続を加える",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図9確認：内部0故障時に新業務用VLANが利用する公式例の経路は？",
+          "choices": [
+            {
+              "text": "内部1からL2SW-21側だけ",
+              "explain": "21側は中継装置用の接続段であり新業務用と別です。"
+            },
+            {
+              "text": "内部1からL2SW-31側",
+              "ok": true,
+              "explain": "LB下側へのもう一つの経路が残ります。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.21,
+            "bottom": 0.463,
+            "label": "IPA原図9：未記入の配線図。解答図ではない"
+          },
+          "id": "redundant-wires-6",
+          "format": "選択",
+          "theme": "原図に四つの接続を加える",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "arrival-rate",
+      "title": "毎秒何件の処理が始まるか",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "接続数計算は一秒当たりから",
+          "body": "トランザクションは一組の要求と応答です。均等に収集を開始するなら、1周期に取得する設備数を周期の秒数で割ると毎秒の開始数が求まります。原問の見積り式では108,000台と3,600秒から全体の起動率を求め、サーバ台数でさらに2倍しません。",
+          "id": "arrival-rate-1",
+          "format": "読む",
+          "theme": "毎秒何件の処理が始まるか",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用：600台を60秒で1回ずつ収集。開始が均等なら式は？",
+          "choices": [
+            {
+              "text": "600×60",
+              "explain": "時間が長いほど毎秒の件数が増える逆の式です。"
+            },
+            {
+              "text": "600÷60",
+              "ok": true,
+              "explain": "件数を1周期の秒数で割ります。"
+            }
+          ],
+          "id": "arrival-rate-2",
+          "format": "選択",
+          "theme": "毎秒何件の処理が始まるか",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "原問で108,000÷3,600を求める理由は？",
+          "choices": [
+            {
+              "text": "1時間の対象台数を1秒当たりの開始件数に直すため",
+              "ok": true,
+              "explain": "同時接続数より先に起動率を求めます。"
+            },
+            {
+              "text": "通信が成功した台数だけを数えるため",
+              "explain": "成功・失敗の保持時間は次の段階で分けます。"
+            }
+          ],
+          "id": "arrival-rate-3",
+          "format": "選択",
+          "theme": "毎秒何件の処理が始まるか",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "起動率と周期短縮",
+          "template": "原問の毎秒トランザクション数アは{a}。周期を3,600秒から300秒へ変えると起動率は{b}倍。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "30",
+                  "ok": true,
+                  "explain": "108,000÷3,600＝30件/秒です。"
+                },
+                {
+                  "text": "60",
+                  "explain": "原問の全体見積りにサーバ2台を重ねて掛ける誤りです。"
+                }
+              ],
+              "why": "108,000÷3,600＝30件/秒です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "12",
+                  "ok": true,
+                  "explain": "3,600÷300＝12倍の頻度です。"
+                },
+                {
+                  "text": "5",
+                  "explain": "5分という時間の値を倍率と混同しています。"
+                }
+              ],
+              "why": "3,600÷300＝12倍の頻度です。"
+            }
+          ],
+          "id": "arrival-rate-4",
+          "format": "穴埋め",
+          "theme": "毎秒何件の処理が始まるか",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "起動率を作る順序",
+          "lead": "単位をそろえてから計算します。",
+          "lines": [
+            {
+              "code": "1周期に対象とする設備数を確認する"
+            },
+            {
+              "code": "収集周期を秒に直す"
+            },
+            {
+              "code": "設備数を周期の秒数で割る"
+            },
+            {
+              "code": "毎秒のトランザクション数として扱う"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "台数÷秒で件/秒になります。",
+          "ngExplain": "件/秒はまだ同時コネクション数ではありません。",
+          "id": "arrival-rate-5",
+          "format": "並べ替え",
+          "theme": "毎秒何件の処理が始まるか",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：90,000台を300秒で収集する",
+          "choices": [
+            {
+              "text": "30件/秒",
+              "explain": "周期が違うので原問の30をそのまま使えません。"
+            },
+            {
+              "text": "300件/秒",
+              "ok": true,
+              "explain": "90,000÷300です。"
+            }
+          ],
+          "id": "arrival-rate-6",
+          "format": "選択",
+          "theme": "毎秒何件の処理が始まるか",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "holding-time",
+      "title": "短い成功と長い無応答を重み付けする",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "接続の平均寿命を求める",
+          "body": "FWは接続開始から切断完了まで状態を保持します。原問は80%が3秒で成功、20%は無通信タイムアウトTout秒まで残るので平均保持時間は0.8×3＋0.2×Tout秒です。毎秒の開始数に平均保持時間を掛けると、平均同時接続数を見積もれます。",
+          "id": "holding-time-1",
+          "format": "読む",
+          "theme": "短い成功と長い無応答を重み付けする",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "平均保持時間を求める式は？",
+          "choices": [
+            {
+              "text": "(3＋Tout)÷2",
+              "explain": "成功・失敗が半々という誤った割合になります。"
+            },
+            {
+              "text": "0.8×3＋0.2×Tout",
+              "ok": true,
+              "explain": "成功と失敗それぞれの割合で重み付けします。"
+            }
+          ],
+          "id": "holding-time-2",
+          "format": "選択",
+          "theme": "短い成功と長い無応答を重み付けする",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "成功側だけを数えたら何を見落とす？",
+          "choices": [
+            {
+              "text": "返事のない接続がToutまでFWの状態を占有すること",
+              "ok": true,
+              "explain": "失敗側の待ち時間が同時数を増やします。"
+            },
+            {
+              "text": "失敗は必ず0秒で消えること",
+              "explain": "原問の無通信タイムアウトを無視しています。"
+            }
+          ],
+          "id": "holding-time-3",
+          "format": "選択",
+          "theme": "短い成功と長い無応答を重み付けする",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "三つの空欄を式へ戻す",
+          "template": "毎秒ア={a}件、平均保持2.4＋0.2×Tout秒より、同時数はイ={b}＋ウ={c}×Tout。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "30",
+                  "ok": true,
+                  "explain": "前節の起動率です。"
+                },
+                {
+                  "text": "108000",
+                  "explain": "1周期の台数であり毎秒の値ではありません。"
+                }
+              ],
+              "why": "前節の起動率です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "72",
+                  "ok": true,
+                  "explain": "30×2.4＝72です。"
+                },
+                {
+                  "text": "2.4",
+                  "explain": "平均秒数をそのまま接続数にしてはいけません。"
+                }
+              ],
+              "why": "30×2.4＝72です。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "6",
+                  "ok": true,
+                  "explain": "30×0.2＝6です。"
+                },
+                {
+                  "text": "0.2",
+                  "explain": "起動率を掛ける前の割合です。"
+                }
+              ],
+              "why": "30×0.2＝6です。"
+            }
+          ],
+          "id": "holding-time-4",
+          "format": "穴埋め",
+          "theme": "短い成功と長い無応答を重み付けする",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "平均同時接続数まで組み立てる",
+          "lead": "二段階の計算を並べます。",
+          "lines": [
+            {
+              "code": "成功の寄与0.8×3＝2.4秒を求める"
+            },
+            {
+              "code": "失敗の寄与0.2×Tout秒を加える"
+            },
+            {
+              "code": "毎秒30件を平均保持時間に掛ける"
+            },
+            {
+              "code": "72＋6×Toutコネクションと整理する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "帯域が小さくても状態保持数は大きくなり得ます。",
+          "ngExplain": "データが数バイトだからFW負荷も必ず小さいとは言えません。",
+          "id": "holding-time-5",
+          "format": "並べ替え",
+          "theme": "短い成功と長い無応答を重み付けする",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：Tout=10秒なら、原問の開始率での同時数は？",
+          "choices": [
+            {
+              "text": "30",
+              "explain": "毎秒開始数と同時数を混同しています。"
+            },
+            {
+              "text": "132",
+              "ok": true,
+              "explain": "72＋6×10＝132です。"
+            },
+            {
+              "text": "82",
+              "explain": "係数6を掛けず72＋10としてしまっています。"
+            }
+          ],
+          "id": "holding-time-6",
+          "format": "選択",
+          "theme": "短い成功と長い無応答を重み付けする",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "close",
+      "title": "長く残る接続を必要な範囲で短くする",
+      "targets": [
+        "s4-4",
+        "s4-5"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "短すぎる制限も失敗を増やす",
+          "body": "Toutを短くすると無応答接続の占有時間を減らせますが、正常な応答まで切ってはいけません。HTTP/1.1で後続の要求がないと分かるなら、その最後の要求にConnection: closeを付けて終了させる方法があります。原問の二つの短縮案は別々に説明します。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "説明用：次の要求がある → 接続を再利用",
+              "説明用：この要求が最後 → Connection: close",
+              "無応答時 → 正常通信を妨げないToutで終了"
+            ],
+            "caption": "説明用：最後の要求と無通信タイムアウトの使い分け"
+          },
+          "id": "close-1",
+          "format": "読む",
+          "theme": "長く残る接続を必要な範囲で短くする",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "Toutをできるだけ小さくするときの制約は？",
+          "choices": [
+            {
+              "text": "常に0秒にすること",
+              "explain": "通常の処理時間さえ待てません。"
+            },
+            {
+              "text": "正常な通信に支障を出さないこと",
+              "ok": true,
+              "explain": "短縮だけを優先して正常応答を切らないようにします。"
+            }
+          ],
+          "id": "close-2",
+          "format": "選択",
+          "theme": "長く残る接続を必要な範囲で短くする",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "最初の要求から必ずConnection: closeにすると不都合なのは？",
+          "choices": [
+            {
+              "text": "後続要求があっても接続の再利用を妨げる",
+              "ok": true,
+              "explain": "最終要求かどうかで使い分けます。"
+            },
+            {
+              "text": "HTTPがUDPへ変わる",
+              "explain": "接続の終了指定であり転送プロトコル変更ではありません。"
+            }
+          ],
+          "id": "close-3",
+          "format": "選択",
+          "theme": "長く残る接続を必要な範囲で短くする",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "二つの短縮案",
+          "template": "Toutは{a}範囲でなるべく小さくする。クローズ接続オプションは{b}要求に付与する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "正常通信に支障がない",
+                  "ok": true,
+                  "explain": "性能と正常通信の成立を両立します。"
+                },
+                {
+                  "text": "成功率を無視できる",
+                  "explain": "再送・再接続による別負荷を招きます。"
+                }
+              ],
+              "why": "性能と正常通信の成立を両立します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "後続がない",
+                  "ok": true,
+                  "explain": "使い終わった接続を切断します。"
+                },
+                {
+                  "text": "後続が必ずある最初の",
+                  "explain": "再利用したい接続を早く閉じてしまいます。"
+                }
+              ],
+              "why": "使い終わった接続を切断します。"
+            }
+          ],
+          "id": "close-4",
+          "format": "穴埋め",
+          "theme": "長く残る接続を必要な範囲で短くする",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "終了指定を使う判断",
+          "lead": "待たずに閉じられる場合です。",
+          "lines": [
+            {
+              "code": "残りの要求があるか確認する"
+            },
+            {
+              "code": "後続がない最後の要求と判断する"
+            },
+            {
+              "code": "その要求へConnection: closeを付ける"
+            },
+            {
+              "code": "応答後にコネクションを切断する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "最後の要求を送る前に接続を切るわけではありません。",
+          "ngExplain": "タイムアウトと明示的な終了指定を混同しないでください。",
+          "id": "close-5",
+          "format": "並べ替え",
+          "theme": "長く残る接続を必要な範囲で短くする",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：正常応答に最大8秒必要なのにToutを2秒へ",
+          "choices": [
+            {
+              "text": "同時数が減るので必ず良い設定",
+              "explain": "正常応答が完了できるかを確認する必要があります。"
+            },
+            {
+              "text": "正常通信を切るおそれがあり設定を再評価する",
+              "ok": true,
+              "explain": "同時数削減だけで正しさを犠牲にしてはいけません。"
+            }
+          ],
+          "id": "close-6",
+          "format": "選択",
+          "theme": "長く残る接続を必要な範囲で短くする",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "reuse",
+      "title": "一つの接続で複数設備を扱う",
+      "targets": [
+        "s4-6"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "ホスト名を共通にし、設備をパスで区別する",
+          "body": "FQDN（Fully Qualified Domain Name、完全修飾ドメイン名）はアクセス先ホストの名前です。原問の案では通信アダプタにFQDNを付け、URLのパスで設備やリソースを区別すれば、同じ相手への一つの接続で複数設備を扱えます。HTTP/1.1のパイプライン化は複数要求を同一接続へ載せる工夫です。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "練習用：http://adapter.example.org/device-1/status",
+              "練習用：http://adapter.example.org/device-2/status",
+              "共通ホスト：adapter.example.org"
+            ],
+            "caption": "説明用URL：原問のURLを引用したものではない。"
+          },
+          "id": "reuse-1",
+          "format": "読む",
+          "theme": "一つの接続で複数設備を扱う",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "設備ごとに別ホスト扱いするより通信アダプタにFQDNを付ける狙いは？",
+          "choices": [
+            {
+              "text": "全設備のデータを同じものにする",
+              "explain": "通信のまとめ方と設備のデータ内容は別です。"
+            },
+            {
+              "text": "複数設備への要求を同じ接続相手へまとめる",
+              "ok": true,
+              "explain": "設備の識別はパスに残せます。"
+            }
+          ],
+          "id": "reuse-2",
+          "format": "選択",
+          "theme": "一つの接続で複数設備を扱う",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "『パイプライン化する』だけでは不足する設計要素は？",
+          "choices": [
+            {
+              "text": "FQDNを通信アダプタへ付けるURL設計",
+              "ok": true,
+              "explain": "複数設備のアクセスを同じ接続へ集約する前提です。"
+            },
+            {
+              "text": "設備を全て同じIPに強制変更する",
+              "explain": "通信アダプタが設備を区別して中継する案です。"
+            }
+          ],
+          "id": "reuse-3",
+          "format": "選択",
+          "theme": "一つの接続で複数設備を扱う",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "前提と効果を答案にする",
+          "template": "{a}にFQDNを付与し、{b}を使って{c}設備から稼働情報を取得する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "通信アダプタ",
+                  "ok": true,
+                  "explain": "設備をまとめる入口に名前を付けます。"
+                },
+                {
+                  "text": "個々の設備だけ",
+                  "explain": "設備別ホストのままでは同一接続への集約が難しくなります。"
+                }
+              ],
+              "why": "設備をまとめる入口に名前を付けます。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "同一コネクション",
+                  "ok": true,
+                  "explain": "状態保持数を減らすため再利用します。"
+                },
+                {
+                  "text": "設備ごとの新規コネクション",
+                  "explain": "同時接続削減の狙いと反対です。"
+                }
+              ],
+              "why": "状態保持数を減らすため再利用します。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "複数の",
+                  "ok": true,
+                  "explain": "集約する対象です。"
+                },
+                {
+                  "text": "一つだけの",
+                  "explain": "複数設備の集約という答案要素が落ちます。"
+                }
+              ],
+              "why": "集約する対象です。"
+            }
+          ],
+          "id": "reuse-4",
+          "format": "穴埋め",
+          "theme": "一つの接続で複数設備を扱う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "URL設計から接続数削減へ",
+          "lead": "原因から効果へ並べてください。",
+          "lines": [
+            {
+              "code": "通信アダプタに共通のFQDNを付ける"
+            },
+            {
+              "code": "パスで設備とリソースを区別する"
+            },
+            {
+              "code": "同一TCP接続で複数設備への要求を送る"
+            },
+            {
+              "code": "設備ごとの接続作成を減らす"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "ホスト名を共通化しても設備やリソースの識別は残します。",
+          "ngExplain": "要求を一つに潰すのではなく接続を共有します。",
+          "id": "reuse-5",
+          "format": "並べ替え",
+          "theme": "一つの接続で複数設備を扱う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：同一アダプタに設備AとB。Bだけ設定変更したい",
+          "choices": [
+            {
+              "text": "同じFQDNならAとBを区別できない",
+              "explain": "URLのパス等でリソースを識別できます。"
+            },
+            {
+              "text": "同じFQDNでBを識別するパスを使う",
+              "ok": true,
+              "explain": "接続相手を共有しても操作対象は区別できます。"
+            }
+          ],
+          "id": "reuse-6",
+          "format": "選択",
+          "theme": "一つの接続で複数設備を扱う",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    }
+  ]
+}

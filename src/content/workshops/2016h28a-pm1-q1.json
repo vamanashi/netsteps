@@ -1,0 +1,1564 @@
+{
+  "examKey": "2016h28a/pm1/1",
+  "title": "メールを届ける・守る・確かめる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "delivery",
+      "title": "メールの配送先を探す",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "delivery-1",
+          "format": "読む",
+          "theme": "メールの配送先を探す",
+          "scaffold": 5,
+          "type": "info",
+          "title": "メールは配送と受取りを分ける",
+          "body": "SMTP（Simple Mail Transfer Protocol）はメールを送る約束、POP3（Post Office Protocol version 3）は届いたメールを取り出す約束です。DNS（Domain Name System）のMX（Mail Exchange）レコードは、そのドメインのメールを受け取るサーバ名を示します。原問のア・イは、この役割から決めます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 215,
+            "nodes": [
+              {
+                "id": "sender",
+                "label": "送信側",
+                "icon": "server",
+                "x": 60,
+                "y": 105
+              },
+              {
+                "id": "dns",
+                "label": "DNS",
+                "icon": "server",
+                "x": 250,
+                "y": 45
+              },
+              {
+                "id": "receiver",
+                "label": "受信サーバ",
+                "icon": "server",
+                "x": 250,
+                "y": 160
+              }
+            ],
+            "links": [
+              {
+                "from": "sender",
+                "to": "dns",
+                "label": "配送先を問合せ"
+              },
+              {
+                "from": "sender",
+                "to": "receiver",
+                "label": "SMTP転送"
+              }
+            ],
+            "caption": "説明用：DNS問合せとメール転送は別"
+          }
+        },
+        {
+          "id": "delivery-2",
+          "format": "選択",
+          "theme": "メールの配送先を探す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "宛先ドメインの受信サーバ名を知るレコードは？",
+          "choices": [
+            {
+              "text": "A",
+              "explain": "Aはホスト名からIPv4アドレスを求めます。メール交換先の役割指定とは別です。",
+              "ok": false
+            },
+            {
+              "text": "MX",
+              "explain": "メール交換先を指定するレコードです。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "delivery-3",
+          "format": "選択",
+          "theme": "メールの配送先を探す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "メールを送った後、PCがPOP3を使う理由は？",
+          "choices": [
+            {
+              "text": "次の中継サーバへ転送するため",
+              "explain": "サーバ間の転送はSMTPの役割です。",
+              "ok": false
+            },
+            {
+              "text": "サーバのメールボックスから取り出すため",
+              "explain": "配送済みのメールを利用者側へ取得します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "delivery-4",
+          "format": "穴埋め",
+          "theme": "メールの配送先を探す",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "役割を結び付ける",
+          "template": "配送先の名前は{a}で調べ、サーバへの転送は{b}で行う。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "レコード",
+              "why": "役割指定と転送を区別します。",
+              "choices": [
+                {
+                  "text": "POP3",
+                  "explain": "これは取得プロトコルです。",
+                  "ok": false
+                },
+                {
+                  "text": "MX",
+                  "explain": "配送先のサーバ名を得ます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "転送",
+              "why": "送る側の約束です。",
+              "choices": [
+                {
+                  "text": "DNS",
+                  "explain": "DNSは名前の情報を返します。",
+                  "ok": false
+                },
+                {
+                  "text": "SMTP",
+                  "explain": "メール配送に使います。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "delivery-5",
+          "format": "並べ替え",
+          "theme": "メールの配送先を探す",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "外部メールが届くまで",
+          "lead": "処理の順に並べよう。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "宛先メールアドレスのドメインを見る"
+            },
+            {
+              "code": "DNSのMXから受信サーバを調べる"
+            },
+            {
+              "code": "SMTPでそのサーバへ転送する"
+            },
+            {
+              "code": "PCがPOP3で受信メールを取り出す"
+            }
+          ],
+          "shuffled": [
+            1,
+            0,
+            3,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "宛先調査、配送、取得は別の処理です。",
+          "ngExplain": "POP3で配送先を調べたり、取得前に配送を省いたりはできません。"
+        },
+        {
+          "id": "delivery-6",
+          "format": "選択",
+          "theme": "メールの配送先を探す",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：会社内の受信サーバを郵便局Xへ委託しMXを更新した。外部メールの配送先は？",
+          "choices": [
+            {
+              "text": "変更前の社内サーバ",
+              "explain": "MX更新後の新しい応答を使う条件なので旧配送先ではありません。",
+              "ok": false
+            },
+            {
+              "text": "MXが示す郵便局Xのサーバ",
+              "explain": "会社名ではなく公開されたMXに従います。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "relay",
+      "title": "認証で中継の利用者を限定する",
+      "targets": [
+        "s1",
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "relay-1",
+          "format": "読む",
+          "theme": "認証で中継の利用者を限定する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "届くことと中継してよいことは別",
+          "body": "自社宛てメールの受信と、外部から外部へのメール中継は別です。誰にでも中継を許すと、迷惑メール送信の踏み台になります。SMTP-AUTHはSMTP上で利用者を認証する機能で、暗号化そのものではありません。原問のエと設問2(1)につながります。",
+          "stage": "concept"
+        },
+        {
+          "id": "relay-2",
+          "format": "選択",
+          "theme": "認証で中継の利用者を限定する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "外部の匿名利用者から、別の外部ドメイン宛ての中継を頼まれた。危険は？",
+          "choices": [
+            {
+              "text": "自社宛てメールが必ず暗号化される",
+              "explain": "中継許可は暗号化を実行する設定ではありません。",
+              "ok": false
+            },
+            {
+              "text": "不正メール送信の踏み台になる",
+              "explain": "自社サーバを経由して第三者へ送信できてしまいます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "relay-3",
+          "format": "選択",
+          "theme": "認証で中継の利用者を限定する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "TLSで暗号化するだけでは中継の許可条件として不十分なのは？",
+          "choices": [
+            {
+              "text": "TLSでは一切メールを送れないから",
+              "explain": "TLS上でもSMTPを利用できます。",
+              "ok": false
+            },
+            {
+              "text": "通信を保護しても正規利用者かは別だから",
+              "explain": "TLSによる通信保護とSMTP利用者認証を分けて考えます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "relay-4",
+          "format": "穴埋め",
+          "theme": "認証で中継の利用者を限定する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "誰に中継させるか",
+          "template": "{a}で利用者を確かめ、{b}からの外部宛て中継を許可する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "機能",
+              "why": "暗号化とは役割が違います。",
+              "choices": [
+                {
+                  "text": "MX",
+                  "explain": "MXは配送先を公開します。",
+                  "ok": false
+                },
+                {
+                  "text": "SMTP-AUTH",
+                  "explain": "SMTP上のユーザ認証です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "対象",
+              "why": "匿名の全員には許可しません。",
+              "choices": [
+                {
+                  "text": "全ての外部ホスト",
+                  "explain": "オープンリレーの危険を残します。",
+                  "ok": false
+                },
+                {
+                  "text": "認証された利用者",
+                  "explain": "業務で利用を認めた利用者に限定できます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "relay-5",
+          "format": "並べ替え",
+          "theme": "認証で中継の利用者を限定する",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "危険を因果で説明する",
+          "lead": "原因から結果へ並べよう。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "外部から外部宛ての中継を無条件に許可する"
+            },
+            {
+              "code": "第三者が自社サーバへ不正メールの中継を依頼できる"
+            },
+            {
+              "code": "自社サーバが不正メールの踏み台になる"
+            }
+          ],
+          "shuffled": [
+            1,
+            0,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "誰が何をできる結果、どのリスクになるかを示します。",
+          "ngExplain": "単に『安全でない』で止めず、中継と踏み台の因果をつなぎます。"
+        },
+        {
+          "id": "relay-6",
+          "format": "選択",
+          "theme": "認証で中継の利用者を限定する",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：正規利用者が暗号化せずSMTP-AUTHに成功した。言えることは？",
+          "choices": [
+            {
+              "text": "認証成功で全経路が暗号化済み",
+              "explain": "SMTP-AUTHは暗号化開始の意味ではありません。",
+              "ok": false
+            },
+            {
+              "text": "認証と盗聴対策は別であり通信保護も必要",
+              "explain": "認証できても経路上の情報保護まで保証しません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "op25",
+      "title": "送信方向とISP境界を読む",
+      "targets": [
+        "s2-2",
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "op25-1",
+          "format": "読む",
+          "theme": "送信方向とISP境界を読む",
+          "scaffold": 5,
+          "type": "info",
+          "title": "OP25Bは外向き25番の制限",
+          "body": "ISP（Internet Service Provider）はインターネット接続事業者です。原問のOP25B（Outbound Port 25 Blocking）は、動的割当アドレスのホストから自社サービス網の外へ出るTCP宛先25番を禁止します。全メール、全顧客、全方向を止める規則ではありません。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 160,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "動的IPの顧客",
+                "x": 55,
+                "y": 70,
+                "icon": "pc"
+              },
+              {
+                "id": "node1",
+                "label": "ISPの出口",
+                "x": 165,
+                "y": 70,
+                "icon": "router"
+              },
+              {
+                "id": "node2",
+                "label": "他社メールサーバ",
+                "x": 275,
+                "y": 70,
+                "icon": "server"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：OP25Bの適用位置"
+          }
+        },
+        {
+          "id": "op25-2",
+          "format": "選択",
+          "theme": "送信方向とISP境界を読む",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "原問のポリシで禁止に該当する組合せは？",
+          "choices": [
+            {
+              "text": "固定IPから自社網外へのTCP宛先587",
+              "explain": "動的IPという条件も25番という条件も満たしません。",
+              "ok": false
+            },
+            {
+              "text": "動的IPから自社網外へのTCP宛先25",
+              "explain": "送信元の範囲、方向、宛先ポートの全条件がそろいます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "op25-3",
+          "format": "選択",
+          "theme": "送信方向とISP境界を読む",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "顧客側の入口で無条件に25番を止めない理由は？",
+          "choices": [
+            {
+              "text": "TCPの送信元ポートが常に25だから",
+              "explain": "クライアントの送信元ポートとサーバの待受ポートは異なります。",
+              "ok": false
+            },
+            {
+              "text": "同じISP内のメールサーバ利用は許可したいから",
+              "explain": "外部向け出口に置けば自社サービス網内通信を残せます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "op25-4",
+          "format": "穴埋め",
+          "theme": "送信方向とISP境界を読む",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "フィルタが見る場所",
+          "template": "SMTPは{a}を使い、宛先ポート{b}への通信を判定する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "プロトコル",
+              "why": "SMTPは信頼性のあるTCPを利用します。",
+              "choices": [
+                {
+                  "text": "UDP",
+                  "explain": "本問のSMTP通信ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "TCP",
+                  "explain": "SMTPのトランスポートです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "ポート",
+              "why": "宛先サービスを識別します。",
+              "choices": [
+                {
+                  "text": "110",
+                  "explain": "POP3でメールを取り出すポートです。",
+                  "ok": false
+                },
+                {
+                  "text": "25",
+                  "explain": "通常のSMTP転送先です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "op25-5",
+          "format": "並べ替え",
+          "theme": "送信方向とISP境界を読む",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "設置位置を決める",
+          "lead": "政策から設置位置へ。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "動的IP顧客から外部へのSMTPだけを止めたい"
+            },
+            {
+              "code": "ISP内メールサーバ向けの通信は残す"
+            },
+            {
+              "code": "ISPのインターネット向け出口で適用する"
+            }
+          ],
+          "shuffled": [
+            2,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "制限範囲に一致する境界を選びます。",
+          "ngExplain": "顧客入口で全25番を止めるとISP内利用まで止まります。"
+        },
+        {
+          "id": "op25-6",
+          "format": "選択",
+          "theme": "送信方向とISP境界を読む",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用の配置条件で、Q社のOP25Bを適用する位置は？",
+          "choices": [
+            {
+              "text": "ルータ5",
+              "explain": "B社とQ社サービス網の間なのでMSV2向けまで制限し得ます。",
+              "ok": false
+            },
+            {
+              "text": "ルータ4",
+              "explain": "Q社サービス網とインターネットを接続する境界です。",
+              "ok": true
+            },
+            {
+              "text": "ルータ1",
+              "explain": "P社側の出口でありQ社のポリシ適用位置ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "intro": "ルータ4はQ社とインターネットの境界、ルータ5はB社とQ社サービス網の境界。Q社網内のMSV2利用は残し、動的IPから網外へのTCP25を止める。"
+        }
+      ]
+    },
+    {
+      "id": "acl",
+      "title": "送信元アドレスをフィルタにする",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "acl-1",
+          "format": "読む",
+          "theme": "送信元アドレスをフィルタにする",
+          "scaffold": 5,
+          "type": "info",
+          "title": "ネットワークの範囲を一つの条件へ",
+          "body": "IPv4の/20は先頭20ビットがネットワーク部であるという意味です。原問でQ社の動的割当ブロックはa.b.0.0/20です。B社のPCの私設アドレスではなく、NAPT（Network Address Port Translation）後のグローバルアドレスをISPの出口で見ます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "bits",
+            "cells": [
+              {
+                "top": "a.b",
+                "steps": [
+                  "先頭16ビット",
+                  "固定"
+                ]
+              },
+              {
+                "top": "第3オクテット",
+                "steps": [
+                  "上位4ビット固定",
+                  "0〜15"
+                ]
+              },
+              {
+                "top": "第4オクテット",
+                "steps": [
+                  "8ビット可変",
+                  "0〜255"
+                ]
+              }
+            ],
+            "caption": "説明用：a.b.0.0/20の範囲"
+          }
+        },
+        {
+          "id": "acl-2",
+          "format": "選択",
+          "theme": "送信元アドレスをフィルタにする",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "ISP出口でB社PCの通信に見える送信元は？",
+          "choices": [
+            {
+              "text": "PCの192.168.1.x",
+              "explain": "これはB社内の変換前アドレスです。",
+              "ok": false
+            },
+            {
+              "text": "ルータ6で変換されたグローバルIP",
+              "explain": "NAPT後の通信だからです。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "acl-3",
+          "format": "選択",
+          "theme": "送信元アドレスをフィルタにする",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "B社の現在の1アドレスだけでなくブロック全体を指定する理由は？",
+          "choices": [
+            {
+              "text": "IPアドレスにメール本文が含まれるため",
+              "explain": "アドレスは本文を格納する場所ではありません。",
+              "ok": false
+            },
+            {
+              "text": "動的割当の対象全体へ同じ政策を適用するため",
+              "explain": "顧客の割当先が変わってもポリシが適用できます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "acl-4",
+          "format": "穴埋め",
+          "theme": "送信元アドレスをフィルタにする",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "原問のACLの3要素",
+          "template": "禁止する条件はプロトコル{a}、送信元{b}、宛先ポート{c}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "オ",
+              "why": "SMTPの下位プロトコルです。",
+              "choices": [
+                {
+                  "text": "UDP",
+                  "explain": "DNSの一部通信と混同しています。",
+                  "ok": false
+                },
+                {
+                  "text": "TCP",
+                  "explain": "SMTPはTCPを使います。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "カ",
+              "why": "原問の動的割当範囲です。",
+              "choices": [
+                {
+                  "text": "192.168.1.0/24",
+                  "explain": "B社LANでありISP出口で見える範囲ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "a.b.0.0/20",
+                  "explain": "Q社の動的割当ブロック全体です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "キ",
+              "why": "送信先サービスです。",
+              "choices": [
+                {
+                  "text": "587",
+                  "explain": "認証付き投稿用として利用する別のポートです。",
+                  "ok": false
+                },
+                {
+                  "text": "25",
+                  "explain": "SMTP転送の待受です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "acl-5",
+          "format": "並べ替え",
+          "theme": "送信元アドレスをフィルタにする",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "禁止か許可かを判定する",
+          "lead": "練習用：上から照合し最初の一致を採用するACL。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "送信元が動的割当ブロックに入るか確認する"
+            },
+            {
+              "code": "TCPかつ宛先25番なら禁止行に一致する"
+            },
+            {
+              "code": "一致しない通信は次のIP全許可行へ進む"
+            }
+          ],
+          "shuffled": [
+            1,
+            0,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "上位の限定した禁止と下位の許可を組み合わせます。",
+          "ngExplain": "下位の全許可を先に適用すれば禁止が働きません。"
+        },
+        {
+          "id": "acl-6",
+          "format": "選択",
+          "theme": "送信元アドレスをフィルタにする",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：動的割当範囲を203.0.113.0/24に変更。修正するACL項目は？",
+          "choices": [
+            {
+              "text": "宛先ポートを110へ変更",
+              "explain": "変更したのは割当範囲であり禁止するSMTPサービスではありません。",
+              "ok": false
+            },
+            {
+              "text": "送信元IPの範囲",
+              "explain": "ポリシの対象顧客範囲が変わったためです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "ports",
+      "title": "投稿・取得とTLS開始方式",
+      "targets": [
+        "s2-4",
+        "s2-5",
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "ports-1",
+          "format": "読む",
+          "theme": "投稿・取得とTLS開始方式",
+          "scaffold": 5,
+          "type": "info",
+          "title": "587は投稿、110は取得",
+          "body": "サブミッションポートのTCP 587は利用者がメールを投稿する入口です。原問は接続後にTLS（Transport Layer Security）へ切り替える方式なので、投稿は587、POP3取得は110を許可します。接続開始からTLSを使う方式のポートと混同しないことが設問2(4)(5)の鍵です。",
+          "stage": "concept"
+        },
+        {
+          "id": "ports-2",
+          "format": "選択",
+          "theme": "投稿・取得とTLS開始方式",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "TCP 587の役割を表す名称は？",
+          "choices": [
+            {
+              "text": "DNSゾーン転送ポート",
+              "explain": "DNSの通信は通常53番を使います。",
+              "ok": false
+            },
+            {
+              "text": "サブミッションポート",
+              "explain": "利用者がメールを投稿するための入口です。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "ports-3",
+          "format": "選択",
+          "theme": "投稿・取得とTLS開始方式",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "原問でPOP3用に995ではなく110を許可する理由は？",
+          "choices": [
+            {
+              "text": "POP3は暗号化できないから",
+              "explain": "POP3もTLSで保護できます。995は接続開始からTLSを使う方式です。",
+              "ok": false
+            },
+            {
+              "text": "接続途中にTLSへ切り替える条件だから",
+              "explain": "暗号化しても接続開始時の待受ポートは110です。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "ports-4",
+          "format": "穴埋め",
+          "theme": "投稿・取得とTLS開始方式",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "外部からDMZへ必要な二つ",
+          "template": "メール取得はTCP {a}、認証付き投稿はTCP {b}を許可する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "取得",
+              "why": "接続後TLSへ移る原問条件です。",
+              "choices": [
+                {
+                  "text": "995",
+                  "explain": "暗黙的TLSの方式であり原問条件とは異なります。",
+                  "ok": false
+                },
+                {
+                  "text": "110",
+                  "explain": "POP3の通常ポートからTLSへ移ります。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "投稿",
+              "why": "本問のサブミッションです。",
+              "choices": [
+                {
+                  "text": "25",
+                  "explain": "原問ではこの外部向け通信がISPで禁止されます。",
+                  "ok": false
+                },
+                {
+                  "text": "587",
+                  "explain": "OP25Bの25番制限とも区別されます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "ports-5",
+          "format": "並べ替え",
+          "theme": "投稿・取得とTLS開始方式",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "安全な投稿の流れ",
+          "lead": "TLS保護を確立してから認証情報を送る練習用の手順。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "TCP 587に接続する"
+            },
+            {
+              "code": "STARTTLSでTLS保護へ切り替える"
+            },
+            {
+              "code": "SMTP-AUTHで利用者を認証する"
+            },
+            {
+              "code": "許可された外部宛てメールを投稿する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "到達、暗号化、認証、中継許可には別の役割があります。",
+          "ngExplain": "認証情報をTLS確立前に送る並びは情報保護になりません。"
+        },
+        {
+          "id": "ports-6",
+          "format": "選択",
+          "theme": "投稿・取得とTLS開始方式",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：POP3取得を接続開始からTLSへ変更した。代表的な許可ポートは？",
+          "choices": [
+            {
+              "text": "587",
+              "explain": "これはメール投稿用であり受信メールの取得用ではありません。",
+              "ok": false
+            },
+            {
+              "text": "995",
+              "explain": "暗黙的TLSのPOP3Sに対応します。原問の110とは方式が変わっています。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "map",
+      "title": "A社とB社の役割を戻す",
+      "targets": [
+        "s1",
+        "s2-2",
+        "s2-5"
+      ],
+      "steps": [
+        {
+          "id": "map-1",
+          "format": "読む",
+          "theme": "A社とB社の役割を戻す",
+          "scaffold": 5,
+          "type": "info",
+          "title": "サーバ名は所有者から決める",
+          "body": "原問ではA社が自社メールサーバMSV3を持ち、Q社が顧客向けにMSV2を提供します。通常のB社メールはQ社サービスを使い、委託後のA社業務メールはMSV3を使います。MXの役割と誰のサービスを使うかを組み合わせて、イ・ウを判断します。",
+          "stage": "concept"
+        },
+        {
+          "id": "map-2",
+          "format": "選択",
+          "theme": "A社とB社の役割を戻す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "委託前にQ社のメールサービスを使うB社PCの相手は？",
+          "choices": [
+            {
+              "text": "MSV1",
+              "explain": "MSV1はP社のサーバでありB社の契約サービスではありません。",
+              "ok": false
+            },
+            {
+              "text": "MSV2",
+              "explain": "Q社が運用する顧客向けメールサーバです。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "originalExcerpt": {
+            "page": 2,
+            "top": 0.37,
+            "bottom": 0.79,
+            "label": "図1のISP境界と各社のメールサーバ（IPA原図）"
+          }
+        },
+        {
+          "id": "map-3",
+          "format": "選択",
+          "theme": "A社とB社の役割を戻す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "A社ドメインのメールをMSV3へ届ける理由は？",
+          "choices": [
+            {
+              "text": "B社が操作するとMXの意味が変わるため",
+              "explain": "端末の設置場所でMXの役割は変わりません。",
+              "ok": false
+            },
+            {
+              "text": "A社のMXが自社受信サーバMSV3を示すため",
+              "explain": "B社から操作する場合でも宛先ドメインの配送設定に従います。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "map-4",
+          "format": "穴埋め",
+          "theme": "A社とB社の役割を戻す",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "原問のア・イ・ウ・エを役割で確認",
+          "template": "配送指定は{a}、A社の受信先は{b}、B社の従来の相手は{c}、SMTP利用者認証は{d}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ア",
+              "why": "配送先の指定です。",
+              "choices": [
+                {
+                  "text": "A",
+                  "explain": "ホスト名のIPv4アドレスを示します。",
+                  "ok": false
+                },
+                {
+                  "text": "MX",
+                  "explain": "メール交換先を示します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "イ",
+              "why": "A社が保有します。",
+              "choices": [
+                {
+                  "text": "MSV2",
+                  "explain": "Q社サービス用です。",
+                  "ok": false
+                },
+                {
+                  "text": "MSV3",
+                  "explain": "A社ドメインの受信先です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "ウ",
+              "why": "B社の契約先はQ社です。",
+              "choices": [
+                {
+                  "text": "MSV3",
+                  "explain": "委託後のA社業務用の相手です。",
+                  "ok": false
+                },
+                {
+                  "text": "MSV2",
+                  "explain": "Q社が提供するメールサーバです。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "d",
+              "label": "エ",
+              "why": "SMTP内のユーザ認証です。",
+              "choices": [
+                {
+                  "text": "SPF",
+                  "explain": "送信ドメインについて送信元IPを検証する別の仕組みです。",
+                  "ok": false
+                },
+                {
+                  "text": "SMTP-AUTH",
+                  "explain": "中継利用者を確認します。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "map-5",
+          "format": "並べ替え",
+          "theme": "A社とB社の役割を戻す",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "構成と制約をつなげる",
+          "lead": "B社からA社業務のメールを投稿するまで。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "B社からMSV3を利用する要件を確認する"
+            },
+            {
+              "code": "Q社出口のOP25BでTCP25が止まることを確認する"
+            },
+            {
+              "code": "MSV3へのTCP587とSMTP-AUTHを使う"
+            },
+            {
+              "code": "FWで投稿587と取得110を許可する"
+            }
+          ],
+          "shuffled": [
+            1,
+            0,
+            3,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "利用先、経路の制限、認証、FW到達性を別々に確認します。",
+          "ngExplain": "サーバの認証を変更するだけでは途中のOP25BやFWの制限は解消しません。"
+        },
+        {
+          "id": "map-6",
+          "format": "選択",
+          "theme": "A社とB社の役割を戻す",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原文のTLS方式を読み取ると、FWの許可と認証のどちらが不要になる？",
+          "choices": [
+            {
+              "text": "TLSを使えばFW許可は不要",
+              "explain": "FWが遮断したTCP接続ではTLS交渉もできません。",
+              "ok": false
+            },
+            {
+              "text": "どちらも必要",
+              "explain": "TLSは通信保護です。到達許可と正規利用者の認証もそれぞれ必要です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.28,
+            "bottom": 0.49,
+            "label": "通信保護方式とFW変更（IPA原図・問題本文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "spf",
+      "title": "送信ドメインと送信元IPを照合する",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "spf-1",
+          "format": "読む",
+          "theme": "送信ドメインと送信元IPを照合する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "SPFは差出人表示の見た目で判断しない",
+          "body": "SPF（Sender Policy Framework）は、そのドメインが送信を認めたIPから来たかを確認します。原問はSMTPのMAIL FROMで渡される送信元ドメインを使い、そのDNS情報と実際に接続してきたメールサーバのIPアドレスを照合します。本文の署名や表示上のFrom欄の真偽まで保証する仕組みではありません。",
+          "stage": "concept",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "MAIL FROM:<notice@example.test>",
+              "RCPT TO:<user@receiver.test>",
+              "DATA",
+              "From: 表示名 <someone@display.test>"
+            ],
+            "caption": "説明用：SMTPの封筒情報とメッセージ内の表示を区別する"
+          }
+        },
+        {
+          "id": "spf-2",
+          "format": "選択",
+          "theme": "送信ドメインと送信元IPを照合する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "原問でSPF検索のドメインを得るコマンドは？",
+          "choices": [
+            {
+              "text": "RCPT TO",
+              "explain": "これは受信者であり送信元ドメインではありません。",
+              "ok": false
+            },
+            {
+              "text": "MAIL FROM",
+              "explain": "SMTPのエンベロープ送信者が示されます。",
+              "ok": true
+            },
+            {
+              "text": "DATA後のFromヘッダ",
+              "explain": "メールの表示上の差出人であり原問のSPF照合対象とは異なります。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "spf-3",
+          "format": "選択",
+          "theme": "送信ドメインと送信元IPを照合する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "実際に接続してきたサーバのIPを照合するのはなぜ？",
+          "choices": [
+            {
+              "text": "IPがメール本文の内容を証明するから",
+              "explain": "IP照合は本文の改ざんや正しさを証明しません。",
+              "ok": false
+            },
+            {
+              "text": "ドメイン名を名乗るだけでは送信の許可を確認できないから",
+              "explain": "DNSに公開された送信許可IPとの一致を検査します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "spf-4",
+          "format": "穴埋め",
+          "theme": "送信ドメインと送信元IPを照合する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "検索キーと照合値",
+          "template": "{a}からドメインを取り、SPFの許可情報と{b}を比べる。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "検索の起点",
+              "why": "SMTPの送信者情報です。",
+              "choices": [
+                {
+                  "text": "RCPT TO",
+                  "explain": "宛先ドメインになってしまいます。",
+                  "ok": false
+                },
+                {
+                  "text": "MAIL FROM",
+                  "explain": "エンベロープ送信元のドメインを得ます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "照合する値",
+              "why": "通信相手の実測情報です。",
+              "choices": [
+                {
+                  "text": "受信者PCのMACアドレス",
+                  "explain": "送信ドメインの許可IPとは関係がありません。",
+                  "ok": false
+                },
+                {
+                  "text": "送信元メールサーバのIPアドレス",
+                  "explain": "許可された送信元かを判定します。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "spf-5",
+          "format": "並べ替え",
+          "theme": "送信ドメインと送信元IPを照合する",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "SPF検証を組み立てる",
+          "lead": "原問の手順を理由の通る順に。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "MAIL FROMから送信元ドメインを得る"
+            },
+            {
+              "code": "そのドメインのSPF情報をDNSで取得する"
+            },
+            {
+              "code": "接続元メールサーバのIPアドレスと照合する"
+            },
+            {
+              "code": "そのドメインからの送信を許可されたIPか判定する"
+            }
+          ],
+          "shuffled": [
+            1,
+            0,
+            2,
+            3
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "名乗ったドメインの規則と、実際の接続元を結び付けます。",
+          "ngExplain": "宛先IPや表示名を比較しても送信元サーバの許可は確認できません。"
+        },
+        {
+          "id": "spf-6",
+          "format": "選択",
+          "theme": "送信ドメインと送信元IPを照合する",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：許可IPは192.0.2.10のみ、実際の送信元は192.0.2.20。表示Fromが正しくても？",
+          "choices": [
+            {
+              "text": "表示Fromが正しければ必ずSPF成功",
+              "explain": "表示上の差出人だけではSPF成功になりません。",
+              "ok": false
+            },
+            {
+              "text": "許可された送信元IPとは一致しない",
+              "explain": "表示Fromではなく実際の接続元を検査するためです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "independent",
+      "title": "対策を混同せず答案へ",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2",
+        "s2-3",
+        "s2-4",
+        "s2-5",
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "independent-1",
+          "format": "読む",
+          "theme": "対策を混同せず答案へ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "三つの問いに分けて考える",
+          "body": "誰が中継を使えるかはSMTP-AUTH、途中で盗聴されないかはTLS、送信ドメインがそのIPを許可したかはSPFです。OP25BとFWは通してよい経路やサービスを制限します。ここからは機能名だけでなく、対象・条件・結果を選んで答案につなげます。",
+          "stage": "concept"
+        },
+        {
+          "id": "independent-2",
+          "format": "選択",
+          "theme": "対策を混同せず答案へ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "認証していない外部利用者による外部宛て中継を防ぐ設定は？",
+          "choices": [
+            {
+              "text": "全受信メールの宛先をMXに書く",
+              "explain": "MXは受信サーバを示す情報で利用者の中継権限ではありません。",
+              "ok": false
+            },
+            {
+              "text": "匿名中継を拒否し、認証済み利用者だけ許可する",
+              "explain": "踏み台になる経路を直接制限します。",
+              "ok": true
+            }
+          ],
+          "stage": "apply"
+        },
+        {
+          "id": "independent-3",
+          "format": "選択",
+          "theme": "対策を混同せず答案へ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "Q社動的IPからMSV3へ投稿できない。TCP25を使っているなら最初に疑う条件は？",
+          "choices": [
+            {
+              "text": "受信者のPOP3パスワード",
+              "explain": "まだSMTP接続を試みる段階で、受信メール取得の認証ではありません。",
+              "ok": false
+            },
+            {
+              "text": "Q社自社網外へのOP25B制限",
+              "explain": "原問の送信元範囲と送信方向が一致しています。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "independent-4",
+          "format": "穴埋め",
+          "theme": "対策を混同せず答案へ",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "短い答案の要素",
+          "template": "SPFは{a}で得たドメインの情報と{b}を照合する。中継を無制限にすると{c}となる。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "コマンド",
+              "why": "宛先でなく送信者を使います。",
+              "choices": [
+                {
+                  "text": "RCPT TO",
+                  "explain": "受信者の指定です。",
+                  "ok": false
+                },
+                {
+                  "text": "MAIL FROM",
+                  "explain": "送信元ドメインを得ます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "情報",
+              "why": "実際の送信者側の接続情報です。",
+              "choices": [
+                {
+                  "text": "メールの件名",
+                  "explain": "配送内容であり接続元ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "送信元メールサーバのIPアドレス",
+                  "explain": "SPFに列挙した送信許可情報と比較できます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "リスク",
+              "why": "無認証で第三者宛てに送れるためです。",
+              "choices": [
+                {
+                  "text": "DNSのゾーン転送",
+                  "explain": "ゾーンデータの複製とは関係がありません。",
+                  "ok": false
+                },
+                {
+                  "text": "不正メールの踏み台",
+                  "explain": "中継機能を悪用されます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "independent-5",
+          "format": "並べ替え",
+          "theme": "対策を混同せず答案へ",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "答案の説明順を整える",
+          "lead": "B社業務メールを安全に扱う理由をつなごう。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "動的IPから他社網へのTCP25はQ社出口で止められる"
+            },
+            {
+              "code": "MSV3のTCP587で認証付き投稿を行う"
+            },
+            {
+              "code": "投稿587と取得110をFWで許可しTLSで保護する"
+            },
+            {
+              "code": "外部からのメールは送信ドメインのSPF情報と接続元IPを照合する"
+            }
+          ],
+          "shuffled": [
+            1,
+            3,
+            0,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "到達性、利用者認証、通信保護、送信元検証を区別できれば原問の各設問を説明できます。",
+          "ngExplain": "SPFは投稿の認証やFW許可を代替しません。"
+        },
+        {
+          "id": "independent-6",
+          "format": "選択",
+          "theme": "対策を混同せず答案へ",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "補助なし確認：投稿だけ成功しPOP3接続が失敗。原問のTLS条件のままFWを点検する対象は？",
+          "choices": [
+            {
+              "text": "Q社出口でUDP25を許可",
+              "explain": "POP3の経路・プロトコル・ポートのどれとも一致しません。",
+              "ok": false
+            },
+            {
+              "text": "外部からMSV3へのTCP110",
+              "explain": "投稿587とは別に取得110の到達性が必要です。",
+              "ok": true
+            },
+            {
+              "text": "SMTP-AUTHを削除",
+              "explain": "取得用接続を直さず不正中継対策を弱めます。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

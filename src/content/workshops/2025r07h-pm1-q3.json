@@ -1,0 +1,2187 @@
+{
+  "examKey": "2025r07h/pm1/3",
+  "title": "SWG移行をログ・証明書・通信経路から設計する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/nl10bi0000009lh8-att/2025r07h_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "log-correlation",
+      "title": "通信時刻から端末を特定する",
+      "targets": [
+        "s1-1",
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "同じIPが別のPCに割り当てられる",
+          "body": "FW（Firewall、ファイアウォール）は通信を許可・拒否し、その記録をログに残します。IP（Internet Protocol）アドレスは通信相手を識別する値です。PC（Personal Computer、パソコン）へIPを貸すDHCP（Dynamic Host Configuration Protocol）では、同じIPを時間を分けて別端末へ貸すことがあります。\n\n練習用の表から10時の通信元を当時の貸出し期間で探します。NTP（Network Time Protocol）は時計を合わせる仕組みで、複数機器のログを同じ時刻基準で照合できるようにします。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "ログ",
+              "時刻",
+              "内容"
+            ],
+            "rows": [
+              [
+                "FW",
+                "10:00",
+                "192.168.10.8から通信"
+              ],
+              [
+                "DHCP",
+                "9:00〜11:00",
+                "192.168.10.8をPC-Aへ貸出し"
+              ],
+              [
+                "DHCP",
+                "11:00〜",
+                "同じIPをPC-Bへ貸出し"
+              ]
+            ],
+            "caption": "説明用：発生時刻とリース期間の照合"
+          },
+          "stage": "concept",
+          "id": "log-correlation-1",
+          "format": "読む",
+          "theme": "通信時刻から端末を特定する",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用：192.168.10.8の貸出し先は9〜11時がPC-A、11時以降がPC-B。10時の不正通信元の候補は？",
+          "choices": [
+            {
+              "text": "PC-B",
+              "ok": false,
+              "explain": "現在同じIPでも、10時の利用者ではありません。"
+            },
+            {
+              "text": "NTPサーバ",
+              "ok": false,
+              "explain": "時計を補正する機器です。不正通信元とは判断できません。"
+            },
+            {
+              "text": "PC-A",
+              "ok": true,
+              "explain": "通信時点のリース期間に一致する端末です。"
+            }
+          ],
+          "stage": "check",
+          "id": "log-correlation-2",
+          "format": "選択",
+          "theme": "通信時刻から端末を特定する",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "複数機器の時刻がずれていると何が困るか。",
+          "choices": [
+            {
+              "text": "ログを保存するポート番号が変わる",
+              "ok": false,
+              "explain": "時刻補正はポート番号を変更する機能ではありません。"
+            },
+            {
+              "text": "同じ事象のログを時系列に照合しにくい",
+              "ok": true,
+              "explain": "端末の割当てと通信の前後関係を誤るおそれがあります。"
+            },
+            {
+              "text": "全IPアドレスが重複する",
+              "ok": false,
+              "explain": "時計のずれだけで全アドレスが重複するわけではありません。"
+            }
+          ],
+          "stage": "reason",
+          "id": "log-correlation-3",
+          "format": "選択",
+          "theme": "通信時刻から端末を特定する",
+          "scaffold": 4
+        },
+        {
+          "id": "lease-log-owner",
+          "type": "info",
+          "title": "保管先と記録した機器を分ける",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "通信時刻から端末を特定する",
+          "scaffold": 5,
+          "body": "原問のJ社ではL3SW（レイヤー3スイッチ）のDHCP機能がPCにIPを割り当てます。syslogはログを別サーバへ転送する仕組みで、syslogサーバは保管先です。記録の種類を問われたら、単に保管先ではなく「L3SWのDHCPリースログ」まで特定します。"
+        },
+        {
+          "type": "blank",
+          "title": "時刻補正の目的と確認するログを埋めよ。",
+          "template": "時刻をそろえる目的は{purpose}ため。J社でPCを特定するには{log}を確認する。",
+          "blanks": [
+            {
+              "key": "purpose",
+              "label": "目的",
+              "choices": [
+                {
+                  "text": "複数機器のログを時系列で確認する",
+                  "ok": true,
+                  "explain": "同じ時刻基準で事象を追跡できます。"
+                },
+                {
+                  "text": "全ログを同じIPアドレスに変換する",
+                  "ok": false,
+                  "explain": "NTPはIPアドレスを変換しません。"
+                }
+              ],
+              "why": "同じ時刻基準で事象を追跡できます。"
+            },
+            {
+              "key": "log",
+              "label": "ログ名",
+              "choices": [
+                {
+                  "text": "L3SWのDHCPリースログ",
+                  "ok": true,
+                  "explain": "J社ではL3SWがPCへのIP割当てを行います。"
+                },
+                {
+                  "text": "公開NTPサーバのシステムログ",
+                  "ok": false,
+                  "explain": "NTPサーバのログではPCへのIP割当てを特定できません。"
+                }
+              ],
+              "why": "J社ではL3SWがPCへのIP割当てを行います。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "log-correlation-4",
+          "format": "穴埋め",
+          "theme": "通信時刻から端末を特定する",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "不正通信元を調べる順序を並べよ。",
+          "lead": "時刻同期が取れていることを前提にします。",
+          "lines": [
+            {
+              "code": "FWログから送信元IPと通信時刻を取得する"
+            },
+            {
+              "code": "同時刻にそのIPを貸し出したDHCPリースログを探す"
+            },
+            {
+              "code": "貸出し先の端末識別情報からPCを特定する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "現在の割当てではなく、通信した時点で照合します。",
+          "ngExplain": "端末を決める前にリース期間を照合します。",
+          "stage": "reason",
+          "id": "log-correlation-5",
+          "format": "並べ替え",
+          "theme": "通信時刻から端末を特定する",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "ログの時計が5分ずれていると分かった。実務上の確認はどれか。",
+          "choices": [
+            {
+              "text": "DHCPログを消してFWログだけで決める",
+              "ok": false,
+              "explain": "対応付けの根拠を失います。"
+            },
+            {
+              "text": "時刻差を補正し、該当期間のリースを再照合する",
+              "ok": true,
+              "explain": "時系列が誤ると別PCを疑うおそれがあります。"
+            },
+            {
+              "text": "現在のIP所有者に即断する",
+              "ok": false,
+              "explain": "過去の割当てと一致するとは限りません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "log-correlation-6",
+          "format": "選択",
+          "theme": "通信時刻から端末を特定する",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "proxy-purpose",
+      "title": "Web通信を中継する目的を分ける",
+      "targets": [
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "Webの接続先を社内で管理する",
+          "body": "プロキシはPCの代わりに接続先へ通信を中継します。原問では外部Webへの通信を中継し、登録されたFQDN（Fully Qualified Domain Name、完全修飾ドメイン名）やIP宛ての通信を拒否します。アクセス履歴を残すことと、利用者を認証することも目的です。三つの役割を区別して設問の「二つ」に答えます。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 50,
+                "y": 65,
+                "label": "PC"
+              },
+              {
+                "id": "node1",
+                "x": 160,
+                "y": 65,
+                "label": "プロキシ"
+              },
+              {
+                "id": "node2",
+                "x": 270,
+                "y": 65,
+                "label": "Webサイト"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：中継位置で拒否・記録・認証"
+          },
+          "stage": "concept",
+          "id": "proxy-purpose-1",
+          "format": "読む",
+          "theme": "Web通信を中継する目的を分ける",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "拒否リストに登録したWebサイトへの通信を止める目的はどれか。",
+          "choices": [
+            {
+              "text": "全WebサーバのIPを同じにする",
+              "ok": false,
+              "explain": "通信先のアドレスを統一する機能ではありません。"
+            },
+            {
+              "text": "PCへIPアドレスを貸し出す",
+              "ok": false,
+              "explain": "その役割はJ社ではL3SWのDHCP機能です。"
+            },
+            {
+              "text": "登録したFQDNやIPアドレス宛ての通信をブロックする",
+              "ok": true,
+              "explain": "本文にあるプロキシの接続先制御です。"
+            }
+          ],
+          "stage": "check",
+          "id": "proxy-purpose-2",
+          "format": "選択",
+          "theme": "Web通信を中継する目的を分ける",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "誰がどのWebへ接続したか後から調べたい。必要な機能はどれか。",
+          "choices": [
+            {
+              "text": "全通信を直接接続にしてログを通さない",
+              "ok": false,
+              "explain": "中継点で履歴を確認する目的に反します。"
+            },
+            {
+              "text": "利用者認証とアクセスログの保存",
+              "ok": true,
+              "explain": "利用者を識別し、アクセスの記録を残します。"
+            },
+            {
+              "text": "給電能力の増強",
+              "ok": false,
+              "explain": "認証や履歴保存の代わりにはなりません。"
+            }
+          ],
+          "stage": "reason",
+          "id": "proxy-purpose-3",
+          "format": "選択",
+          "theme": "Web通信を中継する目的を分ける",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "異なる二つの目的を組み立てよ。",
+          "template": "一つは{block}ため。もう一つは{history}ため。",
+          "blanks": [
+            {
+              "key": "block",
+              "label": "接続先制御",
+              "choices": [
+                {
+                  "text": "登録したFQDNやIP宛ての通信をブロックする",
+                  "ok": true,
+                  "explain": "登録先への通信を拒否する役割です。"
+                },
+                {
+                  "text": "全宛先を無条件で許可する",
+                  "ok": false,
+                  "explain": "本文の拒否機能と逆です。"
+                }
+              ],
+              "why": "登録先への通信を拒否する役割です。"
+            },
+            {
+              "key": "history",
+              "label": "記録の活用",
+              "choices": [
+                {
+                  "text": "Webサイトへのアクセス履歴を確認する",
+                  "ok": true,
+                  "explain": "履歴確認が二つ目の独立した目的になります。"
+                },
+                {
+                  "text": "Webサイトのアドレスを配布する",
+                  "ok": false,
+                  "explain": "アドレス配布とは別の機能です。"
+                }
+              ],
+              "why": "履歴確認が二つ目の独立した目的になります。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "proxy-purpose-4",
+          "format": "穴埋め",
+          "theme": "Web通信を中継する目的を分ける",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "認証付きの中継処理を並べよ。",
+          "lead": "認証が必要な利用者からの初回アクセスを考えます。",
+          "lines": [
+            {
+              "code": "利用者がプロキシへWebアクセスを要求する"
+            },
+            {
+              "code": "プロキシが利用者を認証し接続先の許可を確認する"
+            },
+            {
+              "code": "許可したアクセスを中継し履歴を記録する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "設問では利用者認証も目的の一つとして挙げられます。",
+          "ngExplain": "要求を受けた後に認証と許可を確認します。",
+          "stage": "reason",
+          "id": "proxy-purpose-5",
+          "format": "並べ替え",
+          "theme": "Web通信を中継する目的を分ける",
+          "scaffold": 2
+        },
+        {
+          "id": "web-encryption-terms",
+          "type": "info",
+          "title": "中継と暗号化を分ける",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "Web通信を中継する目的を分ける",
+          "scaffold": 5,
+          "body": "HTTP（Hypertext Transfer Protocol）はWebの要求・応答を運びます。HTTPSはHTTPをTLS（Transport Layer Security）で保護する方式です。暗号化と利用者の認証は別なので、暗号化していても認証に失敗した通信を許可する必要はありません。"
+        },
+        {
+          "type": "quiz",
+          "title": "移行先はSWG（Secure Web Gateway、Web通信を中継・検査するサービス）。HTTP・HTTPSを未認証なら遮断する仕様で、拒否リストは通過したが認証に失敗した。どうなる？",
+          "choices": [
+            {
+              "text": "HTTPだけ許可する",
+              "ok": false,
+              "explain": "本文はHTTPとHTTPSの両方を対象にしています。"
+            },
+            {
+              "text": "HTTPとHTTPSの通信をブロックする",
+              "ok": true,
+              "explain": "接続先の許可と利用者の許可は別の条件です。"
+            },
+            {
+              "text": "接続先が安全なら未認証でも通す",
+              "ok": false,
+              "explain": "本文のソフトEとSWGは未認証通信をブロックします。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "proxy-purpose-6",
+          "format": "選択",
+          "theme": "Web通信を中継する目的を分ける",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "existing-rules",
+      "title": "通信の目的から宛先とポートを選ぶ",
+      "targets": [
+        "s1-4",
+        "s1-5"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "FWの一行を通信として読む",
+          "body": "DMZ（Demilitarized Zone）は内部網と分けてサーバを置くセグメントです。FWの許可ルールは送信元・宛先・通信プロトコル・宛先ポートで読みます。TCP（Transmission Control Protocol）とUDP（User Datagram Protocol）は通信を運ぶ別のプロトコルで、ポートは受け付けるサービスを区別します。\n\nRADIUS（Remote Authentication Dial-In User Service）は利用者認証などの仕組みです。本問はsyslogがUDP/514、RADIUS認証がUDP/1812、旧プロキシがTCP/10080、K社SaaS（Software as a Service、ネットワーク経由のソフトウェアサービス）がHTTPSのTCP/443を使います。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "通信",
+              "宛先ポート"
+            ],
+            "rows": [
+              [
+                "syslogによるログ転送",
+                "UDP/514"
+              ],
+              [
+                "RADIUS認証",
+                "UDP/1812"
+              ],
+              [
+                "プロキシ待受け（本問）",
+                "TCP/10080"
+              ],
+              [
+                "K社SaaSのHTTPS",
+                "TCP/443"
+              ]
+            ],
+            "caption": "説明用：表1を読むための役割表"
+          },
+          "stage": "concept",
+          "id": "existing-rules-1",
+          "format": "読む",
+          "theme": "通信の目的から宛先とポートを選ぶ",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "DMZからUDP/514を送る相手はどれか。",
+          "choices": [
+            {
+              "text": "認証サーバ",
+              "ok": false,
+              "explain": "本問の認証要求はUDP/1812です。"
+            },
+            {
+              "text": "公開NTPサーバ",
+              "ok": false,
+              "explain": "時刻同期はUDP/123です。"
+            },
+            {
+              "text": "syslogサーバ",
+              "ok": true,
+              "explain": "DMZ内の機器からログを転送する相手です。"
+            }
+          ],
+          "stage": "check",
+          "id": "existing-rules-2",
+          "format": "選択",
+          "theme": "通信の目的から宛先とポートを選ぶ",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "プロキシからUDP/1812を送る相手はどれか。",
+          "choices": [
+            {
+              "text": "K社SaaS",
+              "ok": false,
+              "explain": "本問のK社SaaSへの業務アクセスはHTTPSです。"
+            },
+            {
+              "text": "認証サーバ",
+              "ok": true,
+              "explain": "RADIUSの認証要求を受ける機器です。"
+            },
+            {
+              "text": "syslogサーバ",
+              "ok": false,
+              "explain": "UDP/514でログを受け取る機器です。"
+            }
+          ],
+          "stage": "check",
+          "id": "existing-rules-3",
+          "format": "選択",
+          "theme": "通信の目的から宛先とポートを選ぶ",
+          "scaffold": 4
+        },
+        {
+          "id": "rule-port-reason",
+          "type": "quiz",
+          "title": "練習用：内部PCはプロキシのTCP/18080へ、プロキシはWebのTCP/443へ接続する。内部→プロキシの許可に使う宛先ポートは？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "通信の目的から宛先とポートを選ぶ",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "PCが選んだ送信元ポート",
+              "ok": false,
+              "explain": "必要なのは宛先サービスの待受けポートです。"
+            },
+            {
+              "text": "18080",
+              "ok": true,
+              "explain": "対象とする接続区間の受け付け先で判断します。"
+            },
+            {
+              "text": "443",
+              "ok": false,
+              "explain": "これはプロキシ→Webという別区間の宛先です。"
+            }
+          ]
+        },
+        {
+          "type": "blank",
+          "title": "表1の四空欄を埋めよ。",
+          "template": "aは{log}、bは{auth}。内部からプロキシのcは{proxy}、K社SaaSのdは{https}。",
+          "blanks": [
+            {
+              "key": "log",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "syslogサーバ",
+                  "ok": true,
+                  "explain": "UDP/514のログ転送先です。"
+                },
+                {
+                  "text": "NTPサーバ",
+                  "ok": false,
+                  "explain": "NTPはUDP/123です。"
+                }
+              ],
+              "why": "UDP/514のログ転送先です。"
+            },
+            {
+              "key": "auth",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "認証サーバ",
+                  "ok": true,
+                  "explain": "UDP/1812の認証先です。"
+                },
+                {
+                  "text": "業務用サーバ",
+                  "ok": false,
+                  "explain": "利用者認証を実施するサーバとアクセス先を区別します。"
+                }
+              ],
+              "why": "UDP/1812の認証先です。"
+            },
+            {
+              "key": "proxy",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "10080",
+                  "ok": true,
+                  "explain": "本文が指定するプロキシの待受けポートです。"
+                },
+                {
+                  "text": "80",
+                  "ok": false,
+                  "explain": "HTTPの標準値を本文の設定へ勝手に置き換えません。"
+                }
+              ],
+              "why": "本文が指定するプロキシの待受けポートです。"
+            },
+            {
+              "key": "https",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "443",
+                  "ok": true,
+                  "explain": "K社SaaSへHTTPSで接続するためです。"
+                },
+                {
+                  "text": "10080",
+                  "ok": false,
+                  "explain": "10080は本問のプロキシ側待受けです。"
+                }
+              ],
+              "why": "K社SaaSへHTTPSで接続するためです。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.64,
+            "bottom": 0.89,
+            "label": "原表1：宛先とポートの四空欄"
+          },
+          "id": "existing-rules-4",
+          "format": "穴埋め",
+          "theme": "通信の目的から宛先とポートを選ぶ",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "一つの許可ルールを特定する手順を並べよ。",
+          "lead": "内部PCから社内プロキシへの接続を考えます。",
+          "lines": [
+            {
+              "code": "送信元を内部セグメントと特定する"
+            },
+            {
+              "code": "宛先をプロキシサーバと特定する"
+            },
+            {
+              "code": "本文の待受け設定からTCP/10080を選ぶ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "標準値の暗記より、通信方向と本文の設定を優先します。",
+          "ngExplain": "通信先を特定してから対応するポートを読みます。",
+          "stage": "reason",
+          "id": "existing-rules-5",
+          "format": "並べ替え",
+          "theme": "通信の目的から宛先とポートを選ぶ",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "プロキシの待受けだけをTCP/18080へ変更した。どの値を修正するか。",
+          "choices": [
+            {
+              "text": "syslogの宛先をプロキシにする",
+              "ok": false,
+              "explain": "ログ転送先の変更ではありません。"
+            },
+            {
+              "text": "内部からプロキシ宛ての宛先ポート",
+              "ok": true,
+              "explain": "待受けを変えた通信に対応するルールを直します。"
+            },
+            {
+              "text": "K社SaaSのHTTPSを18080へ変える",
+              "ok": false,
+              "explain": "SaaS側の待受けは変更していません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "existing-rules-6",
+          "format": "選択",
+          "theme": "通信の目的から宛先とポートを選ぶ",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "inspection",
+      "title": "HTTPSの検査と不審ファイルの動作を理解する",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "暗号化通信の途中で内容を検査する",
+          "body": "HTTPS検査ではSWGがPC側とWebサイト側の保護された接続をそれぞれ終端して、中継する内容を検査します。PCが確認するのはSWGがそのサイト向けに発行した証明書です。ルート証明書は署名の連鎖を検証するときの信頼の出発点で、信頼するものとして事前登録が必要です。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "PC",
+                "d": "SWGの証明書を検証"
+              },
+              {
+                "t": "SWG",
+                "d": "HTTPSの内容を検査"
+              },
+              {
+                "t": "Webサイト",
+                "d": "SWGからの接続を受ける"
+              }
+            ],
+            "caption": "説明用：HTTPS検査の信頼関係"
+          },
+          "stage": "concept",
+          "id": "inspection-1",
+          "format": "読む",
+          "theme": "HTTPSの検査と不審ファイルの動作を理解する",
+          "scaffold": 5
+        },
+        {
+          "id": "inspection-trust-reason",
+          "type": "quiz",
+          "title": "練習用：Webサイト本来の証明書は正しいが、検査中のSWGが発行した証明書をPCが信頼できない。確認する設定は？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "HTTPSの検査と不審ファイルの動作を理解する",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "PCにSWGの信頼基点が登録されているか",
+              "ok": true,
+              "explain": "検査サービスが入り、PCに提示する証明書の発行者が変わります。"
+            },
+            {
+              "text": "証明書検証を全て無効にすればよい",
+              "ok": false,
+              "explain": "検証を保つための信頼設定を確認する問題です。"
+            },
+            {
+              "text": "PCのIP貸出し時間だけ",
+              "ok": false,
+              "explain": "IP貸出しと証明書の信頼関係は別です。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "PCへ事前にインストールする証明書はどれか。",
+          "choices": [
+            {
+              "text": "PCのMAC（Media Access Control）アドレス証明書",
+              "ok": false,
+              "explain": "MACアドレスを証明する準備を問う設問ではありません。"
+            },
+            {
+              "text": "任意のWebサイト一つの証明書",
+              "ok": false,
+              "explain": "SWGが中継する様々な接続の信頼基点にはなりません。"
+            },
+            {
+              "text": "SWGサービスのルート証明書",
+              "ok": true,
+              "explain": "SWGの証明書を信頼する基点になります。"
+            }
+          ],
+          "stage": "check",
+          "id": "inspection-2",
+          "format": "選択",
+          "theme": "HTTPSの検査と不審ファイルの動作を理解する",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "ルート証明書があれば利用者認証は不要か。",
+          "choices": [
+            {
+              "text": "DHCPが利用者認証を代行する",
+              "ok": false,
+              "explain": "DHCPはIP設定の配布を扱います。"
+            },
+            {
+              "text": "不要にはならない",
+              "ok": true,
+              "explain": "接続相手の証明書の信頼と、利用者認証は別です。"
+            },
+            {
+              "text": "SWGの全利用者として自動認証される",
+              "ok": false,
+              "explain": "ルート証明書は利用者ID（Identifier、識別子）やパスワードの代わりではありません。"
+            }
+          ],
+          "stage": "reason",
+          "id": "inspection-3",
+          "format": "選択",
+          "theme": "HTTPSの検査と不審ファイルの動作を理解する",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "信頼する対象を含めて答えを完成せよ。",
+          "template": "PCには{issuer}の{certificate}をインストールする。",
+          "blanks": [
+            {
+              "key": "issuer",
+              "label": "サービス",
+              "choices": [
+                {
+                  "text": "SWGサービス",
+                  "ok": true,
+                  "explain": "HTTPSを検査するSWGの信頼を準備します。"
+                },
+                {
+                  "text": "DHCPサービス",
+                  "ok": false,
+                  "explain": "アドレス配布のサーバを信頼する設問ではありません。"
+                }
+              ],
+              "why": "HTTPSを検査するSWGの信頼を準備します。"
+            },
+            {
+              "key": "certificate",
+              "label": "種類",
+              "choices": [
+                {
+                  "text": "ルート証明書",
+                  "ok": true,
+                  "explain": "署名検証の信頼基点となる証明書です。"
+                },
+                {
+                  "text": "秘密鍵",
+                  "ok": false,
+                  "explain": "他サービスの秘密鍵をPCへ配るものではありません。"
+                }
+              ],
+              "why": "署名検証の信頼基点となる証明書です。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "inspection-4",
+          "format": "穴埋め",
+          "theme": "HTTPSの検査と不審ファイルの動作を理解する",
+          "scaffold": 2
+        },
+        {
+          "type": "info",
+          "title": "隔離環境で外部への通信を見る",
+          "body": "不審ファイルを隔離環境で動作させます。遠隔操作型なら、攻撃者の指令を受けるC&C（Command and Control）サーバへ通信することがあります。アクセス先の名前だけでなく、通信と動作の組合せを調べます。",
+          "stage": "concept",
+          "id": "inspection-5",
+          "format": "読む",
+          "theme": "HTTPSの検査と不審ファイルの動作を理解する",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "遠隔操作の指令を受けるための外部通信先はどれか。",
+          "choices": [
+            {
+              "text": "PoE+スイッチ",
+              "ok": false,
+              "explain": "給電を扱う機器です。指令サーバではありません。"
+            },
+            {
+              "text": "C&Cサーバ",
+              "ok": true,
+              "explain": "遠隔操作の指令や制御通信を扱う相手です。"
+            },
+            {
+              "text": "社内のsyslogサーバ",
+              "ok": false,
+              "explain": "ログの集約先です。攻撃指令の相手を表す名称ではありません。"
+            }
+          ],
+          "stage": "check",
+          "id": "inspection-6",
+          "format": "選択",
+          "theme": "HTTPSの検査と不審ファイルの動作を理解する",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "HTTPS検査を利用する準備と通信を並べよ。",
+          "lead": "PCの証明書検証を有効なまま利用する設計です。",
+          "lines": [
+            {
+              "code": "SWGのルート証明書をPCへ登録する"
+            },
+            {
+              "code": "PCがSWGの提示する証明書を検証する"
+            },
+            {
+              "code": "SWG経由でHTTPSの内容を検査する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "検査のために証明書の信頼関係を準備します。",
+          "ngExplain": "検査開始前に信頼基点を登録します。",
+          "stage": "reason",
+          "id": "inspection-7",
+          "format": "並べ替え",
+          "theme": "HTTPSの検査と不審ファイルの動作を理解する",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "隔離実行で外部通信が観測されなかった。適切な判断はどれか。",
+          "choices": [
+            {
+              "text": "C&Cが見えなければ必ず安全",
+              "ok": false,
+              "explain": "一度の観測で全動作を確認したことにはなりません。"
+            },
+            {
+              "text": "ルート証明書が壊れたと断定する",
+              "ok": false,
+              "explain": "ファイルの動作観測とPCの信頼設定は別の問題です。"
+            },
+            {
+              "text": "それだけで無害とは断定しない",
+              "ok": true,
+              "explain": "実行条件や待機動作で通信が出ない場合もあります。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "inspection-8",
+          "format": "選択",
+          "theme": "HTTPSの検査と不審ファイルの動作を理解する",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "retire-forward",
+      "title": "停止する役割の通信だけを削除する",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "同じサーバの役割を変更する",
+          "body": "フォワードプロキシは利用者の外部アクセスを代理し、リバースプロキシはサーバ側の入口で要求を受け付けます。原問は同じ機器の用途を後者へ変えます。「内部PC→旧プロキシ→外部Web」が不要になるので、その入口と出口を表1から探します。ログや認証まで不要とは限りません。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "項番",
+              "送信元",
+              "宛先",
+              "通信"
+            ],
+            "rows": [
+              [
+                "1",
+                "DMZ",
+                "ログ保管先",
+                "UDP/514"
+              ],
+              [
+                "2",
+                "プロキシ",
+                "インターネット",
+                "TCP/80・443"
+              ],
+              [
+                "3",
+                "プロキシ",
+                "認証先",
+                "UDP/1812"
+              ],
+              [
+                "7",
+                "内部セグメント",
+                "プロキシ",
+                "TCP/10080"
+              ]
+            ],
+            "caption": "説明用：原表の条件（削除対象は未指定）"
+          },
+          "stage": "concept",
+          "id": "retire-forward-1",
+          "format": "読む",
+          "theme": "停止する役割の通信だけを削除する",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "フォワードプロキシ停止で不要になる出口側ルールはどれか。",
+          "choices": [
+            {
+              "text": "項番1：DMZからログ転送",
+              "ok": false,
+              "explain": "サーバのログ転送まで止める根拠はありません。"
+            },
+            {
+              "text": "項番4：NTPサーバから公開NTP",
+              "ok": false,
+              "explain": "時刻同期を停止する変更ではありません。"
+            },
+            {
+              "text": "項番2：プロキシからインターネット",
+              "ok": true,
+              "explain": "旧プロキシによる外部Webの代理取得が停止します。"
+            }
+          ],
+          "stage": "check",
+          "id": "retire-forward-2",
+          "format": "選択",
+          "theme": "停止する役割の通信だけを削除する",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "同じ停止に対応する入口側ルールはどれか。",
+          "choices": [
+            {
+              "text": "項番3：プロキシから認証サーバ",
+              "ok": false,
+              "explain": "用途変更だけで認証が不要とはいえません。"
+            },
+            {
+              "text": "項番7：内部からプロキシ",
+              "ok": true,
+              "explain": "社内PCが旧プロキシへ外部アクセスを依頼しなくなります。"
+            },
+            {
+              "text": "項番6：内部からNTP",
+              "ok": false,
+              "explain": "PCの時刻同期は継続します。"
+            }
+          ],
+          "stage": "check",
+          "id": "retire-forward-3",
+          "format": "選択",
+          "theme": "停止する役割の通信だけを削除する",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "削除する二つの項番をそろえよ。",
+          "template": "フォワード通信の出口側は{out}、入口側は{in}を削除する。",
+          "blanks": [
+            {
+              "key": "out",
+              "label": "出口側",
+              "choices": [
+                {
+                  "text": "2",
+                  "ok": true,
+                  "explain": "インターネットへの代理取得を許可した行です。"
+                },
+                {
+                  "text": "1",
+                  "ok": false,
+                  "explain": "1はログ転送であり別用途です。"
+                }
+              ],
+              "why": "インターネットへの代理取得を許可した行です。"
+            },
+            {
+              "key": "in",
+              "label": "入口側",
+              "choices": [
+                {
+                  "text": "7",
+                  "ok": true,
+                  "explain": "内部PCから旧プロキシへの行です。"
+                },
+                {
+                  "text": "6",
+                  "ok": false,
+                  "explain": "6は時刻同期の許可です。"
+                }
+              ],
+              "why": "内部PCから旧プロキシへの行です。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.64,
+            "bottom": 0.89,
+            "label": "原表1：用途停止に伴うルールの選択"
+          },
+          "id": "retire-forward-4",
+          "format": "穴埋め",
+          "theme": "停止する役割の通信だけを削除する",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "役割変更時のルール整理を並べよ。",
+          "lead": "フォワード機能を止め、リバース機能を設ける方針です。",
+          "lines": [
+            {
+              "code": "停止する通信を内部PC→旧プロキシ→外部Webと特定する"
+            },
+            {
+              "code": "その入口と出口に対応する項番7と2を削除する"
+            },
+            {
+              "code": "リバースプロキシに必要な通信のルールを追加する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "同じ機器名がある行を一律には削除しません。",
+          "ngExplain": "停止する通信の役割から対象行を決めます。",
+          "stage": "reason",
+          "id": "retire-forward-5",
+          "format": "並べ替え",
+          "theme": "停止する役割の通信だけを削除する",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "変更後も認証サーバを利用する。認証用ルールまで削除するとどうなるか。",
+          "choices": [
+            {
+              "text": "SWGのルート証明書が自動で認証を代行する",
+              "ok": false,
+              "explain": "証明書の信頼と利用者認証は別です。"
+            },
+            {
+              "text": "リバース側で必要な認証を妨げる可能性がある",
+              "ok": true,
+              "explain": "残す用途の依存通信も確認します。"
+            },
+            {
+              "text": "Web通信とは別なので影響しない",
+              "ok": false,
+              "explain": "認証の成功がアクセス条件なら影響します。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "retire-forward-6",
+          "format": "選択",
+          "theme": "停止する役割の通信だけを削除する",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "remote-path",
+      "title": "社外PCから業務用サーバまでをたどる",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "社外から社内サーバへアクセスする",
+          "body": "原問では社外へ持ち出したPCをR-PCと呼びます。このPCはローカルプロキシのソフトEへ要求を渡し、ソフトEがクラウドのSWGへ中継します。SWGからJ社へ入り、DMZのリバースプロキシが内部の業務サーバへ転送します。接続図の線を、実際の中継区間に分けてたどりましょう。",
+          "fig": {
+            "kind": "topo",
+            "height": 285,
+            "nodes": [
+              {
+                "id": "remote",
+                "label": "社外PC",
+                "icon": "pc",
+                "x": 60,
+                "y": 40,
+                "sub": "ソフトE"
+              },
+              {
+                "id": "swg",
+                "label": "SWG",
+                "icon": "cloud",
+                "x": 250,
+                "y": 40
+              },
+              {
+                "id": "fw",
+                "label": "FW",
+                "icon": "fw",
+                "x": 170,
+                "y": 130
+              },
+              {
+                "id": "proxy",
+                "label": "リバース",
+                "icon": "server",
+                "x": 60,
+                "y": 220,
+                "sub": "DMZ"
+              },
+              {
+                "id": "server",
+                "label": "業務サーバ",
+                "icon": "server",
+                "x": 275,
+                "y": 220,
+                "sub": "内部"
+              }
+            ],
+            "links": [
+              {
+                "from": "remote",
+                "to": "swg"
+              },
+              {
+                "from": "swg",
+                "to": "fw"
+              },
+              {
+                "from": "fw",
+                "to": "proxy"
+              },
+              {
+                "from": "fw",
+                "to": "server"
+              }
+            ],
+            "caption": "説明用：接続関係（経路の順番は未記入）"
+          },
+          "stage": "concept",
+          "id": "remote-path-1",
+          "format": "読む",
+          "theme": "社外PCから業務用サーバまでをたどる",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "フォワードとリバースの用途の違いはどれか。",
+          "choices": [
+            {
+              "text": "UDPとTCPの変換の違い",
+              "ok": false,
+              "explain": "プロキシの用途を表す区別ではありません。"
+            },
+            {
+              "text": "IPv4とIPv6（Internet Protocolの版4と版6）のビット長の違い",
+              "ok": false,
+              "explain": "アドレス長とは無関係です。"
+            },
+            {
+              "text": "利用者側の外部アクセス中継と、サーバ側の受付中継",
+              "ok": true,
+              "explain": "本問では後者へ既存機器の役割を変更します。"
+            }
+          ],
+          "stage": "check",
+          "id": "remote-path-2",
+          "format": "選択",
+          "theme": "社外PCから業務用サーバまでをたどる",
+          "scaffold": 4
+        },
+        {
+          "id": "dmz-hop-reason",
+          "type": "quiz",
+          "title": "練習用：FWが外部・DMZ・内部の境界。DMZのリバースプロキシが内部サーバへ新しい接続を作る。外部からの受付後に越える境界は？",
+          "stage": "reason",
+          "format": "選択",
+          "theme": "社外PCから業務用サーバまでをたどる",
+          "scaffold": 2,
+          "choices": [
+            {
+              "text": "内部から外部へだけ",
+              "ok": false,
+              "explain": "プロキシから内部サーバへ渡す区間が抜けています。"
+            },
+            {
+              "text": "最初にFWを通ったので境界は消える",
+              "ok": false,
+              "explain": "一度許可しても別区間の制御が不要にはなりません。"
+            },
+            {
+              "text": "DMZから内部へ、もう一度FWを通る",
+              "ok": true,
+              "explain": "外部→DMZを受け付けた後、別の接続を内部へ開始します。"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "title": "原図2で（H）SWGの後、業務用サーバへ向かう経路はどれか。",
+          "choices": [
+            {
+              "text": "（J）K社SaaS→（K）業務用サーバ",
+              "ok": false,
+              "explain": "K社SaaSは今回の接続先ではありません。"
+            },
+            {
+              "text": "（I）FW→（E）リバースプロキシ→（I）FW→（K）業務用サーバ",
+              "ok": true,
+              "explain": "DMZへの入場と、DMZから内部への転送でFWを二度通ります。"
+            },
+            {
+              "text": "（E）→（K）でFWを一度も通らない",
+              "ok": false,
+              "explain": "原図のDMZと内部の境界を無視しています。"
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 18,
+            "top": 0.48,
+            "bottom": 0.91,
+            "label": "原図2：社外PCとDMZから内部への経路"
+          },
+          "id": "remote-path-3",
+          "format": "選択",
+          "theme": "社外PCから業務用サーバまでをたどる",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "社外側の出発点と中継をそろえよ。",
+          "template": "（B）R-PCは{local}へ渡し、{cloud}を経てJ社のFWへ進む。",
+          "blanks": [
+            {
+              "key": "local",
+              "label": "ローカルプロキシ",
+              "choices": [
+                {
+                  "text": "（A）ソフトE",
+                  "ok": true,
+                  "explain": "AはR-PC内のソフトEです。"
+                },
+                {
+                  "text": "（F）ソフトE",
+                  "ok": false,
+                  "explain": "Fは社内PC側のソフトEです。"
+                }
+              ],
+              "why": "AはR-PC内のソフトEです。"
+            },
+            {
+              "key": "cloud",
+              "label": "クラウド中継",
+              "choices": [
+                {
+                  "text": "（H）SWGサービス",
+                  "ok": true,
+                  "explain": "外部Webと同様、SWGへ要求を中継します。"
+                },
+                {
+                  "text": "（D）NTPサーバ",
+                  "ok": false,
+                  "explain": "NTPは時刻同期の機器です。"
+                }
+              ],
+              "why": "外部Webと同様、SWGへ要求を中継します。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "remote-path-4",
+          "format": "穴埋め",
+          "theme": "社外PCから業務用サーバまでをたどる",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "原図の七つの記号を経路順に並べよ。",
+          "lead": "同じFWの記号が二度必要です。",
+          "lines": [
+            {
+              "code": "（B）R-PC"
+            },
+            {
+              "code": "（A）ソフトE"
+            },
+            {
+              "code": "（H）SWGサービス"
+            },
+            {
+              "code": "（I）FW：SWGからDMZへ"
+            },
+            {
+              "code": "（E）リバースプロキシサーバ"
+            },
+            {
+              "code": "（I）FW：DMZから内部へ"
+            },
+            {
+              "code": "（K）業務用サーバ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          ],
+          "okExplain": "解答する記号列は（B）（A）（H）（I）（E）（I）（K）です。",
+          "ngExplain": "FWの二回目を落とさず、DMZから内部へ抜ける経路をたどります。",
+          "stage": "reason",
+          "id": "remote-path-5",
+          "format": "並べ替え",
+          "theme": "社外PCから業務用サーバまでをたどる",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "FWを二度書くことはルーティングループを意味するか。",
+          "choices": [
+            {
+              "text": "図にFWが二台あることを意味する",
+              "ok": false,
+              "explain": "原図は同じFWを通る経路です。"
+            },
+            {
+              "text": "意味しない。リバースプロキシを挟む別区間である",
+              "ok": true,
+              "explain": "境界を越えてDMZへ入り、別の通信で内部へ向かいます。"
+            },
+            {
+              "text": "必ず同じパケットが無限に回る",
+              "ok": false,
+              "explain": "役割と方向が異なる二つの通過をループとは呼びません。"
+            }
+          ],
+          "stage": "reason",
+          "id": "remote-path-6",
+          "format": "選択",
+          "theme": "社外PCから業務用サーバまでをたどる",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "社内PCからK社SaaSへ向かう場合、R-PC用の（A）を使うか。",
+          "choices": [
+            {
+              "text": "使わず、社内PCの（F）ソフトEを使う",
+              "ok": true,
+              "explain": "出発地点によって同じ役割の記号が変わります。"
+            },
+            {
+              "text": "どのPCも必ず（A）へ接続する",
+              "ok": false,
+              "explain": "AはR-PC上のローカルプロキシです。"
+            },
+            {
+              "text": "業務用サーバ（K）を先に通る",
+              "ok": false,
+              "explain": "K社SaaS宛てに業務用サーバを経由しません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "remote-path-7",
+          "format": "選択",
+          "theme": "社外PCから業務用サーバまでをたどる",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "swg-rule",
+      "title": "新しい出口の許可を三要素で書く",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "ソフトEがクラウドへ接続する",
+          "body": "ソフトEはPC内で動くローカルプロキシです。Web要求をSWGのTCP/443へ中継します。FWの新しい許可は、この接続の送信元・宛先・ポートから決めます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "項目",
+              "新しい接続"
+            ],
+            "rows": [
+              [
+                "送信元",
+                "内部セグメントのソフトE"
+              ],
+              [
+                "宛先",
+                "SWGサービス"
+              ],
+              [
+                "プロトコル／宛先ポート",
+                "TCP/443"
+              ]
+            ],
+            "caption": "説明用：追加する通信の三要素"
+          },
+          "stage": "concept",
+          "id": "swg-rule-1",
+          "format": "読む",
+          "theme": "新しい出口の許可を三要素で書く",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "FWから見た、この接続の送信元はどれか。",
+          "choices": [
+            {
+              "text": "SWGサービス",
+              "ok": false,
+              "explain": "SWGはこの接続の宛先です。"
+            },
+            {
+              "text": "旧プロキシサーバ",
+              "ok": false,
+              "explain": "移行後はソフトEが直接SWGへ接続します。"
+            },
+            {
+              "text": "内部セグメントのPC上のソフトE",
+              "ok": true,
+              "explain": "クラウドへ要求を送る端末側です。"
+            }
+          ],
+          "stage": "check",
+          "id": "swg-rule-2",
+          "format": "選択",
+          "theme": "新しい出口の許可を三要素で書く",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "ソフトEがHTTPのWeb要求を受けた場合も、SWGへの接続先はどれか。",
+          "choices": [
+            {
+              "text": "SWGのUDP/514",
+              "ok": false,
+              "explain": "syslogの転送先ポートと混同しています。"
+            },
+            {
+              "text": "SWGのTCP/443",
+              "ok": true,
+              "explain": "本文はHTTPとHTTPSをこのポートへ中継すると規定します。"
+            },
+            {
+              "text": "必ず外部WebのTCP/80",
+              "ok": false,
+              "explain": "Web側のポートとソフトEからSWGへの接続を区別します。"
+            }
+          ],
+          "stage": "reason",
+          "id": "swg-rule-3",
+          "format": "選択",
+          "theme": "新しい出口の許可を三要素で書く",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "追加する許可ルールを完成せよ。",
+          "template": "送信元は{src}、宛先は{dst}、プロトコル／宛先ポートは{port}。",
+          "blanks": [
+            {
+              "key": "src",
+              "label": "送信元",
+              "choices": [
+                {
+                  "text": "内部セグメント（ソフトE）",
+                  "ok": true,
+                  "explain": "PCに導入したソフトEが開始する通信です。"
+                },
+                {
+                  "text": "DMZのNTPサーバ",
+                  "ok": false,
+                  "explain": "NTPサーバからの時刻同期ではありません。"
+                }
+              ],
+              "why": "PCに導入したソフトEが開始する通信です。"
+            },
+            {
+              "key": "dst",
+              "label": "宛先",
+              "choices": [
+                {
+                  "text": "SWGサービス",
+                  "ok": true,
+                  "explain": "クラウドの検査サービスへの通信です。"
+                },
+                {
+                  "text": "syslogサーバ",
+                  "ok": false,
+                  "explain": "ログ転送の許可とは別です。"
+                }
+              ],
+              "why": "クラウドの検査サービスへの通信です。"
+            },
+            {
+              "key": "port",
+              "label": "プロトコル／ポート",
+              "choices": [
+                {
+                  "text": "TCP/443",
+                  "ok": true,
+                  "explain": "SWGの指定待受けに合わせます。"
+                },
+                {
+                  "text": "TCP/10080",
+                  "ok": false,
+                  "explain": "10080は旧プロキシの待受けです。"
+                }
+              ],
+              "why": "SWGの指定待受けに合わせます。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "swg-rule-4",
+          "format": "穴埋め",
+          "theme": "新しい出口の許可を三要素で書く",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "通信許可を検討する順序を並べよ。",
+          "lead": "サービスの仕様から三要素を決めます。",
+          "lines": [
+            {
+              "code": "ソフトEが接続を開始すると特定する"
+            },
+            {
+              "code": "接続先をSWGサービスと特定する"
+            },
+            {
+              "code": "仕様の待受けTCP/443で許可を作る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "元のWebサイトのポートをそのまま転記しないようにします。",
+          "ngExplain": "中継の各区間を分けてからポートを決めます。",
+          "stage": "reason",
+          "id": "swg-rule-5",
+          "format": "並べ替え",
+          "theme": "新しい出口の許可を三要素で書く",
+          "scaffold": 2
+        },
+        {
+          "id": "stateful-response",
+          "type": "info",
+          "title": "接続を始める通信と応答を分ける",
+          "stage": "concept",
+          "format": "読む",
+          "theme": "新しい出口の許可を三要素で書く",
+          "scaffold": 5,
+          "body": "ステートフル検査では、FWが許可した接続の状態を記録し、その接続への応答かどうかを判断します。原表1のFWは応答パケットを自動通過させます。外部からの新規接続と、許可済み接続への応答を区別します。"
+        },
+        {
+          "type": "quiz",
+          "title": "同じFWは応答パケットを自動通過させる。逆方向を全開放する必要はあるか。",
+          "choices": [
+            {
+              "text": "UDP/443だけ許可すればTCPの応答も通る",
+              "ok": false,
+              "explain": "TCPとUDPは別のプロトコルです。"
+            },
+            {
+              "text": "この接続の応答用に全開放する必要はない",
+              "ok": true,
+              "explain": "ステートフル検査で許可済み接続の応答を扱います。"
+            },
+            {
+              "text": "内部向け全ポートの新規接続を許可する必要がある",
+              "ok": false,
+              "explain": "応答と外部からの新規接続は異なります。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "swg-rule-6",
+          "format": "選択",
+          "theme": "新しい出口の許可を三要素で書く",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "source-allowlist",
+      "title": "SaaSから見える送信元を更新する",
+      "targets": [
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "SaaSが観測する相手が変わる",
+          "body": "K社SaaSはJ社のグローバルIPだけを許可しています。導入後はSWGが企業ごとの固定IPへ送信元を変換します。本問でSWG-GIP（SWG側のGlobal IPアドレス）と呼ぶ値です。元のPCのIPと、最終中継点から出た通信の送信元を分けます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "経路",
+              "K社が見る送信元"
+            ],
+            "rows": [
+              [
+                "導入前：J社FWから接続",
+                "J社のグローバルIP"
+              ],
+              [
+                "導入後：SWGから接続",
+                "SWG-GIP"
+              ]
+            ],
+            "caption": "説明用：最終中継点で変わる送信元"
+          },
+          "stage": "concept",
+          "id": "source-allowlist-1",
+          "format": "読む",
+          "theme": "SaaSから見える送信元を更新する",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "移行後の正常な通信でも拒否される理由はどれか。",
+          "choices": [
+            {
+              "text": "PCのMACアドレスがSaaSまで届くから",
+              "ok": false,
+              "explain": "インターネット先のSaaSが元PCのMACでこの制限を行うわけではありません。"
+            },
+            {
+              "text": "HTTPSでは送信元IPが存在しないから",
+              "ok": false,
+              "explain": "HTTPSでもIPによる通信は行われます。"
+            },
+            {
+              "text": "SaaSが見る送信元が旧許可値と違う",
+              "ok": true,
+              "explain": "認証前のアドレス制限で止まる可能性があります。"
+            }
+          ],
+          "stage": "check",
+          "id": "source-allowlist-2",
+          "format": "選択",
+          "theme": "SaaSから見える送信元を更新する",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "SWG-GIPを企業単位で固定する利点はどれか。",
+          "choices": [
+            {
+              "text": "利用者認証を廃止できる",
+              "ok": false,
+              "explain": "IP制限と利用者認証は別の条件です。"
+            },
+            {
+              "text": "SaaSの送信元許可リストに登録できる",
+              "ok": true,
+              "explain": "中継後の固定アドレスに制限を対応できます。"
+            },
+            {
+              "text": "社内の全PCのプライベートIPを固定する",
+              "ok": false,
+              "explain": "固定するのはSWG側の外部送信元です。"
+            }
+          ],
+          "stage": "reason",
+          "id": "source-allowlist-3",
+          "format": "選択",
+          "theme": "SaaSから見える送信元を更新する",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "変更対象と値を含めて答えよ。",
+          "template": "{service}でアクセスを許可する{field}を{value}に変更する。",
+          "blanks": [
+            {
+              "key": "service",
+              "label": "設定先",
+              "choices": [
+                {
+                  "text": "K社SaaS",
+                  "ok": true,
+                  "explain": "拒否しているサービス側の許可条件を変更します。"
+                },
+                {
+                  "text": "PCのDHCPクライアント",
+                  "ok": false,
+                  "explain": "PCのIP取得設定でSaaSの許可条件は変わりません。"
+                }
+              ],
+              "why": "拒否しているサービス側の許可条件を変更します。"
+            },
+            {
+              "key": "field",
+              "label": "項目",
+              "choices": [
+                {
+                  "text": "送信元",
+                  "ok": true,
+                  "explain": "SaaSが観測する接続元です。"
+                },
+                {
+                  "text": "宛先MACアドレス",
+                  "ok": false,
+                  "explain": "インターネットを越えて元PCのMACは届きません。"
+                }
+              ],
+              "why": "SaaSが観測する接続元です。"
+            },
+            {
+              "key": "value",
+              "label": "新しい値",
+              "choices": [
+                {
+                  "text": "SWG-GIP",
+                  "ok": true,
+                  "explain": "導入後の送信元に合わせます。"
+                },
+                {
+                  "text": "旧J社グローバルIPのまま",
+                  "ok": false,
+                  "explain": "変更前の値だけでは新経路を許可できません。"
+                }
+              ],
+              "why": "導入後の送信元に合わせます。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "source-allowlist-4",
+          "format": "穴埋め",
+          "theme": "SaaSから見える送信元を更新する",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "許可する送信元を決める手順を並べよ。",
+          "lead": "導入後の通信経路を前提にします。",
+          "lines": [
+            {
+              "code": "PCからSWGを経由する経路を確認する"
+            },
+            {
+              "code": "SWGがSWG-GIPへ送信元を変換すると確認する"
+            },
+            {
+              "code": "K社SaaSの許可送信元をSWG-GIPへ変更する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "設定を変える場所はPCではなくK社SaaSです。",
+          "ngExplain": "最後にSaaS側の制限を更新します。",
+          "stage": "reason",
+          "id": "source-allowlist-5",
+          "format": "並べ替え",
+          "theme": "SaaSから見える送信元を更新する",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "条件を変え、一部PCだけ旧経路も残す移行期間なら何を確認するか。",
+          "choices": [
+            {
+              "text": "許可する宛先ポートを0にする",
+              "ok": false,
+              "explain": "送信元制限の移行とは関係ありません。"
+            },
+            {
+              "text": "各経路でSaaSに見える送信元と必要な許可範囲",
+              "ok": true,
+              "explain": "旧経路も使う期間は旧送信元の扱いを別途判断します。"
+            },
+            {
+              "text": "SWG-GIPへ変更すれば旧経路も自動許可される",
+              "ok": false,
+              "explain": "旧経路の送信元はSWG-GIPには変わりません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "source-allowlist-6",
+          "format": "選択",
+          "theme": "SaaSから見える送信元を更新する",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "direct-route",
+      "title": "社内通信の外部往復を省く",
+      "targets": [
+        "s3-5"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "社内サーバへの通信が一度社外へ出る",
+          "body": "社内PCから業務用サーバへもSWGを通すと外部への往復が発生します。直接接続リストにサーバのプライベートIPを登録すれば、その往復を省けます。RTT（Round Trip Time）は要求して応答が戻るまでの往復時間です。経路短縮によりRTTや経由機器の負荷を減らし、外部回線への依存も減らせます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "経路",
+              "通る範囲"
+            ],
+            "rows": [
+              [
+                "SWG経由",
+                "社内→外部SWG→社内"
+              ],
+              [
+                "直接接続",
+                "社内で完結"
+              ]
+            ],
+            "caption": "説明用：社内サーバ宛ての比較"
+          },
+          "stage": "concept",
+          "id": "direct-route-1",
+          "format": "読む",
+          "theme": "社内通信の外部往復を省く",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "外部SWGへの往復を省くと、どの負荷を減らせるか。",
+          "choices": [
+            {
+              "text": "必ず業務サーバの全処理負荷",
+              "ok": false,
+              "explain": "サーバが行う業務処理そのものは残ります。"
+            },
+            {
+              "text": "PCの画面描画を全て不要にする",
+              "ok": false,
+              "explain": "経路短縮は画面描画を廃止しません。"
+            },
+            {
+              "text": "FWや外部回線など経由する機器・回線の負荷",
+              "ok": true,
+              "explain": "処理する通信量や経由回数を減らせます。"
+            }
+          ],
+          "stage": "check",
+          "id": "direct-route-2",
+          "format": "選択",
+          "theme": "社内通信の外部往復を省く",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "原文の直接接続リストへ登録する対象はどれか。",
+          "choices": [
+            {
+              "text": "K社SaaSの全利用者ID",
+              "ok": false,
+              "explain": "リストは利用者IDではなく宛先で制御します。"
+            },
+            {
+              "text": "業務用サーバのプライベートIPアドレス",
+              "ok": true,
+              "explain": "社内から直接到達できる宛先を登録します。"
+            },
+            {
+              "text": "全WebサイトのFQDN",
+              "ok": false,
+              "explain": "原文は全外部サイトの検査を迂回する提案ではありません。"
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 19,
+            "top": 0.38,
+            "bottom": 0.59,
+            "label": "原文：業務用サーバのプライベートIPを登録する提案"
+          },
+          "id": "direct-route-3",
+          "format": "選択",
+          "theme": "社内通信の外部往復を省く",
+          "scaffold": 4
+        },
+        {
+          "id": "direct-availability",
+          "type": "quiz",
+          "title": "練習用：社内網と業務サーバは正常で、外部回線だけ故障。社内からの直接接続で改善するのは？",
+          "stage": "transfer",
+          "format": "選択",
+          "theme": "社内通信の外部往復を省く",
+          "scaffold": 1,
+          "choices": [
+            {
+              "text": "利用者認証が不要になること",
+              "ok": false,
+              "explain": "経路短縮と業務サーバの認証要件は別です。"
+            },
+            {
+              "text": "外部回線の故障に左右されず業務サーバへ接続できること",
+              "ok": true,
+              "explain": "外部へ出ない経路にすると、その故障への依存を減らし可用性を向上できます。"
+            },
+            {
+              "text": "業務サーバが故障しても必ず使えること",
+              "ok": false,
+              "explain": "宛先サーバ自体の故障までは回避できません。"
+            }
+          ]
+        },
+        {
+          "type": "blank",
+          "title": "経路と短い答案を結べ。",
+          "template": "外部への往復を省くことで{cause}し、利点を10字以内で書くなら「{answer}」となる。",
+          "blanks": [
+            {
+              "key": "cause",
+              "label": "変化",
+              "choices": [
+                {
+                  "text": "往復遅延を減ら",
+                  "ok": true,
+                  "explain": "余分な往復がなくなるので遅延を減らせます。"
+                },
+                {
+                  "text": "認証を無条件で省略",
+                  "ok": false,
+                  "explain": "直接接続が業務サーバの認証廃止を意味するわけではありません。"
+                }
+              ],
+              "why": "余分な往復がなくなるので遅延を減らせます。"
+            },
+            {
+              "key": "answer",
+              "label": "短い答案",
+              "choices": [
+                {
+                  "text": "RTTの短縮",
+                  "ok": true,
+                  "explain": "RTTはRound Trip Timeで、往復時間です。"
+                },
+                {
+                  "text": "全暗号化の廃止",
+                  "ok": false,
+                  "explain": "暗号化を止める提案ではありません。"
+                }
+              ],
+              "why": "RTTはRound Trip Timeで、往復時間です。"
+            }
+          ],
+          "stage": "assemble",
+          "id": "direct-route-4",
+          "format": "穴埋め",
+          "theme": "社内通信の外部往復を省く",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "経路短縮による利点を組み立てよ。",
+          "lead": "社内PCから社内業務用サーバへの通信です。",
+          "lines": [
+            {
+              "code": "直接接続リストにサーバのプライベートIPを登録する"
+            },
+            {
+              "code": "ソフトEが外部SWGを経由せず直接接続する"
+            },
+            {
+              "code": "外部往復がなくなりRTTや経由機器の負荷を減らせる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "利点はFWの負荷軽減などでも表現できます。",
+          "ngExplain": "直接接続の結果として何が減るかまで結び付けます。",
+          "stage": "reason",
+          "id": "direct-route-5",
+          "format": "並べ替え",
+          "theme": "社内通信の外部往復を省く",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "自宅のR-PCも登録したプライベートIPへ到達できるか。",
+          "choices": [
+            {
+              "text": "SWG-GIPが自動的にそのプライベートIPになる",
+              "ok": false,
+              "explain": "SWGの外部送信元と社内サーバの宛先は別です。"
+            },
+            {
+              "text": "直接到達できる経路が別に必要",
+              "ok": true,
+              "explain": "リスト登録だけで社内網への接続経路は作られません。"
+            },
+            {
+              "text": "登録だけで自動的に社内へ接続できる",
+              "ok": false,
+              "explain": "直接接続リストはVPN（Virtual Private Network、仮想プライベート網）のように社内へ接続する経路を生成しません。"
+            }
+          ],
+          "stage": "transfer",
+          "id": "direct-route-6",
+          "format": "選択",
+          "theme": "社内通信の外部往復を省く",
+          "scaffold": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2635 @@
+{
+  "examKey": "2017h29a/pm2/2",
+  "title": "電波・鍵・認証・経路を分けて無線LANを設計する",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm2_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "radio",
+      "title": "つながる電波と、入ってよい人は別",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "周波数とネットワーク名を知る",
+          "body": "AP（Access Point）は無線端末を有線ネットワークにつなぐ装置です。原問が比較するIEEE 802.11nは2.4GHzと5GHz、802.11acは5GHzを使います。SSID（Service Set Identifier）やESSID（Extended Service Set Identifier）は接続先の無線ネットワーク名であり、名前を隠すだけでは暗号化や本人確認にはなりません。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 180,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "ノートPC",
+                "icon": "pc",
+                "x": 55,
+                "y": 45
+              },
+              {
+                "id": "node1",
+                "label": "AP",
+                "icon": "ap",
+                "x": 170,
+                "y": 45
+              },
+              {
+                "id": "node2",
+                "label": "有線LAN",
+                "icon": "l2sw",
+                "x": 285,
+                "y": 45
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2"
+              }
+            ],
+            "caption": "説明用：無線区間と有線区間"
+          },
+          "id": "radio-1",
+          "theme": "つながる電波と、入ってよい人は別",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "802.11nと802.11acの両方で使える、原問の周波数帯は？",
+          "choices": [
+            {
+              "text": "2.4GHz",
+              "explain": "nでは使えますが、acの周波数帯ではありません。",
+              "ok": false
+            },
+            {
+              "text": "5GHz",
+              "explain": "nは2.4/5GHz、acは5GHzなので共通するのは5GHzです。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "radio-2",
+          "theme": "つながる電波と、入ってよい人は別",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "SSIDを隠せば証明書による認証を省いてよい？",
+          "choices": [
+            {
+              "text": "よくない。名前の非表示と利用者の本人確認は別",
+              "explain": "通信から名前を知る可能性もあり、識別子を隠すことは認証の代わりにはなりません。",
+              "ok": true
+            },
+            {
+              "text": "よい。SSIDは秘密鍵と同じもの",
+              "explain": "SSIDはネットワークの識別子で、暗号の秘密鍵ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "radio-3",
+          "theme": "つながる電波と、入ってよい人は別",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "表1・表2の三つの空欄を埋める",
+          "template": "nは{a}GHzと{b}GHz、acは{b}GHz。空白又は特定の汎用指定を拒否する機能は{c}接続拒否。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a：低い周波数帯",
+              "why": "nが対応する二つの周波数帯の一方です。",
+              "choices": [
+                {
+                  "text": "0.8",
+                  "explain": "表1のnの周波数帯ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "2.4",
+                  "explain": "原問のnが使う低い方の帯域です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "b：共通する帯域",
+              "why": "nとacに共通します。",
+              "choices": [
+                {
+                  "text": "2.4",
+                  "explain": "acの周波数帯としては不適切です。",
+                  "ok": false
+                },
+                {
+                  "text": "5",
+                  "explain": "acが利用し、nも対応する帯域です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "c：指定方法",
+              "why": "原問の表2は空白又はanyの要求を扱います。",
+              "choices": [
+                {
+                  "text": "MAC",
+                  "explain": "MACフィルタリングとは別の機能です。",
+                  "ok": false
+                },
+                {
+                  "text": "any",
+                  "explain": "接続先を特定しない要求を拒否する機能名です。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "radio-4",
+          "theme": "つながる電波と、入ってよい人は別",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "無線接続を確認する順序",
+          "lead": "この練習では規格、接続先、権限の順に確認します。",
+          "lines": [
+            {
+              "code": "端末とAPに共通の周波数帯・規格を確認する"
+            },
+            {
+              "code": "接続先SSIDを選択する"
+            },
+            {
+              "code": "暗号化と利用者認証の条件を満たす"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "電波が合うこと、目的のネットワークを選ぶこと、利用権限は別の条件です。",
+          "ngExplain": "SSIDを選べたことだけで、本人確認と暗号化が済んだことにはなりません。",
+          "stage": "assemble",
+          "id": "radio-5",
+          "theme": "つながる電波と、入ってよい人は別",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：来訪者端末が2.4GHzのnにしか対応しない。5GHzのみのacサービスで接続できる？",
+          "choices": [
+            {
+              "text": "できる。SSIDを同じにすれば周波数差は消える",
+              "explain": "ネットワーク名は無線規格の互換性を作りません。",
+              "ok": false
+            },
+            {
+              "text": "できない。共通の2.4GHzサービスも必要",
+              "explain": "原問でnにも対応したAPを選ぶ意義につながります。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "radio-6",
+          "theme": "つながる電波と、入ってよい人は別",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "keys",
+      "title": "同じ鍵の使い続けと、認証後の鍵",
+      "targets": [
+        "s1",
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "暗号方式を歴史的な比較として読む",
+          "body": "WEP（Wired Equivalent Privacy）は同じ秘密を共有する共通鍵暗号で、RC4というストリーム暗号を使います。WPA（Wi-Fi Protected Access）はTKIP（Temporal Key Integrity Protocol）で鍵生成を改善し、WPA2はIEEE 802.11iに準拠するAES/CCMPを使います。ここでは2017年の原問の比較を学び、WEPやWPAの現在の採用を勧めるものではありません。",
+          "stage": "concept",
+          "id": "keys-1",
+          "theme": "同じ鍵の使い続けと、認証後の鍵",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "同じ秘密で暗号化・復号し、順次生成する鍵系列を使うWEPの分類は？",
+          "choices": [
+            {
+              "text": "公開鍵暗号・証明書発行",
+              "explain": "WEPのRC4は証明書で公開鍵を交換する暗号ではありません。",
+              "ok": false
+            },
+            {
+              "text": "共通鍵暗号・ストリーム暗号",
+              "explain": "鍵の共有関係とデータ処理方式を別々に分類しています。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "keys-2",
+          "theme": "同じ鍵の使い続けと、認証後の鍵",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "原問で同一のWEPキーを使い続ける点を問題にする理由は？",
+          "choices": [
+            {
+              "text": "同じ鍵に基づく通信が蓄積し、弱い方式での解析につながるため",
+              "explain": "IV（Initialization Vector：初期化ベクトル）との組合せも含め、鍵の運用と方式の弱さを扱っています。",
+              "ok": true
+            },
+            {
+              "text": "WEPキーがそのまま端末のIPアドレスになるため",
+              "explain": "暗号鍵と通信の住所は別です。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "keys-3",
+          "theme": "同じ鍵の使い続けと、認証後の鍵",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "info",
+          "title": "PMKと端末の識別情報",
+          "body": "PMK（Pairwise Master Key）は一時的な通信鍵を作る基となる鍵です。原問の簡略化された説明では、認証サーバで用意されるPMKを基に一時鍵を生成し、TKIPでは一時鍵・IV・端末のMAC（Media Access Control）アドレスを混合します。実際の鍵導出・配布の詳細は認証方式に依存するため、この説明を全実装の手順とはしません。",
+          "stage": "concept",
+          "id": "keys-4",
+          "theme": "同じ鍵の使い続けと、認証後の鍵",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "TKIPの混合材料で、端末のL2識別子に当たるものは？",
+          "choices": [
+            {
+              "text": "MACアドレス",
+              "explain": "原問は一時鍵・IV・無線LAN端末のMACアドレスを挙げています。",
+              "ok": true
+            },
+            {
+              "text": "WebサイトのURL",
+              "explain": "アプリケーション層の文字列で、原問の鍵混合材料ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check",
+          "id": "keys-5",
+          "theme": "同じ鍵の使い続けと、認証後の鍵",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "blank",
+          "title": "原問の鍵に関する五つの空欄を整理する",
+          "template": "WEPは{a}鍵方式の{b}暗号で、{c}のWEPキーを使用し続ける。本文hは{d}、TKIP混合材料のiは{e}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "d：鍵の種類",
+              "why": "同じ秘密を共有します。",
+              "choices": [
+                {
+                  "text": "公開",
+                  "explain": "公開鍵と秘密鍵の組を使う方式ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "共通",
+                  "explain": "暗号化と復号で共有秘密を使います。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "f：処理方式",
+              "why": "RC4の分類です。",
+              "choices": [
+                {
+                  "text": "ブロック",
+                  "explain": "一定長ブロックを直接処理するAESなどとは分類が異なります。",
+                  "ok": false
+                },
+                {
+                  "text": "ストリーム",
+                  "explain": "鍵系列とデータを順次組み合わせます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "g：キーの運用",
+              "why": "WEPの弱さとして原問が挙げます。",
+              "choices": [
+                {
+                  "text": "毎パケット無関係な新規",
+                  "explain": "原問が説明する共有WEPキーの運用と逆です。",
+                  "ok": false
+                },
+                {
+                  "text": "同一",
+                  "explain": "同じWEPキーの継続利用を述べます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "d",
+              "label": "h：本文の主体",
+              "why": "この空欄は原問の簡略モデルに従います。",
+              "choices": [
+                {
+                  "text": "DNSサーバ",
+                  "explain": "名前解決のサーバであり、認証用鍵の説明には当たりません。",
+                  "ok": false
+                },
+                {
+                  "text": "認証サーバ",
+                  "explain": "原問のPMK・一時鍵の説明で指定される主体です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "e",
+              "label": "i：端末情報",
+              "why": "L2で端末を識別します。",
+              "choices": [
+                {
+                  "text": "IPアドレス",
+                  "explain": "原問の混合材料はL3の住所ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "MACアドレス",
+                  "explain": "TKIPの混合に用いる端末識別情報です。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "keys-6",
+          "theme": "同じ鍵の使い続けと、認証後の鍵",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "blank",
+          "title": "WPA2の規格と移動前の処理",
+          "template": "WPA2はIEEE {a}に準拠する。ハンドオーバを短くするため事前{b}とPMK保持を利用する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "e：無線セキュリティ規格",
+              "why": "無線LANのセキュリティ拡張です。",
+              "choices": [
+                {
+                  "text": "802.11i",
+                  "explain": "原問がWPA2の準拠規格として問う番号です。",
+                  "ok": true
+                },
+                {
+                  "text": "802.3at",
+                  "explain": "こちらは有線LANによる電力供給の規格です。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "j：移動前の準備",
+              "why": "APを移る時点での処理を減らします。",
+              "choices": [
+                {
+                  "text": "認証",
+                  "explain": "事前認証と鍵情報保持が移動時の負担を減らします。",
+                  "ok": true
+                },
+                {
+                  "text": "印刷",
+                  "explain": "無線AP間の切替えを早める処理ではありません。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "keys-7",
+          "theme": "同じ鍵の使い続けと、認証後の鍵",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：別APへ移るたびに一から認証し直す方式。影響しやすいのは？",
+          "choices": [
+            {
+              "text": "無線の周波数帯の値そのもの",
+              "explain": "認証手順が増えてもGHzの規格値が変わるわけではありません。",
+              "ok": false
+            },
+            {
+              "text": "ハンドオーバに要する時間",
+              "explain": "原問の事前認証・PMK保持が減らしている処理が再び必要になるためです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "keys-8",
+          "theme": "同じ鍵の使い続けと、認証後の鍵",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "counter",
+      "title": "同じXORをもう一度使う",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "XORは同じ値を二度重ねると戻る",
+          "body": "AES（Advanced Encryption Standard）は一定長を処理するブロック暗号です。CCMP（Counter-mode with CBC-MAC Protocol）のカウンタモード部分では、カウンタをAESで暗号化した値を平文とXOR（排他的論理和）します。同じ鍵・カウンタから同じ値を作り、暗号文ともう一度XORすれば平文に戻せます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "bits",
+            "cells": [
+              {
+                "top": "平文 1010",
+                "steps": [
+                  "XOR 0110",
+                  "暗号文 1100"
+                ]
+              },
+              {
+                "top": "暗号文 1100",
+                "steps": [
+                  "XOR 0110",
+                  "平文 1010"
+                ]
+              }
+            ],
+            "caption": "説明用：練習用4ビットXOR"
+          },
+          "id": "counter-1",
+          "theme": "同じXORをもう一度使う",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用：1010 XOR 0110 = 1100。1100 XOR 0110は？",
+          "choices": [
+            {
+              "text": "0000",
+              "explain": "同じ値同士のXORなら0ですが、1100と0110は同じ値ではありません。",
+              "ok": false
+            },
+            {
+              "text": "1010",
+              "explain": "同じ0110を二度XORすると元の値に戻ります。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "counter-2",
+          "theme": "同じXORをもう一度使う",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "カウンタモードで最初にAESへ入れるのは？",
+          "choices": [
+            {
+              "text": "カウンタ値c",
+              "explain": "暗号化したcを平文又は暗号文とXORします。",
+              "ok": true
+            },
+            {
+              "text": "暗号文e1をそのままAES復号器へ入れる",
+              "explain": "このモードの復号はe1のAES逆変換ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check",
+          "id": "counter-3",
+          "theme": "同じXORをもう一度使う",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "復号時にもAESの暗号化処理を使う理由は？",
+          "choices": [
+            {
+              "text": "暗号文を二重暗号化すれば常に平文になるため",
+              "explain": "任意の暗号の二重暗号化にその性質があるわけではありません。",
+              "ok": false
+            },
+            {
+              "text": "暗号化時と同じ鍵系列を再現してXORするため",
+              "explain": "元の平文はXORの性質によって戻り、AESの逆変換で取り出すわけではありません。",
+              "ok": true
+            }
+          ],
+          "stage": "reason",
+          "id": "counter-4",
+          "theme": "同じXORをもう一度使う",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "cとe1の役割を入れ違えない",
+          "template": "カウンタ値{a}をAESで{b}した結果と、{c}をXORしてm1を得る。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "入力値",
+              "why": "元のブロックに対応するカウンタを使います。",
+              "choices": [
+                {
+                  "text": "c",
+                  "explain": "図2の最初のブロックに対応する値です。",
+                  "ok": true
+                },
+                {
+                  "text": "c+1",
+                  "explain": "次のブロックの鍵系列になり、e1を正しく戻せません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "AES処理",
+              "why": "暗号化時と同じ鍵系列を再現します。",
+              "choices": [
+                {
+                  "text": "暗号化",
+                  "explain": "復号側でもAESの暗号化を使います。",
+                  "ok": true
+                },
+                {
+                  "text": "復号",
+                  "explain": "カウンタにAES逆変換を行う手順ではありません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "XOR相手",
+              "why": "平文に戻したい対象です。",
+              "choices": [
+                {
+                  "text": "暗号文ブロックe1",
+                  "explain": "同じ鍵系列とのXORで平文m1になります。",
+                  "ok": true
+                },
+                {
+                  "text": "平文ブロックm1",
+                  "explain": "復号の開始時点ではm1が未取得なので入力にはできません。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "counter-5",
+          "theme": "同じXORをもう一度使う",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "原問の復号手順を組む",
+          "lead": "同じ暗号鍵を使用することを前提に、図2の最初のブロックを戻します。",
+          "lines": [
+            {
+              "code": "カウンタ値cをAESで暗号化する"
+            },
+            {
+              "code": "その結果と暗号文ブロックe1をXORする"
+            },
+            {
+              "code": "平文ブロックm1を得る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "鍵系列の再現、暗号文とのXOR、平文の取得という順です。",
+          "ngExplain": "e1を直接AESで復号するのではなく、AESにはcを入力します。",
+          "stage": "assemble",
+          "id": "counter-6",
+          "theme": "同じXORをもう一度使う",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：e1の復号でc+1を使ってしまった。どうなる？",
+          "choices": [
+            {
+              "text": "暗号化時と鍵系列が異なり、m1を正しく得られない",
+              "explain": "同じ暗号鍵だけでなく対応するカウンタも一致させる必要があります。",
+              "ok": true
+            },
+            {
+              "text": "どのカウンタでも同じ結果なので戻る",
+              "explain": "AESへ入力する値が変わるため鍵系列も変わります。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "counter-7",
+          "theme": "同じXORをもう一度使う",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "capacity",
+      "title": "周波数の幅と同時に送る本数",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "道路の幅と並列の流れ",
+          "body": "チャネルボンディングは隣り合うチャネルを束ねて帯域幅を広げます。MIMO（Multiple Input Multiple Output）は複数アンテナを使った並列伝送で、本問はアンテナ本数とストリーム数を対応させて計算します。選定APは最大80MHz・3本で、80MHzの1ストリームは最大約433Mbit/sという原問の理論値を使います。",
+          "stage": "concept",
+          "fig": {
+            "kind": "bits",
+            "cells": [
+              {
+                "top": "20MHz × 4",
+                "steps": [
+                  "チャネルを束ねる",
+                  "80MHz"
+                ]
+              },
+              {
+                "top": "約433 × 2",
+                "steps": [
+                  "2ストリーム",
+                  "約867Mbit/s"
+                ]
+              }
+            ],
+            "caption": "説明用：原問の理論値・端数は丸め"
+          },
+          "id": "capacity-1",
+          "theme": "周波数の幅と同時に送る本数",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "選定APが対応する最大チャネルボンディングは？",
+          "choices": [
+            {
+              "text": "8チャネル、160MHz",
+              "explain": "規格にあっても選定製品は対応しないと本文にあります。",
+              "ok": false
+            },
+            {
+              "text": "4チャネル、80MHz",
+              "explain": "原問の製品上限です。規格全体の上限と区別します。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "capacity-2",
+          "theme": "周波数の幅と同時に送る本数",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "80MHzで1本が約433Mbit/sなら、約867Mbit/sに必要な本数を求める式は？",
+          "choices": [
+            {
+              "text": "867 ÷ 約433",
+              "explain": "目標を1本当たりの速度で割って必要な並列数を求めます。",
+              "ok": true
+            },
+            {
+              "text": "867 × 433",
+              "explain": "速度同士を掛けても必要アンテナ本数にはなりません。",
+              "ok": false
+            }
+          ],
+          "stage": "apply",
+          "id": "capacity-3",
+          "theme": "周波数の幅と同時に送る本数",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "quiz",
+          "title": "160MHz・1本という組合せを原問の答えにできない理由は？",
+          "choices": [
+            {
+              "text": "アンテナは必ず最大3本を全て使うから",
+              "explain": "目標速度に最低限必要な本数なので、常に最大本数ではありません。",
+              "ok": false
+            },
+            {
+              "text": "選定APが80MHzまでしか対応していないから",
+              "explain": "規格として可能な方式ではなく、その製品で達成できる条件を問われています。",
+              "ok": true
+            }
+          ],
+          "stage": "reason",
+          "id": "capacity-4",
+          "theme": "周波数の幅と同時に送る本数",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "最小の二要素をそろえる",
+          "template": "選定APで約867Mbit/sを得る最小条件は、周波数帯域幅{a}MHz、アンテナ{b}本。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "幅",
+              "why": "製品上限内で目標速度を達成する幅です。",
+              "choices": [
+                {
+                  "text": "80",
+                  "explain": "約433Mbit/sの2ストリームで目標に達します。",
+                  "ok": true
+                },
+                {
+                  "text": "160",
+                  "explain": "選定APの対応上限を超えます。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "本数",
+              "why": "3本搭載と最低必要本数を区別します。",
+              "choices": [
+                {
+                  "text": "2",
+                  "explain": "約433×2で約867です。",
+                  "ok": true
+                },
+                {
+                  "text": "3",
+                  "explain": "製品の搭載本数ですが、目標速度に必要な最小本数ではありません。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "capacity-5",
+          "theme": "周波数の幅と同時に送る本数",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "性能条件を絞り込む",
+          "lead": "規格の最大値ではなく選定製品の制約から考えます。",
+          "lines": [
+            {
+              "code": "選定APの上限が80MHz・3本であることを確認する"
+            },
+            {
+              "code": "80MHzの1ストリーム当たりの理論速度を使う"
+            },
+            {
+              "code": "目標867Mbit/sを満たす最小の2本を選ぶ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "製品制約を先に適用してから本数を計算します。",
+          "ngExplain": "160MHzの値を使って1本とするのは製品条件を無視しています。",
+          "stage": "assemble",
+          "id": "capacity-6",
+          "theme": "周波数の幅と同時に送る本数",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：80MHz・2本の理論値が約867Mbit/sでも、全端末に同じ実効速度を保証できる？",
+          "choices": [
+            {
+              "text": "保証できない。共有時間・端末対応・再送などを考慮する",
+              "explain": "原問の理論値の計算と、実際にアプリが使える速度は分けます。",
+              "ok": true
+            },
+            {
+              "text": "必ず保証できる。理論値と実効速度は同義",
+              "explain": "無線の共有や制御の時間を無視しています。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "capacity-7",
+          "theme": "周波数の幅と同時に送る本数",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "wlc",
+      "title": "通信経路と認証経路を分ける",
+      "targets": [
+        "s3-2",
+        "s5-1",
+        "s5-5"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "中央で管理してもデータは分散できる",
+          "body": "WLC（Wireless LAN Controller）はAPの設定と認証・移動を管理します。本問の分散処理方式では、認証後のデータはAPから直接有線LANへ流れ、WLCを経由しません。一方、PMKと認証関連情報をWLCが保持するため、WLC故障時に既存通信が続くことと、AP間を移動できることは別です。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 220,
+            "nodes": [
+              {
+                "id": "client",
+                "label": "NPC",
+                "icon": "pc",
+                "x": 45,
+                "y": 65
+              },
+              {
+                "id": "ap",
+                "label": "AP",
+                "icon": "ap",
+                "x": 145,
+                "y": 65
+              },
+              {
+                "id": "lan",
+                "label": "有線LAN",
+                "icon": "l2sw",
+                "x": 270,
+                "y": 65
+              },
+              {
+                "id": "wlc",
+                "label": "WLC",
+                "icon": "server",
+                "x": 145,
+                "y": 150
+              }
+            ],
+            "links": [
+              {
+                "from": "client",
+                "to": "ap"
+              },
+              {
+                "from": "ap",
+                "to": "lan",
+                "label": "認証後データ"
+              },
+              {
+                "from": "ap",
+                "to": "wlc",
+                "label": "認証・管理",
+                "dash": true
+              }
+            ],
+            "caption": "説明用：データと管理の経路"
+          },
+          "id": "wlc-1",
+          "theme": "通信経路と認証経路を分ける",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "認証後の利用者データをWLC経由にしない利点は？",
+          "choices": [
+            {
+              "text": "認証を一切しなくてよくなる",
+              "explain": "管理・認証経路は残っており、データ経路と別です。",
+              "ok": false
+            },
+            {
+              "text": "WLCに通信負荷が集中するのを抑えられる",
+              "explain": "利用者データの処理をAP側へ分散するためです。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "wlc-2",
+          "theme": "通信経路と認証経路を分ける",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "認証済みのNPCが同じAPを使い続ける間にWLCが故障。本問で期待できることは？",
+          "choices": [
+            {
+              "text": "そのNPCの通信は継続できる",
+              "explain": "認証後のデータはWLCを通らず、APで暗号化・復号されるためです。",
+              "ok": true
+            },
+            {
+              "text": "必ず全てのデータ転送が即時停止する",
+              "explain": "WLCを経由する集中処理方式と取り違えています。",
+              "ok": false
+            }
+          ],
+          "stage": "apply",
+          "id": "wlc-3",
+          "theme": "通信経路と認証経路を分ける",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "info",
+          "title": "本人・門番・確認先",
+          "body": "IEEE 802.1Xでは、認証を受ける端末をサプリカント、ネットワーク利用を制御する門番をオーセンティケータと呼びます。本問のサプリカントはNPC（ノートPC）、オーセンティケータはWLCで、確認先はRADIUS（Remote Authentication Dial-In User Service）サーバです。APは無線の中継点でも、この構成のオーセンティケータ名にはなりません。",
+          "stage": "concept",
+          "id": "wlc-4",
+          "theme": "通信経路と認証経路を分ける",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "blank",
+          "title": "役割の二つの機器を答える",
+          "template": "本問のサプリカントは{a}、オーセンティケータは{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "利用する端末",
+              "why": "認証を受ける側を選びます。",
+              "choices": [
+                {
+                  "text": "NPC",
+                  "explain": "本人の認証情報を提示する端末です。",
+                  "ok": true
+                },
+                {
+                  "text": "RADIUSサーバ",
+                  "explain": "認証結果を判断する側で、認証を受ける端末ではありません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "門番",
+              "why": "本問はAP経由でWLCと認証情報を交換します。",
+              "choices": [
+                {
+                  "text": "WLC",
+                  "explain": "原問が指定するオーセンティケータです。",
+                  "ok": true
+                },
+                {
+                  "text": "AP",
+                  "explain": "構成によって役割は異なりますが、原問ではWLCがこの役割です。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "wlc-5",
+          "theme": "通信経路と認証経路を分ける",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "WLCが故障するとハンドオーバができなくなる理由は？",
+          "choices": [
+            {
+              "text": "無線の周波数が5GHzから必ず変化するため",
+              "explain": "WLCの停止が周波数規格を変えるわけではありません。",
+              "ok": false
+            },
+            {
+              "text": "移動に必要なPMKと認証関連情報がWLCに保持されているため",
+              "explain": "同じAPでの継続通信と、別APへ移るための制御は必要情報が違います。",
+              "ok": true
+            }
+          ],
+          "stage": "reason",
+          "id": "wlc-6",
+          "theme": "通信経路と認証経路を分ける",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "継続できるものと失うものを組み立てる",
+          "template": "分散処理はWLCへの負荷集中を抑え、認証後の{a}を続けられる。ただし故障時は{b}できない。必要な{c}がWLCにあるからである。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "継続",
+              "why": "同一APでの既存データ通信という条件です。",
+              "choices": [
+                {
+                  "text": "データ通信",
+                  "explain": "転送経路にWLCがないので継続できます。",
+                  "ok": true
+                },
+                {
+                  "text": "新規端末の認証を無条件に完了",
+                  "explain": "認証制御のWLCを失っても新規認証が必ずできるとはいえません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "問題",
+              "why": "別APへの移動を指します。",
+              "choices": [
+                {
+                  "text": "ハンドオーバ",
+                  "explain": "移動制御に必要な情報を利用できなくなります。",
+                  "ok": true
+                },
+                {
+                  "text": "同じAP上のあらゆる通信",
+                  "explain": "原問の分散方式の利点と矛盾します。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "保持情報",
+              "why": "鍵だけでなく関連情報も含めます。",
+              "choices": [
+                {
+                  "text": "NPCに配布したPMKと認証関連情報",
+                  "explain": "公式解答の理由の両要素です。",
+                  "ok": true
+                },
+                {
+                  "text": "DNSの公開レコードだけ",
+                  "explain": "名前解決の記録がハンドオーバ制御の理由ではありません。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "wlc-7",
+          "theme": "通信経路と認証経路を分ける",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：認証後のデータも必ずWLCで転送する方式へ変更。故障時の通信継続を同じ理由で説明できる？",
+          "choices": [
+            {
+              "text": "できる。認証済みならどんな構成でもWLCは不要",
+              "explain": "認証状態だけでなく実際のデータ経路を確認する必要があります。",
+              "ok": false
+            },
+            {
+              "text": "できない。WLCがデータ転送経路にも入ったため",
+              "explain": "原問の継続可能性は分散処理という条件によります。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "wlc-8",
+          "theme": "通信経路と認証経路を分ける",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "cells",
+      "title": "電波の重なりを、邪魔と助けに分ける",
+      "targets": [
+        "s3-3",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "同じ周波数の競合とセルの重なり",
+          "body": "セルは一台のAPが通信できる範囲です。同じ周波数で隣接APや外来電波と競合すると、電波干渉による通信障害が起こり得ます。一方、異なる周波数のセルを適度に重ねれば、移動中に次のAPへ切り替えたり、複数APへ負荷を分散したりできます。",
+          "stage": "concept",
+          "id": "cells-1",
+          "theme": "電波の重なりを、邪魔と助けに分ける",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "持ち込まれたWi-Fiルータなどの外来電波で調査すべき悪影響は？",
+          "choices": [
+            {
+              "text": "全有線ケーブルの自動切断",
+              "explain": "外来電波の調査から直接導く問題ではありません。",
+              "ok": false
+            },
+            {
+              "text": "電波干渉による通信障害",
+              "explain": "有線で正常でも無線区間で再送や通信不良が起こり得ます。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "cells-2",
+          "theme": "電波の重なりを、邪魔と助けに分ける",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "隣り合うセルを少し重ねる目的は？",
+          "choices": [
+            {
+              "text": "移動時のハンドオーバを円滑にし、接続先を分散できるようにする",
+              "explain": "どちらのAPとも通信できる範囲が切替えや負荷分散の選択肢になります。",
+              "ok": true
+            },
+            {
+              "text": "同じ周波数で必ず同時送信させるため",
+              "explain": "セルの重なりは同じ周波数での干渉を増やす目的ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "cells-3",
+          "theme": "電波の重なりを、邪魔と助けに分ける",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "info",
+          "title": "必要な周波数グループ数は重なりから決まる",
+          "body": "説明用の小例として、四つのセルが相互に干渉する場所を考えます。同時に重なる四つへ別グループを割り当てるなら、少なくとも四グループ必要です。原問の図3も、単純に上下・左右の二色を交互にするだけでなく、斜めのセルの重なりまで見ます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 205,
+            "nodes": [
+              {
+                "id": "ap-a",
+                "label": "セルA",
+                "icon": "ap",
+                "x": 90,
+                "y": 45
+              },
+              {
+                "id": "ap-b",
+                "label": "セルB",
+                "icon": "ap",
+                "x": 245,
+                "y": 45
+              },
+              {
+                "id": "ap-c",
+                "label": "セルC",
+                "icon": "ap",
+                "x": 90,
+                "y": 135
+              },
+              {
+                "id": "ap-d",
+                "label": "セルD",
+                "icon": "ap",
+                "x": 245,
+                "y": 135
+              }
+            ],
+            "links": [
+              {
+                "from": "ap-a",
+                "to": "ap-b"
+              },
+              {
+                "from": "ap-a",
+                "to": "ap-c"
+              },
+              {
+                "from": "ap-a",
+                "to": "ap-d",
+                "dash": true
+              },
+              {
+                "from": "ap-b",
+                "to": "ap-c",
+                "dash": true
+              },
+              {
+                "from": "ap-b",
+                "to": "ap-d"
+              },
+              {
+                "from": "ap-c",
+                "to": "ap-d"
+              }
+            ],
+            "caption": "説明用：線は干渉関係。配線ではない"
+          },
+          "id": "cells-4",
+          "theme": "電波の重なりを、邪魔と助けに分ける",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "原図の重なりで、隣接する四セルに異なる帯域群が必要。最少何グループか？",
+          "choices": [
+            {
+              "text": "2",
+              "explain": "斜めにあるセルの重なりを見落とし、同じ帯域が近接してしまいます。",
+              "ok": false
+            },
+            {
+              "text": "12",
+              "explain": "全APに固有の周波数群を割り当てるのは、離れたセルでの再利用を考慮せず最少ではありません。",
+              "ok": false
+            },
+            {
+              "text": "4",
+              "explain": "縦横だけでなく斜めの重なりもあるので四つを区別します。繰り返し配置により離れたセルでは再利用できます。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 21,
+            "top": 0.55,
+            "bottom": 0.79,
+            "label": "IPA図3：セルの重なりとAP配置"
+          },
+          "id": "cells-5",
+          "theme": "電波の重なりを、邪魔と助けに分ける",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "数と目的を分けて答える",
+          "template": "最少グループ数は{a}。セルを重ねる目的は円滑な{b}、又はAPの{c}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "必要な種類数",
+              "why": "重なりを持つ四つを区別します。",
+              "choices": [
+                {
+                  "text": "3",
+                  "explain": "相互に重なる四セルを全て区別できません。",
+                  "ok": false
+                },
+                {
+                  "text": "4",
+                  "explain": "原図では四グループで配置を繰り返せます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "移動",
+              "why": "接続先を変える動作です。",
+              "choices": [
+                {
+                  "text": "IPアドレスの重複",
+                  "explain": "アドレス重複を起こす目的ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "ハンドオーバ",
+                  "explain": "次のAPとの通信を切れ目なく始めやすくします。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "混雑対策",
+              "why": "複数のAPを利用候補にできます。",
+              "choices": [
+                {
+                  "text": "秘密鍵の共用",
+                  "explain": "セルの重ね方は認証用秘密鍵を共用する仕組みではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "負荷分散",
+                  "explain": "混雑していないAPを利用させる余地が生まれます。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "cells-6",
+          "theme": "電波の重なりを、邪魔と助けに分ける",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：セルが一直線で、直隣以外は全く重ならない。原問の4を必ず使う？",
+          "choices": [
+            {
+              "text": "使わない。A-B-A-Bの2グループで足りる配置を検討できる",
+              "explain": "干渉関係が変われば必要な種類数も変わります。",
+              "ok": true
+            },
+            {
+              "text": "必ず4。802.11acという規格が一律に決めている",
+              "explain": "グループ数はこの問いではAPのセル配置に依存します。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "cells-7",
+          "theme": "電波の重なりを、邪魔と助けに分ける",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "power",
+      "title": "一台の電力とスイッチ全体の電力",
+      "targets": [
+        "s3-5"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "LANケーブルから電気も送る",
+          "body": "PoE（Power over Ethernet）はLANケーブルで機器へ電力を供給します。原問のAPは最大18Wで、IEEE 802.3afでは不足し、IEEE 802.3atのPoE＋を選びます。一ポートが供給できることに加え、12台分を同時に支える総供給電力も確認します。",
+          "stage": "concept",
+          "id": "power-1",
+          "theme": "一台の電力とスイッチ全体の電力",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "APは一台18W。原問で選ぶ802.3atの呼称は？",
+          "choices": [
+            {
+              "text": "通常の802.3afだけ",
+              "explain": "原問では18WのAPへの供給に不足するとされています。",
+              "ok": false
+            },
+            {
+              "text": "PoE＋",
+              "explain": "原問が802.3afの不足を避けるために選ぶ給電規格です。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "power-2",
+          "theme": "一台の電力とスイッチ全体の電力",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "オフィス8台、接客4台のAPを同じスイッチが給電。総必要量を求める式は？",
+          "choices": [
+            {
+              "text": "18 ÷ 12",
+              "explain": "分担する平均ではなく、全台への供給量を足す必要があります。",
+              "ok": false
+            },
+            {
+              "text": "18 × (8 + 4)",
+              "explain": "一台当たりの最大消費電力を全12台分合計します。",
+              "ok": true
+            },
+            {
+              "text": "18 × 8",
+              "explain": "接客エリア4台への電力が欠落します。",
+              "ok": false
+            }
+          ],
+          "stage": "apply",
+          "id": "power-3",
+          "theme": "一台の電力とスイッチ全体の電力",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "quiz",
+          "title": "各ポートが18W対応なら、スイッチ全体が100Wでも十分？",
+          "choices": [
+            {
+              "text": "十分。一ポートの値だけ確認すればよい",
+              "explain": "総電力不足では全APを同時に動かせません。",
+              "ok": false
+            },
+            {
+              "text": "不十分。ポート上限と総供給上限は別",
+              "explain": "12台が18Wずつ必要なら合計216Wになるためです。",
+              "ok": true
+            }
+          ],
+          "stage": "reason",
+          "id": "power-4",
+          "theme": "一台の電力とスイッチ全体の電力",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "呼称と合計を答案へ",
+          "template": "呼称は{a}。原問の最小供給電力は12×18={b}W。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "規格名",
+              "why": "IEEE 802.3atに対応します。",
+              "choices": [
+                {
+                  "text": "PoE＋",
+                  "explain": "原問の呼称です。",
+                  "ok": true
+                },
+                {
+                  "text": "MIMO",
+                  "explain": "無線の並列伝送方式で、給電の規格ではありません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "電力",
+              "why": "全12台を含めた原問の合計です。",
+              "choices": [
+                {
+                  "text": "216",
+                  "explain": "18×12の値です。実設計では損失・余裕・機器仕様も別に確認します。",
+                  "ok": true
+                },
+                {
+                  "text": "144",
+                  "explain": "オフィス8台だけの値で、接客4台が欠落しています。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "power-5",
+          "theme": "一台の電力とスイッチ全体の電力",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：同じ18WのAPを2台追加。原問と同じ合計法なら？",
+          "choices": [
+            {
+              "text": "216Wのまま",
+              "explain": "既存12台分しか数えていません。",
+              "ok": false
+            },
+            {
+              "text": "252W",
+              "explain": "18×14=252です。増設時はポート数と総給電量の両方を確認します。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "power-6",
+          "theme": "一台の電力とスイッチ全体の電力",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "certificates",
+      "title": "証明書・信頼・秘密鍵を分ける",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "本人の証明と、相手を信頼する根拠",
+          "body": "EAP-TLS（Extensible Authentication Protocol - Transport Layer Security）は証明書を使う認証方式です。NPCにはクライアント証明書だけでなく、対応するクライアント秘密鍵と、認証先を検証するためのCA（Certification Authority：認証局）の自己証明書が必要です。原問はこれらをPKCS #12形式のファイルで配布します。",
+          "stage": "concept",
+          "id": "certificates-1",
+          "theme": "証明書・信頼・秘密鍵を分ける",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "クライアント証明書だけコピーしても、本人として認証するために足りないものは？",
+          "choices": [
+            {
+              "text": "CAの秘密鍵",
+              "explain": "証明書発行者の秘密鍵を端末へ配るべきではありません。",
+              "ok": false
+            },
+            {
+              "text": "対応するクライアントの秘密鍵",
+              "explain": "証明書に対応する秘密を持つことを示すために必要です。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "certificates-2",
+          "theme": "証明書・信頼・秘密鍵を分ける",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "CAの自己証明書をNPCへ入れる目的は？",
+          "choices": [
+            {
+              "text": "相手の証明書を検証する信頼の起点を持たせる",
+              "explain": "誰が発行した証明書を信頼するかを判断するためです。",
+              "ok": true
+            },
+            {
+              "text": "全営業員が新しい証明書を自由に発行できるようにする",
+              "explain": "CAの自己証明書はCAの署名用秘密鍵ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "certificates-3",
+          "theme": "証明書・信頼・秘密鍵を分ける",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "証明書以外の二要素を埋める",
+          "template": "原問でNPCへ追加で渡すのは{a}と{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "相手を検証",
+              "why": "信頼の起点となる証明書です。",
+              "choices": [
+                {
+                  "text": "CAの秘密鍵",
+                  "explain": "端末へ渡すと証明書発行の信頼が破綻します。",
+                  "ok": false
+                },
+                {
+                  "text": "CAの自己証明書",
+                  "explain": "原問の認証局を信頼する材料になります。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "本人の秘密",
+              "why": "自分の証明書に対応する鍵です。",
+              "choices": [
+                {
+                  "text": "RADIUSサーバの秘密鍵",
+                  "explain": "相手サーバの秘密鍵をクライアントへ配るものではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "クライアントの秘密鍵",
+                  "explain": "本人が秘密鍵を持つことを示すために必要です。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "certificates-4",
+          "theme": "証明書・信頼・秘密鍵を分ける",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "配布する情報を確認する順序",
+          "lead": "この練習では本人の情報、本人の秘密、信頼の起点の順に確認します。",
+          "lines": [
+            {
+              "code": "NPC用のクライアント証明書を確認する"
+            },
+            {
+              "code": "それに対応するクライアント秘密鍵を含める"
+            },
+            {
+              "code": "検証に使うCAの自己証明書を含める"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "公開できる証明書と保護すべき秘密鍵の役割を分けて、原問の必要要素をそろえます。",
+          "ngExplain": "CAの秘密鍵を含める話ではありません。端末自身の秘密だけを扱います。",
+          "stage": "assemble",
+          "id": "certificates-5",
+          "theme": "証明書・信頼・秘密鍵を分ける",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：PKCS #12ファイルが第三者へ漏えいし、秘密鍵まで取り出された。証明書は公開情報だから放置してよい？",
+          "choices": [
+            {
+              "text": "よい。形式名に証明書とあるものは秘密を含まない",
+              "explain": "証明書と秘密鍵をまとめる形式である点を見落としています。",
+              "ok": false
+            },
+            {
+              "text": "よくない。秘密鍵漏えいとして失効・再発行などを検討する",
+              "explain": "原問のファイルには証明書だけでなく本人の秘密鍵も含まれるためです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "certificates-6",
+          "theme": "証明書・信頼・秘密鍵を分ける",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "bootstrap",
+      "title": "入るための証明書を、入らずに受け取るには",
+      "targets": [
+        "s4-2",
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "最初の一回と更新時を分ける",
+          "body": "証明書がまだないNPCは、証明書で認証する無線LANへ入れません。原問は有線LANで初回配布し、有線撤去後の更新は証明書が有効な間に無線で行います。認証失敗用VLANに配布サーバを置く案は、来訪者も接続し得るため、配布用IDとパスワードの漏えいに弱くなります。",
+          "stage": "concept",
+          "id": "bootstrap-1",
+          "theme": "入るための証明書を、入らずに受け取るには",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "初回配布前のNPCが、証明書必須の無線から配布サーバへ行こうとする問題は？",
+          "choices": [
+            {
+              "text": "有効な証明書は無線で送れない",
+              "explain": "原問は有効期限前の更新を無線で行えるとしています。",
+              "ok": false
+            },
+            {
+              "text": "接続の認証に必要な証明書をまだ持たない",
+              "explain": "取得に必要な接続条件を満たせない、初回導入の循環です。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "bootstrap-2",
+          "theme": "入るための証明書を、入らずに受け取るには",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "認証失敗用VLANに配布サーバを置いたとき、IDとパスワードが漏れると危険な理由は？",
+          "choices": [
+            {
+              "text": "来訪者でも配布サーバへ到達し、証明書や秘密鍵を取得し得る",
+              "explain": "ネットワーク上の到達範囲と配布サーバの認証情報漏えいが組み合わさるためです。",
+              "ok": true
+            },
+            {
+              "text": "VLANという機能自体に暗号鍵を公開する性質がある",
+              "explain": "問題は配置と認証情報漏えいであって、VLANが自動で鍵を公開するわけではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "bootstrap-3",
+          "theme": "入るための証明書を、入らずに受け取るには",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "漏えいの条件から被害を組む",
+          "template": "認証失敗用VLANで、{a}が漏えいすると、{b}もクライアント証明書などをダウンロードできる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "漏れる情報",
+              "why": "配布サーバがアクセス制御に用いる秘密です。",
+              "choices": [
+                {
+                  "text": "公開されているCA証明書だけ",
+                  "explain": "CA証明書の公開自体は配布サーバへのログイン権限を与えません。",
+                  "ok": false
+                },
+                {
+                  "text": "ダウンロードサーバの利用者ID・パスワード",
+                  "explain": "配布処理を通過するための認証情報です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "想定外の取得者",
+              "why": "失敗用VLANへ入れる社外の人も考えます。",
+              "choices": [
+                {
+                  "text": "正規に配布を受ける営業員だけ",
+                  "explain": "正規の配布は問題ではなく、来訪者による取得が危険です。",
+                  "ok": false
+                },
+                {
+                  "text": "来訪者",
+                  "explain": "配布用認証情報が漏れると社員用情報を取得し得ます。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "bootstrap-4",
+          "theme": "入るための証明書を、入らずに受け取るには",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "有線LAN撤去後、証明書の更新を忘れて期限切れにした営業員はどうなる？",
+          "choices": [
+            {
+              "text": "無線認証できず、自分で配布サーバへ行けなくなる",
+              "explain": "更新案内が来ても現在の証明書が失効していると無線入口を通れません。",
+              "ok": true
+            },
+            {
+              "text": "期限切れでも証明書があるだけで必ず通れる",
+              "explain": "有効性の検証を無視しています。",
+              "ok": false
+            }
+          ],
+          "stage": "apply",
+          "id": "bootstrap-5",
+          "theme": "入るための証明書を、入らずに受け取るには",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "自力で取得できない二つのケース",
+          "template": "例外対応が必要なのは、{a}営業員と、{b}営業員。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "更新漏れ",
+              "why": "証明書を持っていたが利用できなくなったケースです。",
+              "choices": [
+                {
+                  "text": "有効期限前に更新する",
+                  "explain": "まだ有効な証明書で無線認証できる通常の更新です。",
+                  "ok": false
+                },
+                {
+                  "text": "クライアント証明書の有効期限を切らせた",
+                  "explain": "認証に使える有効な証明書がなくなります。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "新たな所属",
+              "why": "紛失・故障を除いた原問のもう一つの例です。",
+              "choices": [
+                {
+                  "text": "以前から有効な証明書を持つ",
+                  "explain": "通常は無線で接続し更新できます。",
+                  "ok": false
+                },
+                {
+                  "text": "無線LAN導入後に営業部へ配属された",
+                  "explain": "初回配布に使った有線LANがなく、証明書をまだ持ちません。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "bootstrap-6",
+          "theme": "入るための証明書を、入らずに受け取るには",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "期限切れを防ぐ更新を並べる",
+          "lead": "原問では有効期限の1か月前から更新を準備します。",
+          "lines": [
+            {
+              "code": "情シスが新しい証明書を発行し配布サーバへ保管する"
+            },
+            {
+              "code": "該当営業員へ更新案内を送る"
+            },
+            {
+              "code": "営業員が旧証明書の有効期間内に無線で取得・更新する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "まだ無線へ入れる期間に更新を済ませ、入口を失わないようにします。",
+          "ngExplain": "期限切れ後まで待つと、証明書取得に必要な無線認証が通らなくなります。",
+          "stage": "assemble",
+          "id": "bootstrap-7",
+          "theme": "入るための証明書を、入らずに受け取るには",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：有線を一口だけ管理者監督下の初期設定用に残す。改善するのは？",
+          "choices": [
+            {
+              "text": "無線認証そのものを全員に永久に不要とすること",
+              "explain": "初期配布経路の追加と日常の認証省略は別です。",
+              "ok": false
+            },
+            {
+              "text": "証明書を持たない端末への初回・復旧配布の経路",
+              "explain": "無線認証を先に要求しない経路を用意できるためです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "bootstrap-8",
+          "theme": "入るための証明書を、入らずに受け取るには",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "guest",
+      "title": "社員と来訪者を一本の配線で分ける",
+      "targets": [
+        "s5-2",
+        "s5-3",
+        "s5-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "同じAPでも所属LANを分ける",
+          "body": "社員は証明書によるエンタープライズ認証でVLAN100へ、来訪者はパーソナルモードでVLAN200へ入ります。来訪者に教えるのは接続先ESSIDとPSK（Pre-Shared Key：事前共有鍵）です。接客エリアのAPは両方を運ぶためAPとL2SW5の間をタグVLANにし、来訪者はルータ2側だけへ接続します。",
+          "stage": "concept",
+          "id": "guest-1",
+          "theme": "社員と来訪者を一本の配線で分ける",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "来訪者へ、接続するネットワークを選ばせる情報は？",
+          "choices": [
+            {
+              "text": "社員用CAの秘密鍵",
+              "explain": "ネットワーク名ではなく、来訪者へ渡してはいけない秘密です。",
+              "ok": false
+            },
+            {
+              "text": "ESSID",
+              "explain": "無線ネットワークの名前です。これとは別にPSKが必要です。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "guest-2",
+          "theme": "社員と来訪者を一本の配線で分ける",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "パーソナルモードで暗号鍵を共有するために渡す情報は？",
+          "choices": [
+            {
+              "text": "PSK",
+              "explain": "来訪者用の事前共有鍵です。原問の構成では社員の証明書は渡しません。",
+              "ok": true
+            },
+            {
+              "text": "RADIUSサーバの管理パスワード",
+              "explain": "来訪者接続用の鍵ではなく、管理権限を漏らすことになります。",
+              "ok": false
+            }
+          ],
+          "stage": "check",
+          "id": "guest-3",
+          "theme": "社員と来訪者を一本の配線で分ける",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "APとL2SW5の一本の接続にタグが必要な理由は？",
+          "choices": [
+            {
+              "text": "タグを付ければ内容が暗号化されるため",
+              "explain": "タグは所属識別であり、暗号化とは別の機能です。",
+              "ok": false
+            },
+            {
+              "text": "社員VLAN100と来訪者VLAN200を同時に区別して運ぶため",
+              "explain": "単一のタグなし所属だけでは二つの論理LANを区別できません。",
+              "ok": true
+            }
+          ],
+          "stage": "reason",
+          "id": "guest-4",
+          "theme": "社員と来訪者を一本の配線で分ける",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図で今回新たにタグVLANを設定する箇所は？",
+          "choices": [
+            {
+              "text": "㋐：NPCとAPの無線区間",
+              "explain": "原問が問う有線タグVLANの区間ではありません。",
+              "ok": false
+            },
+            {
+              "text": "㋒：L2SW5とL3SWの間",
+              "explain": "社内側には社員の通信だけを渡し、来訪者VLANを延ばしません。",
+              "ok": false
+            },
+            {
+              "text": "㋑：APとL2SW5の間",
+              "explain": "社員・来訪者を共用するAPから二つのVLANを運ぶ区間です。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 24,
+            "top": 0.19,
+            "bottom": 0.55,
+            "label": "IPA図4：㋐～㋓とAP・L2SW5・二つのルータ"
+          },
+          "id": "guest-5",
+          "theme": "社員と来訪者を一本の配線で分ける",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "情報と分離先をまとめる",
+          "template": "来訪者へ渡すのは{a}と{b}。L2SW5のタグなしポートでは、{c}だけにVLAN200のポートVLANを設定する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "接続先名",
+              "why": "APが来訪者向けに対応付ける識別子です。",
+              "choices": [
+                {
+                  "text": "社員用メールアドレス",
+                  "explain": "無線ネットワーク名の代わりにはなりません。",
+                  "ok": false
+                },
+                {
+                  "text": "ESSID",
+                  "explain": "VLAN200に対応する来訪者用ネットワークを選びます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "共有秘密",
+              "why": "パーソナルモードの接続用です。",
+              "choices": [
+                {
+                  "text": "社員のクライアント秘密鍵",
+                  "explain": "社員本人を装う情報を渡してはいけません。",
+                  "ok": false
+                },
+                {
+                  "text": "PSK",
+                  "explain": "来訪者向けの事前共有鍵を使います。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "ポートVLANの出口",
+              "why": "AP側のタグトランクとは区別して考えます。",
+              "choices": [
+                {
+                  "text": "L3SWへの接続ポートにも",
+                  "explain": "来訪者VLANを社内へ延ばし、分離の目的を損ないます。",
+                  "ok": false
+                },
+                {
+                  "text": "ルータ2への接続ポート",
+                  "explain": "来訪者向けDHCPとインターネット出口だけへつなぎます。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "guest-6",
+          "theme": "社員と来訪者を一本の配線で分ける",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "来訪者の接続を組み立てる",
+          "lead": "原問の来訪者の初期接続から外部アクセスまでです。",
+          "lines": [
+            {
+              "code": "ESSIDとPSKを設定して来訪者用の無線へ接続する"
+            },
+            {
+              "code": "APがESSIDに対応するVLAN200を割り当てる"
+            },
+            {
+              "code": "ルータ2のDHCP機能からネットワーク情報を受け取る"
+            },
+            {
+              "code": "ルータ2を経由してインターネットへアクセスする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "DHCP（Dynamic Host Configuration Protocol）の配布元も社員用と別にします。",
+          "ngExplain": "無線へ接続しただけではIP設定はまだです。来訪者の配布元はルータ2です。",
+          "stage": "assemble",
+          "id": "guest-7",
+          "theme": "社員と来訪者を一本の配線で分ける",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：L3SW向けタグなしポートもVLAN200へ入れた。意図しない結果は？",
+          "choices": [
+            {
+              "text": "VLAN200が自動で暗号化され安全性が増す",
+              "explain": "VLANへの所属変更は暗号化の追加ではありません。",
+              "ok": false
+            },
+            {
+              "text": "来訪者のL2ネットワークが社内側へ延びる",
+              "explain": "ルータ2だけへ通すという分離条件を破ります。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "guest-8",
+          "theme": "社員と来訪者を一本の配線で分ける",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "proxy-path",
+      "title": "社員のWebアクセスは代理サーバを折り返す",
+      "targets": [
+        "s5-6"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "プロキシで二つの通信がつながる",
+          "body": "プロキシサーバは社員の要求を受け、代理で外部Webサーバへアクセスします。原問の社員NPCはVLAN100で社内側へ進み、WLCを経由せずDMZのプロキシを使います。プロキシで通信がいったん終端し、その後外向きの通信が始まるため、L2SW1とFWは経路の列挙に二度現れます。",
+          "stage": "concept",
+          "id": "proxy-path-1",
+          "theme": "社員のWebアクセスは代理サーバを折り返す",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "認証後の社員NPCのデータがAPの次に進む機器は？",
+          "choices": [
+            {
+              "text": "WLC",
+              "explain": "認証後のデータはWLCを経由しないという本問の条件に反します。",
+              "ok": false
+            },
+            {
+              "text": "L2SW5",
+              "explain": "APを収容するスイッチから社内のL3SWへ進みます。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "proxy-path-2",
+          "theme": "社員のWebアクセスは代理サーバを折り返す",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "社員が来訪者用ルータ2へ直接出ない理由は？",
+          "choices": [
+            {
+              "text": "社員はVLAN100で社内側を経てプロキシを使うため",
+              "explain": "来訪者VLAN200の外部専用経路とは別です。",
+              "ok": true
+            },
+            {
+              "text": "ルータ2は無線電波を受信できないから",
+              "explain": "無線はAPが終端し、問題は所属VLANと経路の条件です。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "proxy-path-3",
+          "theme": "社員のWebアクセスは代理サーバを折り返す",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "まずプロキシに届くまでを組む",
+          "lead": "NPCの次から、要求を受けるプロキシまで。L2SW1はDMZ側です。",
+          "lines": [
+            {
+              "code": "AP"
+            },
+            {
+              "code": "L2SW5"
+            },
+            {
+              "code": "L3SW"
+            },
+            {
+              "code": "FW"
+            },
+            {
+              "code": "L2SW1"
+            },
+            {
+              "code": "プロキシサーバ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ]
+          ],
+          "okExplain": "無線→収容スイッチ→社内L3→境界FW→DMZスイッチ→プロキシです。",
+          "ngExplain": "認証サーバやWLCはWebデータの経由先ではありません。来訪者用ルータ2も使いません。",
+          "stage": "assemble",
+          "id": "proxy-path-4",
+          "theme": "社員のWebアクセスは代理サーバを折り返す",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "次にプロキシから外部へ出る",
+          "lead": "プロキシサーバの次から、インターネット直前までを並べます。",
+          "lines": [
+            {
+              "code": "L2SW1"
+            },
+            {
+              "code": "FW"
+            },
+            {
+              "code": "ルータ1"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "プロキシの接続先L2SW1からFWを経て、社員側のインターネット出口ルータ1へ進みます。",
+          "ngExplain": "プロキシからルータ1へ直結しているわけではありません。L2SW1とFWを省略しません。",
+          "stage": "assemble",
+          "id": "proxy-path-5",
+          "theme": "社員のWebアクセスは代理サーバを折り返す",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "blank",
+          "title": "往路だけでなく外向きの後半も付ける",
+          "template": "NPC→AP→L2SW5→L3SW→FW→L2SW1→{a}→{b}→{c}→{d}→インターネット。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "代理処理",
+              "why": "ここで要求を受け、外部へ別の通信を起こします。",
+              "choices": [
+                {
+                  "text": "WLC",
+                  "explain": "認証・移動制御用で、Web代理サーバではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "プロキシサーバ",
+                  "explain": "社員のインターネットアクセスはここを経由します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "代理の接続スイッチ",
+              "why": "同じ機器がもう一度出ても省略しません。",
+              "choices": [
+                {
+                  "text": "L2SW5",
+                  "explain": "AP側のスイッチで、プロキシの直後にはありません。",
+                  "ok": false
+                },
+                {
+                  "text": "L2SW1",
+                  "explain": "プロキシからもDMZの同じスイッチへ送ります。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "境界",
+              "why": "DMZから外へ出るときも通ります。",
+              "choices": [
+                {
+                  "text": "RADIUSサーバ",
+                  "explain": "認証データの確認先でありWeb経路ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "FW",
+                  "explain": "外向き通信の境界機器です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "d",
+              "label": "外部出口",
+              "why": "社員の通常経路を使います。",
+              "choices": [
+                {
+                  "text": "ルータ2",
+                  "explain": "来訪者VLAN200専用の出口です。",
+                  "ok": false
+                },
+                {
+                  "text": "ルータ1",
+                  "explain": "プロキシからインターネットへ出るルータです。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "proxy-path-6",
+          "theme": "社員のWebアクセスは代理サーバを折り返す",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：プロキシを廃止し直接Webアクセスする設計へ変えた。原問の経路をそのまま使える？",
+          "choices": [
+            {
+              "text": "使えない。DMZプロキシへの往復部分を含め経路を再設計する",
+              "explain": "プロキシを使う条件が変わったので、繰り返し通る機器も変わり得ます。",
+              "ok": true
+            },
+            {
+              "text": "使える。全無線通信は必ずプロキシを経由する",
+              "explain": "無線というだけでWeb代理の利用が決まるわけではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "proxy-path-7",
+          "theme": "社員のWebアクセスは代理サーバを折り返す",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "parsons",
+          "title": "原問の全経由機器を自力で並べる",
+          "lead": "NPCとインターネットの間の全経路です。重複する機器は『代理へ』『外部へ』で区別しました。",
+          "lines": [
+            {
+              "code": "AP"
+            },
+            {
+              "code": "L2SW5"
+            },
+            {
+              "code": "L3SW"
+            },
+            {
+              "code": "FW（代理へ）"
+            },
+            {
+              "code": "L2SW1（代理へ）"
+            },
+            {
+              "code": "プロキシサーバ"
+            },
+            {
+              "code": "L2SW1（外部へ）"
+            },
+            {
+              "code": "FW（外部へ）"
+            },
+            {
+              "code": "ルータ1"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ]
+          ],
+          "okExplain": "公式経路のAP→L2SW5→L3SW→FW→L2SW1→プロキシサーバ→L2SW1→FW→ルータ1を全て含みます。",
+          "ngExplain": "プロキシを挟む二つの通信を追ってください。L2SW1とFWの二回目を省くと物理接続と一致しません。",
+          "stage": "transfer",
+          "id": "proxy-path-8",
+          "theme": "社員のWebアクセスは代理サーバを折り返す",
+          "format": "並べ替え",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "final",
+      "title": "条件から自分で答案を作る",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2",
+        "s3-1",
+        "s3-2",
+        "s3-3",
+        "s3-4",
+        "s3-5",
+        "s4-1",
+        "s4-2",
+        "s4-3",
+        "s5-1",
+        "s5-2",
+        "s5-3",
+        "s5-4",
+        "s5-5",
+        "s5-6"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "原問に戻る前の最終チェック",
+          "body": "ここから図と段階的なヒントを外します。原問では規格の最大値と選定製品の制約、認証前後、社員と来訪者の区別を手掛かりにしてください。この確認後は既存の原問画面で全設問を補助なしに解けるか確かめます。",
+          "stage": "concept",
+          "id": "final-1",
+          "theme": "条件から自分で答案を作る",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "原問の選定APで約867Mbit/s、12台の最大消費電力を答える組は？",
+          "choices": [
+            {
+              "text": "160MHz・1本、PoE＋・144W",
+              "explain": "製品が160MHz非対応であることと、接客用4台の消費電力を見落としています。",
+              "ok": false
+            },
+            {
+              "text": "80MHz・2本、PoE＋・216W",
+              "explain": "製品上限と目標速度から2本を選び、12×18Wを合計しています。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "final-2",
+          "theme": "条件から自分で答案を作る",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "quiz",
+          "title": "分散処理のWLC故障時について正しい説明は？",
+          "choices": [
+            {
+              "text": "認証済みの同一APでの通信は継続できるが、保持情報を利用できずハンドオーバできない",
+              "explain": "データ経路とPMK・認証関連情報を使う移動制御を分けています。",
+              "ok": true
+            },
+            {
+              "text": "認証済みならWLCに何が起きても移動も新規認証も必ず成功する",
+              "explain": "既存データ経路がWLCを通らないことを、全機能へ一般化しています。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "final-3",
+          "theme": "条件から自分で答案を作る",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "quiz",
+          "title": "来訪者分離と社員の証明書配布を両立する説明は？",
+          "choices": [
+            {
+              "text": "来訪者へ社員の秘密鍵を渡し、VLAN200を社内全体に延ばす",
+              "explain": "本人認証とネットワーク分離の両方を壊してしまいます。",
+              "ok": false
+            },
+            {
+              "text": "来訪者へはESSIDとPSKを渡しVLAN200をルータ2だけへつなぎ、社員の期限切れ・新配属には情シスが初期情報を導入する",
+              "explain": "来訪者の接続権限と、社員が無線入口を失ったときの配布を別に扱います。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "final-4",
+          "theme": "条件から自分で答案を作る",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    }
+  ]
+}

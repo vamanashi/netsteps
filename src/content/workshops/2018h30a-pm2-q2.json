@@ -1,0 +1,2779 @@
+{
+  "examKey": "2018h30a/pm2/2",
+  "title": "共有する基盤で顧客を分け、移動するサーバへ届ける",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm2_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "physical",
+      "title": "装置をまとめることとNICを束ねること",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "IaaS（Infrastructure as a Service）は、サーバやネットワークなどの基盤をサービスとして提供する方式です。共通の物理基盤でも、故障で全顧客を止めない工夫が必要です。\n\nスタックは複数のスイッチを一つのスイッチとして動かす方式です。チーミングはサーバの複数NIC（Network Interface Card）を協調させる機能で、原問では両方をアクティブにします。設問1のアとエを、対象機器から見分けます。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "a",
+                "label": "L2SWc",
+                "icon": "l2sw",
+                "x": 75,
+                "y": 45
+              },
+              {
+                "id": "b",
+                "label": "L2SWd",
+                "icon": "l2sw",
+                "x": 255,
+                "y": 45
+              },
+              {
+                "id": "srv",
+                "label": "物理サーバ",
+                "icon": "server",
+                "x": 165,
+                "y": 145
+              }
+            ],
+            "links": [
+              {
+                "from": "a",
+                "to": "b",
+                "label": "スタック"
+              },
+              {
+                "from": "a",
+                "to": "srv",
+                "label": "NIC1"
+              },
+              {
+                "from": "b",
+                "to": "srv",
+                "label": "NIC2"
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "L2SWaとL2SWbを接続し、一つのL2スイッチとして動作させる方式は？",
+          "choices": [
+            {
+              "text": "スタック",
+              "ok": true,
+              "explain": "対象は複数のスイッチ本体です。"
+            },
+            {
+              "text": "クライアント認証",
+              "ok": false,
+              "explain": "接続者の正当性を確認する機能で、スイッチを一体化しません。"
+            },
+            {
+              "text": "負荷分散アルゴリズムだけ",
+              "ok": false,
+              "explain": "サーバ選択の計算だけでスイッチ全体を一体化するわけではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "対象を言葉へ対応させる",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "L2SW同士には{a}接続を使う。物理サーバの2枚のNICには{b}機能を使う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "スイッチ本体",
+              "why": "複数装置を論理的な一台として扱います。",
+              "choices": [
+                {
+                  "text": "チーミング",
+                  "ok": false,
+                  "explain": "この設問ではサーバのNIC側の機能です。"
+                },
+                {
+                  "text": "スタック",
+                  "ok": true,
+                  "explain": "原問のL2SWa/b、L2SWc/dの構成です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "サーバのNIC",
+              "why": "複数インタフェースを協調動作させます。",
+              "choices": [
+                {
+                  "text": "チーミング",
+                  "ok": true,
+                  "explain": "原問では2枚をアクティブ／アクティブにします。"
+                },
+                {
+                  "text": "認可",
+                  "ok": false,
+                  "explain": "アクセスを許す判断でありNICを束ねる機能ではありません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "『ケーブルを2本差せば設定なしで冗長化が完成する』と言えないのは？",
+          "choices": [
+            {
+              "text": "両端で論理的な束ね方や動作を整合させる必要があるから",
+              "ok": true,
+              "explain": "原問はスイッチ側のリンクアグリゲーションとNIC側のチーミングを設定します。"
+            },
+            {
+              "text": "2本にするとIPが必ず全て消えるから",
+              "ok": false,
+              "explain": "ケーブル数だけでIP設定は消えません。"
+            },
+            {
+              "text": "アクティブ／アクティブは片方を常時抜く意味だから",
+              "ok": false,
+              "explain": "両方を利用可能な状態にする構成です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：サーバにNICが1枚しかなく、2台のスイッチをスタックにした。残る単一故障点は？",
+          "choices": [
+            {
+              "text": "全ての故障点が必ずなくなる",
+              "ok": false,
+              "explain": "冗長化した範囲を超えて保証してはいけません。"
+            },
+            {
+              "text": "DNSの全レコード",
+              "ok": false,
+              "explain": "この配線条件から導く故障点ではありません。"
+            },
+            {
+              "text": "サーバの唯一のNIC",
+              "ok": true,
+              "explain": "スイッチを冗長化してもサーバ側の1枚は増えません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問の二種類のまとめ方を対象付きで説明する。",
+          "lines": [
+            {
+              "code": "複数のL2SWはスタック接続で一つとして動作させ、"
+            },
+            {
+              "code": "物理サーバの2枚のNICはチーミングで協調させて、"
+            },
+            {
+              "code": "原問のアクティブ／アクティブ構成を実現する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "スイッチ本体とNICという対象の違いを押さえています。",
+          "ngExplain": "機能名だけを並べず、それぞれどこに使うかを記述します。"
+        }
+      ]
+    },
+    {
+      "id": "stateful",
+      "title": "引き継ぐ状態と振り分ける相手",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "FW（Firewall）は通信の許可・拒否を行い、通信中のセッション情報も管理します。待機系にその情報を引き継ぐのがステートフルフェールオーバです。LB（Load Balancer、負荷分散装置）は仮想IPで要求を受け、負荷分散アルゴリズムでサーバを選びます。設問1のイとウは別の機能です。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "稼働FWが交代しても通信中の接続情報を引き継ぐ方式は？",
+          "choices": [
+            {
+              "text": "ポートVLAN",
+              "ok": false,
+              "explain": "ポートを論理LANへ所属させる機能です。"
+            },
+            {
+              "text": "ステートフルフェールオーバ",
+              "ok": true,
+              "explain": "状態を持ったまま装置を切り替えることです。"
+            },
+            {
+              "text": "DNSキャッシュ消去",
+              "ok": false,
+              "explain": "接続情報を待機FWへ引き継ぐ処理ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "保持する情報と選ぶ仕組み",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "FWは{a}を待機系へ転送してステートフルに切り替える。LBは{b}アルゴリズムでサーバを選ぶ。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "状態",
+              "why": "現在の通信を認識するための情報です。",
+              "choices": [
+                {
+                  "text": "セッション情報",
+                  "ok": true,
+                  "explain": "許可済みの通信を交代後も扱うために必要です。"
+                },
+                {
+                  "text": "画面の背景色だけ",
+                  "ok": false,
+                  "explain": "通信の継続に必要な状態ではありません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "LBの動作",
+              "why": "クラスタグループ内で処理先を決めます。",
+              "choices": [
+                {
+                  "text": "暗号鍵生成",
+                  "ok": false,
+                  "explain": "処理先のサーバ選択とは別の機能です。"
+                },
+                {
+                  "text": "負荷分散",
+                  "ok": true,
+                  "explain": "ラウンドロビンなどの方式で要求の担当を選びます。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "LBが顧客ごとにクラスタグループと仮想IPを持つ利点は？",
+          "choices": [
+            {
+              "text": "FWの許可ルールが全て不要になる",
+              "ok": false,
+              "explain": "サーバ選択と通信許可は別の機能です。"
+            },
+            {
+              "text": "各顧客の要求を対応するサーバ群へ振り分けられる",
+              "ok": true,
+              "explain": "物理LBを共有しても、顧客ごとの処理先を区別できます。"
+            },
+            {
+              "text": "全顧客の要求を同じサーバへ必ず送る",
+              "ok": false,
+              "explain": "分離したグループを設定する目的と逆です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：待機FWにIPだけ設定し、セッション状態を同期していない。何を保証できない？",
+          "choices": [
+            {
+              "text": "交代時の既存セッション状態の引継ぎ",
+              "ok": true,
+              "explain": "アドレスを合わせるだけでは通信中の状態は共有されません。"
+            },
+            {
+              "text": "新規通信の宛先IPを表現すること",
+              "ok": false,
+              "explain": "IP設定があることとは別の問題です。"
+            },
+            {
+              "text": "負荷分散先を2台にすることだけ",
+              "ok": false,
+              "explain": "問うているのはFWの状態同期です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問の二つの機能を因果が分かる順に説明する。",
+          "lines": [
+            {
+              "code": "FW間でセッション情報を転送して、"
+            },
+            {
+              "code": "ステートフルフェールオーバを可能にし、"
+            },
+            {
+              "code": "LBではクラスタグループごとの負荷分散アルゴリズムで処理先を選ぶ。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "引継ぎとサーバ選択を混同していません。",
+          "ngExplain": "セッション同期はFWの状態、アルゴリズムはLBの処理先選択です。"
+        }
+      ]
+    },
+    {
+      "id": "tenants",
+      "title": "共有しても許可と経路は分ける",
+      "targets": [
+        "s2-1",
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "マルチテナントは、物理基盤を共有しつつ顧客ごとに独立したシステムを提供する方式です。顧客によって許可する通信もネットワークへの経路も異なります。仮想FWごとにフィルタリングとルーティングを設定することで、物理FWを共有しながら別々の方針を適用できます。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "P社はWeb公開、Q社は社内業務だけという条件。仮想FWを分ける理由として適切なのは？",
+          "choices": [
+            {
+              "text": "全顧客に必ず同じ許可を適用するため",
+              "ok": false,
+              "explain": "独立した顧客システムという要件と逆です。"
+            },
+            {
+              "text": "各顧客の秘密鍵を共有するため",
+              "ok": false,
+              "explain": "秘密鍵の共有は顧客分離の目的ではありません。"
+            },
+            {
+              "text": "顧客ごとに異なるフィルタリングを設定するため",
+              "ok": true,
+              "explain": "許可範囲を一つにまとめると顧客の要件を区別できません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "許可と行き先の二つ",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "仮想FWには顧客別の{a}ルールを設定し、接続先に応じて{b}情報も分ける。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "通すか止めるか",
+              "why": "宛先やポートなどで通信可否を決めます。",
+              "choices": [
+                {
+                  "text": "画面表示",
+                  "ok": false,
+                  "explain": "通信可否の制御にはなりません。"
+                },
+                {
+                  "text": "フィルタリング",
+                  "ok": true,
+                  "explain": "許可範囲を顧客ごとに独立させます。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "次にどこへ渡すか",
+              "why": "顧客のネットワークが異なれば経路も異なります。",
+              "choices": [
+                {
+                  "text": "ルーティング",
+                  "ok": true,
+                  "explain": "顧客別の経路を設定する理由です。"
+                },
+                {
+                  "text": "セッション数の表示だけ",
+                  "ok": false,
+                  "explain": "行き先を決める情報ではありません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "『VLANで分ければ仮想FWの設定は全て共通でよい』としない理由は？",
+          "choices": [
+            {
+              "text": "VLANが必ず全通信を暗号化するから",
+              "ok": false,
+              "explain": "VLANは論理的分離であり暗号化そのものではありません。"
+            },
+            {
+              "text": "VLANを使うとIPが不要になるから",
+              "ok": false,
+              "explain": "顧客ネットワークへのIP通信と経路は引き続き必要です。"
+            },
+            {
+              "text": "VLAN分離だけでは顧客別の許可条件や経路を定義できないから",
+              "ok": true,
+              "explain": "VLAN、フィルタ、経路はそれぞれ異なる役割です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：2顧客の許可ポートは同じだが、接続先のネットワークと次ホップが異なる。なお分ける必要がある設定は？",
+          "choices": [
+            {
+              "text": "Webページの題名だけ",
+              "ok": false,
+              "explain": "経路選択に必要な設定ではありません。"
+            },
+            {
+              "text": "ルーティング情報",
+              "ok": true,
+              "explain": "フィルタ条件が同じでも行き先の経路は顧客ごとに違います。"
+            },
+            {
+              "text": "全く何もない",
+              "ok": false,
+              "explain": "顧客ごとのネットワークの違いを無視しています。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問の仮想FWが必要な理由を二つの視点で構成する。",
+          "lines": [
+            {
+              "code": "顧客ごとに通信の許可条件や接続先が異なるため、"
+            },
+            {
+              "code": "フィルタリングとルーティングを顧客別に設定できるよう、"
+            },
+            {
+              "code": "装置内で複数の仮想FWを稼働させる。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "原問は理由を一つ述べる形式ですが、二つの有効な観点を学習しました。",
+          "ngExplain": "『仮想化したいから』という循環説明ではなく、異なる設定の必要性を述べます。"
+        }
+      ]
+    },
+    {
+      "id": "failover",
+      "title": "装置が生きていても両側の道を確認する",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "冗長FWでは装置の稼働確認だけでなく、その装置につながるリンクも監視します。FWa本体が動作していても、L2SWa側やLBa側が切れると経路として使えません。原問は監視者と監視対象を機器名で三つ挙げるので、誰がどの接続を見ているかをそろえます。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "a",
+                "label": "L2SWa",
+                "icon": "l2sw",
+                "x": 80,
+                "y": 30
+              },
+              {
+                "id": "b",
+                "label": "L2SWb",
+                "icon": "l2sw",
+                "x": 255,
+                "y": 30
+              },
+              {
+                "id": "fa",
+                "label": "FWa",
+                "icon": "fw",
+                "x": 80,
+                "y": 90
+              },
+              {
+                "id": "fb",
+                "label": "FWb",
+                "icon": "fw",
+                "x": 255,
+                "y": 90
+              },
+              {
+                "id": "la",
+                "label": "LBa",
+                "icon": "server",
+                "x": 80,
+                "y": 155
+              },
+              {
+                "id": "lb",
+                "label": "LBb",
+                "icon": "server",
+                "x": 255,
+                "y": 155
+              }
+            ],
+            "links": [
+              {
+                "from": "a",
+                "to": "fa"
+              },
+              {
+                "from": "b",
+                "to": "fb"
+              },
+              {
+                "from": "fa",
+                "to": "fb",
+                "label": "稼働確認"
+              },
+              {
+                "from": "fa",
+                "to": "la"
+              },
+              {
+                "from": "fb",
+                "to": "lb"
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "FWaが停止したことを検知してFWbが引き継ぐための監視は？",
+          "choices": [
+            {
+              "text": "FWbによるFWaの稼働状態の監視",
+              "ok": true,
+              "explain": "待機側が稼働側の停止を把握できます。"
+            },
+            {
+              "text": "利用者PCの画面解像度だけの監視",
+              "ok": false,
+              "explain": "FWaの稼働を判断できません。"
+            },
+            {
+              "text": "FWaが自分の停止後も通知し続けることだけに依存",
+              "ok": false,
+              "explain": "停止した装置は自分の異常を確実に通知できません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "上下のリンクを監視する",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "FWaは{a}への接続ポートと{b}への接続ポートのリンク状態を監視する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "上側の隣接機器",
+              "why": "図2でFWaの上側をたどります。",
+              "choices": [
+                {
+                  "text": "L2SWa",
+                  "ok": true,
+                  "explain": "FWaから上流へ出るリンクです。"
+                },
+                {
+                  "text": "物理サーバ1に直結するポート",
+                  "ok": false,
+                  "explain": "FWaは物理サーバ1へ直結していません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "下側の隣接機器",
+              "why": "図2でFWaの下側をたどります。",
+              "choices": [
+                {
+                  "text": "L2SWbだけ",
+                  "ok": false,
+                  "explain": "FWaの下側の隣接機器ではありません。"
+                },
+                {
+                  "text": "LBa",
+                  "ok": true,
+                  "explain": "FWaから下流へ通すリンクです。"
+                }
+              ]
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.45,
+            "bottom": 0.9,
+            "label": "図2：FWa/bの上下と冗長構成（IPA原図）"
+          }
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "FWaの電源だけ正常ならアクティブを維持してよい、と言えない理由は？",
+          "choices": [
+            {
+              "text": "FWa-LBaやFWa-L2SWaが断線している可能性があるから",
+              "ok": true,
+              "explain": "装置の稼働と端から端までの通過可能性は別です。"
+            },
+            {
+              "text": "電源が入ると必ず全ポートが切れるから",
+              "ok": false,
+              "explain": "正常動作とリンク障害を別に監視すべきという話です。"
+            },
+            {
+              "text": "FWbの存在だけで全顧客のセッションが同期するから",
+              "ok": false,
+              "explain": "実際の同期や監視の設定が必要です。"
+            }
+          ]
+        },
+        {
+          "id": "peer-check",
+          "type": "blank",
+          "title": "待機側にも確認する状態がある",
+          "stage": "apply",
+          "scaffold": 2,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "FWaは相手の{a}を監視できる。FWbは自分の{b}側及び{c}側のリンクを監視できる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "相手の状態",
+              "why": "対向装置が使えるかを確かめます。",
+              "choices": [
+                {
+                  "text": "利用者の資格試験の成績",
+                  "ok": false,
+                  "explain": "装置の健全性を示す情報ではありません。"
+                },
+                {
+                  "text": "FWbの稼働状態",
+                  "ok": true,
+                  "explain": "監視者をFWa、監視対象をFWbとして指定しています。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "FWbの上側",
+              "why": "原図の待機側の隣接機器です。",
+              "choices": [
+                {
+                  "text": "L2SWb",
+                  "ok": true,
+                  "explain": "FWbの上流リンクの状態です。"
+                },
+                {
+                  "text": "L2SWa",
+                  "ok": false,
+                  "explain": "FWa側と取り違えています。"
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "FWbの下側",
+              "why": "切替候補の下流も確認します。",
+              "choices": [
+                {
+                  "text": "LBa",
+                  "ok": false,
+                  "explain": "FWa側の下流でありFWbの直結先ではありません。"
+                },
+                {
+                  "text": "LBb",
+                  "ok": true,
+                  "explain": "FWbからLBbへのリンク状態です。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：FWb側が通信経路として使えるかも確認したい。監視内容の適切な組は？",
+          "choices": [
+            {
+              "text": "FWaの表示ランプだけ",
+              "ok": false,
+              "explain": "FWb側の断線を検知できません。"
+            },
+            {
+              "text": "顧客ごとのWebタイトル",
+              "ok": false,
+              "explain": "切替候補の経路健全性と関係しません。"
+            },
+            {
+              "text": "FWbのL2SWb側リンクとLBb側リンク",
+              "ok": true,
+              "explain": "切替候補の上下両側が利用可能かを確認します。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問へ出す三つの監視内容を、装置→上流→下流の順に並べる。",
+          "lines": [
+            {
+              "code": "FWbによるFWaの稼働状態、"
+            },
+            {
+              "code": "FWaによるL2SWaへの接続ポートのリンク状態、"
+            },
+            {
+              "code": "FWaによるLBaへの接続ポートのリンク状態。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "監視する側と対象をセットで記述しています。ほかにFWaによるFWbの稼働確認、FWb側の上下リンク監視も公式の解答候補です。",
+          "ngExplain": "機器名だけの列挙では、どの状態を誰が監視するかが不足します。"
+        }
+      ]
+    },
+    {
+      "id": "vlan-ports",
+      "title": "移動先へ通すVLANと入口のVLAN",
+      "targets": [
+        "s2-3",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "VLAN（Virtual LAN）は論理的なLANの区分です。顧客から入る入口では顧客別のポートVLANを設定し、複数顧客の仮想サーバが移動し得る物理サーバ向けポートでは全対象VLANを通す必要があります。設問2(3)と設問4(2)では、設定するポートの場所が異なります。",
+          "fig": {
+            "kind": "header",
+            "unit": 32,
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "TPID",
+                    "bits": 16
+                  },
+                  {
+                    "t": "PCP",
+                    "bits": 3
+                  },
+                  {
+                    "t": "DEI",
+                    "bits": 1
+                  },
+                  {
+                    "t": "VLAN ID",
+                    "bits": 12,
+                    "hi": true
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：タグで複数のVLANを区別"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "どの物理サーバにも各顧客の仮想サーバを移動できるようにしたい。サーバ向けポートに必要な設定は？",
+          "choices": [
+            {
+              "text": "管理用VLANだけ",
+              "ok": false,
+              "explain": "顧客のデータ通信用VLANが通りません。"
+            },
+            {
+              "text": "全顧客の仮想サーバに設定されたVLAN ID",
+              "ok": true,
+              "explain": "移動先でも同じVLANへ接続できるようにします。"
+            },
+            {
+              "text": "現在そこにいる1顧客のVLANだけを固定",
+              "ok": false,
+              "explain": "別顧客の仮想サーバが移動するとVLANが不足します。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "二種類の設定箇所",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "移動に備え全対象VLANを設定するのはL2SWc/dの{a}。顧客追加時にポートVLANを設定するのはL2SWa/bの{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "物理サーバ側",
+              "why": "原問の下側スイッチからの接続です。",
+              "choices": [
+                {
+                  "text": "FWの管理コンソールだけ",
+                  "ok": false,
+                  "explain": "データ転送ポートのVLAN設定になりません。"
+                },
+                {
+                  "text": "物理サーバへの接続ポート",
+                  "ok": true,
+                  "explain": "仮想サーバの移動先でも必要なVLANを通します。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "顧客側",
+              "why": "顧客別にフレームの所属を決める入口です。",
+              "choices": [
+                {
+                  "text": "顧客のL2SW又はL3SWへの接続ポート",
+                  "ok": true,
+                  "explain": "原問でポートVLANを設定する上側の接続です。"
+                },
+                {
+                  "text": "全ての物理サーバ向けポートだけ",
+                  "ok": false,
+                  "explain": "これらは複数VLANを運ぶ側で、問われる顧客入口とは違います。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "仮想サーバのVLAN設定を保ったまま移動しても、移動先の物理ポート設定を考える理由は？",
+          "choices": [
+            {
+              "text": "IPアドレスがVLANタグそのものだから",
+              "ok": false,
+              "explain": "IPとVLAN IDは別の識別情報です。"
+            },
+            {
+              "text": "仮想NICのVLANが物理経路でも通る必要があるから",
+              "ok": true,
+              "explain": "仮想側だけ設定しても、途中の物理ポートで止まれば通信できません。"
+            },
+            {
+              "text": "移動するとVLANが自動的に全廃されるから",
+              "ok": false,
+              "explain": "原問はVLANを維持できるように設定する設計です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：移動を許す顧客VLANは40と50だけ。物理サーバ向けポートで必要な集合は？",
+          "choices": [
+            {
+              "text": "40と50",
+              "ok": true,
+              "explain": "移動し得る全対象をカバーします。未使用の全IDを開ける意味ではありません。"
+            },
+            {
+              "text": "現在利用中の40だけ",
+              "ok": false,
+              "explain": "VLAN50の移動後通信ができません。"
+            },
+            {
+              "text": "原問の100・110・120だけ",
+              "ok": false,
+              "explain": "原問の番号を変更条件へ持ち込んでいます。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問の二つの場所を、顧客側からサーバ側へ説明する。",
+          "lines": [
+            {
+              "code": "顧客のL2SW又はL3SWに接続するL2SWa/bのポートではポートVLANを設定し、"
+            },
+            {
+              "code": "L2SWc/dの物理サーバへの接続ポートには、"
+            },
+            {
+              "code": "全顧客の仮想サーバに設定されたVLAN IDを設定する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "入口の所属判定と、移動先へ複数VLANを運ぶ設定を区別できています。",
+          "ngExplain": "上下のスイッチ名と、設定対象の接続先を取り違えないようにします。"
+        }
+      ]
+    },
+    {
+      "id": "fw-settings",
+      "title": "仮想FWにもネットワークの身元が必要",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "仮想FWも通信を受け渡す装置なので、許可ルールだけでなくVLAN ID、IPアドレス、サブネットマスク、仮想MACアドレス、経路情報を設定します。IPとマスクは所属ネットワーク、MACは同じリンク上の受渡し、経路は別ネットワークへの次ホップに関係します。原問はこの中から三つを挙げます。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "仮想FWが『どの論理LANに接続するか』を決める情報は？",
+          "choices": [
+            {
+              "text": "利用者の氏名",
+              "ok": false,
+              "explain": "仮想FWの論理LAN所属を決める設定ではありません。"
+            },
+            {
+              "text": "サーバのCPU使用率",
+              "ok": false,
+              "explain": "性能情報でありネットワーク所属とは別です。"
+            },
+            {
+              "text": "VLAN ID",
+              "ok": true,
+              "explain": "論理的なネットワーク区分に対応します。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "アドレスの役割を区別する",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "仮想FWのIP通信には{a}、同一サブネット範囲の判断には{b}、同じリンク上の識別には{c}を設定する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "IP上の識別",
+              "why": "ネットワーク層のアドレスです。",
+              "choices": [
+                {
+                  "text": "IPアドレス",
+                  "ok": true,
+                  "explain": "仮想FW自身のインタフェースをIP上で指定します。"
+                },
+                {
+                  "text": "VLAN IDだけ",
+                  "ok": false,
+                  "explain": "VLANの識別だけではIPアドレスを与えたことになりません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "ネットワーク範囲",
+              "why": "IPと組み合わせて所属範囲を決めます。",
+              "choices": [
+                {
+                  "text": "TCPポート番号",
+                  "ok": false,
+                  "explain": "アプリの通信先を識別する番号で、サブネット範囲ではありません。"
+                },
+                {
+                  "text": "サブネットマスク",
+                  "ok": true,
+                  "explain": "IPアドレスのネットワーク部分の範囲を示します。"
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "リンク上の識別",
+              "why": "Ethernetフレームでの受渡しに使います。",
+              "choices": [
+                {
+                  "text": "仮想MACアドレス",
+                  "ok": true,
+                  "explain": "仮想FWもレイヤ2上の識別を持ちます。"
+                },
+                {
+                  "text": "HTTPのURL",
+                  "ok": false,
+                  "explain": "Web資源を示す情報でフレームの宛先ではありません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "IPとマスクを設定しただけでは、別ネットワークへ正しく転送できない場合がある理由は？",
+          "choices": [
+            {
+              "text": "マスクを持つとフィルタが使えないから",
+              "ok": false,
+              "explain": "所属範囲とフィルタリングは共存します。"
+            },
+            {
+              "text": "どの次ホップへ渡すかというルーティング情報も必要だから",
+              "ok": true,
+              "explain": "自分の所属と、遠隔宛ての送り先は別の設定です。"
+            },
+            {
+              "text": "仮想FWはIP通信できないから",
+              "ok": false,
+              "explain": "仮想FWもIP通信を処理します。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：IP設定とVLANは正常だが、必要なTCPポートが拒否される。見直す設定は？",
+          "choices": [
+            {
+              "text": "フィルタリングルール",
+              "ok": true,
+              "explain": "通すか拒否するかの条件を確認します。"
+            },
+            {
+              "text": "物理サーバの時計表示だけ",
+              "ok": false,
+              "explain": "指定ポートの許可条件を直せません。"
+            },
+            {
+              "text": "全MACアドレスを同じ値に統一",
+              "ok": false,
+              "explain": "重複を招き、許可設定の不足も解消しません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問へ出す設定例を、所属→識別→制御の順に構成する。",
+          "lines": [
+            {
+              "code": "仮想FWのVLAN IDを設定し、"
+            },
+            {
+              "code": "仮想FWのIPアドレスを設定して、"
+            },
+            {
+              "code": "顧客別のフィルタリングルールを設定する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "原問は三つ指定なので、この三つで一つの答案になります。サブネットマスク、仮想MACアドレス、ルーティング情報も公式の解答候補です。",
+          "ngExplain": "設定対象が仮想FWであることを落とさず、同じ設定を言い換えて三つに数えないようにします。"
+        }
+      ]
+    },
+    {
+      "id": "bootstrap",
+      "title": "制御を受けるための最初の接続",
+      "targets": [
+        "s3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "OpenFlowはOFS（OpenFlow Switch）がデータを転送し、OFC（OpenFlow Controller）が転送ルールを設定する方式です。OFSは起動後、OFCとのTCP接続を確立してOFチャネルを開きます。自動設定を受ける前にも、その接続の送信元と宛先が必要です。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "c",
+                "label": "OFC",
+                "icon": "server",
+                "x": 165,
+                "y": 40
+              },
+              {
+                "id": "s1",
+                "label": "OFS1",
+                "icon": "l2sw",
+                "x": 70,
+                "y": 140
+              },
+              {
+                "id": "s2",
+                "label": "OFS2",
+                "icon": "l2sw",
+                "x": 265,
+                "y": 140
+              }
+            ],
+            "links": [
+              {
+                "from": "c",
+                "to": "s1",
+                "label": "OFチャネル"
+              },
+              {
+                "from": "c",
+                "to": "s2",
+                "label": "OFチャネル"
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "起動したOFSが最初にTCP接続する相手は？",
+          "choices": [
+            {
+              "text": "Web利用者のPC",
+              "ok": false,
+              "explain": "利用者通信の送信者であり制御ルールの配布元ではありません。"
+            },
+            {
+              "text": "仮想FWの全利用者",
+              "ok": false,
+              "explain": "ルールを集中制御する相手ではありません。"
+            },
+            {
+              "text": "OFC",
+              "ok": true,
+              "explain": "フローテーブルを設定・更新するコントローラです。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "TCP接続の両端",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "OFS導入時には{a}のIPアドレスと{b}のIPアドレスを設定する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "自分側",
+              "why": "TCP接続の送信元となる管理用の識別です。",
+              "choices": [
+                {
+                  "text": "自OFS",
+                  "ok": true,
+                  "explain": "接続するスイッチ自身のIPが必要です。"
+                },
+                {
+                  "text": "全仮想サーバだけ",
+                  "ok": false,
+                  "explain": "OFS自身がTCP接続するためのアドレスが欠けます。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "相手側",
+              "why": "制御ルールを受け取る相手です。",
+              "choices": [
+                {
+                  "text": "任意の顧客PC",
+                  "ok": false,
+                  "explain": "制御チャネルの正しい接続相手ではありません。"
+                },
+                {
+                  "text": "OFC",
+                  "ok": true,
+                  "explain": "接続先コントローラを指定します。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "『OFCが全設定を配るからOFS側の初期情報はゼロでよい』が不十分なのは？",
+          "choices": [
+            {
+              "text": "OFCはTCPを使えないから",
+              "ok": false,
+              "explain": "原問はOFCとのTCP接続を明示しています。"
+            },
+            {
+              "text": "全データをOFCで転送するから",
+              "ok": false,
+              "explain": "通常のデータ転送を担うOFSと制御側の役割は別です。"
+            },
+            {
+              "text": "設定を受け取る制御チャネル自体を先に確立する必要があるから",
+              "ok": true,
+              "explain": "接続するための情報と、接続後に配られる転送ルールを分けます。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：OFS3を追加し、OFCは同じ。少なくともどの情報をOFS3へ設定する？",
+          "choices": [
+            {
+              "text": "P社のWebサーバのURLだけ",
+              "ok": false,
+              "explain": "OFチャネルの相手を指定できません。"
+            },
+            {
+              "text": "OFS3自身のIPとOFCのIP",
+              "ok": true,
+              "explain": "新しい接続の両端を特定します。"
+            },
+            {
+              "text": "既存OFS1のIPを自分のIPとして複製",
+              "ok": false,
+              "explain": "同じ管理網でIP重複を起こします。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問の起動から制御開始までを並べる。",
+          "lines": [
+            {
+              "code": "OFSに自OFSとOFCのIPアドレスを設定し、"
+            },
+            {
+              "code": "OFCとのTCP接続からOFチャネルを開設して、"
+            },
+            {
+              "code": "OFCからフローテーブルの設定を受ける。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "最小限の初期情報と、その後の集中設定を区別できています。",
+          "ngExplain": "転送ルールが入る前にも管理通信の道が必要です。"
+        }
+      ]
+    },
+    {
+      "id": "failure-domain",
+      "title": "仮想的に分けても同じ故障を受ける",
+      "targets": [
+        "s5-1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "論理的に独立していても、同じ物理サーバに載る仮想サーバは同じ物理故障の影響を受けます。原問図4ではP社・Q社・Z社向けのFWやLBが物理サーバ3に集まっています。設問5(1)では、共有する故障原因と、それを分散する配置を考えます。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "複数顧客の重要な仮想FW・LBを1台にまとめると、その物理サーバの故障で何が起こる？",
+          "choices": [
+            {
+              "text": "複数顧客が同時に利用不能になる",
+              "ok": true,
+              "explain": "論理的分離は物理ホスト故障の影響を分けません。"
+            },
+            {
+              "text": "必ず1顧客だけが影響を受ける",
+              "ok": false,
+              "explain": "同じホストを共有している条件を無視しています。"
+            },
+            {
+              "text": "VLANタグが暗号化される",
+              "ok": false,
+              "explain": "物理ホスト故障と暗号化は関係しません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "原問の共通故障点",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "原問では{a}の障害で{b}のシステムが同時に停止する可能性がある。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "物理的な集中先",
+              "why": "原図のFW・LBの配置を確認します。",
+              "choices": [
+                {
+                  "text": "顧客PC1台だけ",
+                  "ok": false,
+                  "explain": "原図の共有する基盤の故障点ではありません。"
+                },
+                {
+                  "text": "物理サーバ3",
+                  "ok": true,
+                  "explain": "三つの顧客の重要な仮想機器が集中しています。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "影響する範囲",
+              "why": "同じホストに載る顧客数です。",
+              "choices": [
+                {
+                  "text": "3顧客",
+                  "ok": true,
+                  "explain": "P社・Q社・Z社が同じ故障に巻き込まれます。"
+                },
+                {
+                  "text": "必ずP社だけ",
+                  "ok": false,
+                  "explain": "Q社・Z社の仮想機器も物理サーバ3にあります。"
+                }
+              ]
+            }
+          ],
+          "originalExcerpt": {
+            "page": 19,
+            "top": 0.055,
+            "bottom": 0.55,
+            "label": "図4：物理サーバごとの顧客機器配置（IPA原図）"
+          }
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "『VLAN IDを全て変える』だけではこのリスクを減らせない理由は？",
+          "choices": [
+            {
+              "text": "同じ物理ホストに依存する配置が変わらないから",
+              "ok": true,
+              "explain": "故障の影響を分けるには物理的な配置を分ける必要があります。"
+            },
+            {
+              "text": "VLANを変えるとホストが増えるから",
+              "ok": false,
+              "explain": "VLAN変更で物理ホストは増えません。"
+            },
+            {
+              "text": "全てのホスト故障を暗号化で防げるから",
+              "ok": false,
+              "explain": "暗号化はハードウェア故障対策ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：各顧客の重要な仮想機器を顧客ごとに別ホストへ分けた。同じホスト1台の故障について改善するのは？",
+          "choices": [
+            {
+              "text": "全顧客が永久に無停止になる",
+              "ok": false,
+              "explain": "分散だけで全障害への無停止を保証できません。"
+            },
+            {
+              "text": "全通信が必ず高速化する",
+              "ok": false,
+              "explain": "目的は故障影響の分散で、速度向上を直接保証しません。"
+            },
+            {
+              "text": "3顧客の同時停止を避けやすくなる",
+              "ok": true,
+              "explain": "共通する物理故障点を分けた効果です。個々の顧客の無停止まで保証はしません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問の問題と配置対策を対にする。",
+          "lines": [
+            {
+              "code": "物理サーバ3が故障すると3顧客が同時に停止し得るので、"
+            },
+            {
+              "code": "3顧客向けの仮想サーバを、"
+            },
+            {
+              "code": "それぞれ異なる物理サーバへ分散して配置する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "障害箇所、影響範囲、分散の単位がそろっています。",
+          "ngExplain": "『冗長化する』だけでなく、どの仮想サーバをどこへ分けるかを答えます。"
+        }
+      ]
+    },
+    {
+      "id": "local",
+      "title": "同一ホスト内で完結する通信",
+      "targets": [
+        "s5-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "仮想L2スイッチは物理ホスト内でもフレームを転送します。同じホスト上かつ同じセグメントの仮想機器間なら、外の物理OFSへ出ずに通信できます。原問ではFWpの内部側とLBpの仮想IPを持つポートがこの関係です。外に転送ルールがないことだけで通信不能とは判断しません。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "fw",
+                "label": "FWp内部側",
+                "icon": "fw",
+                "x": 65,
+                "y": 90
+              },
+              {
+                "id": "vs",
+                "label": "仮想L2SW",
+                "icon": "l2sw",
+                "x": 170,
+                "y": 90
+              },
+              {
+                "id": "lb",
+                "label": "LBp仮想IP側",
+                "icon": "server",
+                "x": 275,
+                "y": 90
+              }
+            ],
+            "links": [
+              {
+                "from": "fw",
+                "to": "vs",
+                "label": "VLAN110"
+              },
+              {
+                "from": "vs",
+                "to": "lb",
+                "label": "VLAN110"
+              }
+            ],
+            "caption": "説明用：物理サーバ3内の通信"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "同じ物理サーバ内、同じVLANの仮想機器AとBが通信する。基本的に転送を担える場所は？",
+          "choices": [
+            {
+              "text": "DNSサーバだけ",
+              "ok": false,
+              "explain": "DNSはフレーム転送を行う装置ではありません。"
+            },
+            {
+              "text": "ホスト内の仮想L2スイッチ",
+              "ok": true,
+              "explain": "同一セグメントのローカルなフレームを内部で渡せます。"
+            },
+            {
+              "text": "必ずインターネットのルータ",
+              "ok": false,
+              "explain": "ホストの外へ出る必要がない条件です。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "原問の二つの必要条件",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "FWpの内部側ポートとLBpの仮想IPを持つポートは{a}であり、通信は{b}内で処理される。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "論理的な位置",
+              "why": "単に同じ筐体というだけでは不足します。",
+              "choices": [
+                {
+                  "text": "同一セグメント",
+                  "ok": true,
+                  "explain": "原図ではVLAN110に接続する関係です。"
+                },
+                {
+                  "text": "互いに無関係なセグメント",
+                  "ok": false,
+                  "explain": "この場合は別途ルーティングなどを考える必要があります。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "物理的な位置",
+              "why": "原図の配置を対応させます。",
+              "choices": [
+                {
+                  "text": "物理サーバ1と2の間",
+                  "ok": false,
+                  "explain": "原図での両機器の配置とは違います。"
+                },
+                {
+                  "text": "物理サーバ3",
+                  "ok": true,
+                  "explain": "両方の仮想機器が同じホスト内にあります。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "『同じ物理サーバなら異なるVLANでも必ず直接届く』と言えない理由は？",
+          "choices": [
+            {
+              "text": "IPアドレスはMACと必ず同じ値だから",
+              "ok": false,
+              "explain": "二つは異なる識別子です。"
+            },
+            {
+              "text": "同じホストにいてもセグメントが異なればL2転送だけでは越えられないから",
+              "ok": true,
+              "explain": "物理配置と論理的な所属は両方確認します。"
+            },
+            {
+              "text": "仮想L2SWは同一VLANも転送できないから",
+              "ok": false,
+              "explain": "同一セグメントでの転送を担う装置です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：LBpを別の物理サーバへ移し、VLAN110を維持した。新たに考える必要があるものは？",
+          "choices": [
+            {
+              "text": "ホスト間を運ぶ物理側の転送経路",
+              "ok": true,
+              "explain": "論理的には同じでも、物理ホスト間の通信が必要になります。"
+            },
+            {
+              "text": "ホスト内部で完結すると断言すること",
+              "ok": false,
+              "explain": "別のホストへ移した条件に反します。"
+            },
+            {
+              "text": "TLSの証明書を全て捨てること",
+              "ok": false,
+              "explain": "配置変更による物理転送の必要性とは別です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問でFテーブルに専用エントリが不要な理由を構成する。",
+          "lines": [
+            {
+              "code": "FWpの内部側ポートとLBpの仮想IPを持つポートは同一セグメントであり、"
+            },
+            {
+              "code": "両者の通信は物理サーバ3内で処理されるので、"
+            },
+            {
+              "code": "物理OFSに両者間転送用のFエントリがなくても通信できる。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "同一セグメントと同一物理ホストの二条件が必要です。",
+          "ngExplain": "『仮想化されているから』だけで通信が内部完結するとは判断できません。"
+        }
+      ]
+    },
+    {
+      "id": "mac",
+      "title": "最終宛先IPと次に渡すMAC",
+      "targets": [
+        "s5-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "EthernetのMAC（Media Access Control）アドレスは、同じリンク上の受渡し先を表します。IPの最終宛先がWebサーバでも、途中でFWやLBを経由すれば、その区間で渡す相手のMACは変わります。原問のmFWpwはFWpのWAN側、mLBpはLBp内部側、mWSp1はWebサーバp1を表す記号です。",
+          "fig": {
+            "kind": "header",
+            "unit": 48,
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "宛先MAC : mWSp1",
+                    "bits": 48,
+                    "hi": true
+                  }
+                ]
+              },
+              {
+                "fields": [
+                  {
+                    "t": "送信元MAC : mLBp",
+                    "bits": 48,
+                    "hi": true
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：LBp→Webサーバp1のMAC欄"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "利用者からP社のサービスへ向かうフレームを、まずFWpへ渡したい。宛先MACは？",
+          "choices": [
+            {
+              "text": "常にmWSp1",
+              "ok": false,
+              "explain": "最終サーバのMACを全区間で使うわけではありません。"
+            },
+            {
+              "text": "OFCのIPアドレス",
+              "ok": false,
+              "explain": "MAC欄に制御装置のIPを書くことはできません。"
+            },
+            {
+              "text": "mFWpw",
+              "ok": true,
+              "explain": "その区間の受渡し先はFWpのWAN側です。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "LBから先のフレーム",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "LBp内部側からWebサーバp1へ送るフレームの送信元MACは{a}、宛先MACは{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "送信元",
+              "why": "この区間でフレームを送り出す側です。",
+              "choices": [
+                {
+                  "text": "mFWpw",
+                  "ok": false,
+                  "explain": "先ほどの外側区間の受渡し先であり、現在の送信元ではありません。"
+                },
+                {
+                  "text": "mLBp",
+                  "ok": true,
+                  "explain": "LBpの内部側MACです。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "宛先",
+              "why": "この区間で受け取るサーバです。",
+              "choices": [
+                {
+                  "text": "mWSp1",
+                  "ok": true,
+                  "explain": "Webサーバp1のMACです。"
+                },
+                {
+                  "text": "mRT",
+                  "ok": false,
+                  "explain": "外側ルータのMACであり、現在の送信先ではありません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "フローテーブルの追跡で『現在どの区間か』を確認する理由は？",
+          "choices": [
+            {
+              "text": "全フレームのMACが途中で必ずランダムになるから",
+              "ok": false,
+              "explain": "各区間の相手に応じた規則的な受渡しです。"
+            },
+            {
+              "text": "VLANがIPアドレスの別名だから",
+              "ok": false,
+              "explain": "VLANとIPとMACは別々の情報です。"
+            },
+            {
+              "text": "FWやLBを通る前後で照合するMACの組が変わるから",
+              "ok": true,
+              "explain": "同じWeb要求でもフレームの区間に応じた条件で照合します。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：LBpがWebサーバp4を選んだ。LBpから先で変わる宛先は？",
+          "choices": [
+            {
+              "text": "常にmWSp1",
+              "ok": false,
+              "explain": "負荷分散先の変更に対応できていません。"
+            },
+            {
+              "text": "mWSp4",
+              "ok": true,
+              "explain": "処理先のWebサーバがp4へ変わったことに対応します。"
+            },
+            {
+              "text": "mFWqw",
+              "ok": false,
+              "explain": "Q社FWのWAN側でありP社の選択サーバではありません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問のフレーム情報を二つの区間で整理する。",
+          "lines": [
+            {
+              "code": "外側からFWpへ渡す区間では宛先MACをmFWpwとして追い、"
+            },
+            {
+              "code": "LBpからWebサーバp1へ渡す区間では、"
+            },
+            {
+              "code": "送信元mLBp・宛先mWSp1の組でフローテーブルを照合する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "エンドツーエンドの要求と各リンクのフレームを区別できています。",
+          "ngExplain": "最終サーバ名だけで全区間のMACを決めないようにします。"
+        }
+      ]
+    },
+    {
+      "id": "flow-basics",
+      "title": "入力で表を選び、条件で行を選ぶ",
+      "targets": [
+        "s5-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "フローテーブルは条件に一致するフレームへ処理を指示する表です。原問では最初にFテーブル0を使い、入力ポートで次の表を選びます。その表の複数行に一致すれば優先度が高い行を使い、どれにも一致しなければ廃棄します。表番号と項番は別の番号です。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "練習用 F0",
+              "入力p11 → F2",
+              "入力p12 → F3",
+              "入力p13 → F4"
+            ],
+            "caption": "説明用：入力ポートによる振分け"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の小表：F0で『入力p11→F2』『入力p12→F3』とある。p12から入力したら次は？",
+          "choices": [
+            {
+              "text": "Fテーブル3",
+              "ok": true,
+              "explain": "入力ポートp12に対応する処理先です。"
+            },
+            {
+              "text": "Fテーブル12",
+              "ok": false,
+              "explain": "ポート番号と表番号を同じものとしてはいけません。"
+            },
+            {
+              "text": "表を見る前に全ポートへ複製",
+              "ok": false,
+              "explain": "原問は定義されたアクションに従う方式です。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "二段階で絞り込む",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "最初に{a}で次の表を選び、その表では{b}に一致する項番のアクションを行う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "振分け条件",
+              "why": "原問のFテーブル0の役割です。",
+              "choices": [
+                {
+                  "text": "入力ポート",
+                  "ok": true,
+                  "explain": "物理的にどこから入ったかで処理先を分けます。"
+                },
+                {
+                  "text": "項番の数字の大きさだけ",
+                  "ok": false,
+                  "explain": "項番は入力ポートの番号ではありません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "行の条件",
+              "why": "mDESは宛先MAC、mSRCは送信元MACです。",
+              "choices": [
+                {
+                  "text": "行の表示位置だけ",
+                  "ok": false,
+                  "explain": "条件に一致するかを調べずに処理を選べません。"
+                },
+                {
+                  "text": "宛先・送信元MACなどの条件",
+                  "ok": true,
+                  "explain": "その表に定義されたフィールドを確認します。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "ARPフレームが低優先度の一般ARP行と高優先度のVLAN指定ARP行に両方一致した。原問の選択は？",
+          "choices": [
+            {
+              "text": "高優先度のVLAN指定行",
+              "ok": true,
+              "explain": "複数一致時は定義された優先度で決めます。"
+            },
+            {
+              "text": "先に目に入った低優先度行",
+              "ok": false,
+              "explain": "表示順ではなく優先度の規則があります。"
+            },
+            {
+              "text": "両方のアクションを必ず実行",
+              "ok": false,
+              "explain": "原問では最も優先度の高いFエントリを選びます。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：どの行にも一致しないフレームが到着した。原問の規則では？",
+          "choices": [
+            {
+              "text": "必ずOFCへ送る",
+              "ok": false,
+              "explain": "Packet-Inはそのアクションが指定された場合です。無一致と同じではありません。"
+            },
+            {
+              "text": "必ず全ポートへ出力する",
+              "ok": false,
+              "explain": "未定義のフラッディングを仮定しません。"
+            },
+            {
+              "text": "廃棄する",
+              "ok": true,
+              "explain": "本問は明示的に『どの条件にも一致しないパケットは廃棄』としています。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "表を読む手順を再現する。",
+          "lines": [
+            {
+              "code": "Fテーブル0で入力ポートに一致する行を選び、"
+            },
+            {
+              "code": "指定された次の表でMACなどの条件と優先度を確認し、"
+            },
+            {
+              "code": "選ばれた行のアクションを実行する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "表の振分け、条件照合、処理という順で追うことができます。",
+          "ngExplain": "ポート番号・表番号・項番を混ぜると違うフレームを追ってしまいます。"
+        }
+      ]
+    },
+    {
+      "id": "trace",
+      "title": "P社の要求を三つの空欄へつなぐ",
+      "targets": [
+        "s5-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "ここから原問の番号で追います。外部からOFSのポートp1へ入るとFテーブル0の項番1でVLAN100を付け、Fテーブル1へ進みます。FWpとLBpは同一ホスト内でつながり、LBpからWebサーバp1宛てのフレームは物理サーバ3からOFSのポートp13へ戻ります。原表の関連行を読み、三つの空欄を埋めます。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "原問Fテーブル1：項番1はARP→Packet-In、項番2は宛先mFWpw→p13、項番3は宛先mFWqw→p13。非ARPで宛先mFWpwのフレームに選ぶ行は？",
+          "choices": [
+            {
+              "text": "Fテーブル0・項番1",
+              "ok": false,
+              "explain": "それは直前のVLAN付与と表振分けの処理です。"
+            },
+            {
+              "text": "Fテーブル1・項番2",
+              "ok": true,
+              "explain": "宛先がP社FWのWAN側なので、この行に一致します。"
+            },
+            {
+              "text": "Fテーブル1・項番3",
+              "ok": false,
+              "explain": "宛先はQ社FWのMACであり、今回とは違います。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "LBからWebサーバへの二段階",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "原表：F0の項番6は入力p13→F4。F4の項番6は宛先mWSp1・送信元mLBp→p11。LBpからの入力はまず{a}、次に{b}で処理する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "最初の表と行",
+              "why": "再び物理OFSへ入るのでF0を通ります。",
+              "choices": [
+                {
+                  "text": "Fテーブル0・項番6",
+                  "ok": true,
+                  "explain": "物理サーバ3からのp13入力に一致します。"
+                },
+                {
+                  "text": "Fテーブル4・項番6だけ",
+                  "ok": false,
+                  "explain": "次段だけを選び、最初の入力振分けを落としています。"
+                },
+                {
+                  "text": "Fテーブル0・項番5",
+                  "ok": false,
+                  "explain": "項番5はp12入力であり、物理サーバ3からのp13とは違います。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "次段の表と行",
+              "why": "LBpとWebサーバp1のMACの組で選びます。",
+              "choices": [
+                {
+                  "text": "Fテーブル1・項番2",
+                  "ok": false,
+                  "explain": "外部からFWpへ渡した前の区間の行です。"
+                },
+                {
+                  "text": "Fテーブル4・項番7",
+                  "ok": false,
+                  "explain": "宛先mWSp4用でありp1用ではありません。"
+                },
+                {
+                  "text": "Fテーブル4・項番6",
+                  "ok": true,
+                  "explain": "mLBpからmWSp1への転送行です。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "FWpとLBpの間に物理OFSの転送行を挿入せず、その後にF0へ戻る理由は？",
+          "choices": [
+            {
+              "text": "LBpがOFCの代わりに全表を消すから",
+              "ok": false,
+              "explain": "LBは処理先を選ぶ機器で、表を消すという条件はありません。"
+            },
+            {
+              "text": "FWp-LBp間はホスト内で完結し、LBpから別ホストへ出るときにOFSへ再入力するから",
+              "ok": true,
+              "explain": "同一セグメントの内部通信とホスト間通信を分けます。"
+            },
+            {
+              "text": "F0はパケット全体で一度しか使えないから",
+              "ok": false,
+              "explain": "別のフレームとしてOFSへ再入力すればF0から処理します。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：外部入力はQ社側、宛先MACはmFWqwで、F1の行は先ほどと同じ。F1で使う項番は？",
+          "choices": [
+            {
+              "text": "3",
+              "ok": true,
+              "explain": "顧客名ではなく一致する宛先MACで選び直します。"
+            },
+            {
+              "text": "必ず2",
+              "ok": false,
+              "explain": "P社の解答をそのまま流用しています。"
+            },
+            {
+              "text": "6",
+              "ok": false,
+              "explain": "F0やF4の別区間の項番と混同しています。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問のオ・カ・キに相当する処理を含め、外側からWebサーバp1へ並べる。",
+          "lines": [
+            {
+              "code": "Fテーブル0・項番1 → Fテーブル1・項番2（オ）"
+            },
+            {
+              "code": "FWp → LBp（物理サーバ3内）"
+            },
+            {
+              "code": "Fテーブル0・項番6（カ） → Fテーブル4・項番6（キ）"
+            },
+            {
+              "code": "p11から出力 → Webサーバp1"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "オはF1の2、カはF0の6、キはF4の6です。出力先だけでなく表番号と項番を組にして答えます。",
+          "ngExplain": "FWp・LBpを通った後は入力p13で再度F0を使います。p1というサーバ名と入力p1を混同しません。",
+          "originalExcerpt": {
+            "page": 24,
+            "top": 0.32,
+            "bottom": 0.61,
+            "label": "設問5(3)：三つの空欄を含む転送手順（IPA原問、解答は非表示）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "migration",
+      "title": "MACは同じでも出力先は動く",
+      "targets": [
+        "s5-4"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "原問ではWebサーバp4が物理サーバ1から2へ移動します。MACはmWSp4のままですが、到達させる出力ポートはp11からp12に変わります。移動先でのRARP（Reverse Address Resolution Protocol）をPacket-InでOFCに通知し、OFCが両OFSのルールを更新するという本文の方式で考えます。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "F4 項番7 : mDES=mWSp4, mSRC=mLBp",
+              "移動前 : 出力p11 → 物理サーバ1",
+              "移動後 : 出力p12 → 物理サーバ2"
+            ],
+            "caption": "説明用：同じMACの到達先が変化"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "仮想サーバのMACを維持したまま物理サーバを移す。転送表でまず変えるべきものは？",
+          "choices": [
+            {
+              "text": "必ず全顧客のMACを同じ値にする",
+              "ok": false,
+              "explain": "MAC重複を起こし、位置の更新になりません。"
+            },
+            {
+              "text": "顧客側の全Web URLだけ",
+              "ok": false,
+              "explain": "物理OFSの転送先ポートを更新する作業ではありません。"
+            },
+            {
+              "text": "そのMACへ届ける出力ポート",
+              "ok": true,
+              "explain": "相手の識別は同じでも、現在の配置場所が変わります。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "原問の三つの指定",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "仮想基盤とOpenFlow",
+          "template": "Fテーブル4を更新するのは{a}。既知の項番3以外では項番{b}を、{c}に変更する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "装置名を全て",
+              "why": "両OFSが物理サーバへ接続しています。",
+              "choices": [
+                {
+                  "text": "OFS1とOFS2",
+                  "ok": true,
+                  "explain": "どちらを通っても移動後のサーバへ届く必要があります。"
+                },
+                {
+                  "text": "OFS1だけ",
+                  "ok": false,
+                  "explain": "通知したOFSだけ更新するとOFS2経由で旧位置へ送ります。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "更新する行",
+              "why": "原表でmWSp4宛て・mLBp送信元のユニキャスト行です。",
+              "choices": [
+                {
+                  "text": "6",
+                  "ok": false,
+                  "explain": "F4項番6は移動していないWebサーバp1向けです。"
+                },
+                {
+                  "text": "7",
+                  "ok": true,
+                  "explain": "F4項番7がWebサーバp4への転送を指定します。"
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "新しい出力",
+              "why": "物理サーバ2に対応するOFSのポートです。",
+              "choices": [
+                {
+                  "text": "p11から出力",
+                  "ok": false,
+                  "explain": "移動前の物理サーバ1へ送り続けています。"
+                },
+                {
+                  "text": "p13から出力",
+                  "ok": false,
+                  "explain": "FW・LBが載る物理サーバ3の側です。"
+                },
+                {
+                  "text": "p12から出力",
+                  "ok": true,
+                  "explain": "p4の移動先は物理サーバ2です。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "通知を出したOFS1だけを更新すると不十分な理由は？",
+          "choices": [
+            {
+              "text": "OFCは一つのOFSしか制御できないから",
+              "ok": false,
+              "explain": "原問は一つのOFCで両OFSを制御します。"
+            },
+            {
+              "text": "OFS2も同じ宛先へ転送する経路になり得るから",
+              "ok": true,
+              "explain": "片側だけ古い転送先が残ると、その経路で通信できません。"
+            },
+            {
+              "text": "OFS2はMACを一切扱えないから",
+              "ok": false,
+              "explain": "OFS2もFテーブルでMACを照合します。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "仮想基盤とOpenFlow",
+          "intro": "練習用の変更条件：p4ではなくp1だけが物理サーバ2へ移動した。F4の『項番6:mWSp1』『項番7:mWSp4』のどちらの出力先を変える？",
+          "choices": [
+            {
+              "text": "項番6をp12へ",
+              "ok": true,
+              "explain": "今度はmWSp1の所在が変わるので、対応する行を選び直します。"
+            },
+            {
+              "text": "必ず項番7をp12へ",
+              "ok": false,
+              "explain": "原問の番号を固定的に使っています。"
+            },
+            {
+              "text": "項番6・7を無条件に両方p12へ",
+              "ok": false,
+              "explain": "移動していないp4まで誤った出力先にします。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "仮想基盤とOpenFlow",
+          "lead": "原問の移動通知から更新までを順序立てる。",
+          "lines": [
+            {
+              "code": "移動先からのRARPをPacket-InでOFCへ知らせ、"
+            },
+            {
+              "code": "OFCがOFS1とOFS2のFテーブル4を更新し、"
+            },
+            {
+              "code": "項番7のアクションをp12から出力に変更する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "両OFS、項番7、p12の三要素が必要です。項番3のARP転送も移動先を含むよう変更されますが、設問ではそれ以外のユニキャスト行を答えます。",
+          "ngExplain": "通知元だけではなく、同じ転送先を持つ両装置へ変更を反映します。"
+        },
+        {
+          "id": "independent",
+          "type": "info",
+          "title": "補助なしの原問へ",
+          "stage": "transfer",
+          "scaffold": 0,
+          "format": "読む",
+          "theme": "仮想基盤とOpenFlow",
+          "body": "ここまでで部品ごとの判断を練習しました。次は「公式の原問を解く」から、教材の解説を閉じて原文・原図だけで挑戦してください。用語だけでなく、対象機器・通信方向・条件・結果を設問の指定に合わせてそろえます。原問の答案と学習記録は別に保存されます。"
+        }
+      ]
+    }
+  ]
+}

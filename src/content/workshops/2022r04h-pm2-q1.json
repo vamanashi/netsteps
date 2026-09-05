@@ -1,0 +1,2197 @@
+{
+  "examKey": "2022r04h/pm2/1",
+  "title": "証明書でVDIへ接続し二つの回線を使う",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm2_ans.pdf",
+    "https://www.rfc-editor.org/rfc/rfc8446",
+    "https://www.rfc-editor.org/rfc/rfc5280.txt",
+    "https://www.rfc-editor.org/rfc/rfc2986.txt",
+    "https://www.rfc-editor.org/rfc/rfc5798.txt"
+  ],
+  "sections": [
+    {
+      "id": "remote-basics",
+      "title": "自宅の画面から社内の仮想PCを操作する",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "remote-basics-1",
+          "type": "info",
+          "title": "データを置く場所と操作する場所",
+          "body": "VDI（Virtual Desktop Infrastructure：仮想デスクトップ基盤）は社内サーバで動く仮想PCを手元から操作する仕組みです。PC（Personal Computer）は利用者の端末です。原問では業務データを個人PCに置かず、仮想PCで業務を行います。",
+          "format": "読む",
+          "theme": "データを置く場所と操作する場所",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "remote-basics-2",
+          "type": "quiz",
+          "title": "練習用の条件：自宅PCには画面だけを表示し、業務処理は社内で行う。業務データを扱う中心はどこか。",
+          "choices": [
+            {
+              "text": "回線事業者のルータ",
+              "ok": false,
+              "explain": "ルータは業務アプリケーションを実行しません。"
+            },
+            {
+              "text": "社内の仮想PC",
+              "ok": true,
+              "explain": "画面操作と業務処理の実行場所を分けます。"
+            },
+            {
+              "text": "自宅PCの保存フォルダ",
+              "ok": false,
+              "explain": "原問の「業務データを置かない」方針に反します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：自宅PCには画面だけを表示し、業務処理は社内で行う。業務データを扱う中心はどこか。",
+          "scaffold": 4,
+          "stage": "check"
+        },
+        {
+          "id": "remote-basics-3",
+          "type": "info",
+          "title": "安全な通路と画面操作は別の役割",
+          "body": "VPN（Virtual Private Network）は公開回線上などに論理的な専用の通路を作ります。SSL（Secure Sockets Layer）の名称が残るSSL-VPNですが、本問の保護にはTLS（Transport Layer Security）1.3を使います。RDP（Remote Desktop Protocol）は仮想PCの画面操作を運ぶプロトコルです。",
+          "format": "読む",
+          "theme": "安全な通路と画面操作は別の役割",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "remote-basics-4",
+          "type": "info",
+          "title": "アドレスは機器、ポートは受け口",
+          "body": "IP（Internet Protocol）のアドレスで通信先を指定し、TCP（Transmission Control Protocol）のポート番号で受け付ける処理を指定します。本問はVPN装置の入口がTCP 443、仮想PCのRDPがTCP 3389です。localhostは自分自身を指し、ここでは個人PC上のVPNクライアントが受け付けます。",
+          "format": "読む",
+          "theme": "アドレスは機器、ポートは受け口",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "remote-basics-5",
+          "type": "quiz",
+          "title": "個人PCのVDIクライアントがlocalhost:3389へ接続する。最初に受け付けるのはどこか。",
+          "choices": [
+            {
+              "text": "インターネットの全端末",
+              "ok": false,
+              "explain": "localhostは同報送信先ではありません。"
+            },
+            {
+              "text": "同じ個人PCのSSL-VPNクライアント",
+              "ok": true,
+              "explain": "そこからVPN内の接続へ中継します。"
+            },
+            {
+              "text": "社内の仮想PCへ直接届く",
+              "ok": false,
+              "explain": "localhostは自分自身であり社内PCの名前ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "個人PCのVDIクライアントがlocalhost:3389へ接続する。最初に受け付けるのはどこか。",
+          "scaffold": 4,
+          "stage": "apply"
+        }
+      ]
+    },
+    {
+      "id": "tls",
+      "title": "SSL-VPNの方式とTLSの保護を選ぶ",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "SSL-VPNの方式とTLSの保護を選ぶ",
+          "body": "TLSは、内容を隠す暗号化・相手の認証・改ざん検知を提供します。AEAD（Authenticated Encryption with Associated Data）は暗号化とメッセージ認証を組み合わせてデータを保護します。原問ではWeb専用、固定ポートの転送、動的ポートにも対応する三方式から、TCP 3389だけを使うRDPに適した方式を選びます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "要件",
+              "考えること"
+            ],
+            "rows": [
+              [
+                "内容を盗み見られたくない",
+                "通信内容の保護"
+              ],
+              [
+                "途中で変更されたくない",
+                "受信データの検査"
+              ],
+              [
+                "画面操作だけ通したい",
+                "必要な受け口の転送"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "tls-1",
+          "format": "読む",
+          "theme": "SSL-VPNの方式とTLSの保護を選ぶ",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "AEADが同時に行う二つの処理はどれか。",
+          "choices": [
+            {
+              "text": "圧縮と経路制御",
+              "ok": false,
+              "explain": "AEADのセキュリティ処理ではありません。"
+            },
+            {
+              "text": "名前解決と認可",
+              "ok": false,
+              "explain": "DNSと権限管理の処理です。"
+            },
+            {
+              "text": "暗号化とメッセージ認証",
+              "ok": true,
+              "explain": "秘匿性と改ざん検知をまとめて提供します。"
+            }
+          ],
+          "id": "tls-2",
+          "format": "選択",
+          "theme": "SSL-VPNの方式とTLSの保護を選ぶ",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "id": "tls-7",
+          "type": "quiz",
+          "title": "暗号化されていても、途中でデータを書き換えられたら困る。AEADのどの処理が必要か。",
+          "choices": [
+            {
+              "text": "暗号化だけ",
+              "ok": false,
+              "explain": "内容を隠すことと変更を検出することは別の性質です。"
+            },
+            {
+              "text": "通信の圧縮",
+              "ok": false,
+              "explain": "通信量を減らしても改ざんは検出できません。"
+            },
+            {
+              "text": "メッセージ認証",
+              "ok": true,
+              "explain": "改ざんを検出します。証明書による相手の身元確認とは役割が異なります。"
+            }
+          ],
+          "format": "選択",
+          "theme": "暗号化されていても、途中でデータを書き換えられたら困る。AEADのどの処理が必要か。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "tls-8",
+          "type": "info",
+          "title": "三つのVPN方式を使い分ける",
+          "body": "リバースプロキシ方式はWeb要求を中継します。ポートフォワーディング方式は指定したTCP/UDP（User Datagram Protocol）のポートへ中継します。原問のL2（Layer 2）フォワーディング方式は、動的にポートが変わるアプリケーションにも対応します。",
+          "format": "読む",
+          "theme": "三つのVPN方式を使い分ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "原問では固定TCP 3389番のRDPだけを使う。転送対象をそのポートに絞る方式はどれか。",
+          "choices": [
+            {
+              "text": "L2フォワーディング方式",
+              "ok": false,
+              "explain": "RDPも通せますが、動的ポートなど広い通信に対応する方式です。ここでは固定ポートに転送対象を絞る方式を選びます。"
+            },
+            {
+              "text": "ポートフォワーディング方式",
+              "ok": true,
+              "explain": "特定ポートの通信をVPN内へ転送します。"
+            },
+            {
+              "text": "リバースプロキシ方式",
+              "ok": false,
+              "explain": "主にWebアプリへのHTTP中継です。"
+            }
+          ],
+          "id": "tls-3",
+          "format": "選択",
+          "theme": "SSL-VPNの方式とTLSの保護を選ぶ",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "tls-9",
+          "type": "info",
+          "title": "公開鍵と一時的な鍵交換",
+          "body": "証明書には相手へ渡せる公開鍵が入り、秘密鍵は所有者が保持します。DHE（Diffie-Hellman Ephemeral）は一時的な値で共有の秘密を作る鍵交換、ECDHE（Elliptic Curve Diffie-Hellman Ephemeral）はその楕円曲線版です。原問の空欄カは「カ、ECDHE、PSK」という列挙なのでDHEを選びます。PSK（Pre-Shared Key）は事前共有鍵を使う方式です。",
+          "format": "読む",
+          "theme": "公開鍵と一時的な鍵交換",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "blank",
+          "title": "原問のア〜カを、保護・転送・鍵の役割に戻して選ぶ",
+          "template": "TLSは暗号化・相手の認証・{a}を提供する。動的ポートにも対応する方式は{b}。ポートフォワーディングは任意の{c}へ中継する。証明書は{d}鍵を含む。本問のRDPには{e}方式を選ぶ。原文の「カ、ECDHE、PSK」のカは{f}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ア",
+              "choices": [
+                {
+                  "text": "改ざん検知",
+                  "ok": true,
+                  "explain": "暗号化と認証に加わる機能です。"
+                },
+                {
+                  "text": "経路集約",
+                  "ok": false,
+                  "explain": "TLSの機能ではありません。"
+                },
+                {
+                  "text": "負荷分散",
+                  "ok": false,
+                  "explain": "TLSの機能ではありません。"
+                }
+              ],
+              "why": "暗号化と認証に加わる機能です。"
+            },
+            {
+              "key": "b",
+              "label": "イ",
+              "choices": [
+                {
+                  "text": "L2フォワーディング",
+                  "ok": true,
+                  "explain": "固定ポートの転送にとどまらず、原問では動的に変わるポートの通信にも対応します。"
+                },
+                {
+                  "text": "DNSフォワーディング",
+                  "ok": false,
+                  "explain": "名前解決の転送です。"
+                },
+                {
+                  "text": "VRRP",
+                  "ok": false,
+                  "explain": "ゲートウェイ冗長化です。"
+                }
+              ],
+              "why": "固定ポートの転送にとどまらず、原問では動的に変わるポートの通信にも対応します。"
+            },
+            {
+              "key": "c",
+              "label": "ウ",
+              "choices": [
+                {
+                  "text": "ポート",
+                  "ok": true,
+                  "explain": "TCPやUDPの待受け先です。"
+                },
+                {
+                  "text": "VLANだけ",
+                  "ok": false,
+                  "explain": "任意ポートへの接続説明と合いません。"
+                },
+                {
+                  "text": "証明書",
+                  "ok": false,
+                  "explain": "接続先番号ではありません。"
+                }
+              ],
+              "why": "TCPやUDPの待受け先です。"
+            },
+            {
+              "key": "d",
+              "label": "エ",
+              "choices": [
+                {
+                  "text": "公開",
+                  "ok": true,
+                  "explain": "検証に使える鍵が証明書に入ります。"
+                },
+                {
+                  "text": "秘密",
+                  "ok": false,
+                  "explain": "秘密鍵は所有者だけが保持します。"
+                },
+                {
+                  "text": "共通",
+                  "ok": false,
+                  "explain": "X.509のSubject公開鍵情報とは違います。"
+                }
+              ],
+              "why": "検証に使える鍵が証明書に入ります。"
+            },
+            {
+              "key": "e",
+              "label": "オ",
+              "choices": [
+                {
+                  "text": "ポートフォワーディング",
+                  "ok": true,
+                  "explain": "固定RDPポートを転送します。"
+                },
+                {
+                  "text": "リバースプロキシ",
+                  "ok": false,
+                  "explain": "Web専用の選択ではありません。"
+                },
+                {
+                  "text": "パケットモード",
+                  "ok": false,
+                  "explain": "ECMPの振分け方式です。"
+                }
+              ],
+              "why": "固定RDPポートを転送します。"
+            },
+            {
+              "key": "f",
+              "label": "カ",
+              "choices": [
+                {
+                  "text": "DHE",
+                  "ok": true,
+                  "explain": "原文がECDHEとPSKを別に挙げているので、残る有限体の一時DH鍵交換を答えます。TLS 1.3の全接続がDHEだけという意味ではありません。"
+                },
+                {
+                  "text": "静的RSA",
+                  "ok": false,
+                  "explain": "TLS 1.3では規定されません。"
+                },
+                {
+                  "text": "NAPT",
+                  "ok": false,
+                  "explain": "鍵交換方式ではありません。"
+                }
+              ],
+              "why": "原文がECDHEとPSKを別に挙げているので、残る有限体の一時DH鍵交換を答えます。TLS 1.3の全接続がDHEだけという意味ではありません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 4,
+            "top": 0.08,
+            "bottom": 0.75,
+            "label": "原文：SSL-VPN方式、TLS、証明書"
+          },
+          "id": "tls-4",
+          "format": "穴埋め",
+          "theme": "SSL-VPNの方式とTLSの保護を選ぶ",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "RDPを利用するまでを並べる",
+          "lead": "個人PCに二つのクライアントがあります。",
+          "lines": [
+            {
+              "code": "SSL-VPNクライアントがTLS 1.3で装置へ接続する"
+            },
+            {
+              "code": "ポートフォワーディングでlocalhost:3389を待ち受ける"
+            },
+            {
+              "code": "VDIクライアントがlocalhost:3389へ接続する"
+            },
+            {
+              "code": "VPN内で仮想PCの3389番へ中継する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "VPN接続とVDI操作の入口を分けます。",
+          "ngExplain": "VDIクライアントが直接インターネット上の仮想PCへ接続しません。",
+          "id": "tls-5",
+          "format": "並べ替え",
+          "theme": "SSL-VPNの方式とTLSの保護を選ぶ",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "練習用の条件変更：固定3389だけのRDPから、接続ごとに動的ポートを使う別アプリに変えた。原問の分類で検討する方式はどれか。",
+          "choices": [
+            {
+              "text": "AEADを無効にする",
+              "ok": false,
+              "explain": "ポート要件の変更に暗号保護の無効化は不要です。"
+            },
+            {
+              "text": "L2フォワーディング方式",
+              "ok": true,
+              "explain": "原問では動的ポートにも対応する方式です。"
+            },
+            {
+              "text": "Subjectを削除する",
+              "ok": false,
+              "explain": "VPNの転送範囲とは関係しません。"
+            }
+          ],
+          "id": "tls-6",
+          "format": "選択",
+          "theme": "SSL-VPNの方式とTLSの保護を選ぶ",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "certificate-fields",
+      "title": "証明書の「誰」と「誰が発行したか」を分ける",
+      "targets": [
+        "s1",
+        "s2-2",
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "certificate-fields-1",
+          "type": "info",
+          "title": "証明書は公開鍵に持ち主の情報を結び付ける",
+          "body": "CA（Certification Authority：認証局）が署名したX.509証明書には、Subject（証明対象の識別情報）、Issuer（発行者）、公開鍵、有効期間などが入ります。SubjectとIssuerは、それぞれ「誰の証明書か」と「誰が発行したか」を示します。",
+          "format": "読む",
+          "theme": "証明書は公開鍵に持ち主の情報を結び付ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "certificate-fields-2",
+          "type": "quiz",
+          "title": "証明対象が利用者A、発行者が認証局Bの証明書。Subjectに対応するのはどちらか。",
+          "choices": [
+            {
+              "text": "利用者A",
+              "ok": true,
+              "explain": "証明される側の識別情報です。"
+            },
+            {
+              "text": "認証局B",
+              "ok": false,
+              "explain": "発行者はIssuerで表します。"
+            },
+            {
+              "text": "VPNの宛先ポート443",
+              "ok": false,
+              "explain": "通信の受け口は証明対象ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "証明対象が利用者A、発行者が認証局Bの証明書。Subjectに対応するのはどちらか。",
+          "scaffold": 4,
+          "stage": "check"
+        },
+        {
+          "id": "certificate-fields-3",
+          "type": "quiz",
+          "title": "証明書のフィールドから「証明対象を識別する情報」を探す。選ぶフィールド名はどれか。",
+          "choices": [
+            {
+              "text": "Issuer",
+              "ok": false,
+              "explain": "認証局の識別情報です。"
+            },
+            {
+              "text": "有効期間",
+              "ok": false,
+              "explain": "利用できる期間であり証明対象の名前ではありません。"
+            },
+            {
+              "text": "Subject",
+              "ok": true,
+              "explain": "設問2(2)では値ではなくフィールド名を答えます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "証明書のフィールドから「証明対象を識別する情報」を探す。選ぶフィールド名はどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "id": "certificate-fields-4",
+          "type": "blank",
+          "title": "フィールド名と証明書の役割を結ぶ",
+          "template": "{subject}は証明対象を示し、証明書はその対象と{key}を結び付ける。",
+          "blanks": [
+            {
+              "key": "subject",
+              "label": "証明対象",
+              "choices": [
+                {
+                  "text": "Subject",
+                  "ok": true,
+                  "explain": "原問の下線②に対応します。"
+                },
+                {
+                  "text": "Issuer",
+                  "ok": false,
+                  "explain": "発行元を示すため役割が違います。"
+                }
+              ],
+              "why": "原問の下線②に対応します。"
+            },
+            {
+              "key": "key",
+              "label": "公開される情報",
+              "choices": [
+                {
+                  "text": "公開鍵",
+                  "ok": true,
+                  "explain": "秘密鍵の所持を確認するときなどに使います。"
+                },
+                {
+                  "text": "秘密鍵",
+                  "ok": false,
+                  "explain": "本人だけが保持する鍵を証明書に含めません。"
+                }
+              ],
+              "why": "秘密鍵の所持を確認するときなどに使います。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "フィールド名と証明書の役割を結ぶ",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "certificate-fields-5",
+          "type": "quiz",
+          "title": "練習用の条件：利用者Aの証明書のコピーだけを持ち、秘密鍵は持たない。本人と判断できるか。",
+          "choices": [
+            {
+              "text": "できる。SubjectにAと書いてある",
+              "ok": false,
+              "explain": "誰でもコピーできる文字列だけでは本人を証明できません。"
+            },
+            {
+              "text": "できない。対応する秘密鍵の所持も確かめる",
+              "ok": true,
+              "explain": "公開情報の複製と本人認証を分けます。次節で検証する側を整理します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：利用者Aの証明書のコピーだけを持ち、秘密鍵は持たない。本人と判断できるか。",
+          "scaffold": 2,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "cert",
+      "title": "証明書の本人性と信頼を検証する",
+      "targets": [
+        "s3-1",
+        "s3-2",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "証明書の本人性と信頼を検証する",
+          "body": "原問では本人だけがクライアント証明書に対応する秘密鍵を保有します。SSL-VPN装置は信頼するCAのルート証明書を起点に証明書を検証し、秘密鍵所持の証明も確認します。個人PCも接続先のサーバ証明書を検証し、なりすまし装置への接続を防ぎます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "利用者",
+                "d": "秘密鍵で所持を証明"
+              },
+              {
+                "t": "証明書",
+                "d": "利用者IDと公開鍵"
+              },
+              {
+                "t": "SSL-VPN装置",
+                "d": "CAのルート証明書で検証"
+              }
+            ],
+            "caption": "説明用の流れ"
+          },
+          "id": "cert-1",
+          "format": "読む",
+          "theme": "証明書の本人性と信頼を検証する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "証明書をコピーしただけの攻撃者が本人になれない根拠はどれか。",
+          "choices": [
+            {
+              "text": "証明書のファイル名が秘密だから",
+              "ok": false,
+              "explain": "ファイル名は暗号学的な根拠になりません。"
+            },
+            {
+              "text": "IPアドレスが永久に固定だから",
+              "ok": false,
+              "explain": "証明書の本人性とは別です。"
+            },
+            {
+              "text": "対応する秘密鍵を本人だけが保有する",
+              "ok": true,
+              "explain": "公開情報だけでは秘密鍵所持を証明できません。"
+            }
+          ],
+          "id": "cert-2",
+          "format": "選択",
+          "theme": "証明書の本人性と信頼を検証する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "装置がクライアント証明書の発行元を信頼するため事前に入れるものはどれか。",
+          "choices": [
+            {
+              "text": "個人PCのMAC一覧",
+              "ok": false,
+              "explain": "CA署名の検証には使いません。"
+            },
+            {
+              "text": "CAのルート証明書",
+              "ok": true,
+              "explain": "信頼の起点として署名を検証します。"
+            },
+            {
+              "text": "全利用者の秘密鍵",
+              "ok": false,
+              "explain": "秘密鍵を装置へ集めてはいけません。"
+            }
+          ],
+          "id": "cert-3",
+          "format": "選択",
+          "theme": "証明書の本人性と信頼を検証する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "検証する側とリスクを埋める",
+          "template": "装置は{a}を用いてクライアント証明書を検証する。個人PCがサーバ証明書を検証すると、{b}へ接続するリスクを減らす。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "信頼の起点",
+              "choices": [
+                {
+                  "text": "CAのルート証明書",
+                  "ok": true,
+                  "explain": "発行者の署名をたどる起点です。"
+                },
+                {
+                  "text": "利用者の秘密鍵",
+                  "ok": false,
+                  "explain": "利用者だけが保有します。"
+                },
+                {
+                  "text": "NATテーブル",
+                  "ok": false,
+                  "explain": "転送先の変換情報です。"
+                }
+              ],
+              "why": "発行者の署名をたどる起点です。"
+            },
+            {
+              "key": "b",
+              "label": "低減する接続",
+              "choices": [
+                {
+                  "text": "なりすまされたSSL-VPN装置",
+                  "ok": true,
+                  "explain": "接続先の本人性を確かめます。"
+                },
+                {
+                  "text": "正規の仮想PC",
+                  "ok": false,
+                  "explain": "正規装置への接続は低減対象ではありません。"
+                },
+                {
+                  "text": "社内DNSサーバ",
+                  "ok": false,
+                  "explain": "サーバ証明書検証の直接の対象ではありません。"
+                }
+              ],
+              "why": "接続先の本人性を確かめます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.08,
+            "bottom": 0.65,
+            "label": "原文：クライアント・サーバ証明書の相互検証"
+          },
+          "id": "cert-4",
+          "format": "穴埋め",
+          "theme": "証明書の本人性と信頼を検証する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "クライアント認証を因果順に並べる",
+          "lead": "次は理解のための確認手順です。実装上の細かな検証順序を一意に定めるものではありません。",
+          "lines": [
+            {
+              "code": "装置が信頼するCAのルート証明書を持つ"
+            },
+            {
+              "code": "利用者がクライアント証明書を提示する"
+            },
+            {
+              "code": "利用者が対応する秘密鍵の所持を証明する"
+            },
+            {
+              "code": "装置がCA署名と利用者IDを検証する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ],
+            [
+              0,
+              1,
+              3,
+              2
+            ]
+          ],
+          "okExplain": "CA署名を確認することと、利用者の秘密鍵所持を確認することの両方が必要です。両検証の順序は入れ替えてもこの説明は成立します。",
+          "ngExplain": "証明書の提示だけでは秘密鍵所持を確認できません。",
+          "id": "cert-5",
+          "format": "並べ替え",
+          "theme": "証明書の本人性と信頼を検証する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "練習用の条件：証明書の接続先名が、接続したFQDN（Fully Qualified Domain Name：完全修飾ドメイン名）と一致しない。どうするか。",
+          "choices": [
+            {
+              "text": "クライアント証明書を削除する",
+              "ok": false,
+              "explain": "サーバ側の名前不一致は解消しません。"
+            },
+            {
+              "text": "接続を中止してなりすましを疑う",
+              "ok": true,
+              "explain": "証明対象と接続先の不一致です。"
+            },
+            {
+              "text": "暗号化されているので続行する",
+              "ok": false,
+              "explain": "暗号相手が正規装置とは限りません。"
+            }
+          ],
+          "id": "cert-6",
+          "format": "選択",
+          "theme": "証明書の本人性と信頼を検証する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "forward-secrecy",
+      "title": "長期の鍵が漏れても過去の通信を守れるか",
+      "targets": [
+        "s1",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "forward-secrecy-1",
+          "type": "info",
+          "title": "盗聴記録が後日解読される問題",
+          "body": "RSA（Rivest–Shamir–Adleman）鍵交換では、長期使用するサーバ公開鍵で共有秘密を保護して送ります。その秘密鍵が後日漏れると、保存された過去の通信から共有秘密を復元されるおそれがあります。署名にRSAを使うことと、このRSA鍵交換は別です。",
+          "format": "読む",
+          "theme": "盗聴記録が後日解読される問題",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "forward-secrecy-2",
+          "type": "quiz",
+          "title": "練習用の条件：月曜のRSA鍵交換と暗号通信が記録され、水曜に同じサーバ秘密鍵が漏えいした。何が危険か。",
+          "choices": [
+            {
+              "text": "月曜の通信内容を後から復号され得る",
+              "ok": true,
+              "explain": "鍵が使われていた期間の記録も影響範囲です。"
+            },
+            {
+              "text": "水曜以降の通信だけが対象",
+              "ok": false,
+              "explain": "過去の共有秘密も復元され得る点を見落としています。"
+            },
+            {
+              "text": "公開された証明書だけが初めて読める",
+              "ok": false,
+              "explain": "証明書はもともと公開情報です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：月曜のRSA鍵交換と暗号通信が記録され、水曜に同じサーバ秘密鍵が漏えいした。何が危険か。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "forward-secrecy-3",
+          "type": "info",
+          "title": "一時鍵を使い、使い終わった秘密を消す",
+          "body": "DHE/ECDHEでは接続ごとの一時秘密を使います。一時秘密を適切に破棄すれば、後で認証用の長期秘密鍵だけが漏れても過去の通信鍵を復元できません。この性質を前方秘匿性と呼びます。TLS 1.3でもPSK単独方式や早期データまで同じ保証とは限りません。",
+          "format": "読む",
+          "theme": "一時鍵を使い、使い終わった秘密を消す",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "forward-secrecy-4",
+          "type": "parsons",
+          "title": "過去の通信を守る根拠を組み立てる",
+          "lead": "練習用の条件：DHEを用い、一時秘密の破棄後に長期認証鍵だけが漏れました。",
+          "lines": [
+            {
+              "code": "接続ごとに一時秘密を使って通信鍵を導く"
+            },
+            {
+              "code": "接続で使った一時秘密を破棄する"
+            },
+            {
+              "code": "後で漏れた長期認証鍵からは過去の通信鍵を復元できない"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "一時鍵交換と長期の認証鍵の役割を分けた結果です。",
+          "ngExplain": "証明書の公開鍵を隠したからではありません。",
+          "format": "並べ替え",
+          "theme": "過去の通信を守る根拠を組み立てる",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "forward-secrecy-5",
+          "type": "quiz",
+          "title": "練習用の条件変更：通信鍵そのものが端末から盗まれた。前方秘匿性だけでその通信を守れるか。",
+          "choices": [
+            {
+              "text": "守れない。漏れた通信鍵で復号され得る",
+              "ok": true,
+              "explain": "前方秘匿性が扱うのは長期鍵の後日漏えいであり、通信鍵そのものの窃取とは別です。"
+            },
+            {
+              "text": "必ず守れる。TLS 1.3だから",
+              "ok": false,
+              "explain": "バージョン名だけであらゆる鍵漏えいを防げません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件変更：通信鍵そのものが端末から盗まれた。前方秘匿性だけでその通信を守れるか。",
+          "scaffold": 2,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "keys",
+      "title": "前方秘匿性と証明書発行を理解する",
+      "targets": [
+        "s3-4",
+        "s3-5",
+        "s3-6"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "前方秘匿性と証明書発行を理解する",
+          "body": "CSR（Certificate Signing Request：証明書署名要求）は、利用者が自分の公開鍵を証明してもらうためにCAへ提出する要求です。利用者が秘密鍵でCSRに署名し、CAは利用者の公開鍵でその署名を検証します。CRL（Certificate Revocation List：証明書失効リスト）では、その発行CA内のシリアル番号で証明書を区別します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "対象",
+              "確認すること"
+            ],
+            "rows": [
+              [
+                "CSR",
+                "要求者が鍵を持つか"
+              ],
+              [
+                "発行された証明書",
+                "CAが内容を保証しているか"
+              ],
+              [
+                "失効",
+                "どの発行物を使えなくするか"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "keys-1",
+          "format": "読む",
+          "theme": "前方秘匿性と証明書発行を理解する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "静的RSA鍵交換で秘密鍵漏えい後に復号対象となり得る範囲はどれか。",
+          "choices": [
+            {
+              "text": "漏えい後の公開Webだけ",
+              "ok": false,
+              "explain": "問題は過去の記録通信にも及びます。"
+            },
+            {
+              "text": "証明書のSubjectだけ",
+              "ok": false,
+              "explain": "Subjectは公開情報です。"
+            },
+            {
+              "text": "漏えい前に記録された通信データ",
+              "ok": true,
+              "explain": "同じ秘密鍵で過去の共有秘密を復元され得ます。"
+            }
+          ],
+          "id": "keys-2",
+          "format": "選択",
+          "theme": "前方秘匿性と証明書発行を理解する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "CSRへの署名と検証の鍵の組はどれか。",
+          "choices": [
+            {
+              "text": "CAの秘密鍵で利用者が署名する",
+              "ok": false,
+              "explain": "利用者はCAの秘密鍵を持ちません。"
+            },
+            {
+              "text": "秘密鍵で署名し、公開鍵で検証する",
+              "ok": true,
+              "explain": "公開鍵暗号の署名の基本関係です。"
+            },
+            {
+              "text": "公開鍵で署名し、秘密鍵で検証する",
+              "ok": false,
+              "explain": "機密化と署名を逆にしています。"
+            }
+          ],
+          "id": "keys-3",
+          "format": "選択",
+          "theme": "前方秘匿性と証明書発行を理解する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "keys-7",
+          "type": "quiz",
+          "title": "CSRの署名検証と、CAが発行した証明書の署名検証では、検証する公開鍵は同じか。",
+          "choices": [
+            {
+              "text": "両方ともCAの公開鍵",
+              "ok": false,
+              "explain": "CSRに署名したのは利用者です。"
+            },
+            {
+              "text": "両方とも利用者の秘密鍵",
+              "ok": false,
+              "explain": "検証者へ秘密鍵を渡す必要はありません。"
+            },
+            {
+              "text": "違う。CSRは利用者、証明書は発行CAの公開鍵",
+              "ok": true,
+              "explain": "署名者の公開鍵を使います。利用者のCSR署名とCAの発行署名を区別します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "CSRの署名検証と、CAが発行した証明書の署名検証では、検証する公開鍵は同じか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "三つの回答要素を組み立てる",
+          "template": "復号され得るのは{a}。CSRは{b}で署名し{c}で検証する。CRLは{d}で証明書を識別する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "範囲",
+              "choices": [
+                {
+                  "text": "秘密鍵が漏えいする前に行われた通信データ",
+                  "ok": true,
+                  "explain": "前方秘匿性がない方式の問題です。"
+                },
+                {
+                  "text": "公開鍵の発行後の名前だけ",
+                  "ok": false,
+                  "explain": "通信データの範囲を答えていません。"
+                },
+                {
+                  "text": "失効後のDNS問合せだけ",
+                  "ok": false,
+                  "explain": "鍵交換の影響範囲ではありません。"
+                }
+              ],
+              "why": "前方秘匿性がない方式の問題です。"
+            },
+            {
+              "key": "b",
+              "label": "署名鍵",
+              "choices": [
+                {
+                  "text": "利用者の秘密鍵",
+                  "ok": true,
+                  "explain": "鍵の所有者が要求へ署名します。"
+                },
+                {
+                  "text": "利用者の公開鍵",
+                  "ok": false,
+                  "explain": "公開鍵は検証側に渡します。"
+                },
+                {
+                  "text": "CAの公開鍵",
+                  "ok": false,
+                  "explain": "利用者CSRの署名鍵ではありません。"
+                }
+              ],
+              "why": "鍵の所有者が要求へ署名します。"
+            },
+            {
+              "key": "c",
+              "label": "検証鍵",
+              "choices": [
+                {
+                  "text": "利用者の公開鍵",
+                  "ok": true,
+                  "explain": "CSRに含まれる公開鍵で署名を確認します。"
+                },
+                {
+                  "text": "利用者の秘密鍵",
+                  "ok": false,
+                  "explain": "検証側へ秘密鍵を渡しません。"
+                },
+                {
+                  "text": "共通鍵",
+                  "ok": false,
+                  "explain": "CSR署名は公開鍵方式です。"
+                }
+              ],
+              "why": "CSRに含まれる公開鍵で署名を確認します。"
+            },
+            {
+              "key": "d",
+              "label": "識別子",
+              "choices": [
+                {
+                  "text": "シリアル番号",
+                  "ok": true,
+                  "explain": "CAが発行証明書を一意に識別します。"
+                },
+                {
+                  "text": "Subjectだけ",
+                  "ok": false,
+                  "explain": "同一主体への再発行を区別できません。"
+                },
+                {
+                  "text": "MACアドレス",
+                  "ok": false,
+                  "explain": "証明書の識別子ではありません。"
+                }
+              ],
+              "why": "CAが発行証明書を一意に識別します。"
+            }
+          ],
+          "id": "keys-4",
+          "format": "穴埋め",
+          "theme": "前方秘匿性と証明書発行を理解する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "証明書の発行から失効までを並べる",
+          "lead": "利用者鍵とCA鍵の役割を分けます。",
+          "lines": [
+            {
+              "code": "利用者が鍵ペアを生成する"
+            },
+            {
+              "code": "利用者秘密鍵でCSRに署名する"
+            },
+            {
+              "code": "CAが利用者公開鍵でCSR署名を検証する"
+            },
+            {
+              "code": "CAが管理者の承認も確認し、CAの秘密鍵で証明書に署名して発行する"
+            },
+            {
+              "code": "失効時にシリアル番号をCRLへ載せる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            4,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          ],
+          "okExplain": "要求者の鍵所持を確認し、CAが証明書を管理します。",
+          "ngExplain": "CAの証明書署名と利用者のCSR署名は別の署名です。",
+          "id": "keys-5",
+          "format": "並べ替え",
+          "theme": "前方秘匿性と証明書発行を理解する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "同じCAが同じ利用者へ証明書を再発行した。二枚のうち失効対象を区別する情報はどれか。",
+          "choices": [
+            {
+              "text": "RDPのポート番号",
+              "ok": false,
+              "explain": "証明書識別には使いません。"
+            },
+            {
+              "text": "各証明書のシリアル番号",
+              "ok": true,
+              "explain": "同じSubjectでも発行物を区別できます。"
+            },
+            {
+              "text": "利用者IDだけ",
+              "ok": false,
+              "explain": "同じ利用者の複数証明書を区別できません。"
+            }
+          ],
+          "id": "keys-6",
+          "format": "選択",
+          "theme": "前方秘匿性と証明書発行を理解する",
+          "scaffold": 3,
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.03,
+            "bottom": 0.55,
+            "label": "原文：CSR発行と証明書失効"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mapping",
+      "title": "証明書の利用者を仮想PCへ結び付ける",
+      "targets": [
+        "s4-1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "mapping-7",
+          "type": "info",
+          "title": "利用者の固定情報と接続のたびの情報",
+          "body": "原問では、仮想PCのIPは利用者ごとに固定です。一方、VPNクライアントのIPは接続時にプールから割り当てます。ユーザテーブルは利用者と仮想PCの対応、NAT（Network Address Translation）テーブルは接続中のパケット転送に使う変換情報を保持します。",
+          "format": "読む",
+          "theme": "利用者の固定情報と接続のたびの情報",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "mapping-8",
+          "type": "info",
+          "title": "共通の入口を自分の仮想PCへ変換する",
+          "body": "VIP（Virtual IP address：仮想IPアドレス）は原問の装置内の共通の宛先です。DNAT（Destination NAT）は宛先IPアドレスの変換です。装置は認証した利用者の割当てに基づいて、VIP宛ての通信をその利用者の仮想PCへ中継します。",
+          "format": "読む",
+          "theme": "共通の入口を自分の仮想PCへ変換する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "info",
+          "title": "証明書の利用者を仮想PCへ結び付ける",
+          "body": "利用者ごとに固定の仮想PCがあります。SSL-VPN装置は利用者IDと仮想PCのIPの組をユーザテーブルに持ちます。TLSのCertificateメッセージを受けた時点で証明書から利用者IDを得ます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "時点",
+              "得る情報"
+            ],
+            "rows": [
+              [
+                "（VIII）Certificate",
+                "クライアント証明書と利用者ID"
+              ],
+              [
+                "認証成功後",
+                "ユーザテーブルを検索"
+              ],
+              [
+                "NAT作成",
+                "仮想PCのIPへDNAT"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "mapping-1",
+          "format": "読む",
+          "theme": "証明書の利用者を仮想PCへ結び付ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "ユーザテーブルのキーと値の組はどれか。",
+          "choices": [
+            {
+              "text": "クライアントIPとCA秘密鍵",
+              "ok": false,
+              "explain": "CA秘密鍵をテーブルへ入れません。"
+            },
+            {
+              "text": "サーバ証明書とFWのMAC",
+              "ok": false,
+              "explain": "仮想PCの選択に使えません。"
+            },
+            {
+              "text": "利用者IDとその仮想PCのIPアドレス",
+              "ok": true,
+              "explain": "認証した利用者を割当て済みPCへ結び付けます。"
+            }
+          ],
+          "id": "mapping-2",
+          "format": "選択",
+          "theme": "証明書の利用者を仮想PCへ結び付ける",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "id": "mapping-9",
+          "type": "quiz",
+          "title": "練習用の条件：利用者A→仮想PC 172.17.10.10、B→172.17.10.11。証明書はA、接続時のクライアントIPは172.16.3.9。ユーザテーブルの検索結果はどれか。",
+          "choices": [
+            {
+              "text": "172.16.3.9",
+              "ok": false,
+              "explain": "接続側に割り当てたIPであり、固定の仮想PCのIPではありません。"
+            },
+            {
+              "text": "172.17.10.11",
+              "ok": false,
+              "explain": "Bの仮想PCへつなぐと利用者の割当てを無視します。"
+            },
+            {
+              "text": "172.17.10.10",
+              "ok": true,
+              "explain": "検索キーは証明書から得たAであり、その人の仮想PCを選びます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：利用者A→仮想PC 172.17.10.10、B→172.17.10.11。証明書はA、接続時のクライアントIPは172.16.3.9。ユーザテーブルの検索結果はどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "type": "quiz",
+          "title": "原問の対応：IはClientHello、VはサーバCertificate、VIIIはクライアントCertificate、XはFinished。社員番号を得るメッセージはどれか。",
+          "choices": [
+            {
+              "text": "（X）Finished",
+              "ok": false,
+              "explain": "ハンドシェーク完全性を確認する段階です。"
+            },
+            {
+              "text": "（VIII）クライアントのCertificate",
+              "ok": true,
+              "explain": "証明書に社員番号を含める条件です。"
+            },
+            {
+              "text": "（I）ClientHello",
+              "ok": false,
+              "explain": "暗号条件などを提示しますが利用者証明書そのものではありません。"
+            }
+          ],
+          "id": "mapping-3",
+          "format": "選択",
+          "theme": "証明書の利用者を仮想PCへ結び付ける",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "検索情報と時点を埋める",
+          "template": "ユーザテーブルは{a}の組を持つ。検索キーは{b}から得る利用者IDで、時点は{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "テーブル内容",
+              "choices": [
+                {
+                  "text": "利用者IDと仮想PCのIPアドレス",
+                  "ok": true,
+                  "explain": "利用者ごとの割当てを表します。"
+                },
+                {
+                  "text": "利用者IDと全PCのMAC",
+                  "ok": false,
+                  "explain": "割当て先IPが必要です。"
+                },
+                {
+                  "text": "クライアントIPとポート443",
+                  "ok": false,
+                  "explain": "認証前後で割り当てる情報です。"
+                }
+              ],
+              "why": "利用者ごとの割当てを表します。"
+            },
+            {
+              "key": "b",
+              "label": "情報源",
+              "choices": [
+                {
+                  "text": "クライアント証明書",
+                  "ok": true,
+                  "explain": "社員番号を含めています。"
+                },
+                {
+                  "text": "サーバ証明書",
+                  "ok": false,
+                  "explain": "装置側の本人性を示します。"
+                },
+                {
+                  "text": "DNS応答",
+                  "ok": false,
+                  "explain": "利用者IDを含みません。"
+                }
+              ],
+              "why": "社員番号を含めています。"
+            },
+            {
+              "key": "c",
+              "label": "タイミング",
+              "choices": [
+                {
+                  "text": "VIII",
+                  "ok": true,
+                  "explain": "クライアントCertificateの送信です。"
+                },
+                {
+                  "text": "I",
+                  "ok": false,
+                  "explain": "ClientHelloでは証明書を送りません。"
+                },
+                {
+                  "text": "X",
+                  "ok": false,
+                  "explain": "証明書提示より後です。"
+                }
+              ],
+              "why": "クライアントCertificateの送信です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 8,
+            "top": 0.08,
+            "bottom": 0.72,
+            "label": "原図3：TLS 1.3の接続シーケンス"
+          },
+          "id": "mapping-4",
+          "format": "穴埋め",
+          "theme": "証明書の利用者を仮想PCへ結び付ける",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "仮想PCへの接続先を作る順を並べる",
+          "lead": "認証情報と転送情報を結び付けます。",
+          "lines": [
+            {
+              "code": "（VIII）でクライアント証明書を受信する"
+            },
+            {
+              "code": "証明書から利用者IDを得る"
+            },
+            {
+              "code": "利用者の認証成功を確認し、ユーザテーブルから仮想PCのIPを得る"
+            },
+            {
+              "code": "VIPを仮想PCのIPへ変換するNATエントリを作る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "利用者IDが割当て済み仮想PCを選ぶキーです。",
+          "ngExplain": "クライアントIPだけでは利用者の仮想PCを特定できません。",
+          "id": "mapping-5",
+          "format": "並べ替え",
+          "theme": "証明書の利用者を仮想PCへ結び付ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "利用者IDは正しいがユーザテーブルに仮想PCがない。どう扱うか。",
+          "choices": [
+            {
+              "text": "CAのルート証明書を仮想PCにする",
+              "ok": false,
+              "explain": "証明書は接続先PCではありません。"
+            },
+            {
+              "text": "接続先を決められないためエラーにする",
+              "ok": true,
+              "explain": "認証成功と接続先の存在は別です。"
+            },
+            {
+              "text": "任意の仮想PCへ接続する",
+              "ok": false,
+              "explain": "他人の環境へ接続する危険があります。"
+            }
+          ],
+          "id": "mapping-6",
+          "format": "選択",
+          "theme": "証明書の利用者を仮想PCへ結び付ける",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "cost-paths",
+      "title": "リンクの費用を足して同じ費用の道を数える",
+      "targets": [
+        "s5-1",
+        "s5-2"
+      ],
+      "steps": [
+        {
+          "id": "cost-paths-1",
+          "type": "info",
+          "title": "コストが小さい経路を選ぶ",
+          "body": "L3SW（Layer 3 Switch）はIPで転送経路を選ぶスイッチです。OSPF（Open Shortest Path First）は経路上の送出インタフェースのコストを足して比較します。同じ最小コストの道を複数使うECMP（Equal Cost Multi-Path）で、原問のM社とN社の両回線を平常時から利用します。",
+          "format": "読む",
+          "theme": "コストが小さい経路を選ぶ",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "cost-paths-2",
+          "type": "info",
+          "title": "練習用に原図の必要部分だけ取り出す",
+          "body": "L3SW11からM社網またはN社網へ出るコストは各50です。各網からL3SW31とL3SW32のどちらにも届き、それぞれからサーバセグメントへ出るコストは20です。広域イーサネット内のL2（Layer 2）転送にはOSPFルータのホップを追加しません。これは原図4の経路計算用の要約です。",
+          "format": "読む",
+          "theme": "練習用に原図の必要部分だけ取り出す",
+          "scaffold": 5,
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 310,
+            "nodes": [
+              {
+                "id": "start",
+                "x": 170,
+                "y": 28,
+                "label": "L3SW11",
+                "icon": "l3sw"
+              },
+              {
+                "id": "m",
+                "x": 75,
+                "y": 102,
+                "label": "M社網",
+                "icon": "cloud"
+              },
+              {
+                "id": "n",
+                "x": 265,
+                "y": 102,
+                "label": "N社網",
+                "icon": "cloud"
+              },
+              {
+                "id": "r31",
+                "x": 75,
+                "y": 184,
+                "label": "L3SW31",
+                "icon": "l3sw"
+              },
+              {
+                "id": "r32",
+                "x": 265,
+                "y": 184,
+                "label": "L3SW32",
+                "icon": "l3sw"
+              },
+              {
+                "id": "dest",
+                "x": 170,
+                "y": 255,
+                "label": "サーバ網",
+                "icon": "server"
+              }
+            ],
+            "links": [
+              {
+                "from": "start",
+                "to": "m",
+                "label": "送出50"
+              },
+              {
+                "from": "start",
+                "to": "n",
+                "label": "送出50"
+              },
+              {
+                "from": "m",
+                "to": "r31"
+              },
+              {
+                "from": "m",
+                "to": "r32"
+              },
+              {
+                "from": "n",
+                "to": "r31"
+              },
+              {
+                "from": "n",
+                "to": "r32"
+              },
+              {
+                "from": "r31",
+                "to": "dest",
+                "label": "送出20"
+              },
+              {
+                "from": "r32",
+                "to": "dest",
+                "label": "送出20"
+              }
+            ],
+            "caption": "説明用：原図4の計算対象を要約"
+          }
+        },
+        {
+          "id": "cost-paths-3",
+          "type": "quiz",
+          "title": "L3SW11からM社網へ50、L3SW31からサーバへ20。L3SW31の網側ポートの50は受信側。足す式はどれか。",
+          "choices": [
+            {
+              "text": "50＋50＋20",
+              "ok": false,
+              "explain": "受信側インタフェースの値まで二重に足しています。"
+            },
+            {
+              "text": "50だけ",
+              "ok": false,
+              "explain": "最後にサーバセグメントへ出る20が抜けています。"
+            },
+            {
+              "text": "50＋20",
+              "ok": true,
+              "explain": "進行方向に送出するインタフェースのコストを足します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "L3SW11からM社網へ50、L3SW31からサーバへ20。L3SW31の網側ポートの50は受信側。足す式はどれか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "cost-paths-4",
+          "type": "quiz",
+          "title": "出口M/Nの各々から31/32のどちらにも到達する。経路の組合せを重複なく数える式はどれか。",
+          "choices": [
+            {
+              "text": "2×2×2＝8",
+              "ok": false,
+              "explain": "サーバ側のL2スイッチをOSPFの別次ホップとして増やしてはいけません。"
+            },
+            {
+              "text": "2×2＝4",
+              "ok": true,
+              "explain": "M→31、M→32、N→31、N→32です。機器の最大対応数から数えたのではありません。"
+            },
+            {
+              "text": "2社なので2経路",
+              "ok": false,
+              "explain": "各社経由で31と32の二つの次ホップを選べる点を落としています。"
+            }
+          ],
+          "format": "選択",
+          "theme": "出口はM/Nの2通り。各出口から31/32の2台へ到達できる。経路の組合せ数はどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "id": "cost-paths-5",
+          "type": "blank",
+          "title": "経路数とコストを独立に答える",
+          "template": "同一コストの道は2×2で{count}本。一本のコストは50＋20で{cost}。",
+          "blanks": [
+            {
+              "key": "count",
+              "label": "経路数",
+              "choices": [
+                {
+                  "text": "4",
+                  "ok": true,
+                  "explain": "出口とデータセンタ側ルータの組合せです。"
+                },
+                {
+                  "text": "2",
+                  "ok": false,
+                  "explain": "データセンタ側の二つの選択を落としています。"
+                }
+              ],
+              "why": "出口とデータセンタ側ルータの組合せです。"
+            },
+            {
+              "key": "cost",
+              "label": "コスト",
+              "choices": [
+                {
+                  "text": "70",
+                  "ok": true,
+                  "explain": "経路に沿う送出コストの和です。"
+                },
+                {
+                  "text": "140",
+                  "ok": false,
+                  "explain": "複数経路のコストを合算するのではありません。"
+                }
+              ],
+              "why": "経路に沿う送出コストの和です。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "経路数とコストを独立に答える",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cost-paths-6",
+          "type": "quiz",
+          "title": "練習用の条件変更：N社へ出るコストだけ60にした。他は同じなら最小コストの経路数とコストはどれか。",
+          "choices": [
+            {
+              "text": "4経路、70",
+              "ok": false,
+              "explain": "N社経由のコスト変更を反映していません。"
+            },
+            {
+              "text": "4経路、150",
+              "ok": false,
+              "explain": "経路同士を足すのではなく一本ずつ比較します。"
+            },
+            {
+              "text": "M社経由の2経路、70",
+              "ok": true,
+              "explain": "N社経由は80となり最小コストではなくなります。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件変更：N社へ出るコストだけ60にした。他は同じなら最小コストの経路数とコストはどれか。",
+          "scaffold": 2,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "flow-hash",
+      "title": "同じ通信を同じ道へ送る理由",
+      "targets": [
+        "s5-3",
+        "s5-4"
+      ],
+      "steps": [
+        {
+          "id": "flow-hash-1",
+          "type": "info",
+          "title": "フローはひとまとまりの通信",
+          "body": "原問の装置は送信元IPと宛先IPの組からハッシュ値を計算し、その値で経路を決めます。ハッシュは入力を一定の計算規則で値に変える仕組みです。同じ組なら同じ経路を使い、経路ごとの遅延差による到着順の逆転を抑えます。一般の装置にはポート番号も使う実装があります。",
+          "format": "読む",
+          "theme": "フローはひとまとまりの通信",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "flow-hash-2",
+          "type": "quiz",
+          "title": "練習用の条件：1番目は20msの経路へ送る。1ms後に2番目を5msの経路へ送る。先に届くのはどちらか。",
+          "choices": [
+            {
+              "text": "1番目",
+              "ok": false,
+              "explain": "送信順だけでは経路遅延の差を相殺できません。"
+            },
+            {
+              "text": "必ず同時",
+              "ok": false,
+              "explain": "転送時間が異なります。"
+            },
+            {
+              "text": "2番目",
+              "ok": true,
+              "explain": "2番目は送信開始から6ms、1番目は20msで到着します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：1番目は20msの経路へ送る。1ms後に2番目を5msの経路へ送る。先に届くのはどちらか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "flow-hash-3",
+          "type": "quiz",
+          "title": "練習用の条件：多数のIPの組があり、各通信量も大きく偏らない。ほぼ均等な利用率の説明に必要なのはどれか。",
+          "choices": [
+            {
+              "text": "暗号文の長さをそろえること",
+              "ok": false,
+              "explain": "原問のハッシュ入力は暗号文ではありません。"
+            },
+            {
+              "text": "送信元IPと宛先IPから計算するハッシュ値が偏らないこと",
+              "ok": true,
+              "explain": "原問のハッシュ入力と分散の理由を両方含めます。"
+            },
+            {
+              "text": "同じIPの組のパケットを毎回別の経路へ送ること",
+              "ok": false,
+              "explain": "それでは原問のフローモードではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：多数のIPの組があり、各通信量も大きく偏らない。ほぼ均等な利用率の説明に必要なのはどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "id": "flow-hash-4",
+          "type": "blank",
+          "title": "通信品質と分散の二つの理由を答える",
+          "template": "同じIPの組を同じ道へ送るので{order}。多数の{input}から計算するハッシュ値が偏らなければ経路へ分散する。",
+          "blanks": [
+            {
+              "key": "order",
+              "label": "品質",
+              "choices": [
+                {
+                  "text": "到着順序の逆転が起こりにくい",
+                  "ok": true,
+                  "explain": "遅延差のある経路に同じ通信を分けないためです。"
+                },
+                {
+                  "text": "全通信が必ず同じ速度になる",
+                  "ok": false,
+                  "explain": "経路固定で速度まで一定にはできません。"
+                }
+              ],
+              "why": "遅延差のある経路に同じ通信を分けないためです。"
+            },
+            {
+              "key": "input",
+              "label": "原問の入力",
+              "choices": [
+                {
+                  "text": "送信元IPアドレスと宛先IPアドレスの組",
+                  "ok": true,
+                  "explain": "原問の装置の仕様です。"
+                },
+                {
+                  "text": "送信元ポートと宛先ポートだけ",
+                  "ok": false,
+                  "explain": "原問はIPアドレスの組を使う仕様です。"
+                }
+              ],
+              "why": "原問の装置の仕様です。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "通信品質と分散の二つの理由を答える",
+          "scaffold": 3,
+          "stage": "assemble"
+        }
+      ]
+    },
+    {
+      "id": "redundancy",
+      "title": "ECMPとVRRPを組み合わせる",
+      "targets": [
+        "s5-1",
+        "s5-2",
+        "s5-3",
+        "s5-4",
+        "s5-5"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "ECMPとVRRPを組み合わせる",
+          "body": "経路の選択はOSPFとECMPが担います。サーバの出口を冗長化するVRRP（Virtual Router Redundancy Protocol）は、一つの仮想ルータを複数機器で引き継ぐ仕組みです。原問では通常のマスタがL3SW31で、上流のaまたはbの障害を追跡し、サーバから戻る通信も健全なM/N両回線へ送れるようにします。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "役割",
+              "判断材料"
+            ],
+            "rows": [
+              [
+                "OSPF",
+                "経路コスト"
+              ],
+              [
+                "ECMP",
+                "同一最小コストの経路とハッシュ"
+              ],
+              [
+                "VRRP",
+                "マスタの優先度と障害追跡"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "redundancy-1",
+          "format": "読む",
+          "theme": "ECMPとVRRPを組み合わせる",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "パケットごとに別経路を選ぶ場合の通信品質上の問題はどれか。",
+          "choices": [
+            {
+              "text": "同一フローが必ず一経路になる",
+              "ok": false,
+              "explain": "それはフローモードです。"
+            },
+            {
+              "text": "経路数が必ず一つになる",
+              "ok": false,
+              "explain": "パケットモードでも複数経路を使います。"
+            },
+            {
+              "text": "到着順序が逆転しやすい",
+              "ok": true,
+              "explain": "経路ごとの遅延差で後のパケットが先に着き得ます。"
+            }
+          ],
+          "id": "redundancy-2",
+          "format": "選択",
+          "theme": "ECMPとVRRPを組み合わせる",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "フローモードで多数の送受信IP組があると利用率が分散する理由はどれか。",
+          "choices": [
+            {
+              "text": "VRRPが全経路を同時にマスタにする",
+              "ok": false,
+              "explain": "VRRPの役割と異なります。"
+            },
+            {
+              "text": "IPの組から得るハッシュ値が経路へ分散する",
+              "ok": true,
+              "explain": "異なる組が異なる値になりやすいためです。"
+            },
+            {
+              "text": "全パケットを複製する",
+              "ok": false,
+              "explain": "ECMPは複製ではなく経路選択です。"
+            }
+          ],
+          "id": "redundancy-3",
+          "format": "選択",
+          "theme": "ECMPとVRRPを組み合わせる",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "図4・図5の答えを組み立てる",
+          "template": "通常時は{a}。L3SW11からは{b}経路でコスト{c}。上流障害時はL3SW31の{d}を下げる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "目的",
+              "choices": [
+                {
+                  "text": "M社とN社の広域イーサネットの両方を利用する",
+                  "ok": true,
+                  "explain": "二契約を平常時にも活用します。"
+                },
+                {
+                  "text": "M社だけを利用する",
+                  "ok": false,
+                  "explain": "ECMPの目的と合いません。"
+                },
+                {
+                  "text": "N社を待機させる",
+                  "ok": false,
+                  "explain": "両方利用という条件と違います。"
+                }
+              ],
+              "why": "二契約を平常時にも活用します。"
+            },
+            {
+              "key": "b",
+              "label": "経路数",
+              "choices": [
+                {
+                  "text": "4",
+                  "ok": true,
+                  "explain": "二つの出口と二つのデータセンタ側経路の組です。"
+                },
+                {
+                  "text": "2",
+                  "ok": false,
+                  "explain": "図の同一コスト経路を一部落としています。"
+                },
+                {
+                  "text": "8",
+                  "ok": false,
+                  "explain": "図4の組合せは2×2です。最大対応数は装置の上限であり、図から経路数を数える根拠とは区別します。"
+                }
+              ],
+              "why": "二つの出口と二つのデータセンタ側経路の組です。"
+            },
+            {
+              "key": "c",
+              "label": "合計コスト",
+              "choices": [
+                {
+                  "text": "70",
+                  "ok": true,
+                  "explain": "図の50と20を足します。"
+                },
+                {
+                  "text": "50",
+                  "ok": false,
+                  "explain": "下流の20を落としています。"
+                },
+                {
+                  "text": "90",
+                  "ok": false,
+                  "explain": "送出コストは50と20です。途中のL2スイッチにはOSPFコストを加算しません。"
+                }
+              ],
+              "why": "図の50と20を足します。"
+            },
+            {
+              "key": "d",
+              "label": "VRRP動作",
+              "choices": [
+                {
+                  "text": "優先度",
+                  "ok": true,
+                  "explain": "マスタ選出を変える値です。"
+                },
+                {
+                  "text": "VRID",
+                  "ok": false,
+                  "explain": "グループ識別子であり障害時に下げる値ではありません。"
+                },
+                {
+                  "text": "TTL",
+                  "ok": false,
+                  "explain": "VRRPのマスタ選出値ではありません。"
+                }
+              ],
+              "why": "マスタ選出を変える値です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.04,
+            "bottom": 0.89,
+            "label": "原図4：ネットワーク構成とポートのコスト"
+          },
+          "id": "redundancy-4",
+          "format": "穴埋め",
+          "theme": "ECMPとVRRPを組み合わせる",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "id": "redundancy-7",
+          "type": "info",
+          "title": "上流の故障はサーバ側から見えないことがある",
+          "body": "原問のL3SW31は上流a/bの片側が壊れてもサーバ側インタフェースが生きています。通常のVRRP広告だけでは上流の健全性を判断できないので、インタフェース障害を追跡して優先度に反映します。優先度を下げてL3SW32へマスタを移し、両回線の利用を保ちます。",
+          "format": "読む",
+          "theme": "上流の故障はサーバ側から見えないことがある",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "redundancy-8",
+          "type": "quiz",
+          "title": "練習用の条件：31の優先度150、32は100。32が高優先度時にマスタへ切替わる設定で、a障害時に31を80へ下げる。何が起きるか。",
+          "choices": [
+            {
+              "text": "32がマスタになり、正常な両上流を使う",
+              "ok": true,
+              "explain": "80は100より低く、障害を優先度へ反映しています。"
+            },
+            {
+              "text": "31が150のままマスタを続ける",
+              "ok": false,
+              "explain": "トラッキングによる減算を無視しています。"
+            },
+            {
+              "text": "VRRPのグループ識別子を下げる",
+              "ok": false,
+              "explain": "選出を変えるのは優先度であり、グループの番号ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：31の優先度150、32は100。32が高優先度時にマスタへ切替わる設定で、a障害時に31を80へ下げる。何が起きるか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "type": "parsons",
+          "title": "上流障害でVRRPを切り替える順を並べる",
+          "lead": "練習用の補足条件：障害時の減算で31の優先度は32未満になり、32のプリエンプト（高優先度ならマスタを引き継ぐ動作）は有効です。",
+          "lines": [
+            {
+              "code": "L3SW31の上流インタフェース障害を検知する"
+            },
+            {
+              "code": "トラッキングでL3SW31のVRRP優先度を下げる"
+            },
+            {
+              "code": "L3SW32の優先度が相対的に高くなる"
+            },
+            {
+              "code": "L3SW32がマスタとなり健全な上流へ送る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "LAN側が生きていても上流障害をマスタ選出へ反映します。",
+          "ngExplain": "VRIDを変えるのではなく優先度を下げます。",
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.18,
+            "bottom": 0.78,
+            "label": "原図5：VRRPの上流トラッキング"
+          },
+          "id": "redundancy-5",
+          "format": "並べ替え",
+          "theme": "ECMPとVRRPを組み合わせる",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "練習用の条件変更：送信元と宛先IPが一組だけの大容量通信では、四つの経路へ均等になるか。",
+          "choices": [
+            {
+              "text": "パケット順序を逆転させれば均等になる",
+              "ok": false,
+              "explain": "順序逆転は品質上避ける対象です。"
+            },
+            {
+              "text": "なりにくい。同じフローは同じハッシュ結果になる",
+              "ok": true,
+              "explain": "多数のIP組があることが均等化の前提です。"
+            },
+            {
+              "text": "必ず四等分される",
+              "ok": false,
+              "explain": "フロー単位はパケットを四分割しません。"
+            }
+          ],
+          "id": "redundancy-6",
+          "format": "選択",
+          "theme": "ECMPとVRRPを組み合わせる",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

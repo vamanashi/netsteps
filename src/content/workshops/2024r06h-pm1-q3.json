@@ -1,0 +1,1786 @@
+{
+  "examKey": "2024r06h/pm1/3",
+  "title": "VPNとプロキシの経路から負荷軽減を考える",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm1_qs.pdf",
+    "https://www.rfc-editor.org/rfc/rfc4303"
+  ],
+  "sections": [
+    {
+      "id": "hub-keys",
+      "title": "接続の形と鍵の影響範囲",
+      "targets": [
+        "s1-1",
+        "s1-2",
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "hub-keys-01",
+          "format": "読む",
+          "theme": "接続の形と鍵の影響範囲",
+          "scaffold": 5,
+          "type": "info",
+          "title": "支社を本社へつなぐ",
+          "body": "大阪と仙台は、それぞれ本社へVPNを張ります。支社同士の直接トンネルはありません。本社と支社のペアに、あらかじめ同じ秘密の鍵を設定します。この鍵を別のペアと共用するか考えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "トンネル",
+              "両端に設定する鍵"
+            ],
+            "rows": [
+              [
+                "本社―大阪",
+                "鍵A"
+              ],
+              [
+                "本社―仙台",
+                "鍵B"
+              ]
+            ],
+            "caption": "説明用：本社を中心とする練習構成"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "hub-keys-02",
+          "format": "選択",
+          "theme": "接続の形と鍵の影響範囲",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "本社が中心、支社が枝となるVPNの構成名はどれか。",
+          "choices": [
+            {
+              "text": "ハブアンドスポーク",
+              "explain": "中心のハブと、各拠点のスポークを結ぶ構成です。",
+              "ok": true
+            },
+            {
+              "text": "フルメッシュ",
+              "explain": "全拠点間を直接接続する構成です。今回は支社間の直接接続がありません。",
+              "ok": false
+            },
+            {
+              "text": "DNSラウンドロビン",
+              "explain": "名前解決を使う振分けであり、VPNの接続形態ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "hub-keys-03",
+          "format": "選択",
+          "theme": "接続の形と鍵の影響範囲",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "ペアの両端へあらかじめ設定する同じ秘密の鍵はどれか。",
+          "choices": [
+            {
+              "text": "公開鍵",
+              "explain": "公開して配布できる鍵です。ここでは秘密として同じ値を共有します。",
+              "ok": false
+            },
+            {
+              "text": "ルータID",
+              "explain": "経路制御で装置を識別する値であり秘密鍵ではありません。",
+              "ok": false
+            },
+            {
+              "text": "事前共有鍵",
+              "explain": "接続する双方で事前に共有する鍵です。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "hub-keys-04",
+          "format": "選択",
+          "theme": "接続の形と鍵の影響範囲",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "大阪用の鍵Aが漏えいした。仙台に別の鍵Bを使う効果はどれか。",
+          "choices": [
+            {
+              "text": "全拠点の暗号化が不要になる",
+              "explain": "分離しても、各トンネルの保護は必要です。",
+              "ok": false
+            },
+            {
+              "text": "鍵Aの漏えいの影響を仙台のペアへ広げにくい",
+              "explain": "ペアごとの鍵の分離により、影響範囲を限定できます。",
+              "ok": true
+            },
+            {
+              "text": "鍵A自体が漏えいしなくなる",
+              "explain": "鍵を分けても、個々の鍵の漏えいは起こり得ます。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "hub-keys-05",
+          "format": "穴埋め",
+          "theme": "接続の形と鍵の影響範囲",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "接続形態と鍵の効果をまとめる",
+          "template": "構成は{a}型である。両端の{b}をペア別にし、漏えい時の{c}を小さくする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "形態",
+              "choices": [
+                {
+                  "text": "ハブアンドスポーク",
+                  "explain": "本社を中心に各支社を結びます。",
+                  "ok": true
+                },
+                {
+                  "text": "フルメッシュ",
+                  "explain": "支社同士にも直接トンネルが必要な形です。",
+                  "ok": false
+                }
+              ],
+              "why": "本社を中心に各支社を結びます。"
+            },
+            {
+              "key": "b",
+              "label": "鍵名",
+              "choices": [
+                {
+                  "text": "公開鍵",
+                  "explain": "公開する情報を秘密の共通鍵とは呼びません。",
+                  "ok": false
+                },
+                {
+                  "text": "事前共有鍵",
+                  "explain": "ペアの両端へ同じ値を設定します。",
+                  "ok": true
+                }
+              ],
+              "why": "ペアの両端へ同じ値を設定します。"
+            },
+            {
+              "key": "c",
+              "label": "効果",
+              "choices": [
+                {
+                  "text": "影響範囲",
+                  "explain": "別ペアの鍵を分けることで被害の広がりを抑えます。",
+                  "ok": true
+                },
+                {
+                  "text": "IPヘッダー長",
+                  "explain": "鍵の共用範囲とIPヘッダーの長さは別です。",
+                  "ok": false
+                }
+              ],
+              "why": "別ペアの鍵を分けることで被害の広がりを抑えます。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "hub-keys-06",
+          "format": "並べ替え",
+          "theme": "接続の形と鍵の影響範囲",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "鍵を分ける理由を組み立てる",
+          "lead": "鍵Aと鍵Bを異なる値にする設計です。",
+          "lines": [
+            {
+              "code": "本社と各支社のペアごとに異なる鍵を設定する"
+            },
+            {
+              "code": "あるペアの鍵が漏えいする"
+            },
+            {
+              "code": "別ペアの鍵までは同じ値で利用できない"
+            },
+            {
+              "code": "漏えい時の影響範囲を小さくできる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "漏えいしないという保証でなく、漏えい後の影響の限定です。",
+          "ngExplain": "条件はペアごとの分離です。その後で漏えいの範囲を説明します。",
+          "stage": "reason"
+        },
+        {
+          "id": "hub-keys-07",
+          "format": "選択",
+          "theme": "接続の形と鍵の影響範囲",
+          "scaffold": 2,
+          "type": "quiz",
+          "title": "条件変更：全支社で同じ鍵を使っていた。1支社で漏えいした場合の見直し範囲はどれか。",
+          "choices": [
+            {
+              "text": "どのペアも変更不要",
+              "explain": "漏えいした鍵を使い続ける理由にはなりません。",
+              "ok": false
+            },
+            {
+              "text": "同じ鍵を使う全ペア",
+              "explain": "共通の秘密が失われたので、利用する全ペアが影響対象です。",
+              "ok": true
+            },
+            {
+              "text": "漏えいした支社の画面設定だけ",
+              "explain": "鍵の共用先にも同じ秘密が使われています。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "esp-range",
+      "title": "二重のIPヘッダーから暗号化範囲を追う",
+      "targets": [
+        "s1-4"
+      ],
+      "steps": [
+        {
+          "id": "esp-range-01",
+          "format": "読む",
+          "theme": "二重のIPヘッダーから暗号化範囲を追う",
+          "scaffold": 5,
+          "type": "info",
+          "title": "先にIPを包み、その後に暗号化する",
+          "body": "元のIPパケットをIP in IPで包みます。すると元のIPヘッダーの外側に、もう一つIPヘッダーが付きます。ESPはEncapsulating Security Payloadです。暗号化の対象は、ESPへ渡すパケットを基準に考えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "層",
+              "内容"
+            ],
+            "rows": [
+              [
+                "IP-IPの外側",
+                "拠点間を運ぶIPヘッダー"
+              ],
+              [
+                "その内側",
+                "元のIPヘッダー＋元のIPペイロード"
+              ],
+              [
+                "ESP",
+                "暗号化と完全性の保護に使う構造"
+              ]
+            ],
+            "caption": "説明用：原問を読む前の包み方"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "esp-range-02",
+          "format": "選択",
+          "theme": "二重のIPヘッダーから暗号化範囲を追う",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "IP-IPで追加したIPヘッダーの内側は何か。",
+          "choices": [
+            {
+              "text": "元のペイロードだけ",
+              "explain": "IP-IPでは元のIPヘッダーも保持して包みます。",
+              "ok": false
+            },
+            {
+              "text": "ESP認証データだけ",
+              "explain": "この段階はIP-IPです。まだESPの処理を加えていません。",
+              "ok": false
+            },
+            {
+              "text": "元のIPパケット全体",
+              "explain": "元のIPヘッダーも含めて内側へ入ります。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "esp-range-03",
+          "format": "選択",
+          "theme": "二重のIPヘッダーから暗号化範囲を追う",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "原問のトランスポートモードは、何をIPのペイロードとして暗号化するか。",
+          "choices": [
+            {
+              "text": "ESP認証データだけ",
+              "explain": "認証データと暗号化対象は別です。",
+              "ok": false
+            },
+            {
+              "text": "IP-IPの内側にある元のIPパケットとESPトレーラ",
+              "explain": "IP-IPの外側ヘッダーは転送に使うため残ります。",
+              "ok": true
+            },
+            {
+              "text": "外側IPヘッダーだけ",
+              "explain": "宛先を読む外側ヘッダーをこのモードでは暗号化しません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "esp-range-04",
+          "format": "穴埋め",
+          "theme": "二重のIPヘッダーから暗号化範囲を追う",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "トンネルモードへ変えたときの三要素を入れる",
+          "template": "暗号化範囲は、図2の{a}、{b}、{c}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "追加で含まれるもの",
+              "choices": [
+                {
+                  "text": "IPヘッダー",
+                  "explain": "IP-IPで付けたヘッダーも内側へ入ります。さらに新しい外側IPヘッダーが付きます。",
+                  "ok": true
+                },
+                {
+                  "text": "ESPヘッダー",
+                  "explain": "ESPヘッダー自体は、この暗号化対象に含めません。",
+                  "ok": false
+                }
+              ],
+              "why": "IP-IPで付けたヘッダーも内側へ入ります。さらに新しい外側IPヘッダーが付きます。"
+            },
+            {
+              "key": "b",
+              "label": "中身",
+              "choices": [
+                {
+                  "text": "元のIPペイロードだけ",
+                  "explain": "元のIPヘッダーを落としてしまいます。",
+                  "ok": false
+                },
+                {
+                  "text": "元のIPパケット",
+                  "explain": "元のIPヘッダーとペイロードの両方を含みます。",
+                  "ok": true
+                }
+              ],
+              "why": "元のIPヘッダーとペイロードの両方を含みます。"
+            },
+            {
+              "key": "c",
+              "label": "末尾",
+              "choices": [
+                {
+                  "text": "ESPトレーラ",
+                  "explain": "暗号化範囲に含めます。",
+                  "ok": true
+                },
+                {
+                  "text": "ESP認証データ",
+                  "explain": "暗号化範囲の末尾に含めるのはESPトレーラです。",
+                  "ok": false
+                }
+              ],
+              "why": "暗号化範囲に含めます。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 17,
+            "top": 0.62,
+            "bottom": 0.83,
+            "label": "図2のIP-IPとESPの構造（IPA原図）"
+          }
+        },
+        {
+          "id": "esp-range-05",
+          "format": "並べ替え",
+          "theme": "二重のIPヘッダーから暗号化範囲を追う",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "トンネルモードで包む順序を組み立てる",
+          "lead": "図2のIP-IP済みパケットを、ESPのトンネルモードへ渡します。",
+          "lines": [
+            {
+              "code": "IP-IPのIPヘッダーと元のIPパケットを一体の内側データにする"
+            },
+            {
+              "code": "ESPトレーラを加えて暗号化する"
+            },
+            {
+              "code": "ESPヘッダーと認証データを配置する"
+            },
+            {
+              "code": "転送用の新しい外側IPヘッダーを付ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "暗号化する古いIPヘッダーと、転送用に追加する新しいものを分けます。",
+          "ngExplain": "元のIPパケットの外に、IP-IPのヘッダーが既にある点が鍵です。",
+          "stage": "reason"
+        },
+        {
+          "id": "esp-range-06",
+          "format": "選択",
+          "theme": "二重のIPヘッダーから暗号化範囲を追う",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：IP-IPを使わず元のIPパケットを直接ESPトンネルモードで包む。どう変わるか。",
+          "choices": [
+            {
+              "text": "元のIPヘッダーが暗号化されなくなる",
+              "explain": "トンネルモードでは元のIPパケット全体が内側に入ります。",
+              "ok": false
+            },
+            {
+              "text": "IP-IPが追加する中間のIPヘッダーは存在しない",
+              "explain": "包む前の構造が違います。原問の三要素を機械的に流用しません。",
+              "ok": true
+            },
+            {
+              "text": "新しい外側IPヘッダーまで暗号化する",
+              "explain": "転送用の外側IPヘッダーは読み取れる必要があります。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "tunnel-load",
+      "title": "トンネルの番号付けと転送負荷",
+      "targets": [
+        "s1-5",
+        "s1-6"
+      ],
+      "steps": [
+        {
+          "id": "tunnel-load-01",
+          "format": "読む",
+          "theme": "トンネルの番号付けと転送負荷",
+          "scaffold": 5,
+          "type": "info",
+          "title": "トンネルのためだけのIPを増やさない",
+          "body": "装置の外側インタフェースには固定IPがあります。論理的なトンネルインタフェースへ、専用のIPを割り当てない設定を使います。別に、カプセル化でパケットが大きくなる問題もあります。番号付けとパケット長を分けて考えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "設定",
+              "着目点"
+            ],
+            "rows": [
+              [
+                "IP Unnumbered",
+                "インタフェース専用のIPを割り当てない"
+              ],
+              [
+                "フラグメント防止",
+                "包んだ後のパケット長を抑える"
+              ]
+            ],
+            "caption": "説明用：異なる二つの設計条件"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "tunnel-load-02",
+          "format": "選択",
+          "theme": "トンネルの番号付けと転送負荷",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "IP Unnumbered設定の説明はどれか。",
+          "choices": [
+            {
+              "text": "対象インタフェースに専用のIPアドレスを割り当てない",
+              "explain": "必要に応じて別インタフェースのアドレスを利用します。IP通信をなくす意味ではありません。",
+              "ok": true
+            },
+            {
+              "text": "装置全体から全てのIPアドレスを消す",
+              "explain": "外側でIPsecを通信するためのIPアドレスは必要です。",
+              "ok": false
+            },
+            {
+              "text": "IPアドレスを毎回暗号鍵に変更する",
+              "explain": "アドレス割当てと鍵の設定は別です。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "tunnel-load-03",
+          "format": "選択",
+          "theme": "トンネルの番号付けと転送負荷",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "IPsecなどのヘッダーが増えると、元の長いパケットはどうなり得るか。",
+          "choices": [
+            {
+              "text": "元のパケットの全長が必ず短くなる",
+              "explain": "ヘッダーを加えるので、通常は全長が増えます。",
+              "ok": false
+            },
+            {
+              "text": "宛先IPアドレスが必ず重複する",
+              "explain": "長さの問題とアドレスの重複は別です。",
+              "ok": false
+            },
+            {
+              "text": "送信先回線で運べる最大長を超える",
+              "explain": "カプセル化によって転送する全体の長さが増えます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "tunnel-load-04",
+          "format": "選択",
+          "theme": "トンネルの番号付けと転送負荷",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "UTMでIPフラグメント処理が増えると、直接増えるものはどれか。",
+          "choices": [
+            {
+              "text": "サーバ証明書の有効期間",
+              "explain": "パケット分割と証明書の期限は関係しません。",
+              "ok": false
+            },
+            {
+              "text": "転送負荷",
+              "explain": "分割と複数パケットの処理が増えるためです。",
+              "ok": true
+            },
+            {
+              "text": "利用可能な物理帯域",
+              "explain": "分割によって回線容量そのものは増えません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "tunnel-load-05",
+          "format": "穴埋め",
+          "theme": "トンネルの番号付けと転送負荷",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "設定の説明と負荷への影響を完成する",
+          "template": "IP Unnumberedは{a}へのIPアドレスの割当てを行わない。IPフラグメント処理が増えると、UTMの{b}が増大する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "対象",
+              "choices": [
+                {
+                  "text": "全ての相手PC",
+                  "explain": "相手PCへのアドレス割当てを止める機能ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "対象インタフェース",
+                  "explain": "原問はIP-IP over IPsecインタフェースの設定です。",
+                  "ok": true
+                }
+              ],
+              "why": "原問はIP-IP over IPsecインタフェースの設定です。"
+            },
+            {
+              "key": "b",
+              "label": "影響",
+              "choices": [
+                {
+                  "text": "転送負荷",
+                  "explain": "パケットを分割する処理や転送数が増えます。",
+                  "ok": true
+                },
+                {
+                  "text": "暗号鍵の長さ",
+                  "explain": "分割の有無で鍵長は変化しません。",
+                  "ok": false
+                }
+              ],
+              "why": "パケットを分割する処理や転送数が増えます。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "tunnel-load-06",
+          "format": "並べ替え",
+          "theme": "トンネルの番号付けと転送負荷",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "フラグメント防止の理由を並べる",
+          "lead": "転送装置で何が増えるかを説明します。",
+          "lines": [
+            {
+              "code": "カプセル化により転送するパケットが大きくなる"
+            },
+            {
+              "code": "最大転送長を超えると分割処理が必要になる場合がある"
+            },
+            {
+              "code": "UTMが複数パケットを生成し転送する"
+            },
+            {
+              "code": "UTMの転送負荷が増大する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "原問はUTMへの影響を問うので、転送負荷まで書きます。",
+          "ngExplain": "大きくなる原因、処理、装置への影響の順にします。",
+          "stage": "reason"
+        },
+        {
+          "id": "tunnel-load-07",
+          "format": "選択",
+          "theme": "トンネルの番号付けと転送負荷",
+          "scaffold": 2,
+          "type": "quiz",
+          "title": "条件変更：TCPの送信データを小さくし、包んだ後も最大長以内にした。何が減るか。",
+          "choices": [
+            {
+              "text": "トンネル相手のIPアドレスが不要になる",
+              "explain": "サイズと接続先アドレスは別の情報です。",
+              "ok": false
+            },
+            {
+              "text": "UTMで必要になるIPフラグメント処理",
+              "explain": "包んだ後の長さを抑えることで分割を避けられます。",
+              "ok": true
+            },
+            {
+              "text": "IPsecの暗号化そのものが不要になる",
+              "explain": "長さを調整しても暗号化は引き続き必要です。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "pac-branch",
+      "title": "URLから使うプロキシを選ぶ",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "pac-branch-01",
+          "format": "読む",
+          "theme": "URLから使うプロキシを選ぶ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "一つのPCで通信先を分ける",
+          "body": "PACはProxy Auto-Configurationです。ブラウザはPACの関数へURLとホスト名を渡します。DIRECTならプロキシを使わず、PROXYなら指定した中継先を使います。条件に合った最初のreturnで処理が終わります。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "社内・プライベートIP",
+                "d": "DIRECT"
+              },
+              {
+                "t": "対象SaaS",
+                "d": "支社プロキシ"
+              },
+              {
+                "t": "その他",
+                "d": "本社プロキシ"
+              }
+            ],
+            "caption": "説明用：順番に評価する練習用の分岐"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "pac-branch-02",
+          "format": "選択",
+          "theme": "URLから使うプロキシを選ぶ",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "DIRECTはどのような指示か。",
+          "choices": [
+            {
+              "text": "必ず本社のプロキシを利用する",
+              "explain": "本社を使うならPROXYとして指定します。",
+              "ok": false
+            },
+            {
+              "text": "プロキシを利用せず通信する",
+              "explain": "ルータやVPNまで一切使わないという意味ではありません。",
+              "ok": true
+            },
+            {
+              "text": "インターネットへ物理的に直結する",
+              "explain": "DIRECTはプロキシの利用有無です。IP経路は別に決まります。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "pac-branch-03",
+          "format": "選択",
+          "theme": "URLから使うプロキシを選ぶ",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "DMZのWebサーバはプライベートIP。最初の条件でDIRECTとなる。次のSaaS条件は評価するか。",
+          "choices": [
+            {
+              "text": "しない。returnで関数から戻る",
+              "explain": "最初に一致した結果が使われます。",
+              "ok": true
+            },
+            {
+              "text": "後ろのPROXY指定で必ず上書きする",
+              "explain": "returnした後の分岐は実行されません。",
+              "ok": false
+            },
+            {
+              "text": "全部のプロキシへ同時に送る",
+              "explain": "このPACは条件に応じて一つの戻り値を返します。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "pac-branch-04",
+          "format": "穴埋め",
+          "theme": "URLから使うプロキシを選ぶ",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "原問の二つのアクセスを分ける",
+          "template": "DMZのWebサーバへは{a}。www.example.comへは{b}を利用する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "社内宛て",
+              "choices": [
+                {
+                  "text": "大阪支社のプロキシを利用する",
+                  "explain": "大阪プロキシは(c)のSaaS条件に該当した場合です。",
+                  "ok": false
+                },
+                {
+                  "text": "プロキシを利用しない",
+                  "explain": "DMZはプライベートIPなので(b)でDIRECTになります。",
+                  "ok": true
+                }
+              ],
+              "why": "DMZはプライベートIPなので(b)でDIRECTになります。"
+            },
+            {
+              "key": "b",
+              "label": "その他の外部宛て",
+              "choices": [
+                {
+                  "text": "プロキシを利用しない",
+                  "explain": "一般の外部ホストはDIRECT条件に合いません。",
+                  "ok": false
+                },
+                {
+                  "text": "proxy.a-sha.jp",
+                  "explain": "社内条件にもSaaS条件にも合わず、(d)へ進みます。",
+                  "ok": true
+                },
+                {
+                  "text": "proxy.osaka.a-sha.jp",
+                  "explain": "www.example.comは指定されたSaaSドメインではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "社内条件にもSaaS条件にも合わず、(d)へ進みます。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 19,
+            "top": 0.32,
+            "bottom": 0.89,
+            "label": "図4の(b)・(c)・(d)の分岐（IPA原図）"
+          }
+        },
+        {
+          "id": "pac-branch-05",
+          "format": "並べ替え",
+          "theme": "URLから使うプロキシを選ぶ",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "一般の外部サイトの分岐を追う",
+          "lead": "www.example.comはプライベートIPでなく、対象SaaSでもありません。",
+          "lines": [
+            {
+              "code": "社内ドメインやプライベートIPの条件に一致しない"
+            },
+            {
+              "code": "対象SaaSのドメイン条件にも一致しない"
+            },
+            {
+              "code": "最後のreturnへ進む"
+            },
+            {
+              "code": "proxy.a-sha.jpの8080番を利用する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "URLのパスではなく、ここではホスト名などの条件をたどります。",
+          "ngExplain": "先の条件でreturnしないことを確認してから、最後の指定へ進みます。",
+          "stage": "reason"
+        },
+        {
+          "id": "pac-branch-06",
+          "format": "選択",
+          "theme": "URLから使うプロキシを選ぶ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：hostがapp.c-saas.exampleで、IPは公開アドレス。どこへ送るか。",
+          "choices": [
+            {
+              "text": "大阪支社ならproxy.osaka.a-sha.jp",
+              "explain": "*.c-saas.exampleの条件に一致するので(c)の指定を使います。",
+              "ok": true
+            },
+            {
+              "text": "本社へ送る。全てのHTTPSは最後のreturnを使う",
+              "explain": "このPACはHTTPSかだけでなく、ホスト名の条件で分岐します。",
+              "ok": false
+            },
+            {
+              "text": "DIRECT。SaaSなら必ずプロキシ不要",
+              "explain": "原問のSaaSは支社のUTMプロキシを利用します。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "prefix-range",
+      "title": "マスクから範囲の両端を求める",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "prefix-range-01",
+          "format": "読む",
+          "theme": "マスクから範囲の両端を求める",
+          "scaffold": 5,
+          "type": "info",
+          "title": "172.16だけで終わらない範囲",
+          "body": "PACが172.16.0.0と255.240.0.0でIPを比較します。先頭12ビットがネットワーク部分です。第2オクテットの上位4ビットが0001で固定されます。残るビットを変えて範囲を作ります。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "第2オクテット",
+              "2進数",
+              "10進数"
+            ],
+            "rows": [
+              [
+                "固定部＋最小",
+                "0001 0000",
+                "16"
+              ],
+              [
+                "固定部＋最大",
+                "0001 1111",
+                "31"
+              ]
+            ],
+            "caption": "説明用：255.240.0.0は/12"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "prefix-range-02",
+          "format": "選択",
+          "theme": "マスクから範囲の両端を求める",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "第2オクテットの変化する下位4ビットは何通りか。",
+          "choices": [
+            {
+              "text": "4通り",
+              "explain": "4はビット数です。組合せ数は2の4乗になります。",
+              "ok": false
+            },
+            {
+              "text": "240通り",
+              "explain": "240はマスクの値で、可変部分の個数ではありません。",
+              "ok": false
+            },
+            {
+              "text": "16通り",
+              "explain": "2の4乗です。16から31までの16個になります。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "prefix-range-03",
+          "format": "選択",
+          "theme": "マスクから範囲の両端を求める",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "この範囲に含まれるアドレスはどれか。",
+          "choices": [
+            {
+              "text": "172.15.255.254",
+              "explain": "15は16より小さく、範囲外です。",
+              "ok": false
+            },
+            {
+              "text": "172.30.8.9",
+              "explain": "第2オクテットが16～31に含まれます。",
+              "ok": true
+            },
+            {
+              "text": "172.32.0.1",
+              "explain": "32は固定する上位4ビットが変わるため範囲外です。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "prefix-range-04",
+          "format": "穴埋め",
+          "theme": "マスクから範囲の両端を求める",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "アドレス空間の最初と最後を完成する",
+          "template": "最初は{a}、最後は{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "最初",
+              "choices": [
+                {
+                  "text": "172.16.0.1",
+                  "explain": "利用可能ホストの先頭ではなく、アドレス空間の先頭を求めています。",
+                  "ok": false
+                },
+                {
+                  "text": "172.16.0.0",
+                  "explain": "可変部を全て0にしたアドレスです。",
+                  "ok": true
+                }
+              ],
+              "why": "可変部を全て0にしたアドレスです。"
+            },
+            {
+              "key": "b",
+              "label": "最後",
+              "choices": [
+                {
+                  "text": "172.31.255.254",
+                  "explain": "ホスト割当て範囲と、今回のアドレス空間全体を混同しています。",
+                  "ok": false
+                },
+                {
+                  "text": "172.16.255.255",
+                  "explain": "第2オクテットの可変4ビットを考慮できていません。",
+                  "ok": false
+                },
+                {
+                  "text": "172.31.255.255",
+                  "explain": "可変部を全て1にしたアドレスです。",
+                  "ok": true
+                }
+              ],
+              "why": "可変部を全て1にしたアドレスです。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "prefix-range-05",
+          "format": "並べ替え",
+          "theme": "マスクから範囲の両端を求める",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "マスクから両端を出す順序",
+          "lead": "暗記した範囲だけに頼らず計算します。",
+          "lines": [
+            {
+              "code": "255.240.0.0を先頭12ビット固定と読む"
+            },
+            {
+              "code": "第2オクテットの上位4ビット0001を固定する"
+            },
+            {
+              "code": "残りのビットを全て0にして172.16.0.0を得る"
+            },
+            {
+              "code": "残りのビットを全て1にして172.31.255.255を得る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "設問は空間の両端です。ホスト用に1を足したり引いたりしません。",
+          "ngExplain": "固定する部分を先に決め、可変部の最小と最大を作ります。",
+          "stage": "reason"
+        },
+        {
+          "id": "prefix-range-06",
+          "format": "選択",
+          "theme": "マスクから範囲の両端を求める",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：172.16.0.0/13なら、アドレス空間の最後はどれか。",
+          "choices": [
+            {
+              "text": "172.16.0.255",
+              "explain": "これは/24に相当する範囲です。",
+              "ok": false
+            },
+            {
+              "text": "172.23.255.255",
+              "explain": "第2オクテットの可変部は3ビットです。16～23になります。",
+              "ok": true
+            },
+            {
+              "text": "172.31.255.255",
+              "explain": "これは/12の場合です。固定ビットが一つ増えています。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "proxy-load",
+      "title": "負荷を減らす場所と支社別設定",
+      "targets": [
+        "s2-4",
+        "s2-5"
+      ],
+      "steps": [
+        {
+          "id": "proxy-load-01",
+          "format": "読む",
+          "theme": "負荷を減らす場所と支社別設定",
+          "scaffold": 5,
+          "type": "info",
+          "title": "通信先によって本社を通すか変える",
+          "body": "本社のプロキシに社内通信まで集めると、中継処理が増えます。社内宛てはDIRECTにできます。SaaS宛てには、各支社のUTMプロキシを使います。支社ごとにその名前が異なる点を確認します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "通信先",
+              "大阪からの中継先",
+              "仙台からの中継先"
+            ],
+            "rows": [
+              [
+                "社内",
+                "利用しない",
+                "利用しない"
+              ],
+              [
+                "対象SaaS",
+                "大阪のUTM",
+                "仙台のUTM"
+              ],
+              [
+                "その他の外部",
+                "本社",
+                "本社"
+              ]
+            ],
+            "caption": "説明用：必要な中継だけを残す"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "proxy-load-02",
+          "format": "選択",
+          "theme": "負荷を減らす場所と支社別設定",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "プライベートIP宛てをDIRECTにして、最も直接減る処理はどれか。",
+          "choices": [
+            {
+              "text": "SaaS事業者のDNS管理",
+              "explain": "社内宛ての中継を省く効果とは異なります。",
+              "ok": false
+            },
+            {
+              "text": "本社プロキシサーバの中継処理",
+              "explain": "利用しない分だけ本社プロキシの負荷を軽減できます。",
+              "ok": true
+            },
+            {
+              "text": "全ルータの経路制御",
+              "explain": "DIRECTでもIP転送やVPNを使うことがあります。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "proxy-load-03",
+          "format": "選択",
+          "theme": "負荷を減らす場所と支社別設定",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "大阪のPACをそのまま仙台へ配ると、何が問題になり得るか。",
+          "choices": [
+            {
+              "text": "SaaS通信のプロキシ指定が大阪のままになる",
+              "explain": "支社ごとにUTMプロキシのFQDNが異なります。",
+              "ok": true
+            },
+            {
+              "text": "JavaScriptが支社名を自動的に修正する",
+              "explain": "そのような自動置換は原問のPACにはありません。",
+              "ok": false
+            },
+            {
+              "text": "全ての社内IPアドレスが変わる",
+              "explain": "PACはプロキシを選ぶもので、IPアドレスを割り当てません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "proxy-load-04",
+          "format": "穴埋め",
+          "theme": "負荷を減らす場所と支社別設定",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "効果と支社別に用意する理由を完成する",
+          "template": "DIRECTの効果は{a}の負荷軽減である。支社別PACが必要なのは{b}が異なるためである。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "対象",
+              "choices": [
+                {
+                  "text": "各PCのMACアドレス",
+                  "explain": "アドレスは処理負荷の主体ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "本社のプロキシサーバ",
+                  "explain": "不要な中継を通さないためです。",
+                  "ok": true
+                }
+              ],
+              "why": "不要な中継を通さないためです。"
+            },
+            {
+              "key": "b",
+              "label": "支社固有の情報",
+              "choices": [
+                {
+                  "text": "UTMプロキシサーバのFQDN",
+                  "explain": "Fully Qualified Domain Nameは完全なドメイン名です。各支社の中継先を特定します。",
+                  "ok": true
+                },
+                {
+                  "text": "HTTPというプロトコル名",
+                  "explain": "利用するプロトコルは支社ごとに別物になるわけではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "Fully Qualified Domain Nameは完全なドメイン名です。各支社の中継先を特定します。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "proxy-load-05",
+          "format": "並べ替え",
+          "theme": "負荷を減らす場所と支社別設定",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "支社ごとにPACを作る理由を並べる",
+          "lead": "大阪用を複製するときの確認です。",
+          "lines": [
+            {
+              "code": "SaaS通信は利用者がいる支社のUTMへ向けたい"
+            },
+            {
+              "code": "各支社のUTMプロキシのFQDNは異なる"
+            },
+            {
+              "code": "PAC内のPROXY指定を支社に対応させる"
+            },
+            {
+              "code": "各支社用のPACを用意する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "変更対象をFQDNまで具体化すると、理由が明確になります。",
+          "ngExplain": "単に支社が違うからでなく、PACで指定する中継先が違うためです。",
+          "stage": "reason"
+        },
+        {
+          "id": "proxy-load-06",
+          "format": "選択",
+          "theme": "負荷を減らす場所と支社別設定",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：仙台用PACでも一般サイトは本社へ送りたい。変更する箇所はどれか。",
+          "choices": [
+            {
+              "text": "対象SaaSのPROXYを仙台のUTMへ変える",
+              "explain": "最後の本社プロキシ指定は維持します。目的に関係する分岐だけ変更します。",
+              "ok": true
+            },
+            {
+              "text": "全てをDIRECTに変える",
+              "explain": "一般サイトを本社で記録する方針を満たせません。",
+              "ok": false
+            },
+            {
+              "text": "本社向けの最後のPROXYだけ大阪へ変える",
+              "explain": "SaaS用の支社指定が直らず、一般サイトの方針も崩れます。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "wpad-flow",
+      "title": "設定の場所の発見とファイル取得",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "wpad-flow-01",
+          "format": "読む",
+          "theme": "設定の場所の発見とファイル取得",
+          "scaffold": 5,
+          "type": "info",
+          "title": "PACファイルをどこから得るか",
+          "body": "PACはプロキシを選ぶ設定ファイルです。WPADはWeb Proxy Auto-Discoveryです。DHCPやDNSの仕組みで、設定ファイルの場所を見つけます。その場所からHTTPでPACを取得します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "場所を発見",
+                "d": "DHCP又はDNS"
+              },
+              {
+                "t": "ファイルを取得",
+                "d": "HTTP"
+              },
+              {
+                "t": "ファイルを実行",
+                "d": "DIRECT又はPROXYを選ぶ"
+              }
+            ],
+            "caption": "説明用：発見・取得・適用を分ける"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "wpad-flow-02",
+          "format": "選択",
+          "theme": "設定の場所の発見とファイル取得",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "PACの場所を発見するために使う組合せはどれか。",
+          "choices": [
+            {
+              "text": "ESPとOSPF",
+              "explain": "暗号化と経路制御であり、WPADの場所発見とは異なります。",
+              "ok": false
+            },
+            {
+              "text": "HTTPとTCPだけ",
+              "explain": "ファイル取得に関係しますが、原問の場所発見の二つはDHCPとDNSです。",
+              "ok": false
+            },
+            {
+              "text": "DHCPとDNS",
+              "explain": "DHCPは設定配布、DNSは名前解決の仕組みを利用します。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "wpad-flow-03",
+          "format": "選択",
+          "theme": "設定の場所の発見とファイル取得",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "場所が分かった後、原問でPACファイルをダウンロードするプロトコルはどれか。",
+          "choices": [
+            {
+              "text": "BGP",
+              "explain": "AS間の経路交換に使うプロトコルです。",
+              "ok": false
+            },
+            {
+              "text": "HTTP",
+              "explain": "Webサーバからファイルを取得します。",
+              "ok": true
+            },
+            {
+              "text": "DNSだけ",
+              "explain": "DNSは場所を探す役割です。PAC本文を取得するHTTPと区別します。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "wpad-flow-04",
+          "format": "穴埋め",
+          "theme": "設定の場所の発見とファイル取得",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "原問の四空欄を対応させる",
+          "template": "場所の発見は{a}と{b}、取得は{c}を使う。自動検出しない場合はPACの{d}を直接設定する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄イ",
+              "choices": [
+                {
+                  "text": "DHCP",
+                  "explain": "Dynamic Host Configuration Protocolです。場所の配布に使えます。",
+                  "ok": true
+                },
+                {
+                  "text": "IPsec",
+                  "explain": "拠点間の暗号トンネルであり、場所の配布とは異なります。",
+                  "ok": false
+                }
+              ],
+              "why": "Dynamic Host Configuration Protocolです。場所の配布に使えます。"
+            },
+            {
+              "key": "b",
+              "label": "空欄ウ",
+              "choices": [
+                {
+                  "text": "OSPF",
+                  "explain": "IP経路を学習するプロトコルです。",
+                  "ok": false
+                },
+                {
+                  "text": "DNS",
+                  "explain": "Domain Name Systemです。設定取得先の発見に使えます。",
+                  "ok": true
+                }
+              ],
+              "why": "Domain Name Systemです。設定取得先の発見に使えます。"
+            },
+            {
+              "key": "c",
+              "label": "空欄エ",
+              "choices": [
+                {
+                  "text": "HTTP",
+                  "explain": "Hypertext Transfer ProtocolでPACを取得します。",
+                  "ok": true
+                },
+                {
+                  "text": "DHCP",
+                  "explain": "ファイル本文のダウンロードを行うプロトコルではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "Hypertext Transfer ProtocolでPACを取得します。"
+            },
+            {
+              "key": "d",
+              "label": "空欄オ",
+              "choices": [
+                {
+                  "text": "事前共有鍵",
+                  "explain": "PACの場所を表す情報ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "URL",
+                  "explain": "Uniform Resource LocatorでPACファイルの場所を指定します。",
+                  "ok": true
+                }
+              ],
+              "why": "Uniform Resource LocatorでPACファイルの場所を指定します。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 20,
+            "top": 0.23,
+            "bottom": 0.54,
+            "label": "WPADでの場所配布・取得と直接設定（IPA原文）"
+          }
+        },
+        {
+          "id": "wpad-flow-05",
+          "format": "並べ替え",
+          "theme": "設定の場所の発見とファイル取得",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "WPADからプロキシ選択まで並べる",
+          "lead": "場所とファイルの中身を区別します。",
+          "lines": [
+            {
+              "code": "DHCP又はDNSでPACの場所を発見する"
+            },
+            {
+              "code": "HTTPでPACファイルをダウンロードする"
+            },
+            {
+              "code": "アクセス先をPACの条件へ渡す"
+            },
+            {
+              "code": "返されたDIRECT又はPROXYに従う"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "WPADは発見を自動化します。通信先ごとの判断はPACで行います。",
+          "ngExplain": "先に場所を知り、ファイルを取得した後で条件を評価します。",
+          "stage": "reason"
+        },
+        {
+          "id": "wpad-flow-06",
+          "format": "選択",
+          "theme": "設定の場所の発見とファイル取得",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：WPADを無効化し、PACのURLを直接指定した。失われる機能はどれか。",
+          "choices": [
+            {
+              "text": "全てのDNS名前解決",
+              "explain": "WPADの停止は通常のWebアクセスの名前解決を止めません。",
+              "ok": false
+            },
+            {
+              "text": "PACの場所の自動発見",
+              "explain": "PACによる通信先別のプロキシ選択は引き続き使えます。",
+              "ok": true
+            },
+            {
+              "text": "PACによる分岐機能の全て",
+              "explain": "URL指定で取得できれば、PACの処理は使えます。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "wpad-risk",
+      "title": "不正な配布元から中継先が変わる",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "wpad-risk-01",
+          "format": "読む",
+          "theme": "不正な配布元から中継先が変わる",
+          "scaffold": 5,
+          "type": "info",
+          "title": "設定を配る相手も信頼の対象",
+          "body": "PCが自動でPACの場所を探します。悪意あるDHCPやDNSが、偽のPACの場所を返したとします。偽PACは攻撃者のプロキシを指定しています。場所の発見が通信先の選択に影響する流れを追います。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "偽のDHCP・DNS",
+                "d": "不正なPAC取得先を案内"
+              },
+              {
+                "t": "不正なPAC",
+                "d": "攻撃者のPROXYを指定"
+              },
+              {
+                "t": "PCの通信",
+                "d": "不正なプロキシへ中継"
+              }
+            ],
+            "caption": "説明用：原問の脅威を短い場面にしたもの"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "wpad-risk-02",
+          "format": "選択",
+          "theme": "不正な配布元から中継先が変わる",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "偽PACを取得したPCの通信に起こることはどれか。",
+          "choices": [
+            {
+              "text": "IPsecの鍵が必ず自動更新される",
+              "explain": "PACはIPsecの鍵更新の設定ではありません。",
+              "ok": false
+            },
+            {
+              "text": "BGPのAS番号が必ず変更される",
+              "explain": "ブラウザのプロキシ設定とAS番号は別です。",
+              "ok": false
+            },
+            {
+              "text": "不正なプロキシサーバへ中継される",
+              "explain": "プロキシの指定が攻撃者のものに変わるためです。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "wpad-risk-03",
+          "format": "選択",
+          "theme": "不正な配布元から中継先が変わる",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "この脅威の原因を最も直接表すものはどれか。",
+          "choices": [
+            {
+              "text": "DIRECTの文字が暗号化されていない",
+              "explain": "問題は不正な取得先と、そのPACが指定する中継先です。",
+              "ok": false
+            },
+            {
+              "text": "信頼できない応答でPACの取得先が誘導される",
+              "explain": "設定ファイルの内容が正しいとは限らなくなります。",
+              "ok": true
+            },
+            {
+              "text": "HTTPであるだけで全ての署名が偽造される",
+              "explain": "プロキシ誘導と暗号署名の偽造は同じではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "wpad-risk-04",
+          "format": "穴埋め",
+          "theme": "不正な配布元から中継先が変わる",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "主体と結果を入れて脅威を説明する",
+          "template": "悪意あるDHCPやDNSに誘導された{a}の通信が、{b}に中継される。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "影響を受ける主体",
+              "choices": [
+                {
+                  "text": "PCやWebブラウザ",
+                  "explain": "自動検出を行い、PACを使う主体です。",
+                  "ok": true
+                },
+                {
+                  "text": "全てのOSPFルータ",
+                  "explain": "WPADはOSPFの経路交換を変更する仕組みではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "自動検出を行い、PACを使う主体です。"
+            },
+            {
+              "key": "b",
+              "label": "中継先",
+              "choices": [
+                {
+                  "text": "必ず正規の本社プロキシ",
+                  "explain": "配布内容が偽なら正規の指定とは限りません。",
+                  "ok": false
+                },
+                {
+                  "text": "不正なプロキシサーバ",
+                  "explain": "偽PACで攻撃者の中継先が指定されます。",
+                  "ok": true
+                }
+              ],
+              "why": "偽PACで攻撃者の中継先が指定されます。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "wpad-risk-05",
+          "format": "並べ替え",
+          "theme": "不正な配布元から中継先が変わる",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "不正中継までの因果関係を並べる",
+          "lead": "悪意あるサーバからの応答を採用した場合です。",
+          "lines": [
+            {
+              "code": "PCがWPADでPACの場所を探す"
+            },
+            {
+              "code": "不正なDHCPやDNSの応答を受け入れる"
+            },
+            {
+              "code": "不正なPACを取得して適用する"
+            },
+            {
+              "code": "通信が不正なプロキシサーバへ向けられる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "正規の送信先へ向かう前の、中継先選択が書き換わります。",
+          "ngExplain": "偽のファイルを受け取る前に、場所の発見が誘導されます。",
+          "stage": "reason"
+        },
+        {
+          "id": "wpad-risk-06",
+          "format": "選択",
+          "theme": "不正な配布元から中継先が変わる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：PACのURLを固定した。今後も必要な管理はどれか。",
+          "choices": [
+            {
+              "text": "全てのルータからIPアドレスを消す",
+              "explain": "配布元の管理にはならず、通信の到達性を失います。",
+              "ok": false
+            },
+            {
+              "text": "そのURLで配るPACの内容と配布元の管理",
+              "explain": "自動発見を止めても、配る設定ファイルの正当性は重要です。",
+              "ok": true
+            },
+            {
+              "text": "どんなPACでも無条件に信用する",
+              "explain": "設定内容が改変されれば、中継先も変わり得ます。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

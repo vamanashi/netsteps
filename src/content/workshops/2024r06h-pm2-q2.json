@@ -1,0 +1,2142 @@
+{
+  "examKey": "2024r06h/pm2/2",
+  "title": "メール配送と送信ドメイン認証を委託先へ広げる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm2_qs.pdf",
+    "https://www.rfc-editor.org/rfc/rfc7208",
+    "https://www.rfc-editor.org/rfc/rfc6376"
+  ],
+  "sections": [
+    {
+      "id": "dns-mail",
+      "title": "DNSの名前と優先度から配送先を選ぶ",
+      "targets": [
+        "s1-1",
+        "s1-2",
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "dns-mail-01",
+          "format": "読む",
+          "theme": "DNSの名前と優先度から配送先を選ぶ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "社内送信と社外受信で名前の使い方が違う",
+          "body": "社内メールサーバはmail.y-sha.lanを引きます。二つのAレコードがあり、DNSラウンドロビンで中継先を分けます。社外からY社へ送る側はMXレコードを見ます。MXはPreference値が小さい配送先を優先します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "用途",
+              "参照名・規則"
+            ],
+            "rows": [
+              [
+                "社内から中継",
+                "mail.y-sha.lanのAレコード"
+              ],
+              [
+                "社外から受信",
+                "y-sha.comのMXレコード"
+              ],
+              [
+                "MXの選択",
+                "Preferenceが小さい方"
+              ]
+            ],
+            "caption": "説明用：二つの名前解決"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "dns-mail-02",
+          "format": "選択",
+          "theme": "DNSの名前と優先度から配送先を選ぶ",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "社内メールサーバYが中継先を引くFQDNはどれか。",
+          "choices": [
+            {
+              "text": "mail.y-sha.lan",
+              "explain": "図3で二つのAレコードをもつ名前です。",
+              "ok": true
+            },
+            {
+              "text": "y-mail3.y-sha.lan",
+              "explain": "社内メールサーバ自身の名前です。中継先の振分け名ではありません。",
+              "ok": false
+            },
+            {
+              "text": "support@y-sha.com",
+              "explain": "これはメールアドレスで、Aレコードを引くFQDNではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "dns-mail-03",
+          "format": "選択",
+          "theme": "DNSの名前と優先度から配送先を選ぶ",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "DNSラウンドロビンの偏りを小さくするため、TTLを60秒にする理由はどれか。",
+          "choices": [
+            {
+              "text": "メール本文を60秒で削除する",
+              "explain": "TTLはDNS応答のキャッシュ時間です。メールの保存期間ではありません。",
+              "ok": false
+            },
+            {
+              "text": "必ず1秒ごとに二台へ同時送信する",
+              "explain": "TTLは同時送信を指示する値ではありません。",
+              "ok": false
+            },
+            {
+              "text": "同じ応答を長くキャッシュさせない",
+              "explain": "短時間で再問合せし、別のAレコードを得る機会を作ります。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "dns-mail-04",
+          "format": "選択",
+          "theme": "DNSの名前と優先度から配送先を選ぶ",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "MXのPreferenceが20と1なら、平常時に選ぶのはどちらか。",
+          "choices": [
+            {
+              "text": "AレコードのIPが小さい方",
+              "explain": "MXの選択はPreference値で決めます。",
+              "ok": false
+            },
+            {
+              "text": "1のy-mail2",
+              "explain": "MXは値が小さい配送先を優先します。",
+              "ok": true
+            },
+            {
+              "text": "20のy-mail1",
+              "explain": "値が大きい方を優先する規則ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "dns-mail-05",
+          "format": "穴埋め",
+          "theme": "DNSの名前と優先度から配送先を選ぶ",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "三つの空欄を完成する",
+          "template": "社内の転送先FQDNは{a}。MXは{b}値を比較し、平常時は{c}を選ぶ。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "設問1(1)",
+              "choices": [
+                {
+                  "text": "mail.y-sha.lan",
+                  "explain": "二つの中継サーバのAレコードをまとめる名前です。",
+                  "ok": true
+                },
+                {
+                  "text": "y-sha.com",
+                  "explain": "外部から受信するときのメールドメインです。",
+                  "ok": false
+                }
+              ],
+              "why": "二つの中継サーバのAレコードをまとめる名前です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄a",
+              "choices": [
+                {
+                  "text": "TTLだけ",
+                  "explain": "TTLはキャッシュ時間です。配送先の優先順位ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "Preference",
+                  "explain": "MXレコードの優先度を示す値です。",
+                  "ok": true
+                }
+              ],
+              "why": "MXレコードの優先度を示す値です。"
+            },
+            {
+              "key": "c",
+              "label": "空欄b",
+              "choices": [
+                {
+                  "text": "y-mail2",
+                  "explain": "Preference 1で、20のy-mail1より優先されます。",
+                  "ok": true
+                },
+                {
+                  "text": "y-mail1",
+                  "explain": "値20なので平常時の第一候補ではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "Preference 1で、20のy-mail1より優先されます。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 14,
+            "top": 0.45,
+            "bottom": 0.91,
+            "label": "図1・図2のメール構成とMX（IPA原図・原表）"
+          }
+        },
+        {
+          "id": "dns-mail-06",
+          "format": "並べ替え",
+          "theme": "DNSの名前と優先度から配送先を選ぶ",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "社内送信時の中継先を決める",
+          "lead": "社外からのMX選択とは分けます。",
+          "lines": [
+            {
+              "code": "社内メールサーバYがmail.y-sha.lanを問い合わせる"
+            },
+            {
+              "code": "TTL 60秒の二つのAレコードから応答を得る"
+            },
+            {
+              "code": "DNSラウンドロビンでY1又はY2のIPを得る"
+            },
+            {
+              "code": "選んだメール中継サーバへ転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "短いTTLは再問合せの機会を増やします。障害時の再送機能とは別です。",
+          "ngExplain": "名前、Aレコード、転送先の順に追います。",
+          "stage": "reason"
+        },
+        {
+          "id": "dns-mail-07",
+          "format": "選択",
+          "theme": "DNSの名前と優先度から配送先を選ぶ",
+          "scaffold": 2,
+          "type": "quiz",
+          "title": "条件変更：同じAレコードを端末が2日間キャッシュした。偏りはどうなり得るか。",
+          "choices": [
+            {
+              "text": "MXのPreferenceが自動的に同値になる",
+              "explain": "AレコードのTTLはMX値を書き換えません。",
+              "ok": false
+            },
+            {
+              "text": "同じ中継先を使い続け、偏りやすい",
+              "explain": "再問合せしなければ別の応答を得る機会が減ります。",
+              "ok": true
+            },
+            {
+              "text": "必ず毎回別のIPになる",
+              "explain": "長いキャッシュでは同じ応答を再利用します。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "nat-ptr",
+      "title": "公開IPから内部サーバと名前を追う",
+      "targets": [
+        "s1-4",
+        "s1-5"
+      ],
+      "steps": [
+        {
+          "id": "nat-ptr-01",
+          "format": "読む",
+          "theme": "公開IPから内部サーバと名前を追う",
+          "scaffold": 5,
+          "type": "info",
+          "title": "外から見えるIPと内部IPを対応させる",
+          "body": "外部DNSのAレコードでy-mail1.y-sha.comは200.a.b.1です。FWの静的NATで内部の192.168.0.1へ変換します。別に、逆引きはIPアドレスからPTRレコードでFQDNを得ます。攻撃者が自分のDNSを管理できる場合の限界も考えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "見える場所",
+              "y-mail1の値"
+            ],
+            "rows": [
+              [
+                "インターネット側",
+                "200.a.b.1"
+              ],
+              [
+                "DMZ内部",
+                "192.168.0.1"
+              ]
+            ],
+            "caption": "説明用：静的NATの一対一対応"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "nat-ptr-02",
+          "format": "選択",
+          "theme": "公開IPから内部サーバと名前を追う",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "外部の送信元がy-mail1へ接続する宛先IPはどれか。",
+          "choices": [
+            {
+              "text": "192.168.1.1",
+              "explain": "これは社内メールサーバYのIPです。",
+              "ok": false
+            },
+            {
+              "text": "200.a.b.1",
+              "explain": "外部DNSのAレコードで公開されるグローバルIPです。",
+              "ok": true
+            },
+            {
+              "text": "192.168.0.1",
+              "explain": "FWの内側へ変換した後のIPです。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "nat-ptr-03",
+          "format": "選択",
+          "theme": "公開IPから内部サーバと名前を追う",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "FWで200.a.b.1の宛先を変換した後はどれか。",
+          "choices": [
+            {
+              "text": "192.168.0.1",
+              "explain": "社内DNSのy-mail1のAレコードと対応します。",
+              "ok": true
+            },
+            {
+              "text": "200.a.b.2",
+              "explain": "これはy-mail2の公開IPです。",
+              "ok": false
+            },
+            {
+              "text": "mail.y-sha.lanという文字列",
+              "explain": "NATで変換するのはIPアドレスです。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "nat-ptr-04",
+          "format": "穴埋め",
+          "theme": "公開IPから内部サーバと名前を追う",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "NATの二空欄と名前解決を完成する",
+          "template": "表1のアは{a}、イは{b}。IPからFQDNを得るのはDNSの{c}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "外側IP",
+              "choices": [
+                {
+                  "text": "200.a.b.1",
+                  "explain": "y-mail1の外部Aレコードです。",
+                  "ok": true
+                },
+                {
+                  "text": "192.168.0.1",
+                  "explain": "これは変換後の内部IPです。",
+                  "ok": false
+                }
+              ],
+              "why": "y-mail1の外部Aレコードです。"
+            },
+            {
+              "key": "b",
+              "label": "変換後IP",
+              "choices": [
+                {
+                  "text": "200.a.b.1",
+                  "explain": "これは変換前です。",
+                  "ok": false
+                },
+                {
+                  "text": "192.168.0.1",
+                  "explain": "FWの内側のy-mail1へ届けます。",
+                  "ok": true
+                }
+              ],
+              "why": "FWの内側のy-mail1へ届けます。"
+            },
+            {
+              "key": "c",
+              "label": "空欄c",
+              "choices": [
+                {
+                  "text": "逆引き",
+                  "explain": "PTRレコードを参照してIPからFQDNを得ます。",
+                  "ok": true
+                },
+                {
+                  "text": "正引き",
+                  "explain": "正引きは名前からIPを得る方向です。",
+                  "ok": false
+                }
+              ],
+              "why": "PTRレコードを参照してIPからFQDNを得ます。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.07,
+            "bottom": 0.66,
+            "label": "表1の静的NATとPTRの説明（IPA原文・原表）"
+          }
+        },
+        {
+          "id": "nat-ptr-05",
+          "format": "選択",
+          "theme": "公開IPから内部サーバと名前を追う",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "逆引き名と送信元ドメインが一致した。なぜ正規とは限らないか。",
+          "choices": [
+            {
+              "text": "IPアドレスには文字列を一切対応付けられないから",
+              "explain": "PTRはIPからFQDNへの対応を表します。",
+              "ok": false
+            },
+            {
+              "text": "攻撃者が自分のPTRへ詐称ドメインのFQDNを登録できる",
+              "explain": "自分が管理する逆引き情報を都合よく設定できるためです。",
+              "ok": true
+            },
+            {
+              "text": "PTRは必ずCAが発行する証明書だから",
+              "explain": "PTRはDNSレコードで、CAの証明書ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "nat-ptr-06",
+          "format": "並べ替え",
+          "theme": "公開IPから内部サーバと名前を追う",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "逆引きだけの検査をすり抜ける流れ",
+          "lead": "攻撃者が自分の送信サーバとDNSを管理します。",
+          "lines": [
+            {
+              "code": "送信元メールアドレスにy-sha.comを詐称する"
+            },
+            {
+              "code": "攻撃者の送信サーバIPのPTRへy-sha.com系のFQDNを登録する"
+            },
+            {
+              "code": "受信側がIPを逆引きしてそのFQDNを得る"
+            },
+            {
+              "code": "見かけのドメイン一致だけでは詐称を見抜けない"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "PTRの管理権限が送信者側にある場合、自己申告だけでは不足します。",
+          "ngExplain": "攻撃者が変更できる情報を根拠にしている点を示します。",
+          "stage": "reason"
+        },
+        {
+          "id": "nat-ptr-07",
+          "format": "選択",
+          "theme": "公開IPから内部サーバと名前を追う",
+          "scaffold": 2,
+          "type": "quiz",
+          "title": "条件変更：逆引き後、得たFQDNを正引きして元IPへ戻ることも確認した。送信ドメインの承認まで証明するか。",
+          "choices": [
+            {
+              "text": "必ずSPFの全条件も満たす",
+              "explain": "SPFはドメインの公開方針を別に照会します。",
+              "ok": false
+            },
+            {
+              "text": "DKIM署名が自動的に生成される",
+              "explain": "DNSの正逆引きだけでメールに署名は付きません。",
+              "ok": false
+            },
+            {
+              "text": "承認された送信元かは別の仕組みで確認する",
+              "explain": "forward-confirmed reverse DNSでも、そのドメインのメール送信方針とは別です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "spf-record",
+      "title": "送信を許可するIPをDNSで公開する",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "spf-record-01",
+          "format": "読む",
+          "theme": "送信を許可するIPをDNSで公開する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "どのサーバから送るかをドメインが示す",
+          "body": "SPFはSender Policy Frameworkです。y-sha.comの権威DNSへ、送信を許可するIPをTXTレコードとして置きます。受信側はSMTPのMAIL FROMにあるドメインを基に、そのSPFレコードを取得します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "情報",
+              "原問の値"
+            ],
+            "rows": [
+              [
+                "SMTPコマンド",
+                "MAIL FROM"
+              ],
+              [
+                "検査するドメイン",
+                "y-sha.com"
+              ],
+              [
+                "許可IP",
+                "200.a.b.1、200.a.b.2"
+              ]
+            ],
+            "caption": "説明用：SPFで使う値"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "spf-record-02",
+          "format": "選択",
+          "theme": "送信を許可するIPをDNSで公開する",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "Y社のSPFへ登録すべきIPはどれか。",
+          "choices": [
+            {
+              "text": "社内DNSサーバだけ",
+              "explain": "メールを送信する中継サーバの正当性を検査します。",
+              "ok": false
+            },
+            {
+              "text": "メール中継サーバY1とY2の公開IP",
+              "explain": "顧客へ実際にSMTP接続する送信元です。",
+              "ok": true
+            },
+            {
+              "text": "全サポート担当者PCのプライベートIPだけ",
+              "explain": "社外の受信サーバから見えるSMTP送信元ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "spf-record-03",
+          "format": "選択",
+          "theme": "送信を許可するIPをDNSで公開する",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "受信側がSPF用ドメインを得るSMTPの情報はどれか。",
+          "choices": [
+            {
+              "text": "MAIL FROMコマンドのメールアドレス",
+              "explain": "SPFはエンベロープ送信者のドメインを使います。",
+              "ok": true
+            },
+            {
+              "text": "メール本文の最初のURLだけ",
+              "explain": "本文中のURLはSPFのドメイン選択に使いません。",
+              "ok": false
+            },
+            {
+              "text": "RCPT TOの受信者ドメインだけ",
+              "explain": "検査対象は送信側のドメインです。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "spf-record-04",
+          "format": "穴埋め",
+          "theme": "送信を許可するIPをDNSで公開する",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "二つのIPと三つの字句を完成する",
+          "template": "SPFのウは{a}、エは{b}。{c}の{d}から{e}を得る。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ウ",
+              "choices": [
+                {
+                  "text": "192.168.0.1",
+                  "explain": "外部受信側が見る送信元はNAT後の公開IPです。",
+                  "ok": false
+                },
+                {
+                  "text": "200.a.b.1",
+                  "explain": "メール中継サーバY1の公開IPです。",
+                  "ok": true
+                }
+              ],
+              "why": "メール中継サーバY1の公開IPです。"
+            },
+            {
+              "key": "b",
+              "label": "エ",
+              "choices": [
+                {
+                  "text": "200.a.b.2",
+                  "explain": "メール中継サーバY2の公開IPです。",
+                  "ok": true
+                },
+                {
+                  "text": "192.168.0.2",
+                  "explain": "これは内部IPです。",
+                  "ok": false
+                }
+              ],
+              "why": "メール中継サーバY2の公開IPです。"
+            },
+            {
+              "key": "c",
+              "label": "空欄d",
+              "choices": [
+                {
+                  "text": "DNS",
+                  "explain": "MAIL FROMはSMTPのコマンドです。",
+                  "ok": false
+                },
+                {
+                  "text": "SMTP",
+                  "explain": "Simple Mail Transfer Protocolです。",
+                  "ok": true
+                }
+              ],
+              "why": "Simple Mail Transfer Protocolです。"
+            },
+            {
+              "key": "d",
+              "label": "空欄e",
+              "choices": [
+                {
+                  "text": "MAIL FROM",
+                  "explain": "エンベロープ送信元を指定します。",
+                  "ok": true
+                },
+                {
+                  "text": "GET",
+                  "explain": "HTTPの取得メソッドです。",
+                  "ok": false
+                }
+              ],
+              "why": "エンベロープ送信元を指定します。"
+            },
+            {
+              "key": "e",
+              "label": "空欄f",
+              "choices": [
+                {
+                  "text": "support",
+                  "explain": "@より前のローカル部です。",
+                  "ok": false
+                },
+                {
+                  "text": "y-sha.com",
+                  "explain": "support@y-sha.comのドメイン部分です。",
+                  "ok": true
+                }
+              ],
+              "why": "support@y-sha.comのドメイン部分です。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 17,
+            "top": 0.08,
+            "bottom": 0.46,
+            "label": "SPF認証の流れと空欄d～f（IPA原文）"
+          }
+        },
+        {
+          "id": "spf-record-05",
+          "format": "並べ替え",
+          "theme": "送信を許可するIPをDNSで公開する",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "受信側がSPFを検査する順序",
+          "lead": "Y1又はY2から顧客へ届く場合です。",
+          "lines": [
+            {
+              "code": "SMTPのMAIL FROMからy-sha.comを得る"
+            },
+            {
+              "code": "y-sha.comの権威DNSへTXTレコードを問い合わせる"
+            },
+            {
+              "code": "SPFレコードから200.a.b.1と200.a.b.2の許可を得る"
+            },
+            {
+              "code": "実際の接続元IPが許可集合に入るか比較する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "メールヘッダーの見た目だけでなく、SMTP接続元IPと公開方針を比べます。",
+          "ngExplain": "ドメインを取り出し、そのドメインが公開する許可IPを確認します。",
+          "stage": "reason"
+        },
+        {
+          "id": "spf-record-06",
+          "format": "選択",
+          "theme": "送信を許可するIPをDNSで公開する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：Fromヘッダーはy-sha.comだが、MAIL FROMはattacker.example。どのSPFを引くか。",
+          "choices": [
+            {
+              "text": "attacker.example",
+              "explain": "原問のSPFではMAIL FROMのドメインを使います。",
+              "ok": true
+            },
+            {
+              "text": "必ずy-sha.com",
+              "explain": "表示用Fromとエンベロープ送信者を混同しています。",
+              "ok": false
+            },
+            {
+              "text": "宛先顧客のドメイン",
+              "explain": "送信元の許可方針を調べます。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "spf-check",
+      "title": "公開方針と実際の接続元を比較する",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "spf-check-01",
+          "format": "読む",
+          "theme": "公開方針と実際の接続元を比較する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "レコードがあるだけでは合格しない",
+          "body": "受信サーバはSPFレコードを取得します。次に、SMTP接続してきた相手のIPを確認します。レコードのip4などが許可する範囲と比較し、合致するかを評価します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "実測",
+                "d": "接続元IPを取得"
+              },
+              {
+                "t": "方針",
+                "d": "SPFの許可IPを取得"
+              },
+              {
+                "t": "比較",
+                "d": "含まれるかを判定"
+              },
+              {
+                "t": "処置",
+                "d": "受信・隔離・廃棄など"
+              }
+            ],
+            "caption": "説明用：正当性の確認"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "spf-check-02",
+          "format": "選択",
+          "theme": "公開方針と実際の接続元を比較する",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "SPF検査で比較する二つはどれか。",
+          "choices": [
+            {
+              "text": "メール本文の文字数とTTL",
+              "explain": "送信サーバの正当性を示す比較ではありません。",
+              "ok": false
+            },
+            {
+              "text": "受信者のMACと送信者のポート番号",
+              "explain": "SPFの中心は送信元IPとドメイン方針です。",
+              "ok": false
+            },
+            {
+              "text": "実際の送信元IPとSPFの許可IP",
+              "explain": "公開された送信方針に接続元が含まれるか確認します。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "spf-check-03",
+          "format": "選択",
+          "theme": "公開方針と実際の接続元を比較する",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "SPFに200.a.b.1だけ登録され、接続元が200.a.b.2ならどうか。",
+          "choices": [
+            {
+              "text": "下二桁だけ違うので必ず一致する",
+              "explain": "完全なIP又は指定されたプレフィックスで比較します。",
+              "ok": false
+            },
+            {
+              "text": "その許可条件には一致しない",
+              "explain": "Y2からも送るなら200.a.b.2も登録する必要があります。",
+              "ok": true
+            },
+            {
+              "text": "同じ会社名なら自動的に一致する",
+              "explain": "受信側は会社名でなくレコードの許可条件を評価します。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "spf-check-04",
+          "format": "穴埋め",
+          "theme": "公開方針と実際の接続元を比較する",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "確認方法を答案の形にする",
+          "template": "{a}が、SPFレコードに{b}ことを確認する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "実測する対象",
+              "choices": [
+                {
+                  "text": "送信元メールサーバのIPアドレス",
+                  "explain": "SMTP接続元として受信側が確認します。",
+                  "ok": true
+                },
+                {
+                  "text": "表示名の会社名",
+                  "explain": "表示名はIPベースのSPF検査対象ではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "SMTP接続元として受信側が確認します。"
+            },
+            {
+              "key": "b",
+              "label": "比較結果",
+              "choices": [
+                {
+                  "text": "登録されていない",
+                  "explain": "未登録なら正当な送信元という確認になりません。",
+                  "ok": false
+                },
+                {
+                  "text": "登録されている",
+                  "explain": "許可された送信元に含まれることを確かめます。",
+                  "ok": true
+                }
+              ],
+              "why": "許可された送信元に含まれることを確かめます。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "spf-check-05",
+          "format": "並べ替え",
+          "theme": "公開方針と実際の接続元を比較する",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "SPF合格までの根拠を並べる",
+          "lead": "送信元はY1の200.a.b.1です。",
+          "lines": [
+            {
+              "code": "y-sha.comのSPFレコードをDNSから取得する"
+            },
+            {
+              "code": "レコードが200.a.b.1を許可していると読む"
+            },
+            {
+              "code": "実際のSMTP接続元が200.a.b.1だと確認する"
+            },
+            {
+              "code": "許可IPに含まれるため正規の送信サーバと評価する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "ドメイン名が似ているかではなく、接続元IPとの一致です。",
+          "ngExplain": "方針の取得、実測、比較の順にします。",
+          "stage": "reason"
+        },
+        {
+          "id": "spf-check-06",
+          "format": "選択",
+          "theme": "公開方針と実際の接続元を比較する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：正規IPから、従業員が不正な本文を送った。SPFだけで検知できるか。",
+          "choices": [
+            {
+              "text": "できる。正規IPからのメールを全て拒否する",
+              "explain": "それでは正規メールも拒否します。",
+              "ok": false
+            },
+            {
+              "text": "できない。SPFは送信サーバIPの許可を検査する",
+              "explain": "個々の送信者や本文の正しさまでは確認しません。",
+              "ok": true
+            },
+            {
+              "text": "できる。SPFは全メール内容を意味解析する",
+              "explain": "SPFレコードに本文検査の規則はありません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "dkim-parts",
+      "title": "署名対象・鍵・DNSサイズを分ける",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "dkim-parts-01",
+          "format": "読む",
+          "theme": "署名対象・鍵・DNSサイズを分ける",
+          "scaffold": 5,
+          "type": "info",
+          "title": "メールの内容とドメインを署名で結ぶ",
+          "body": "DKIMはDomainKeys Identified Mailです。送信側がヘッダーと本文を基に署名し、受信側がDNSから公開鍵を得ます。原問のDKIMレコードはk=rsa、pに公開鍵を置きます。DNSをUDPで使う場合の原問条件は512バイトです。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "項目",
+              "値"
+            ],
+            "rows": [
+              [
+                "署名の入力",
+                "ヘッダーと本文"
+              ],
+              [
+                "DNSの鍵形式",
+                "RSA"
+              ],
+              [
+                "pタグ",
+                "公開鍵"
+              ],
+              [
+                "原問のUDP DNS最大長",
+                "512バイト"
+              ]
+            ],
+            "caption": "説明用：DKIMの構成要素"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "dkim-parts-02",
+          "format": "選択",
+          "theme": "署名対象・鍵・DNSサイズを分ける",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "本文だけでなく署名生成の対象になるものはどれか。",
+          "choices": [
+            {
+              "text": "送信回線の帯域値",
+              "explain": "メール内容の真正性を検査する値ではありません。",
+              "ok": false
+            },
+            {
+              "text": "メールのヘッダー",
+              "explain": "選択したヘッダーと本文を基に署名します。",
+              "ok": true
+            },
+            {
+              "text": "ルータのLSDB",
+              "explain": "メール署名の入力ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "dkim-parts-03",
+          "format": "選択",
+          "theme": "署名対象・鍵・DNSサイズを分ける",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "DKIMレコードのk=rsaが示すものはどれか。",
+          "choices": [
+            {
+              "text": "鍵形式のアルゴリズムがRSA",
+              "explain": "公開鍵暗号の形式を指定します。",
+              "ok": true
+            },
+            {
+              "text": "DNS通信が必ずTCPだけ",
+              "explain": "kタグはDNSのトランスポートを指定しません。",
+              "ok": false
+            },
+            {
+              "text": "署名対象が本文だけ",
+              "explain": "署名対象の指定ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "dkim-parts-04",
+          "format": "選択",
+          "theme": "署名対象・鍵・DNSサイズを分ける",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "受信側が署名を検証するためDNSで得る鍵はどれか。",
+          "choices": [
+            {
+              "text": "秘密鍵",
+              "explain": "秘密鍵は署名側で保護し、DNSへ公開しません。",
+              "ok": false
+            },
+            {
+              "text": "事前共有鍵",
+              "explain": "DKIMは受信者ごとに同じ秘密を共有する方式ではありません。",
+              "ok": false
+            },
+            {
+              "text": "公開鍵",
+              "explain": "送信側が秘密鍵で作った署名を対応する公開鍵で検証します。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "dkim-parts-05",
+          "format": "穴埋め",
+          "theme": "署名対象・鍵・DNSサイズを分ける",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "四つの空欄を完成する",
+          "template": "署名はメールの{a}と本文を基にする。DNSを{b}で使う場合の上限は{c}バイト。pタグは{d}を保持する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄g",
+              "choices": [
+                {
+                  "text": "ヘッダー",
+                  "explain": "DKIM-Signatureなどで指定されたヘッダーを署名対象にします。",
+                  "ok": true
+                },
+                {
+                  "text": "IPフラグメント",
+                  "explain": "メール内容の構成要素ではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "DKIM-Signatureなどで指定されたヘッダーを署名対象にします。"
+            },
+            {
+              "key": "b",
+              "label": "空欄h",
+              "choices": [
+                {
+                  "text": "SMTP",
+                  "explain": "DNSのトランスポートではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "UDP",
+                  "explain": "原問の条件でDNSメッセージ長を考えます。",
+                  "ok": true
+                }
+              ],
+              "why": "原問の条件でDNSメッセージ長を考えます。"
+            },
+            {
+              "key": "c",
+              "label": "空欄i",
+              "choices": [
+                {
+                  "text": "512",
+                  "explain": "原問が置く従来のUDP DNSサイズ条件です。",
+                  "ok": true
+                },
+                {
+                  "text": "2048",
+                  "explain": "これは一般に使う鍵のビット長です。",
+                  "ok": false
+                }
+              ],
+              "why": "原問が置く従来のUDP DNSサイズ条件です。"
+            },
+            {
+              "key": "d",
+              "label": "空欄オ",
+              "choices": [
+                {
+                  "text": "秘密鍵",
+                  "explain": "DNSで公開してはいけません。",
+                  "ok": false
+                },
+                {
+                  "text": "公開鍵",
+                  "explain": "受信側が署名検証に利用します。",
+                  "ok": true
+                }
+              ],
+              "why": "受信側が署名検証に利用します。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 17,
+            "top": 0.46,
+            "bottom": 0.93,
+            "label": "DKIMの署名対象とDNSサイズ（IPA原文）"
+          }
+        },
+        {
+          "id": "dkim-parts-06",
+          "format": "並べ替え",
+          "theme": "署名対象・鍵・DNSサイズを分ける",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "DKIM署名と検証の鍵を並べる",
+          "lead": "送信側と受信側の鍵を混同しないようにします。",
+          "lines": [
+            {
+              "code": "管理者がRSAの鍵ペアを生成する"
+            },
+            {
+              "code": "送信側が秘密鍵でメールへ署名する"
+            },
+            {
+              "code": "公開鍵をDKIMレコードのpタグで公開する"
+            },
+            {
+              "code": "受信側が公開鍵を取得して署名を検証する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "秘密鍵は署名側に残し、公開鍵だけをDNSで配ります。",
+          "ngExplain": "鍵ペアの生成後、署名と公開、検証へ進みます。",
+          "stage": "reason"
+        },
+        {
+          "id": "dkim-parts-07",
+          "format": "選択",
+          "theme": "署名対象・鍵・DNSサイズを分ける",
+          "scaffold": 2,
+          "type": "quiz",
+          "title": "条件変更：秘密鍵をDNSのpタグへ登録した。評価はどれか。",
+          "choices": [
+            {
+              "text": "受信者だけに秘密に配布できる",
+              "explain": "DNSの公開レコードは秘密の保管場所ではありません。",
+              "ok": false
+            },
+            {
+              "text": "SPFの接続元IPが自動的に増える",
+              "explain": "DKIM鍵とSPF許可IPは別のレコードです。",
+              "ok": false
+            },
+            {
+              "text": "秘密鍵が漏えいし、第三者が署名を作れる危険がある",
+              "explain": "pタグで公開するのは公開鍵です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "dkim-verify",
+      "title": "署名を検証して正規サーバからの送信を確かめる",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "dkim-verify-01",
+          "format": "読む",
+          "theme": "署名を検証して正規サーバからの送信を確かめる",
+          "scaffold": 5,
+          "type": "info",
+          "title": "署名のドメインとセレクターを使う",
+          "body": "DKIM-Signatureのdタグは署名ドメイン、sタグはセレクターです。受信側はsel.ysha._domainkey.y-sha.comのような名前で公開鍵を引きます。署名が正しければ、対応する秘密鍵を持つ送信側が処理したと判断できます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "d・sタグ",
+                "d": "DNSの検索名を作る"
+              },
+              {
+                "t": "DKIMレコード",
+                "d": "公開鍵を取得"
+              },
+              {
+                "t": "署名検証",
+                "d": "ヘッダー・本文と照合"
+              },
+              {
+                "t": "結果",
+                "d": "正規の署名元か評価"
+              }
+            ],
+            "caption": "説明用：DKIMの受信側処理"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "dkim-verify-02",
+          "format": "選択",
+          "theme": "署名を検証して正規サーバからの送信を確かめる",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "セレクターを使う利点はどれか。",
+          "choices": [
+            {
+              "text": "同一ドメインで複数の鍵を識別できる",
+              "explain": "鍵の更新や送信系統の分離に使えます。",
+              "ok": true
+            },
+            {
+              "text": "全てのドメインを同じ秘密鍵にする",
+              "explain": "セレクターは異なる鍵を選べます。",
+              "ok": false
+            },
+            {
+              "text": "メール本文をDNSへ全て保存する",
+              "explain": "DNSには公開鍵などを置きます。本文の保存場所ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "dkim-verify-03",
+          "format": "選択",
+          "theme": "署名を検証して正規サーバからの送信を確かめる",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "署名検証が成功したとき、直接分かることはどれか。",
+          "choices": [
+            {
+              "text": "その従業員が人事上の担当者である",
+              "explain": "DKIMは個人の所属部署までは認証しません。",
+              "ok": false
+            },
+            {
+              "text": "送信経路の全ルータが故障していない",
+              "explain": "署名検証はネットワーク経路の死活監視ではありません。",
+              "ok": false
+            },
+            {
+              "text": "対応する秘密鍵で署名され、対象部分が一致する",
+              "explain": "正規の署名処理と改ざんの有無を評価できます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "dkim-verify-04",
+          "format": "穴埋め",
+          "theme": "署名を検証して正規サーバからの送信を確かめる",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "正規サーバと判断する理由を完成する",
+          "template": "受信したメールの署名を{a}で検証できるため、{b}から送信されたかを判断できる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "検証に使うもの",
+              "choices": [
+                {
+                  "text": "DKIMレコードの公開鍵",
+                  "explain": "署名ドメインとセレクターから取得します。",
+                  "ok": true
+                },
+                {
+                  "text": "SPFの許可IPだけ",
+                  "explain": "IP許可はSPFであり、署名の暗号学的検証ではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "署名ドメインとセレクターから取得します。"
+            },
+            {
+              "key": "b",
+              "label": "判断対象",
+              "choices": [
+                {
+                  "text": "必ず正規の個人担当者",
+                  "explain": "サーバの署名だけで個人の権限までは確認できません。",
+                  "ok": false
+                },
+                {
+                  "text": "正規のメールサーバ",
+                  "explain": "対応する秘密鍵でDKIM処理した送信系を確認します。",
+                  "ok": true
+                }
+              ],
+              "why": "対応する秘密鍵でDKIM処理した送信系を確認します。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "dkim-verify-05",
+          "format": "並べ替え",
+          "theme": "署名を検証して正規サーバからの送信を確かめる",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "署名の真正性を確認する順序",
+          "lead": "顧客のメールサーバ側の動作です。",
+          "lines": [
+            {
+              "code": "DKIM-Signatureからdタグとsタグを読む"
+            },
+            {
+              "code": "外部DNSサーバYから対応する公開鍵を取得する"
+            },
+            {
+              "code": "公開鍵で電子署名を検証する"
+            },
+            {
+              "code": "正規の秘密鍵をもつメールサーバから送られたか判断する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "署名に書かれた検索情報から、検証用の鍵を取得します。",
+          "ngExplain": "DNS取得が先で、その公開鍵を用いて署名を検証します。",
+          "stage": "reason"
+        },
+        {
+          "id": "dkim-verify-06",
+          "format": "選択",
+          "theme": "署名を検証して正規サーバからの送信を確かめる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：転送途中で署名対象の本文が1文字変わった。検証はどうか。",
+          "choices": [
+            {
+              "text": "公開鍵が自動的に秘密鍵へ変わる",
+              "explain": "鍵の役割は変わりません。",
+              "ok": false
+            },
+            {
+              "text": "SPFが必ずPASSなのでDKIMも成功する",
+              "explain": "SPFとDKIMは別々に評価されます。",
+              "ok": false
+            },
+            {
+              "text": "署名と再計算結果が合わず、改ざんを検出できる",
+              "explain": "署名対象の内容が変化したためです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "delegate-spf",
+      "title": "委託先をY社ドメインの送信元へ追加する",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "delegate-spf-01",
+          "format": "読む",
+          "theme": "委託先をY社ドメインの送信元へ追加する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "Z社がY社のアドレスで送信する",
+          "body": "Z社のメール中継サーバZは、Y社の顧客へsupport@y-sha.comとして送ります。受信側はy-sha.comのSPFを見ます。したがって、Y社の外部DNSへZ社の送信元公開IPを追加する必要があります。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 55,
+                "y": 65,
+                "label": "メール中継サーバZ"
+              },
+              {
+                "id": "node1",
+                "x": 165,
+                "y": 65,
+                "label": "顧客メールサーバ"
+              },
+              {
+                "id": "node2",
+                "x": 275,
+                "y": 65,
+                "label": "外部DNSサーバY"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：Y社ドメインの許可IPをY社DNSで公開"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "delegate-spf-02",
+          "format": "選択",
+          "theme": "委託先をY社ドメインの送信元へ追加する",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "SPFレコードを追加するDNSはどれか。",
+          "choices": [
+            {
+              "text": "社内DNSサーバZだけ",
+              "explain": "顧客の受信サーバからy-sha.comの方針として参照できません。",
+              "ok": false
+            },
+            {
+              "text": "顧客のPCのhostsファイル",
+              "explain": "ドメイン全体の公開SPF方針にはなりません。",
+              "ok": false
+            },
+            {
+              "text": "外部DNSサーバY",
+              "explain": "検査対象ドメインy-sha.comの権威DNSです。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "delegate-spf-03",
+          "format": "選択",
+          "theme": "委託先をY社ドメインの送信元へ追加する",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "追加する最も直接の情報はどれか。",
+          "choices": [
+            {
+              "text": "Z社の全社内PCのMACアドレス",
+              "explain": "外部のSPF検査でMACアドレスは見えません。",
+              "ok": false
+            },
+            {
+              "text": "メール中継サーバZの公開IPアドレス",
+              "explain": "顧客へSMTP接続する委託先サーバを許可します。",
+              "ok": true
+            },
+            {
+              "text": "サポート担当者の氏名一覧",
+              "explain": "SPFは個人名で送信元を認証しません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "delegate-spf-04",
+          "format": "穴埋め",
+          "theme": "委託先をY社ドメインの送信元へ追加する",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "DNSサーバと登録情報を完成する",
+          "template": "{a}の{b}へ、{c}と{d}を登録する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "DNSサーバ名",
+              "choices": [
+                {
+                  "text": "社内DNSサーバY",
+                  "explain": "インターネットの顧客から参照する公開情報ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "外部DNSサーバY",
+                  "explain": "y-sha.comの公開ゾーンを管理します。",
+                  "ok": true
+                }
+              ],
+              "why": "y-sha.comの公開ゾーンを管理します。"
+            },
+            {
+              "key": "b",
+              "label": "図中のホスト名",
+              "choices": [
+                {
+                  "text": "y-ns1",
+                  "explain": "図1で外部DNSサーバYのホスト名です。",
+                  "ok": true
+                },
+                {
+                  "text": "y-ns2",
+                  "explain": "社内DNSサーバYです。",
+                  "ok": false
+                }
+              ],
+              "why": "図1で外部DNSサーバYのホスト名です。"
+            },
+            {
+              "key": "c",
+              "label": "登録する情報1",
+              "choices": [
+                {
+                  "text": "社内メールサーバZの私設IPだけ",
+                  "explain": "顧客から見えるSMTP接続元ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "メール中継サーバZのIPアドレス",
+                  "explain": "委託先の送信元としてSPFへ許可します。",
+                  "ok": true
+                }
+              ],
+              "why": "委託先の送信元としてSPFへ許可します。"
+            },
+            {
+              "key": "d",
+              "label": "登録する情報2",
+              "choices": [
+                {
+                  "text": "z-mail1のIPアドレス",
+                  "explain": "図6のメール中継サーバZを具体的に示す情報です。",
+                  "ok": true
+                },
+                {
+                  "text": "z-mail2のIPアドレス",
+                  "explain": "z-mail2は社内メールサーバZです。",
+                  "ok": false
+                }
+              ],
+              "why": "図6のメール中継サーバZを具体的に示す情報です。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 20,
+            "top": 0.27,
+            "bottom": 0.83,
+            "label": "図6・図7のZ社メール構成（IPA原図・原表）"
+          }
+        },
+        {
+          "id": "delegate-spf-05",
+          "format": "並べ替え",
+          "theme": "委託先をY社ドメインの送信元へ追加する",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "委託先からのSPF合格まで並べる",
+          "lead": "Z社がsupport@y-sha.comで顧客へ送ります。",
+          "lines": [
+            {
+              "code": "Z社メール中継サーバの公開IPを確認する"
+            },
+            {
+              "code": "外部DNSサーバYのy-sha.com用SPFへ追加する"
+            },
+            {
+              "code": "顧客がMAIL FROMのy-sha.comからSPFを取得する"
+            },
+            {
+              "code": "実際のZ社接続元IPが許可されていると確認する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "Z社のDNSでなく、送信に名乗るY社ドメインのDNSへ方針を置きます。",
+          "ngExplain": "検査対象ドメインを先に確認すると、登録先を選べます。",
+          "stage": "reason"
+        },
+        {
+          "id": "delegate-spf-06",
+          "format": "選択",
+          "theme": "委託先をY社ドメインの送信元へ追加する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：Z社の送信元IPが変更されたがSPFを更新しなかった。何が起きるか。",
+          "choices": [
+            {
+              "text": "DKIM鍵が同じならSPFも必ずPASSになる",
+              "explain": "SPFとDKIMの判定は独立しています。",
+              "ok": false
+            },
+            {
+              "text": "新しい接続元が許可条件に一致しない",
+              "explain": "実際のIPと公開方針がずれるためです。",
+              "ok": true
+            },
+            {
+              "text": "古いIPの文字列から新IPを自動推測する",
+              "explain": "受信側は公開されたレコードを評価します。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "delegate-dkim",
+      "title": "署名ドメインを保ち鍵を分離する",
+      "targets": [
+        "s4-2",
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "delegate-dkim-01",
+          "format": "読む",
+          "theme": "署名ドメインを保ち鍵を分離する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "委託先だけ別の鍵でY社として署名する",
+          "body": "Z社のメールもy-sha.comとして署名します。dタグをy-sha.comにし、外部DNSサーバYから鍵を引けるようにします。セレクターはsel.zshaとしてY社系と分けます。これにより委託先の鍵漏えいを分離できます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "送信系",
+              "dタグ",
+              "sタグ"
+            ],
+            "rows": [
+              [
+                "Y社",
+                "y-sha.com",
+                "sel.ysha"
+              ],
+              [
+                "Z社の委託メール",
+                "y-sha.com",
+                "sel.zsha"
+              ]
+            ],
+            "caption": "説明用：同じ署名ドメインで鍵を分ける"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "delegate-dkim-02",
+          "format": "選択",
+          "theme": "署名ドメインを保ち鍵を分離する",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "Z社署名のdタグへ入れるドメインはどれか。",
+          "choices": [
+            {
+              "text": "y-sha.lan",
+              "explain": "社内用の名前で、外部DNSサーバYの公開署名ドメインではありません。",
+              "ok": false
+            },
+            {
+              "text": "y-sha.com",
+              "explain": "顧客がY社ドメインのメールとして検査できるようにします。",
+              "ok": true
+            },
+            {
+              "text": "z-sha.co.jp",
+              "explain": "Z社自身のドメインで署名すると、Y社としての設計とは変わります。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "delegate-dkim-03",
+          "format": "選択",
+          "theme": "署名ドメインを保ち鍵を分離する",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "sel.zshaをY社のsel.yshaと分ける効果はどれか。",
+          "choices": [
+            {
+              "text": "委託先用に別の鍵を選べる",
+              "explain": "セレクターごとに異なる公開鍵を登録できます。",
+              "ok": true
+            },
+            {
+              "text": "同じ秘密鍵を全社で必ず共用する",
+              "explain": "セレクター分離の目的と逆です。",
+              "ok": false
+            },
+            {
+              "text": "SPFの送信元IPを不要にする",
+              "explain": "DKIMの鍵分離とSPFのIP検査は別です。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "delegate-dkim-04",
+          "format": "穴埋め",
+          "theme": "署名ドメインを保ち鍵を分離する",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "ドメインと漏えい時の利点を完成する",
+          "template": "dタグは{a}、sタグはsel.zshaとする。Z社の鍵が漏えいしても、{b}のDKIM処理への影響を抑えられる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄j",
+              "choices": [
+                {
+                  "text": "y-sha.com",
+                  "explain": "Y社の署名ドメインとして公開鍵を検索します。",
+                  "ok": true
+                },
+                {
+                  "text": "z-sha.co.jp",
+                  "explain": "今回のsupport@y-sha.comの署名設計とは異なります。",
+                  "ok": false
+                }
+              ],
+              "why": "Y社の署名ドメインとして公開鍵を検索します。"
+            },
+            {
+              "key": "b",
+              "label": "分離できる対象",
+              "choices": [
+                {
+                  "text": "Z社の漏えいした鍵そのもの",
+                  "explain": "漏えいした鍵の安全性が戻るわけではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "Y社で実施中",
+                  "explain": "Y社のsel.yshaは別の鍵なので交換対象を分けられます。",
+                  "ok": true
+                }
+              ],
+              "why": "Y社のsel.yshaは別の鍵なので交換対象を分けられます。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 21,
+            "top": 0.16,
+            "bottom": 0.73,
+            "label": "委託先のSPF・DKIM設計（IPA原文）"
+          }
+        },
+        {
+          "id": "delegate-dkim-05",
+          "format": "並べ替え",
+          "theme": "署名ドメインを保ち鍵を分離する",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "鍵漏えいの影響を限定する設計を並べる",
+          "lead": "Y社とZ社の送信系を分けます。",
+          "lines": [
+            {
+              "code": "Y社用セレクターsel.yshaへ鍵Aを登録する"
+            },
+            {
+              "code": "Z社用セレクターsel.zshaへ別の鍵Bを登録する"
+            },
+            {
+              "code": "Z社で鍵Bが漏えいする"
+            },
+            {
+              "code": "鍵Bを失効・交換してもY社の鍵Aでの処理を継続できる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "同じドメインでも、セレクターで鍵を分けられます。",
+          "ngExplain": "先に異なる鍵を割り当てているから、漏えい時の範囲を限定できます。",
+          "stage": "reason"
+        },
+        {
+          "id": "delegate-dkim-06",
+          "format": "選択",
+          "theme": "署名ドメインを保ち鍵を分離する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：Y社とZ社が同じ秘密鍵とセレクターを共用した。Z社で漏えいした場合はどうか。",
+          "choices": [
+            {
+              "text": "Y社側も同じ鍵を使うため影響を受ける",
+              "explain": "共用した秘密が失われ、Y社の署名系も鍵交換が必要です。",
+              "ok": true
+            },
+            {
+              "text": "セレクター名が同じなら漏えいが無効になる",
+              "explain": "同じ鍵を使うことが問題です。",
+              "ok": false
+            },
+            {
+              "text": "公開鍵だけを変更せず秘密鍵を使い続ける",
+              "explain": "漏えいした秘密鍵のままでは第三者が署名できます。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "domain-limit",
+      "title": "ドメイン認証と担当者認証を分ける",
+      "targets": [
+        "s4-4"
+      ],
+      "steps": [
+        {
+          "id": "domain-limit-01",
+          "format": "読む",
+          "theme": "ドメイン認証と担当者認証を分ける",
+          "scaffold": 5,
+          "type": "info",
+          "title": "正規サーバから送った人が正規担当者とは限らない",
+          "body": "Z社のメール中継サーバは、サポートチームYの正規メールにも署名します。同じZ社の別部署の従業員も、そのサーバを使える条件です。送信元をsupport@y-sha.comへ変えた場合、SPFとDKIMが確認する範囲を考えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "方式",
+              "確認できるもの",
+              "確認できないもの"
+            ],
+            "rows": [
+              [
+                "SPF",
+                "許可された送信元IP",
+                "個々の担当者の所属"
+              ],
+              [
+                "DKIM",
+                "ドメイン鍵による署名",
+                "個々の担当者の権限"
+              ]
+            ],
+            "caption": "説明用：サーバ・ドメインと個人を分離"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "domain-limit-02",
+          "format": "選択",
+          "theme": "ドメイン認証と担当者認証を分ける",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "別部署の従業員が正規のメール中継サーバZを使う。SPFはどうなり得るか。",
+          "choices": [
+            {
+              "text": "部署名が違うため必ずFAIL",
+              "explain": "SPFレコードに部署名の照合はありません。",
+              "ok": false
+            },
+            {
+              "text": "メール本文を解析して担当製品を判断する",
+              "explain": "SPFの検査対象ではありません。",
+              "ok": false
+            },
+            {
+              "text": "許可IPから送られるのでPASSし得る",
+              "explain": "SPFは利用者の部署でなく接続元IPを見ます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "domain-limit-03",
+          "format": "選択",
+          "theme": "ドメイン認証と担当者認証を分ける",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "同じサーバZがDKIM署名した場合、DKIMは何を示すか。",
+          "choices": [
+            {
+              "text": "メールの業務内容が正しい",
+              "explain": "署名は内容の承認手続そのものではありません。",
+              "ok": false
+            },
+            {
+              "text": "Z社用の正規鍵でY社ドメインの署名処理が行われた",
+              "explain": "個々の担当者の権限までは示しません。",
+              "ok": true
+            },
+            {
+              "text": "送信者本人がサポートチームYに所属する",
+              "explain": "ドメイン鍵の署名だけでは個人を識別できません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "domain-limit-04",
+          "format": "穴埋め",
+          "theme": "ドメイン認証と担当者認証を分ける",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "検知できない理由を完成する",
+          "template": "なりすましメールも、許可された{a}から社外へ{b}ため、ドメイン認証を通り得る。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "送信元",
+              "choices": [
+                {
+                  "text": "未知の攻撃者サーバ",
+                  "explain": "それならSPFの許可IPに一致しない可能性があります。",
+                  "ok": false
+                },
+                {
+                  "text": "メール中継サーバZ",
+                  "explain": "SPFで許可され、DKIM処理も行う正規の送信系です。",
+                  "ok": true
+                }
+              ],
+              "why": "SPFで許可され、DKIM処理も行う正規の送信系です。"
+            },
+            {
+              "key": "b",
+              "label": "動作",
+              "choices": [
+                {
+                  "text": "転送される",
+                  "explain": "別部署の従業員でも正規中継系を使える条件が原因です。",
+                  "ok": true
+                },
+                {
+                  "text": "必ず遮断される",
+                  "explain": "原問ではサーバが部署の本人確認をできないため指摘されています。",
+                  "ok": false
+                }
+              ],
+              "why": "別部署の従業員でも正規中継系を使える条件が原因です。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "domain-limit-05",
+          "format": "並べ替え",
+          "theme": "ドメイン認証と担当者認証を分ける",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "SPFとDKIMで見抜けない因果を並べる",
+          "lead": "Z社の別部署が送る場合です。",
+          "lines": [
+            {
+              "code": "別部署の従業員がsupport@y-sha.comを送信元に設定する"
+            },
+            {
+              "code": "許可されたメール中継サーバZから顧客へ送る"
+            },
+            {
+              "code": "サーバZがsel.zshaの正規鍵でDKIM署名する"
+            },
+            {
+              "code": "SPFとDKIMは通り得るため担当者のなりすましを判別できない"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "正規の経路と鍵が使われるので、個人の権限確認が別に必要です。",
+          "ngExplain": "攻撃者が正規サーバを利用できるという原問条件を落としません。",
+          "stage": "reason"
+        },
+        {
+          "id": "domain-limit-06",
+          "format": "選択",
+          "theme": "ドメイン認証と担当者認証を分ける",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：各担当者が個人の秘密鍵でS/MIME署名し、顧客が本人証明書を検証する。追加で確認できるものはどれか。",
+          "choices": [
+            {
+              "text": "全ての従業員が同じ本人であること",
+              "explain": "個人ごとの鍵と証明書を使うなら同一視しません。",
+              "ok": false
+            },
+            {
+              "text": "署名した個人に対応する証明書と内容の完全性",
+              "explain": "ドメインの送信系より細かい主体を認証できます。",
+              "ok": true
+            },
+            {
+              "text": "SMTP接続元IPがSPFにあることだけ",
+              "explain": "それはSPFが既に確認する範囲です。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1852 @@
+{
+  "examKey": "2019r01a/pm1/1",
+  "title": "故障時の帯域と監視区間を小さく確かめる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm1_qs.pdf"
+  ],
+  "sections": [
+    {
+      "id": "routing-domains",
+      "title": "外部の経路と内部の経路を分ける",
+      "targets": [
+        "s1-1"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "二つのISPにつながるデータセンタ",
+          "body": "データセンタは二つのISPに接続します。ISPと自社は別の自律システム（AS）です。社内ではOSPFで経路を交換します。まず経路情報を交換する範囲を見分けます。",
+          "fig": {
+            "kind": "net",
+            "height": 140,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 45,
+                "y": 65,
+                "label": "ISP"
+              },
+              {
+                "id": "node1",
+                "x": 170,
+                "y": 65,
+                "label": "コアルータ"
+              },
+              {
+                "id": "node2",
+                "x": 295,
+                "y": 65,
+                "label": "L3SW"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用の構成図"
+          },
+          "format": "読む",
+          "theme": "外部の経路と内部の経路を分ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "scope",
+          "type": "quiz",
+          "title": "別のASとの経路交換に使うものはどれか。",
+          "choices": [
+            {
+              "text": "VRRP",
+              "ok": false,
+              "explain": "複数ルータで既定の出口を冗長化します。AS間の経路交換ではありません。"
+            },
+            {
+              "text": "ARP",
+              "ok": false,
+              "explain": "同一リンク上のIPとMACの対応を解決します。"
+            },
+            {
+              "text": "BGP（Border Gateway Protocol）",
+              "ok": true,
+              "explain": "AS間の経路を交換するプロトコルです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "外部の経路と内部の経路を分ける",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "BGPが経路にASの並びを含める理由は何か。",
+          "choices": [
+            {
+              "text": "物理回線の速度を合算するため",
+              "ok": false,
+              "explain": "帯域の集約はLAGの役割です。"
+            },
+            {
+              "text": "通過するASを判断材料にするため",
+              "ok": true,
+              "explain": "ASの並びを経路属性として扱うパスベクトル型です。"
+            },
+            {
+              "text": "LANのMACアドレスを調べるため",
+              "ok": false,
+              "explain": "MACの解決はARPの役割です。ASの列からは分かりません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "外部の経路と内部の経路を分ける",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "原問の二つの経路制御を補う。",
+          "template": "AS間は{a}、OSPFのエリア0は{b}エリアである。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "BGP",
+                  "ok": true,
+                  "explain": "原問はAS番号が異なる相手との接続です。"
+                },
+                {
+                  "text": "OSPF",
+                  "ok": false,
+                  "explain": "原問では社内の経路交換に使います。"
+                },
+                {
+                  "text": "VRRP",
+                  "ok": false,
+                  "explain": "出口の冗長化であり経路交換ではありません。"
+                }
+              ],
+              "why": "原問はAS番号が異なる相手との接続です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "スタブ",
+                  "ok": false,
+                  "explain": "外部経路の扱いを制限するエリアです。"
+                },
+                {
+                  "text": "顧客",
+                  "ok": false,
+                  "explain": "顧客VLANとOSPFエリアは別の区分です。"
+                },
+                {
+                  "text": "バックボーン",
+                  "ok": true,
+                  "explain": "OSPFのエリア0の名称です。"
+                }
+              ],
+              "why": "OSPFのエリア0の名称です。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "外部の経路と内部の経路を分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "通信を外部へ送る判断を並べる。",
+          "lead": "顧客からISPへ送る場合の判断です。",
+          "lines": [
+            {
+              "code": "内部の宛先経路をOSPFで把握する"
+            },
+            {
+              "code": "コアルータで外部ASへのBGP経路を参照する"
+            },
+            {
+              "code": "選んだISPへパケットを転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "内部と外部で経路を扱う範囲を分けます。",
+          "ngExplain": "まず内部で出口に到達し、外部への経路を選びます。",
+          "format": "並べ替え",
+          "theme": "外部の経路と内部の経路を分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "ISPを1社追加した。社内OSPFをBGPに置き換える必要があるか。",
+          "choices": [
+            {
+              "text": "ない。新ISPとはARPだけで経路を交換する",
+              "ok": false,
+              "explain": "ARPでは外部ネットワークへの経路を交換できません。"
+            },
+            {
+              "text": "ない。AS間の接続と内部の設計を分けて検討する",
+              "ok": true,
+              "explain": "ISPの追加だけで内部プロトコルの変更は決まりません。"
+            },
+            {
+              "text": "ある。ISPが3社ならOSPFは使えない",
+              "ok": false,
+              "explain": "OSPFの利用可否はISPの社数では決まりません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "外部の経路と内部の経路を分ける",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "vrrp-path",
+      "title": "仮想ルータの通信を同じVLANで追う",
+      "targets": [
+        "s1-1",
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "出口が故障しても同じ宛先を使う",
+          "body": "2台のL3スイッチが一つの仮想IPアドレスを提供します。VRRP（Virtual Router Redundancy Protocol）が担当を切り替えます。広告は同じVLANで届く必要があります。",
+          "fig": {
+            "kind": "net",
+            "height": 140,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 45,
+                "y": 65,
+                "label": "L3-A"
+              },
+              {
+                "id": "node1",
+                "x": 128.33333333333331,
+                "y": 65,
+                "label": "L2-A"
+              },
+              {
+                "id": "node2",
+                "x": 211.66666666666666,
+                "y": 65,
+                "label": "L2-B"
+              },
+              {
+                "id": "node3",
+                "x": 295,
+                "y": 65,
+                "label": "L3-B"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              },
+              {
+                "from": "node2",
+                "to": "node3",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用の構成図"
+          },
+          "format": "読む",
+          "theme": "仮想ルータの通信を同じVLANで追う",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "link",
+          "type": "quiz",
+          "title": "2台のL3間の直結回線は別IPセグメントである。顧客VLANの広告が通るのはどこか。",
+          "choices": [
+            {
+              "text": "必ずL3間の最短の直結回線",
+              "ok": false,
+              "explain": "物理的に近くても別セグメントでは対象広告の経路になりません。"
+            },
+            {
+              "text": "一度ISPを経由する経路",
+              "ok": false,
+              "explain": "同一リンク内の制御通信をISPへ転送しません。"
+            },
+            {
+              "text": "顧客VLANを延ばしたL2スイッチ経由の経路",
+              "ok": true,
+              "explain": "VRRPの広告は対象VLAN内で交換されます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "仮想ルータの通信を同じVLANで追う",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "新マスタからGARPを送るとL2SWは何を更新できるか。",
+          "choices": [
+            {
+              "text": "顧客端末のTCPポート番号",
+              "ok": false,
+              "explain": "TCPの状態はMACアドレステーブルに記録しません。"
+            },
+            {
+              "text": "仮想MACアドレスを学習するポート",
+              "ok": true,
+              "explain": "受信フレームの送信元MACから新しいポートを学習します。"
+            },
+            {
+              "text": "BGPのAS番号",
+              "ok": false,
+              "explain": "AS番号はL2SWのMAC学習と無関係です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "仮想ルータの通信を同じVLANで追う",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "切替え時の主語・通知・結果を選ぶ。",
+          "template": "{a}が{b}を送信し、L2SWの{c}を更新させる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "新しいマスタ",
+                  "ok": true,
+                  "explain": "切替後の経路を知らせる側です。"
+                },
+                {
+                  "text": "故障したマスタ",
+                  "ok": false,
+                  "explain": "故障機器からの通知は期待できません。"
+                },
+                {
+                  "text": "ISP",
+                  "ok": false,
+                  "explain": "顧客VLAN内のマスタではありません。"
+                }
+              ],
+              "why": "切替後の経路を知らせる側です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "BGP UPDATE",
+                  "ok": false,
+                  "explain": "AS間の経路更新です。"
+                },
+                {
+                  "text": "DNS応答",
+                  "ok": false,
+                  "explain": "名前とIPの対応を返すものです。"
+                },
+                {
+                  "text": "GARP（Gratuitous ARP）",
+                  "ok": true,
+                  "explain": "要求を待たずにARP情報を通知します。"
+                }
+              ],
+              "why": "要求を待たずにARP情報を通知します。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "DHCPプール",
+                  "ok": false,
+                  "explain": "割当て可能なIP範囲は変わりません。"
+                },
+                {
+                  "text": "MACアドレステーブル",
+                  "ok": true,
+                  "explain": "新しい受信ポートに仮想MACを学習します。"
+                },
+                {
+                  "text": "ASパス",
+                  "ok": false,
+                  "explain": "BGPが扱う経路属性です。"
+                }
+              ],
+              "why": "新しい受信ポートに仮想MACを学習します。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "仮想ルータの通信を同じVLANで追う",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "original-path",
+          "type": "parsons",
+          "title": "原図で広告の経路を並べる。",
+          "lead": "L3SW1からL3SW2へ、顧客VLANの回線だけを追います。",
+          "lines": [
+            {
+              "code": "キ：L3SW1からL2SW1へ"
+            },
+            {
+              "code": "ケ：L2SW1からL2SW2へ"
+            },
+            {
+              "code": "ク：L2SW2からL3SW2へ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "対象回線はキ・ク・ケです。カは独立したIPセグメントです。",
+          "ngExplain": "直結のカではなく、対象VLANのL2経路をたどります。",
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.34,
+            "bottom": 0.81,
+            "label": "図1：3階の回線記号と接続（IPA原図）"
+          },
+          "format": "並べ替え",
+          "theme": "仮想ルータの通信を同じVLANで追う",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "新マスタが同じ仮想IPと仮想MACを引き継ぐ。顧客のデフォルトルートはどうするか。",
+          "choices": [
+            {
+              "text": "デフォルトルートを削除する",
+              "ok": false,
+              "explain": "外部への転送先がなくなります。"
+            },
+            {
+              "text": "仮想IPを宛先とする設定を維持する",
+              "ok": true,
+              "explain": "担当機器が変わっても、顧客から見た出口は同じです。"
+            },
+            {
+              "text": "新マスタの実IPに変更する",
+              "ok": false,
+              "explain": "仮想IPを利用した冗長化の利点が失われます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "仮想ルータの通信を同じVLANで追う",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "vlan-tags",
+      "title": "共有回線と顧客専用回線を区別する",
+      "targets": [
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "二つの顧客を同じ回線で運ぶ",
+          "body": "顧客Aと顧客Bを別々のVLANに収容します。スイッチ間の共有回線には両方の通信が流れます。VLAN（Virtual LAN）のタグで所属を識別します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "回線",
+              "運ぶVLAN"
+            ],
+            "rows": [
+              [
+                "顧客Aへの回線",
+                "Aだけ"
+              ],
+              [
+                "スイッチ間",
+                "AとB"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "共有回線と顧客専用回線を区別する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "AとBを1本で運び、混ぜないために必要な情報はどれか。",
+          "choices": [
+            {
+              "text": "全フレームで同じ宛先IP",
+              "ok": false,
+              "explain": "同じ宛先にしても顧客の所属を識別できません。"
+            },
+            {
+              "text": "回線ごとに異なるAS番号",
+              "ok": false,
+              "explain": "ASは経路制御の単位です。VLANの識別には使いません。"
+            },
+            {
+              "text": "各フレームのVLAN識別情報",
+              "ok": true,
+              "explain": "共有回線で所属を識別する必要があります。"
+            }
+          ],
+          "format": "選択",
+          "theme": "共有回線と顧客専用回線を区別する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "顧客専用ポートでタグが必須とはいえない理由は何か。",
+          "choices": [
+            {
+              "text": "VRRPが全タグを自動削除する",
+              "ok": false,
+              "explain": "VRRPはVLANタグの変換機能ではありません。"
+            },
+            {
+              "text": "ポートの所属VLANだけで顧客を判定できる",
+              "ok": true,
+              "explain": "一つのVLANだけならタグなしフレームでも識別できます。"
+            },
+            {
+              "text": "専用回線はIPを使わない",
+              "ok": false,
+              "explain": "IPを使うかどうかとタグの必要性は別です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "共有回線と顧客専用回線を区別する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "共有回線の条件と設定を組み立てる。",
+          "template": "{a}を運ぶスイッチ間では、{b}でフレームを識別する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "複数顧客のVLAN",
+                  "ok": true,
+                  "explain": "原問は顧客ごとにVLANを割り当てます。"
+                },
+                {
+                  "text": "一つの顧客だけ",
+                  "ok": false,
+                  "explain": "専用ポートなら所属から判定できます。"
+                },
+                {
+                  "text": "BGPのASパスだけ",
+                  "ok": false,
+                  "explain": "L2のVLAN識別とは異なります。"
+                }
+              ],
+              "why": "原問は顧客ごとにVLANを割り当てます。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "TCP確認応答番号",
+                  "ok": false,
+                  "explain": "TCPデータの受信位置を示す情報です。"
+                },
+                {
+                  "text": "GARPの送信間隔",
+                  "ok": false,
+                  "explain": "VLANの所属は識別できません。"
+                },
+                {
+                  "text": "VLANタグ",
+                  "ok": true,
+                  "explain": "共有リンク上の所属を区別します。"
+                }
+              ],
+              "why": "共有リンク上の所属を区別します。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "共有回線と顧客専用回線を区別する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "original",
+          "type": "quiz",
+          "title": "原図の既存回線で、タグが必須の組合せはどれか。",
+          "choices": [
+            {
+              "text": "カ・キ・ク",
+              "ok": false,
+              "explain": "カは独立したIPセグメントです。共有回線ケが抜けています。"
+            },
+            {
+              "text": "コ・サ・シ・ス",
+              "ok": false,
+              "explain": "顧客ごとに分かれるCR接続回線です。全てにタグが必須とはいえません。"
+            },
+            {
+              "text": "キ・ク・ケ",
+              "ok": true,
+              "explain": "L3SWとL2SW間、L2SW同士の共有回線です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.34,
+            "bottom": 0.81,
+            "label": "図1：既存の顧客接続と共有回線（IPA原図）"
+          },
+          "format": "選択",
+          "theme": "共有回線と顧客専用回線を区別する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "顧客Aへの1本で新たにA用とB用のVLANを運ぶ。必要性はどう変わるか。",
+          "choices": [
+            {
+              "text": "OSPFエリアを二つに分ければタグは不要",
+              "ok": false,
+              "explain": "OSPFの区分は同じ回線上のL2識別を代替しません。"
+            },
+            {
+              "text": "その回線でもVLANを識別するタグが必要になる",
+              "ok": true,
+              "explain": "接続先の名前ではなく、運ぶVLAN数で判断します。"
+            },
+            {
+              "text": "顧客向け回線なのでタグは不要のまま",
+              "ok": false,
+              "explain": "複数VLANを区別する必要が生じています。"
+            }
+          ],
+          "format": "選択",
+          "theme": "共有回線と顧客専用回線を区別する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "lacp-hidden-fault",
+      "title": "リンクが上がったままの故障を検出する",
+      "targets": [
+        "s1-4"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "光区間だけが切れた",
+          "body": "二つのスイッチの間にメディアコンバータがあります。光が切れても銅線側のリンクは上がったままです。LAG（Link Aggregation）で束ねた回線の一部が使えなくなりました。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "スイッチ",
+                "d": "銅線側はリンクアップ"
+              },
+              {
+                "t": "メディアコンバータ",
+                "d": "光区間が断線"
+              },
+              {
+                "t": "相手スイッチ",
+                "d": "制御フレームが届かない"
+              }
+            ],
+            "caption": "説明用の通信・処理の流れ"
+          },
+          "format": "読む",
+          "theme": "リンクが上がったままの故障を検出する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "自ポートのリンク状態だけでは見逃すものはどれか。",
+          "choices": [
+            {
+              "text": "自ポートのケーブル抜去",
+              "ok": false,
+              "explain": "直接接続の断線はリンクダウンとして分かります。"
+            },
+            {
+              "text": "IPアドレスの桁数",
+              "ok": false,
+              "explain": "リンク監視の対象ではありません。"
+            },
+            {
+              "text": "途中の光区間での断線",
+              "ok": true,
+              "explain": "コンバータが障害を銅線側へ連動させない条件です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "リンクが上がったままの故障を検出する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "LACPを使うとどの判断が可能になるか。",
+          "choices": [
+            {
+              "text": "正常メンバの速度を2倍にする",
+              "ok": false,
+              "explain": "障害検出と物理速度は別です。"
+            },
+            {
+              "text": "対向との制御通信を基に故障メンバを除外する",
+              "ok": true,
+              "explain": "Link Aggregation Control Protocolは集約状態を確認します。"
+            },
+            {
+              "text": "光ファイバを自動修復する",
+              "ok": false,
+              "explain": "通信制御で物理的な断線は直せません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "リンクが上がったままの故障を検出する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "故障条件・対象・処理をそろえる。",
+          "template": "{a}故障でも、LAGから{b}を{c}できる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "リンクダウンを伴わない",
+                  "ok": true,
+                  "explain": "本問のコンバータが作る見えにくい故障です。"
+                },
+                {
+                  "text": "IPアドレスが重複した",
+                  "ok": false,
+                  "explain": "LACPはIPアドレス重複を直接検査しません。"
+                },
+                {
+                  "text": "DNSに登録されていない",
+                  "ok": false,
+                  "explain": "名前解決はLACPの対象ではありません。"
+                }
+              ],
+              "why": "本問のコンバータが作る見えにくい故障です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "正常回線だけ",
+                  "ok": false,
+                  "explain": "故障回線を残すと廃棄が続きます。"
+                },
+                {
+                  "text": "顧客のルート全て",
+                  "ok": false,
+                  "explain": "LACPは経路表を全削除する機能ではありません。"
+                },
+                {
+                  "text": "故障回線",
+                  "ok": true,
+                  "explain": "集約に使えないメンバを除きます。"
+                }
+              ],
+              "why": "集約に使えないメンバを除きます。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "暗号化",
+                  "ok": false,
+                  "explain": "LACPに暗号化の役割はありません。"
+                },
+                {
+                  "text": "自動で除外",
+                  "ok": true,
+                  "explain": "静的な束ね方との差です。"
+                },
+                {
+                  "text": "増速",
+                  "ok": false,
+                  "explain": "物理帯域は増えません。"
+                }
+              ],
+              "why": "静的な束ね方との差です。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "リンクが上がったままの故障を検出する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "原問の障害検出の流れを並べる。",
+          "lead": "銅線側へリンクダウンが伝わらない条件です。",
+          "lines": [
+            {
+              "code": "途中の光区間が断線する"
+            },
+            {
+              "code": "銅線側はリンクアップでもLACPの制御通信が途絶える"
+            },
+            {
+              "code": "故障したメンバをLAGから除外する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "物理リンク状態と対向への到達性を区別します。",
+          "ngExplain": "コンバータを越えた通信が続いているかが判断材料です。",
+          "originalExcerpt": {
+            "page": 4,
+            "top": 0.65,
+            "bottom": 0.8,
+            "label": "本文：メディアコンバータの障害連動条件（IPA原文）"
+          },
+          "format": "並べ替え",
+          "theme": "リンクが上がったままの故障を検出する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "光断を銅線側リンクダウンへ連動する装置に交換した。変わる点は何か。",
+          "choices": [
+            {
+              "text": "LACPの制御通信は不要な仕様になる",
+              "ok": false,
+              "explain": "今回の断線の検出条件が変わるだけです。"
+            },
+            {
+              "text": "この断線は物理リンク状態からも検出できる",
+              "ok": true,
+              "explain": "連動機能によりスイッチ側のリンクが落ちます。"
+            },
+            {
+              "text": "断線しても通信が継続する",
+              "ok": false,
+              "explain": "故障の通知機能であり代替経路ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "リンクが上がったままの故障を検出する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "lag-capacity",
+      "title": "故障後の帯域からパケット廃棄を判断する",
+      "targets": [
+        "s1-5"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "2本のうち1本が止まる",
+          "body": "1Gビット／秒の回線を2本束ねます。合計1.6Gビット／秒が流れています。1本故障しても残りの回線を使い続けると、容量が不足します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "状態",
+              "使用可能な回線",
+              "合計帯域"
+            ],
+            "rows": [
+              [
+                "正常",
+                "1G×2",
+                "2G"
+              ],
+              [
+                "片系故障",
+                "1G×1",
+                "1G"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "故障後の帯域からパケット廃棄を判断する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "故障後も1.6Gビット／秒を1G回線へ送り続けた。何が起きるか。",
+          "choices": [
+            {
+              "text": "残った回線が自動で1.6Gになる",
+              "ok": false,
+              "explain": "物理速度は入力に合わせて増えません。"
+            },
+            {
+              "text": "パケットのIPアドレスが短縮される",
+              "ok": false,
+              "explain": "アドレス長を変えて帯域不足は解決しません。"
+            },
+            {
+              "text": "輻輳し、収容できないパケットが廃棄される",
+              "ok": true,
+              "explain": "平均入力が出力を上回り続ければ待ち行列があふれます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "故障後の帯域からパケット廃棄を判断する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "原問でLAG全体を閉塞する目的はどれか。",
+          "choices": [
+            {
+              "text": "顧客の最大通信量を1Gに変更する",
+              "ok": false,
+              "explain": "設計条件は最大2Gのままです。"
+            },
+            {
+              "text": "帯域不足の経路を残さず、冗長経路へ切り替える",
+              "ok": true,
+              "explain": "1本残存による1Gの狭い経路を使わせないためです。"
+            },
+            {
+              "text": "障害回線を修理する",
+              "ok": false,
+              "explain": "閉塞は故障修理ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "故障後の帯域からパケット廃棄を判断する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "L3SW3とL2SW3の間の問題を組み立てる。",
+          "template": "全体を閉塞せず1本だけで転送すると、{a}を超えた{b}が{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "1Gビット／秒",
+                  "ok": true,
+                  "explain": "残存メンバ1本の容量です。"
+                },
+                {
+                  "text": "2Gビット／秒",
+                  "ok": false,
+                  "explain": "2本とも利用できる場合の合計です。"
+                },
+                {
+                  "text": "10Gビット／秒",
+                  "ok": false,
+                  "explain": "この区間の残存回線の速度ではありません。"
+                }
+              ],
+              "why": "残存メンバ1本の容量です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "AS番号",
+                  "ok": false,
+                  "explain": "帯域を消費するデータの単位ではありません。"
+                },
+                {
+                  "text": "VLAN定義",
+                  "ok": false,
+                  "explain": "設定が廃棄されるわけではありません。"
+                },
+                {
+                  "text": "パケット",
+                  "ok": true,
+                  "explain": "設問はパケットへの影響を求めています。"
+                }
+              ],
+              "why": "設問はパケットへの影響を求めています。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "暗号化される",
+                  "ok": false,
+                  "explain": "輻輳によって暗号化は起きません。"
+                },
+                {
+                  "text": "廃棄される",
+                  "ok": true,
+                  "explain": "持続的な帯域不足でバッファがあふれます。"
+                },
+                {
+                  "text": "必ず別経路へ分散される",
+                  "ok": false,
+                  "explain": "狭い経路が有効なままでは、その動作を保証できません。"
+                }
+              ],
+              "why": "持続的な帯域不足でバッファがあふれます。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "故障後の帯域からパケット廃棄を判断する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "要件から閉塞設定までを並べる。",
+          "lead": "原問は1か所断線しても輻輳させない設計です。",
+          "lines": [
+            {
+              "code": "顧客の合計最大通信量2Gを確認する"
+            },
+            {
+              "code": "1本故障後は1Gしか残らないと判断する"
+            },
+            {
+              "code": "そのLAG全体を閉塞し代替経路を使用させる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "正常時だけでなく故障後の容量で判断します。",
+          "ngExplain": "必要量、残存容量、切替動作の順に確認します。",
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.05,
+            "bottom": 0.41,
+            "label": "本文：最大トラフィック量と全IF閉塞の条件（IPA原文）"
+          },
+          "format": "並べ替え",
+          "theme": "故障後の帯域からパケット廃棄を判断する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "最大通信量が0.7Gに下がり、他の制約はない。1Gの残存回線の容量は足りるか。",
+          "choices": [
+            {
+              "text": "2本構成なら残り0本として扱うしかない",
+              "ok": false,
+              "explain": "全体閉塞は設計上選ぶ設定です。"
+            },
+            {
+              "text": "容量の面では足りる",
+              "ok": true,
+              "explain": "0.7Gは1Gを下回ります。原問と最大量が違います。"
+            },
+            {
+              "text": "LAGが1本になっただけで必ず廃棄される",
+              "ok": false,
+              "explain": "廃棄は残存容量と入力の関係で判断します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "故障後の帯域からパケット廃棄を判断する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "hash-input",
+      "title": "負荷分散の材料が偏る理由を説明する",
+      "targets": [
+        "s1-6"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "端末は多いがMACの組は少ない",
+          "body": "複数の通信が同じルータ間を通ります。IPアドレスやポートが違っても、隣接ルータ間のMACの組は同じ場合があります。ハッシュは同じ入力に同じ結果を返します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "通信",
+              "MACの組",
+              "IP・ポートの組"
+            ],
+            "rows": [
+              [
+                "通信1",
+                "R1→R2",
+                "A:1000→B:443"
+              ],
+              [
+                "通信2",
+                "R1→R2",
+                "C:2000→D:443"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "負荷分散の材料が偏る理由を説明する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "MACの組だけをハッシュ入力にすると、上の2通信はどうなるか。",
+          "choices": [
+            {
+              "text": "必ず1本ずつに割り当てられる",
+              "ok": false,
+              "explain": "回線を順番に選ぶ方式ではありません。"
+            },
+            {
+              "text": "MACの組が同じなので通信不能になる",
+              "ok": false,
+              "explain": "同じルータ間を複数のIP通信が通るのは通常の動作です。"
+            },
+            {
+              "text": "同じメンバに割り当てられる",
+              "ok": true,
+              "explain": "入力が同じなのでハッシュ結果も同じです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "負荷分散の材料が偏る理由を説明する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "端末数が多いのに分散しない理由はどれか。",
+          "choices": [
+            {
+              "text": "OSPFがTCPポートを固定するため",
+              "ok": false,
+              "explain": "OSPFはアプリケーションのポートを変更しません。"
+            },
+            {
+              "text": "途中のL2ヘッダは隣接ルータのMACの組になるため",
+              "ok": true,
+              "explain": "IP通信の多様さがMACの組に現れない場合があります。"
+            },
+            {
+              "text": "MACアドレスがIPアドレスより短いため",
+              "ok": false,
+              "explain": "ここで重要なのは入力値の種類の少なさです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "負荷分散の材料が偏る理由を説明する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "原因と結果を結ぶ。",
+          "template": "{a}の組合せが少ないため、{b}が分散しない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "送信元・宛先MACアドレス",
+                  "ok": true,
+                  "explain": "原問の前者の方式が使う入力です。"
+                },
+                {
+                  "text": "VLAN名称の文字",
+                  "ok": false,
+                  "explain": "原問のハッシュ入力ではありません。"
+                },
+                {
+                  "text": "監視時刻",
+                  "ok": false,
+                  "explain": "通信の振分け材料ではありません。"
+                }
+              ],
+              "why": "原問の前者の方式が使う入力です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "OSPFのエリア番号",
+                  "ok": false,
+                  "explain": "LAGのハッシュから決まるものではありません。"
+                },
+                {
+                  "text": "DNSのTTL",
+                  "ok": false,
+                  "explain": "名前解決のキャッシュ時間です。"
+                },
+                {
+                  "text": "ハッシュ関数の計算値",
+                  "ok": true,
+                  "explain": "少数の入力が少数のメンバに集中します。"
+                }
+              ],
+              "why": "少数の入力が少数のメンバに集中します。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "負荷分散の材料が偏る理由を説明する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "入力を増やす設計の理由を並べる。",
+          "lead": "原問の二つの方式を比べます。",
+          "lines": [
+            {
+              "code": "MACの組では複数の通信を区別できない"
+            },
+            {
+              "code": "送信元・宛先IPと両ポート番号を入力に加える"
+            },
+            {
+              "code": "異なる通信を別メンバへ分散しやすくする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "分散の可能性を高めます。均等な分散を保証する意味ではありません。",
+          "ngExplain": "まず偏りの原因を示し、その原因を減らす入力を選びます。",
+          "format": "並べ替え",
+          "theme": "負荷分散の材料が偏る理由を説明する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "IPとポートを使うLAGに、単一の大きなTCP通信だけを流した。どうなるか。",
+          "choices": [
+            {
+              "text": "ポートを使えば1通信でも2本分の速度が出る",
+              "ok": false,
+              "explain": "メンバへの割当て条件からその保証はありません。"
+            },
+            {
+              "text": "その通信は一つのメンバに偏り得る",
+              "ok": true,
+              "explain": "同一フローではハッシュ入力が変わらないためです。"
+            },
+            {
+              "text": "パケットごとに必ず交互に送る",
+              "ok": false,
+              "explain": "フロー単位のハッシュはラウンドロビンではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "負荷分散の材料が偏る理由を説明する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "monitor-counters",
+      "title": "疎通・通知・通信量の観測を選び分ける",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "生きている装置の回線が混雑する",
+          "body": "監視装置からpingは成功しています。それでも一方のLAGメンバだけが混雑しています。生存確認とは別に、各インタフェースの通信量を調べます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "知りたいこと",
+              "観測方法"
+            ],
+            "rows": [
+              [
+                "応答の有無",
+                "ping"
+              ],
+              [
+                "状態変更",
+                "SNMPトラップ"
+              ],
+              [
+                "一定時間の通信量",
+                "MIBカウンタの差分"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "疎通・通知・通信量の観測を選び分ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "pingが利用するプロトコルはどれか。",
+          "choices": [
+            {
+              "text": "SNMP",
+              "ok": false,
+              "explain": "装置の管理情報を取得するプロトコルです。"
+            },
+            {
+              "text": "BGP",
+              "ok": false,
+              "explain": "外部経路を交換します。pingの要求ではありません。"
+            },
+            {
+              "text": "ICMP（Internet Control Message Protocol）",
+              "ok": true,
+              "explain": "Echo RequestとEcho Replyで応答を確認します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "疎通・通知・通信量の観測を選び分ける",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "各回線のトラフィック量を知るには何を読むか。",
+          "choices": [
+            {
+              "text": "pingが成功した回数だけ",
+              "ok": false,
+              "explain": "疎通確認の応答数は顧客の通信量ではありません。"
+            },
+            {
+              "text": "各IFの送受信カウンタ",
+              "ok": true,
+              "explain": "MIBの値を継続取得し、差分から量を求めます。"
+            },
+            {
+              "text": "障害トラップが来た回数だけ",
+              "ok": false,
+              "explain": "状態変更回数から通常通信の量は求められません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "疎通・通知・通信量の観測を選び分ける",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "監視の三つの空欄を埋める。",
+          "template": "pingは{d}、装置からの通知は{e}、管理情報ベースは{f}である。",
+          "blanks": [
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "ICMP",
+                  "ok": true,
+                  "explain": "疎通確認に使います。"
+                },
+                {
+                  "text": "TCP",
+                  "ok": false,
+                  "explain": "原問のpingはTCP接続確認ではありません。"
+                },
+                {
+                  "text": "ARP",
+                  "ok": false,
+                  "explain": "同一リンク内のアドレス解決です。"
+                }
+              ],
+              "why": "疎通確認に使います。"
+            },
+            {
+              "key": "e",
+              "label": "e",
+              "choices": [
+                {
+                  "text": "OSPF広告",
+                  "ok": false,
+                  "explain": "経路制御の情報です。"
+                },
+                {
+                  "text": "HTTP Cookie",
+                  "ok": false,
+                  "explain": "ブラウザの状態管理に使います。"
+                },
+                {
+                  "text": "SNMPトラップ",
+                  "ok": true,
+                  "explain": "SNMPはSimple Network Management Protocolです。"
+                }
+              ],
+              "why": "SNMPはSimple Network Management Protocolです。"
+            },
+            {
+              "key": "f",
+              "label": "f",
+              "choices": [
+                {
+                  "text": "FIB",
+                  "ok": false,
+                  "explain": "転送用の経路情報です。"
+                },
+                {
+                  "text": "MIB",
+                  "ok": true,
+                  "explain": "Management Information Baseに管理対象の情報があります。"
+                },
+                {
+                  "text": "RIB",
+                  "ok": false,
+                  "explain": "ルーティング情報ベースです。"
+                }
+              ],
+              "why": "Management Information Baseに管理対象の情報があります。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "疎通・通知・通信量の観測を選び分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "カウンタから通信量を得る手順を並べる。",
+          "lead": "カウンタの巻戻りは起きないものとします。",
+          "lines": [
+            {
+              "code": "各メンバIFのカウンタを取得する"
+            },
+            {
+              "code": "5分後に同じカウンタを再取得する"
+            },
+            {
+              "code": "差分を時間で割り各回線の平均トラフィックを求める"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "原問の方法は(iii)です。メンバごとに読むことが重要です。",
+          "ngExplain": "単発の値ではなく、同じIFの時間差を使います。",
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.71,
+            "bottom": 0.91,
+            "label": "本文：三つの監視方法（IPA原文）"
+          },
+          "format": "並べ替え",
+          "theme": "疎通・通知・通信量の観測を選び分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "トラップが一度も届かなくても通信量が増えることはあるか。",
+          "choices": [
+            {
+              "text": "ない。ping成功時は通信量が一定になる",
+              "ok": false,
+              "explain": "疎通と量にはそのような関係はありません。"
+            },
+            {
+              "text": "ある。正常動作中でもトラフィックは変動する",
+              "ok": true,
+              "explain": "状態変更通知と通信量の計測は目的が違います。"
+            },
+            {
+              "text": "ない。通信1個ごとにトラップが出る",
+              "ok": false,
+              "explain": "通常のパケット全てをトラップで通知するものではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "疎通・通知・通信量の観測を選び分ける",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "service-path",
+      "title": "追加監視が確かめる区間を限定する",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "管理口には届くが顧客通信は止まる",
+          "body": "管理用ネットワークと顧客データのネットワークは独立しています。管理口へpingできても、顧客データの経路は通っていません。確認したい経路へ監視パケットを流します。",
+          "fig": {
+            "kind": "net",
+            "height": 140,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 45,
+                "y": 65,
+                "label": "監視装置"
+              },
+              {
+                "id": "node1",
+                "x": 170,
+                "y": 65,
+                "label": "コアルータ"
+              },
+              {
+                "id": "node2",
+                "x": 295,
+                "y": 65,
+                "label": "L3SW仮想IP"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用の構成図"
+          },
+          "format": "読む",
+          "theme": "追加監視が確かめる区間を限定する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "管理IFから他のIFへルーティングできない。管理IFへのpingで分からないものはどれか。",
+          "choices": [
+            {
+              "text": "その管理IFがpingに応答したこと",
+              "ok": false,
+              "explain": "成功すればその応答は確認できます。"
+            },
+            {
+              "text": "監視装置がパケットを送れたこと",
+              "ok": false,
+              "explain": "応答が戻った事実から送信は確認できます。"
+            },
+            {
+              "text": "顧客データを運ぶ経路の疎通",
+              "ok": true,
+              "explain": "管理ネットワークだけで往復しているためです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "追加監視が確かめる区間を限定する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "L3SWの実IPではなく仮想IPを監視する狙いはどれか。",
+          "choices": [
+            {
+              "text": "ISPの全ての外部経路を確認する",
+              "ok": false,
+              "explain": "今回の監視パケットはISPへ出ません。"
+            },
+            {
+              "text": "顧客が利用する仮想ルータの応答を確認する",
+              "ok": true,
+              "explain": "マスタが切り替わっても同じ宛先を監視できます。"
+            },
+            {
+              "text": "全顧客のサーバアプリケーションを確認する",
+              "ok": false,
+              "explain": "仮想IPより先のアプリケーションは通りません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "追加監視が確かめる区間を限定する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "原問で追加される確認区間を選ぶ。",
+          "template": "データ用経路で、{a}から{b}までの正常性を確認する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "コアルータ",
+                  "ok": true,
+                  "explain": "L2SW22を通じてここからデータ網へ入ります。"
+                },
+                {
+                  "text": "インターネットのWebサーバ",
+                  "ok": false,
+                  "explain": "外部のサーバから監視していません。"
+                },
+                {
+                  "text": "顧客セグメント内のPC",
+                  "ok": false,
+                  "explain": "監視装置の配置が異なります。"
+                }
+              ],
+              "why": "L2SW22を通じてここからデータ網へ入ります。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "顧客の全サーバ",
+                  "ok": false,
+                  "explain": "仮想IPの先まで到達したことは確認しません。"
+                },
+                {
+                  "text": "ISP",
+                  "ok": false,
+                  "explain": "宛先は社内のL3SWです。"
+                },
+                {
+                  "text": "L3SW",
+                  "ok": true,
+                  "explain": "宛先はL3SWのVRRP仮想IPです。"
+                }
+              ],
+              "why": "宛先はL3SWのVRRP仮想IPです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.18,
+            "bottom": 0.73,
+            "label": "本文・図2：追加する監視経路と宛先（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "追加監視が確かめる区間を限定する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "確認範囲を判断する順序を並べる。",
+          "lead": "実際に通る経路だけを答案に含めます。",
+          "lines": [
+            {
+              "code": "監視装置がL2SW22経由でコアルータへ送る"
+            },
+            {
+              "code": "顧客データの経路でL3SWの仮想IPに届く"
+            },
+            {
+              "code": "コアルータからL3SWまでの疎通を確認できる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "監視の送信経路と終点から確認範囲を定めます。",
+          "ngExplain": "管理用経路や、終点より先の顧客設備を混ぜないでください。",
+          "format": "並べ替え",
+          "theme": "追加監視が確かめる区間を限定する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "L3SW仮想IPへのpingは成功したが、その先のCRが故障した。矛盾するか。",
+          "choices": [
+            {
+              "text": "矛盾する。仮想IPはCRそのものである",
+              "ok": false,
+              "explain": "本問の監視対象はL3SWの仮想IPです。"
+            },
+            {
+              "text": "矛盾しない。CRは今回の確認区間外である",
+              "ok": true,
+              "explain": "監視の終点より先の故障は検出できない場合があります。"
+            },
+            {
+              "text": "矛盾する。ping成功は全サービス正常を意味する",
+              "ok": false,
+              "explain": "応答する終点までの確認に限られます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "追加監視が確かめる区間を限定する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

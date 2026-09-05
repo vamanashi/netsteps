@@ -1,0 +1,1790 @@
+{
+  "examKey": "2021r03h/pm1/2",
+  "title": "企業統合でOSPFの経路とエリアをつなぐ",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_ans.pdf",
+    "https://www.rfc-editor.org/rfc/rfc2328"
+  ],
+  "sections": [
+    {
+      "id": "vpn-roles",
+      "title": "VPNの認証情報と通信範囲を分ける",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "vpn-roles-1",
+          "format": "読む",
+          "theme": "VPNの認証情報と通信範囲を分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "クラウドへ安全に接続する",
+          "body": "社内PCはFWとクラウドのゲートウェイを介して通信します。IPsecはIP通信を保護する仕組みです。両端には相手の外部IPと、保護する社内ネットワークを設定します。原問の空欄aは認証のための情報です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "設定するもの",
+              "目的"
+            ],
+            "rows": [
+              [
+                "相手の外部IP",
+                "トンネルの接続先"
+              ],
+              [
+                "社内ネットワーク",
+                "トンネルで扱う通信範囲"
+              ],
+              [
+                "事前共有鍵",
+                "相手の認証"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "vpn-roles-2",
+          "format": "選択",
+          "theme": "VPNの認証情報と通信範囲を分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "両端に同じ秘密情報をあらかじめ設定して相手を認証する。この情報はどれか。",
+          "choices": [
+            {
+              "text": "公開鍵だけ",
+              "ok": false,
+              "explain": "事前に共有する秘密情報とは別の方式です。"
+            },
+            {
+              "text": "サブネットマスク",
+              "ok": false,
+              "explain": "ネットワークの範囲を表し、認証はしません。"
+            },
+            {
+              "text": "事前共有鍵",
+              "ok": true,
+              "explain": "双方が同じ秘密を知っていることを認証に用います。"
+            }
+          ]
+        },
+        {
+          "id": "vpn-roles-3",
+          "format": "選択",
+          "theme": "VPNの認証情報と通信範囲を分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "外部IPは正しいが共有鍵が両端で異なる。何が問題になるか。",
+          "choices": [
+            {
+              "text": "自動で全ネットワークが許可される",
+              "ok": false,
+              "explain": "認証に失敗して通信範囲が広がることはありません。"
+            },
+            {
+              "text": "相手の認証に失敗する",
+              "ok": true,
+              "explain": "到達先が正しくても認証情報は一致させる必要があります。"
+            },
+            {
+              "text": "PCのMACアドレスが重複する",
+              "ok": false,
+              "explain": "鍵の不一致はLANのMAC割当てとは無関係です。"
+            }
+          ]
+        },
+        {
+          "id": "vpn-roles-4",
+          "format": "穴埋め",
+          "theme": "VPNの認証情報と通信範囲を分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "設定の役割を補え。",
+          "template": "IPsec VPN認証用の事前{a}を両端に設定する。E社を加えたら、保護対象に{b}を追加する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "共有鍵",
+                  "ok": true,
+                  "explain": "原問の認証設定に入る語です。"
+                },
+                {
+                  "text": "コスト",
+                  "ok": false,
+                  "explain": "OSPFの経路評価値です。"
+                },
+                {
+                  "text": "デフォルトルート",
+                  "ok": false,
+                  "explain": "未知の宛先への転送先であり秘密情報ではありません。"
+                }
+              ],
+              "why": "原問の認証設定に入る語です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "E社の172.18.0.0/16",
+                  "ok": true,
+                  "explain": "接続元ネットワークが新しく増えるためです。"
+                },
+                {
+                  "text": "E社PCのMACアドレスだけ",
+                  "ok": false,
+                  "explain": "拠点間のIPsecではIPネットワークの設定が必要です。"
+                },
+                {
+                  "text": "既存172.16.0.0/16の削除",
+                  "ok": false,
+                  "explain": "D社支社の通信を残す必要があります。"
+                }
+              ],
+              "why": "接続元ネットワークが新しく増えるためです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.12,
+            "bottom": 0.34,
+            "label": "FWとVPC GWの設定項目（IPA原典）"
+          }
+        },
+        {
+          "id": "vpn-roles-5",
+          "format": "並べ替え",
+          "theme": "VPNの認証情報と通信範囲を分ける",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "新しい接続元を追加する考え方を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "E社PCの接続元ネットワークを確認する"
+            },
+            {
+              "code": "FWとVPC GWの保護対象設定にE社の範囲を追加する"
+            },
+            {
+              "code": "既存接続元と追加した接続元から通信を確認する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "経路が通ることと、IPsecでその通信を扱うことは別の確認事項です。",
+          "ngExplain": "経路が通ることと、IPsecでその通信を扱うことは別の確認事項です。"
+        },
+        {
+          "id": "vpn-roles-6",
+          "format": "選択",
+          "theme": "VPNの認証情報と通信範囲を分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "別の練習で新部署のアドレスが既存の保護対象/16に収まる。必要な判断はどれか。",
+          "choices": [
+            {
+              "text": "外部IPを部署PCのIPに変える",
+              "ok": false,
+              "explain": "トンネル終端と社内接続元の役割を混同しています。"
+            },
+            {
+              "text": "既存範囲に含まれることを確かめて経路なども確認する",
+              "ok": true,
+              "explain": "範囲内なら同じ設定で扱える場合があります。経路や許可条件は別途確認します。"
+            },
+            {
+              "text": "必ず共有鍵を部署ごとに変える",
+              "ok": false,
+              "explain": "接続元の追加とトンネル相手の認証は別です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "spf",
+      "title": "リンク情報から経路を計算する",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "spf-1",
+          "format": "読む",
+          "theme": "リンク情報から経路を計算する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "経路は情報交換と計算で作る",
+          "body": "OSPFはOpen Shortest Path Firstです。LSAはLink State Advertisementで、接続状態を伝えます。集めたLSAからリンク状態データベースを作り、経路を計算します。原問ではType1の名称と計算方法を問います。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "経路",
+              "コストの合計"
+            ],
+            "rows": [
+              [
+                "直行",
+                "30"
+              ],
+              [
+                "中継1台",
+                "10＋10＝20"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "spf-2",
+          "format": "選択",
+          "theme": "リンク情報から経路を計算する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "直行コスト30、2区間の迂回コスト10と10。同じ種別のOSPF経路ではどちらを選ぶか。",
+          "choices": [
+            {
+              "text": "直行30",
+              "ok": false,
+              "explain": "ホップ数だけで優先する方式ではありません。"
+            },
+            {
+              "text": "どちらも必ず同じ割合",
+              "ok": false,
+              "explain": "合計コストが異なる条件です。"
+            },
+            {
+              "text": "迂回の合計20",
+              "ok": true,
+              "explain": "区間のコストを合計して比較します。"
+            }
+          ]
+        },
+        {
+          "id": "spf-3",
+          "format": "選択",
+          "theme": "リンク情報から経路を計算する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "Type1のLSAは何を表すか。",
+          "choices": [
+            {
+              "text": "接続PCのMAC一覧",
+              "ok": false,
+              "explain": "スイッチのMACアドレス表ではありません。"
+            },
+            {
+              "text": "ルータとそのリンクの情報",
+              "ok": true,
+              "explain": "ルータLSAと呼ばれ、リンクのコストなどを含みます。"
+            },
+            {
+              "text": "DNSの名前とIPの組",
+              "ok": false,
+              "explain": "DNSの資源レコードとLSAは別です。"
+            }
+          ]
+        },
+        {
+          "id": "spf-4",
+          "format": "穴埋め",
+          "theme": "リンク情報から経路を計算する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "原文のb、c、dに対応する語を選べ。",
+          "template": "Type1は{b}LSAで、評価値は{c}という。最短経路は{d}アルゴリズムで求める。",
+          "blanks": [
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "ルータ",
+                  "ok": true,
+                  "explain": "Type1は各ルータの接続情報です。"
+                },
+                {
+                  "text": "ネットワーク",
+                  "ok": false,
+                  "explain": "ネットワークLSAはType2です。"
+                },
+                {
+                  "text": "サマリ",
+                  "ok": false,
+                  "explain": "エリア間に通知する要約情報とは異なります。"
+                }
+              ],
+              "why": "Type1は各ルータの接続情報です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "コスト",
+                  "ok": true,
+                  "explain": "OSPFが経路の評価に使う値です。"
+                },
+                {
+                  "text": "TTL",
+                  "ok": false,
+                  "explain": "パケットの生存期間を制限する値です。"
+                },
+                {
+                  "text": "MAC",
+                  "ok": false,
+                  "explain": "レイヤ2の機器識別に用います。"
+                }
+              ],
+              "why": "OSPFが経路の評価に使う値です。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "ダイクストラ",
+                  "ok": true,
+                  "explain": "リンク状態から最短経路を計算します。"
+                },
+                {
+                  "text": "ラウンドロビン",
+                  "ok": false,
+                  "explain": "順番に資源を割り当てる方式です。"
+                },
+                {
+                  "text": "NAT",
+                  "ok": false,
+                  "explain": "IPアドレスを変換する機能です。"
+                }
+              ],
+              "why": "リンク状態から最短経路を計算します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.365,
+            "bottom": 0.67,
+            "label": "OSPFのLSAと最短経路計算（IPA原典）"
+          }
+        },
+        {
+          "id": "spf-5",
+          "format": "並べ替え",
+          "theme": "リンク情報から経路を計算する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "経路表ができる順に並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "LSAを隣接ルータと交換する"
+            },
+            {
+              "code": "リンク状態データベースを構築する"
+            },
+            {
+              "code": "コストから最短経路を計算し、経路表へ反映する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "LSAの情報が計算の入力になり、経路表は計算結果です。",
+          "ngExplain": "LSAの情報が計算の入力になり、経路表は計算結果です。"
+        },
+        {
+          "id": "spf-6",
+          "format": "選択",
+          "theme": "リンク情報から経路を計算する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "迂回側の2区間目だけコストを25にした。直行30との比較結果はどれか。",
+          "choices": [
+            {
+              "text": "区間数が同じでないので比較不能",
+              "ok": false,
+              "explain": "合計コストで比較できます。"
+            },
+            {
+              "text": "直行を選ぶ",
+              "ok": true,
+              "explain": "迂回は10＋25＝35なので直行30が小さくなります。"
+            },
+            {
+              "text": "以前の迂回を永久に使う",
+              "ok": false,
+              "explain": "リンク情報が更新されれば経路を再計算します。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "default",
+      "title": "出口の経路を全社へ知らせる",
+      "targets": [
+        "s2"
+      ],
+      "steps": [
+        {
+          "id": "default-1",
+          "format": "読む",
+          "theme": "出口の経路を全社へ知らせる",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "出口だけ知っていても支社は使えない",
+          "body": "FWにはインターネット向けの静的デフォルト経路があります。支社の機器はOSPFで経路を学びます。FWが持つ出口情報をOSPF側に通知する必要があります。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "支社：未知の外部宛先"
+              },
+              {
+                "t": "OSPFで学んだデフォルト経路"
+              },
+              {
+                "t": "FW：ISPへ静的経路で転送"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "default-2",
+          "format": "選択",
+          "theme": "出口の経路を全社へ知らせる",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "FWだけに静的デフォルト経路を設定した。支社が同じ出口を学ぶために必要なのはどれか。",
+          "choices": [
+            {
+              "text": "FWでDNSキャッシュを消す",
+              "ok": false,
+              "explain": "名前解決と出口経路の広告は別です。"
+            },
+            {
+              "text": "OSPFへデフォルトルートを導入する",
+              "ok": true,
+              "explain": "FWのローカル設定を全社へ知らせる必要があります。"
+            },
+            {
+              "text": "支社PCにFWのMACだけ配る",
+              "ok": false,
+              "explain": "遠隔ネットワークへの経路を作ることにはなりません。"
+            }
+          ]
+        },
+        {
+          "id": "default-3",
+          "format": "選択",
+          "theme": "出口の経路を全社へ知らせる",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "デフォルトルートが表す宛先はどれか。",
+          "choices": [
+            {
+              "text": "0.0.0.0/0",
+              "ok": true,
+              "explain": "より具体的な経路がない宛先に使います。"
+            },
+            {
+              "text": "192.168.1.0/24だけ",
+              "ok": false,
+              "explain": "これはクラウド側の特定ネットワークです。"
+            },
+            {
+              "text": "172.16.0.0/16だけ",
+              "ok": false,
+              "explain": "これは支社の集約先です。"
+            }
+          ]
+        },
+        {
+          "id": "default-4",
+          "format": "穴埋め",
+          "theme": "出口の経路を全社へ知らせる",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "設定機器と設定内容を結べ。",
+          "template": "出口の{a}で、{b}をOSPFへ導入する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "L2SW7",
+                  "ok": false,
+                  "explain": "原問のOSPF機器に含まれないレイヤ2機器です。"
+                },
+                {
+                  "text": "VPC内のPC",
+                  "ok": false,
+                  "explain": "全社のOSPFへ出口を知らせる機器ではありません。"
+                },
+                {
+                  "text": "FW",
+                  "ok": true,
+                  "explain": "ISP向け静的デフォルト経路を保持します。"
+                }
+              ],
+              "why": "ISP向け静的デフォルト経路を保持します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "全PCのARP表",
+                  "ok": false,
+                  "explain": "レイヤ2の対応関係はOSPF経路ではありません。"
+                },
+                {
+                  "text": "共有鍵",
+                  "ok": false,
+                  "explain": "トンネルの認証設定であり経路広告ではありません。"
+                },
+                {
+                  "text": "デフォルトルート",
+                  "ok": true,
+                  "explain": "未知の外部宛先を出口へ向けます。"
+                }
+              ],
+              "why": "未知の外部宛先を出口へ向けます。"
+            }
+          ]
+        },
+        {
+          "id": "default-5",
+          "format": "並べ替え",
+          "theme": "出口の経路を全社へ知らせる",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "全社から出口を使える理由を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "FWがISP向けの静的デフォルト経路を持つ"
+            },
+            {
+              "code": "そのデフォルトルートをOSPFへ導入する"
+            },
+            {
+              "code": "支社が学習したデフォルト経路に従ってFWへ送る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "FWの転送設定と、他機器が出口を知るための広告を分けます。",
+          "ngExplain": "FWの転送設定と、他機器が出口を知るための広告を分けます。"
+        },
+        {
+          "id": "default-6",
+          "format": "選択",
+          "theme": "出口の経路を全社へ知らせる",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "支社にクラウド宛て/24とデフォルト/0の両方がある。クラウド宛てではどちらを使うか。",
+          "choices": [
+            {
+              "text": "/24の経路",
+              "ok": true,
+              "explain": "宛先に一致するプレフィックスが長い経路を使います。"
+            },
+            {
+              "text": "常に/0",
+              "ok": false,
+              "explain": "デフォルトは具体的な経路がない場合に使います。"
+            },
+            {
+              "text": "広告の新しい方だけ",
+              "ok": false,
+              "explain": "転送時の宛先照合は最長一致です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "summary",
+      "title": "集約する位置と効果を判断する",
+      "targets": [
+        "s1",
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "summary-1",
+          "format": "読む",
+          "theme": "集約する位置と効果を判断する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "支社の細かな経路を本社に持たせない",
+          "body": "支社の複数LANは172.16で始まるアドレスです。本社は172.17で始まります。エリア境界で支社経路をまとめると、本社の経路表を小さくできます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "側",
+              "範囲",
+              "OSPFエリア"
+            ],
+            "rows": [
+              [
+                "支社a〜g",
+                "172.16.x.x",
+                "1"
+              ],
+              [
+                "本社h〜l",
+                "172.17.x.x",
+                "0"
+              ],
+              [
+                "境界",
+                "ルータ",
+                "1と0"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "summary-2",
+          "format": "選択",
+          "theme": "集約する位置と効果を判断する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "172.16.0.0/23と172.16.10.0/23を、原問指定の/16にまとめる。どれか。",
+          "choices": [
+            {
+              "text": "172.16.10.0/16",
+              "ok": false,
+              "explain": "/16ではホスト部を0にしたネットワークアドレスで表します。"
+            },
+            {
+              "text": "172.16.0.0/16",
+              "ok": true,
+              "explain": "先頭16ビットの172.16を共通部として残します。"
+            },
+            {
+              "text": "172.17.0.0/16",
+              "ok": false,
+              "explain": "これは本社側の範囲です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.685,
+            "bottom": 0.885,
+            "label": "表1の支社と本社のアドレス（IPA原典）"
+          }
+        },
+        {
+          "id": "summary-3",
+          "format": "選択",
+          "theme": "集約する位置と効果を判断する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "支社エリア1の経路を本社エリア0へまとめて通知する機器はどれか。",
+          "choices": [
+            {
+              "text": "ルータ",
+              "ok": true,
+              "explain": "原図で支社網gと本社網hの両方に接続しています。"
+            },
+            {
+              "text": "FW",
+              "ok": false,
+              "explain": "本社エリア0とインターネットの境界です。"
+            },
+            {
+              "text": "L2SW7",
+              "ok": false,
+              "explain": "同じLAN内でフレームを転送する機器です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.29,
+            "bottom": 0.595,
+            "label": "図1の広域網と本社の境界（IPA原典）"
+          }
+        },
+        {
+          "id": "summary-4",
+          "format": "穴埋め",
+          "theme": "集約する位置と効果を判断する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "機器・範囲・効果を補え。",
+          "template": "{a}で支社経路を{b}へ集約し、本社の{c}を小さくする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "L2SW1",
+                  "ok": false,
+                  "explain": "支社のレイヤ2機器です。"
+                },
+                {
+                  "text": "VPC GW",
+                  "ok": false,
+                  "explain": "OSPFの社内エリア境界ではありません。"
+                },
+                {
+                  "text": "ルータ",
+                  "ok": true,
+                  "explain": "エリア1と0をつなぐ境界で集約します。"
+                }
+              ],
+              "why": "エリア1と0をつなぐ境界で集約します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "172.17.0.0/16",
+                  "ok": false,
+                  "explain": "本社側の範囲です。"
+                },
+                {
+                  "text": "192.168.1.0/24",
+                  "ok": false,
+                  "explain": "クラウドの仮想セグメントです。"
+                },
+                {
+                  "text": "172.16.0.0/16",
+                  "ok": true,
+                  "explain": "表1のa〜gを含みます。"
+                }
+              ],
+              "why": "表1のa〜gを含みます。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "IPパケット",
+                  "ok": false,
+                  "explain": "集約してもパケット自体の長さは減りません。"
+                },
+                {
+                  "text": "暗号鍵",
+                  "ok": false,
+                  "explain": "暗号と経路数は別の問題です。"
+                },
+                {
+                  "text": "ルーティングテーブル",
+                  "ok": true,
+                  "explain": "複数の宛先情報を1項目にまとめられます。"
+                }
+              ],
+              "why": "複数の宛先情報を1項目にまとめられます。"
+            }
+          ]
+        },
+        {
+          "id": "summary-5",
+          "format": "並べ替え",
+          "theme": "集約する位置と効果を判断する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "集約の説明を組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "支社個別経路の共通プレフィックスを確認する"
+            },
+            {
+              "code": "エリア境界のルータで172.16.0.0/16へ集約する"
+            },
+            {
+              "code": "本社で必要な経路表の項目数を減らす"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "集約はアドレスの付け替えではなく、通知する経路情報をまとめる処理です。",
+          "ngExplain": "集約はアドレスの付け替えではなく、通知する経路情報をまとめる処理です。"
+        },
+        {
+          "id": "summary-6",
+          "format": "選択",
+          "theme": "集約する位置と効果を判断する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "新支社が172.18.2.0/24になった。既存172.16.0.0/16だけで通知できるか。",
+          "choices": [
+            {
+              "text": "できない",
+              "ok": true,
+              "explain": "先頭16ビットが違い、既存集約範囲に含まれません。"
+            },
+            {
+              "text": "支社なので含まれる",
+              "ok": false,
+              "explain": "組織名ではなくアドレスの一致で判定します。"
+            },
+            {
+              "text": "/24は/16より長いので常に含まれる",
+              "ok": false,
+              "explain": "長さだけでなく共通プレフィックスの一致が必要です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "discard",
+      "title": "集約範囲の未使用宛先を捨てる",
+      "targets": [
+        "s3-3",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "discard-1",
+          "format": "読む",
+          "theme": "集約範囲の未使用宛先を捨てる",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "集約は未使用の宛先まで含む",
+          "body": "FWは172.16.0.0/16をルータへ送ります。ルータの支社個別経路にない宛先も、この集約範囲に含まれます。ルータがデフォルト経路でFWへ戻すと往復が続きます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "FW：172.16.200.1を/16でルータへ"
+              },
+              {
+                "t": "ルータ：個別経路なし、/0でFWへ戻す"
+              },
+              {
+                "t": "対策：ルータに/16→Null0を置く"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "discard-2",
+          "format": "選択",
+          "theme": "集約範囲の未使用宛先を捨てる",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "未使用の172.16.200.1宛てがルータへ来た。/0しか一致しないと何が起こり得るか。",
+          "choices": [
+            {
+              "text": "暗号鍵が消える",
+              "ok": false,
+              "explain": "経路の不整合であり認証の問題ではありません。"
+            },
+            {
+              "text": "FWへ戻り、FWから再びルータへ送られる",
+              "ok": true,
+              "explain": "FWの集約経路とルータのデフォルト経路が循環します。"
+            },
+            {
+              "text": "自動で新支社を作る",
+              "ok": false,
+              "explain": "経路情報はネットワークを新設しません。"
+            }
+          ]
+        },
+        {
+          "id": "discard-3",
+          "format": "選択",
+          "theme": "集約範囲の未使用宛先を捨てる",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "ループ対策の宛先と転送先はどれか。",
+          "choices": [
+            {
+              "text": "172.16.0.0/16 → Null0",
+              "ok": true,
+              "explain": "集約範囲にだけ一致するパケットを捨てます。"
+            },
+            {
+              "text": "0.0.0.0/0 → Null0だけ",
+              "ok": false,
+              "explain": "正常なインターネット向け通信も捨ててしまいます。"
+            },
+            {
+              "text": "172.17.0.0/16 → FW",
+              "ok": false,
+              "explain": "問題の支社範囲に一致せず対策になりません。"
+            }
+          ]
+        },
+        {
+          "id": "discard-4",
+          "format": "穴埋め",
+          "theme": "集約範囲の未使用宛先を捨てる",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "表2に対応する機器と経路を補え。",
+          "template": "設定機器fは{f}、宛先gは{g}、ネクストホップはNull0とする。",
+          "blanks": [
+            {
+              "key": "f",
+              "label": "f",
+              "choices": [
+                {
+                  "text": "FW",
+                  "ok": false,
+                  "explain": "支社個別経路の有無を知る集約元ではありません。"
+                },
+                {
+                  "text": "L3SW4",
+                  "ok": false,
+                  "explain": "本社LAN側で集約を受け取る機器です。"
+                },
+                {
+                  "text": "ルータ",
+                  "ok": true,
+                  "explain": "集約を作り、未使用宛先をFWへ戻し得る機器です。"
+                }
+              ],
+              "why": "集約を作り、未使用宛先をFWへ戻し得る機器です。"
+            },
+            {
+              "key": "g",
+              "label": "g",
+              "choices": [
+                {
+                  "text": "172.16.0.0/23",
+                  "ok": false,
+                  "explain": "他の支社や未使用範囲をカバーできません。"
+                },
+                {
+                  "text": "172.17.0.0/16",
+                  "ok": false,
+                  "explain": "本社範囲であり対象が違います。"
+                },
+                {
+                  "text": "172.16.0.0/16",
+                  "ok": true,
+                  "explain": "支社をまとめた範囲そのものを指定します。"
+                }
+              ],
+              "why": "支社をまとめた範囲そのものを指定します。"
+            }
+          ]
+        },
+        {
+          "id": "discard-5",
+          "format": "並べ替え",
+          "theme": "集約範囲の未使用宛先を捨てる",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "破棄経路の因果を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "集約範囲には個別経路のない宛先も含まれる"
+            },
+            {
+              "code": "ルータでその範囲に一致するNull0経路を用意する"
+            },
+            {
+              "code": "デフォルトでFWへ戻さず、ルータとFW間のループを防ぐ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "Null0は正常な個別経路がない場合の行き先を固定します。",
+          "ngExplain": "Null0は正常な個別経路がない場合の行き先を固定します。"
+        },
+        {
+          "id": "discard-6",
+          "format": "選択",
+          "theme": "集約範囲の未使用宛先を捨てる",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "ルータに172.16.2.0/23と172.16.0.0/16→Null0がある。172.16.2.5はどうなるか。",
+          "choices": [
+            {
+              "text": "/23の実経路を使う",
+              "ok": true,
+              "explain": "最長一致なので、詳しい支社経路が優先されます。"
+            },
+            {
+              "text": "Null0で必ず捨てる",
+              "ok": false,
+              "explain": "/16より/23が具体的です。"
+            },
+            {
+              "text": "同じアドレス範囲なのでエラーになる",
+              "ok": false,
+              "explain": "集約経路と個別経路は共存できます。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "partition",
+      "title": "分断されたエリア0の影響を読む",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "partition-1",
+          "format": "読む",
+          "theme": "分断されたエリア0の影響を読む",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "同じ番号でも連続していなければ分断",
+          "body": "E社はエリア0で、D社支社1へ新しいエリア0のリンクを接続します。D社本社のエリア0までの途中にはエリア1があります。OSPFのバックボーンを論理的に連続させる必要があります。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "E社エリア0"
+              },
+              {
+                "t": "L3SW1 → エリア1 → ルータ"
+              },
+              {
+                "t": "D社本社エリア0"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "partition-2",
+          "format": "選択",
+          "theme": "分断されたエリア0の影響を読む",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "エリア0がエリア1を挟んで二つになった。問題となるのはどれか。",
+          "choices": [
+            {
+              "text": "全ポートでMACが重複する",
+              "ok": false,
+              "explain": "エリア番号はMACアドレスとは別です。"
+            },
+            {
+              "text": "IPsecの共有鍵が自動変更される",
+              "ok": false,
+              "explain": "OSPFのエリア構造の問題です。"
+            },
+            {
+              "text": "バックボーンの連続性が失われる",
+              "ok": true,
+              "explain": "同じ番号を付けるだけでは一つのバックボーンになりません。"
+            }
+          ]
+        },
+        {
+          "id": "partition-3",
+          "format": "選択",
+          "theme": "分断されたエリア0の影響を読む",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "原図でD社本社エリア0に属するセグメントの組はどれか。",
+          "choices": [
+            {
+              "text": "a、bだけ",
+              "ok": false,
+              "explain": "支社1のLANであり本社エリア0ではありません。"
+            },
+            {
+              "text": "h、i、j、k、l",
+              "ok": true,
+              "explain": "hは本社共通LAN、i〜lは本社PC側LANです。"
+            },
+            {
+              "text": "a、b、c、d、e、f、g",
+              "ok": false,
+              "explain": "こちらは支社と広域網のエリア1です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.15,
+            "bottom": 0.645,
+            "label": "図2の分断されたエリア0（IPA原典）"
+          }
+        },
+        {
+          "id": "partition-4",
+          "format": "穴埋め",
+          "theme": "分断されたエリア0の影響を読む",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "到達不可の範囲を分類せよ。",
+          "template": "E社側から追加対策なしで到達できないD社内の範囲は{a}である。途中の支社網gはエリア{b}にある。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "h、i、j、k、l",
+                  "ok": true,
+                  "explain": "分断された先の本社エリア0です。"
+                },
+                {
+                  "text": "hだけ",
+                  "ok": false,
+                  "explain": "hの先にあるi〜lも本社エリア0です。"
+                },
+                {
+                  "text": "a〜lの全部",
+                  "ok": false,
+                  "explain": "支社エリア1への接続まで失われるわけではありません。"
+                }
+              ],
+              "why": "分断された先の本社エリア0です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "1",
+                  "ok": true,
+                  "explain": "原図の支社と広域イーサ網がエリア1です。"
+                },
+                {
+                  "text": "0",
+                  "ok": false,
+                  "explain": "gは分断された二つのエリア0の間にあります。"
+                },
+                {
+                  "text": "2",
+                  "ok": false,
+                  "explain": "原図にはエリア2はありません。"
+                }
+              ],
+              "why": "原図の支社と広域イーサ網がエリア1です。"
+            }
+          ]
+        },
+        {
+          "id": "partition-5",
+          "format": "並べ替え",
+          "theme": "分断されたエリア0の影響を読む",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "到達不可を判断する順に並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "E社の接続先からエリア0の連続性をたどる"
+            },
+            {
+              "code": "途中のエリア1で本社エリア0と分断されていると判断する"
+            },
+            {
+              "code": "本社エリア0のh、i、j、k、lを列挙する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "範囲記号は図の位置から選びます。単に全セグメントを答える問題ではありません。",
+          "ngExplain": "範囲記号は図の位置から選びます。単に全セグメントを答える問題ではありません。"
+        },
+        {
+          "id": "partition-6",
+          "format": "選択",
+          "theme": "分断されたエリア0の影響を読む",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "条件を変え、E社を本社hへエリア0で直接接続した。分断に対する判断はどれか。",
+          "choices": [
+            {
+              "text": "全社をエリア1へ変更する必要がある",
+              "ok": false,
+              "explain": "エリア0の連続性を確認する問題です。"
+            },
+            {
+              "text": "その接続ではエリア0が連続する",
+              "ok": true,
+              "explain": "本社のエリア0へ直接つながるため、今回の分断条件がなくなります。"
+            },
+            {
+              "text": "支社エリア1がある限り必ず分断する",
+              "ok": false,
+              "explain": "エリア1の存在だけが原因ではありません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "virtual-link",
+      "title": "仮想リンクの両端を特定する",
+      "targets": [
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "virtual-link-1",
+          "format": "読む",
+          "theme": "仮想リンクの両端を特定する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "既存構成を保ちながらバックボーンをつなぐ",
+          "body": "物理構成の変更は最小限にします。仮想リンクは別のエリアを通り、エリア0を論理的に結びます。原問ではエリア1の両端の境界ルータが設定対象です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "端点",
+              "接続するエリア"
+            ],
+            "rows": [
+              [
+                "D社のルータ",
+                "本社0と支社1"
+              ],
+              [
+                "L3SW1",
+                "E社側0と支社1"
+              ],
+              [
+                "途中",
+                "エリア1"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "virtual-link-2",
+          "format": "選択",
+          "theme": "仮想リンクの両端を特定する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "E社側で新たにエリア境界になる機器はどれか。",
+          "choices": [
+            {
+              "text": "L3SW6",
+              "ok": false,
+              "explain": "E社側のエリア0内に位置します。"
+            },
+            {
+              "text": "FW",
+              "ok": false,
+              "explain": "D社本社側のインターネット出口です。"
+            },
+            {
+              "text": "L3SW1",
+              "ok": true,
+              "explain": "支社エリア1と新しいエリア0リンクの両方に接します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.16,
+            "bottom": 0.63,
+            "label": "図2のフロア間接続と二つの境界（IPA原典）"
+          }
+        },
+        {
+          "id": "virtual-link-3",
+          "format": "選択",
+          "theme": "仮想リンクの両端を特定する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "二つのエリア0を既存エリア1経由で論理的につなぐ設定はどれか。",
+          "choices": [
+            {
+              "text": "L2SWのMAC表消去",
+              "ok": false,
+              "explain": "レイヤ2の学習情報ではエリア構造を変更できません。"
+            },
+            {
+              "text": "OSPF仮想リンク",
+              "ok": true,
+              "explain": "バックボーンの連続性を補います。"
+            },
+            {
+              "text": "IPsec共有鍵の更新",
+              "ok": false,
+              "explain": "トンネル認証の変更で、OSPFの分断は直りません。"
+            }
+          ]
+        },
+        {
+          "id": "virtual-link-4",
+          "format": "穴埋め",
+          "theme": "仮想リンクの両端を特定する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "二つの機器と設定内容を補え。",
+          "template": "{a}と{b}に、エリア1を経由する{c}の接続設定を行う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "ルータ",
+                  "ok": true,
+                  "explain": "D社本社側のエリア境界です。"
+                },
+                {
+                  "text": "FW",
+                  "ok": false,
+                  "explain": "本社エリア0とISPの境界です。"
+                },
+                {
+                  "text": "L2SW7",
+                  "ok": false,
+                  "explain": "OSPFの境界ルータではありません。"
+                }
+              ],
+              "why": "D社本社側のエリア境界です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "L3SW1",
+                  "ok": true,
+                  "explain": "E社側エリア0につながる境界です。"
+                },
+                {
+                  "text": "L3SW6",
+                  "ok": false,
+                  "explain": "経由するエリア1に直接接していません。"
+                },
+                {
+                  "text": "L3SW2",
+                  "ok": false,
+                  "explain": "E社へのフロア間接続を持ちません。"
+                }
+              ],
+              "why": "E社側エリア0につながる境界です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "OSPF仮想リンク",
+                  "ok": true,
+                  "explain": "両端を設定してバックボーンをつなぎます。"
+                },
+                {
+                  "text": "DHCPリレー",
+                  "ok": false,
+                  "explain": "アドレス配布要求を中継する機能です。"
+                },
+                {
+                  "text": "NAT",
+                  "ok": false,
+                  "explain": "アドレス変換ではエリア0の連続性を作れません。"
+                }
+              ],
+              "why": "両端を設定してバックボーンをつなぎます。"
+            }
+          ]
+        },
+        {
+          "id": "virtual-link-5",
+          "format": "並べ替え",
+          "theme": "仮想リンクの両端を特定する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "接続回復の説明を組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "ルータとL3SW1を仮想リンクの両端にする"
+            },
+            {
+              "code": "エリア1を通ってエリア0を論理的に接続する"
+            },
+            {
+              "code": "分断されていたバックボーンの連続性を回復する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "設定は両端に必要です。原図のどの機器が境界かを先に特定します。",
+          "ngExplain": "設定は両端に必要です。原図のどの機器が境界かを先に特定します。"
+        },
+        {
+          "id": "virtual-link-6",
+          "format": "選択",
+          "theme": "仮想リンクの両端を特定する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "L3SW2にもエリア0への新リンクを設けた。追加設計でまず確認すべきものはどれか。",
+          "choices": [
+            {
+              "text": "全機器で同じMACを設定する",
+              "ok": false,
+              "explain": "MAC重複は接続回復の方法ではありません。"
+            },
+            {
+              "text": "新しい境界を含むエリア0の連続性",
+              "ok": true,
+              "explain": "境界と経路が増えるのでエリア構成を再確認します。"
+            },
+            {
+              "text": "名前がL3SWなのでOSPFを使えないと判断する",
+              "ok": false,
+              "explain": "原問のL3SWはOSPFに参加します。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "second-summary",
+      "title": "境界が増えた後も集約を保つ",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "second-summary-1",
+          "format": "読む",
+          "theme": "境界が増えた後も集約を保つ",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "もう一つの境界から細かな経路が出る",
+          "body": "仮想リンクを作ると、ルータとL3SW1が並列の境界になります。ルータだけに集約設定があっても、L3SW1は支社個別経路を通知できます。新しい境界にも同じ集約が必要です。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "エリア1の支社個別経路"
+              },
+              {
+                "t": "境界A：ルータで集約済み／境界B：L3SW1は未集約"
+              },
+              {
+                "t": "両境界で/16へ集約してエリア0へ通知"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "second-summary-2",
+          "format": "選択",
+          "theme": "境界が増えた後も集約を保つ",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ルータだけで集約しているのに本社に個別経路が現れた。原因はどれか。",
+          "choices": [
+            {
+              "text": "L3SW1が別の境界として個別経路を通知した",
+              "ok": true,
+              "explain": "経路の通知口が増えたためです。"
+            },
+            {
+              "text": "Null0が全個別経路を複製した",
+              "ok": false,
+              "explain": "Null0は破棄先で、経路を複製する機能ではありません。"
+            },
+            {
+              "text": "共有鍵が長すぎる",
+              "ok": false,
+              "explain": "VPN認証の値とOSPFの経路集約は別です。"
+            }
+          ]
+        },
+        {
+          "id": "second-summary-3",
+          "format": "選択",
+          "theme": "境界が増えた後も集約を保つ",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "追加する集約設定の対象機器はどれか。",
+          "choices": [
+            {
+              "text": "ルータだけ",
+              "ok": false,
+              "explain": "そこには既に集約設定があります。"
+            },
+            {
+              "text": "L2SW12",
+              "ok": false,
+              "explain": "E社内のレイヤ2機器です。"
+            },
+            {
+              "text": "L3SW1",
+              "ok": true,
+              "explain": "新たなエリア境界であり、個別経路の通知元です。"
+            }
+          ]
+        },
+        {
+          "id": "second-summary-4",
+          "format": "穴埋め",
+          "theme": "境界が増えた後も集約を保つ",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "対象・元の経路・集約先をそろえよ。",
+          "template": "{a}で、OSPFエリア{b}の支社個別経路を{c}に集約する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "VPC GW",
+                  "ok": false,
+                  "explain": "クラウド側のトンネル終端です。"
+                },
+                {
+                  "text": "L3SW1",
+                  "ok": true,
+                  "explain": "追加の境界側でも集約します。"
+                },
+                {
+                  "text": "FW",
+                  "ok": false,
+                  "explain": "支社エリアの追加境界ではありません。"
+                }
+              ],
+              "why": "追加の境界側でも集約します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "2",
+                  "ok": false,
+                  "explain": "原問にないエリアです。"
+                },
+                {
+                  "text": "1",
+                  "ok": true,
+                  "explain": "支社個別経路が属するエリアです。"
+                },
+                {
+                  "text": "0",
+                  "ok": false,
+                  "explain": "本社・E社側の通知先エリアです。"
+                }
+              ],
+              "why": "支社個別経路が属するエリアです。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "0.0.0.0/0",
+                  "ok": false,
+                  "explain": "全宛先のデフォルトであり支社集約ではありません。"
+                },
+                {
+                  "text": "172.16.0.0/16",
+                  "ok": true,
+                  "explain": "支社a〜gを含む既存の集約範囲です。"
+                },
+                {
+                  "text": "172.18.0.0/16",
+                  "ok": false,
+                  "explain": "E社の範囲であり支社の範囲ではありません。"
+                }
+              ],
+              "why": "支社a〜gを含む既存の集約範囲です。"
+            }
+          ]
+        },
+        {
+          "id": "second-summary-5",
+          "format": "並べ替え",
+          "theme": "境界が増えた後も集約を保つ",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "集約を保つ説明を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "仮想リンクでL3SW1もエリア境界になる"
+            },
+            {
+              "code": "L3SW1から支社個別経路がエリア0へ通知される"
+            },
+            {
+              "code": "L3SW1でもエリア1の経路を172.16.0.0/16へ集約する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "既存の境界だけでなく、追加の経路通知口にも同じ方針を適用します。",
+          "ngExplain": "既存の境界だけでなく、追加の経路通知口にも同じ方針を適用します。"
+        },
+        {
+          "id": "second-summary-6",
+          "format": "選択",
+          "theme": "境界が増えた後も集約を保つ",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "練習で境界が3台になった。2台だけ集約しても残るリスクはどれか。",
+          "choices": [
+            {
+              "text": "集約した2台が必ず停止する",
+              "ok": false,
+              "explain": "集約設定の不一致は即時停止を意味しません。"
+            },
+            {
+              "text": "全経路が自動的に1行になる",
+              "ok": false,
+              "explain": "未集約の境界が残れば個別経路も現れ得ます。"
+            },
+            {
+              "text": "3台目から個別経路が通知される",
+              "ok": true,
+              "explain": "集約方針は通知を行う各境界で確認します。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

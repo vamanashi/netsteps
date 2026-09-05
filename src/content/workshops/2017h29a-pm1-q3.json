@@ -1,0 +1,1320 @@
+{
+  "examKey": "2017h29a/pm1/3",
+  "title": "二本のVPNを安全につなぎ、片系故障を見逃さない",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000fqpm-att/2017h29a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "address-key",
+      "title": "住所の変換と相手確認",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "外へ出す住所と秘密の鍵",
+          "body": "IPアドレスは通信先を示し、ポート番号は同じ端末の通信を区別します。NAPT（Network Address Port Translation）は両方を変換し、複数端末で外向きアドレスを共有できるようにします。VPNではこれとは別に、事前共有鍵（Pre-Shared Key）で接続相手を認証します。",
+          "stage": "concept",
+          "id": "address-key-1",
+          "theme": "住所の変換と相手確認",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "IPアドレスだけでなくポート番号も変換する処理は？",
+          "choices": [
+            {
+              "text": "DNS",
+              "explain": "名前とIPアドレスを対応させる機能で、通過するパケットのポート変換ではありません。",
+              "ok": false
+            },
+            {
+              "text": "NAPT",
+              "explain": "複数の内部通信をアドレスとポートの組で区別できます。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "address-key-2",
+          "theme": "住所の変換と相手確認",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "IPsecの両端へあらかじめ同じ秘密を設定する理由は？",
+          "choices": [
+            {
+              "text": "接続相手がその秘密を共有していることを認証するため",
+              "explain": "本問のIKEフェーズ1で用いる事前共有鍵方式です。",
+              "ok": true
+            },
+            {
+              "text": "全PCに同じIPアドレスを設定するため",
+              "explain": "共有するのは認証用の鍵であって、ネットワークアドレスではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "address-key-3",
+          "theme": "住所の変換と相手確認",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "異なる二つの機能を埋める",
+          "template": "FWでIPとポートを変換するのは{a}。VPN相手との認証にあらかじめ共有するのは{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "変換処理",
+              "why": "ポートを含むことが手掛かりです。",
+              "choices": [
+                {
+                  "text": "ARP",
+                  "explain": "IPから同じリンク上のMACを調べる手続です。",
+                  "ok": false
+                },
+                {
+                  "text": "NAPT",
+                  "explain": "IPアドレスとポート番号を変換します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "認証の秘密",
+              "why": "公開される住所とは違う情報です。",
+              "choices": [
+                {
+                  "text": "公開IPアドレス",
+                  "explain": "到達先の住所であり、秘密の認証情報にはなりません。",
+                  "ok": false
+                },
+                {
+                  "text": "事前共有鍵",
+                  "explain": "双方が保持する同じ認証用の秘密です。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "address-key-4",
+          "theme": "住所の変換と相手確認",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "VPN接続の準備を整理する",
+          "lead": "本問のIKE（Internet Key Exchange）の二つの段階まで並べます。",
+          "lines": [
+            {
+              "code": "VPNの双方に同じ事前共有鍵を用意する"
+            },
+            {
+              "code": "フェーズ1で相手を認証しIKE SAを確立する"
+            },
+            {
+              "code": "フェーズ2でデータを保護するIPsec SAを確立する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "SA（Security Association）は保護条件の合意です。相手確認からデータ保護用の合意へ進みます。",
+          "ngExplain": "データ保護用のSAより先に、相手確認とIKE SAの確立が必要です。",
+          "stage": "assemble",
+          "id": "address-key-5",
+          "theme": "住所の変換と相手確認",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：NAPTの設定は正しいがVPNの鍵が双方で違う。どうなる？",
+          "choices": [
+            {
+              "text": "NAPTが鍵を同じ値に変える",
+              "explain": "NAPTはアドレスとポートの変換であり、暗号鍵の同期機能ではありません。",
+              "ok": false
+            },
+            {
+              "text": "相手認証に失敗し得る",
+              "explain": "住所変換が成功しても認証用の秘密の不一致は解消されません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "address-key-6",
+          "theme": "住所の変換と相手確認",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "encapsulation",
+      "title": "外側のIPを残して内側を守る",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "封筒を二段で見る",
+          "body": "IP in IPは元のIPパケットを別のIPパケットで包む方法です。本問は先にVPNルータのグローバルIPアドレス間で包み、その通信をIPsecで保護します。したがって外側IPヘッダを暗号化しないトランスポートモードでも、インターネット上で配送できます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "元の通信",
+                "parts": [
+                  {
+                    "t": "内部IPヘッダ",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "データ",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "IP in IP",
+                "parts": [
+                  {
+                    "t": "外側のグローバルIP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "内部IPとデータ",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "IPsec transport",
+                "parts": [
+                  {
+                    "t": "外側のグローバルIP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "ESP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "保護する内側IPとデータ",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：原問の二段構成。ESPの末尾などは省略"
+          },
+          "id": "encapsulation-1",
+          "theme": "外側のIPを残して内側を守る",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "インターネット上の中継装置が配送に使うのはどの住所？",
+          "choices": [
+            {
+              "text": "暗号化された内側のプライベートIPアドレス",
+              "explain": "外側の中継装置は保護された内側を配送用に読みません。",
+              "ok": false
+            },
+            {
+              "text": "外側のグローバルIPアドレス",
+              "explain": "外側ヘッダが配送可能な公開アドレスを示します。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "encapsulation-2",
+          "theme": "外側のIPを残して内側を守る",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "本問でトランスポートモードを選べる根拠は？",
+          "choices": [
+            {
+              "text": "IPsecが保護する対象が既にグローバルIP間の通信だから",
+              "explain": "IP in IPによる外側ヘッダをそのまま配送に使えます。",
+              "ok": true
+            },
+            {
+              "text": "プライベートIPの通信は暗号化しなくてよいから",
+              "explain": "内側の元パケットは保護対象です。アドレスの種類は暗号化不要の根拠ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "encapsulation-3",
+          "theme": "外側のIPを残して内側を守る",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "答案の主語を確定する",
+          "template": "本問では、暗号化対象の通信が{a}間なので、外側IPヘッダを残す{b}モードを選べる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "外側の住所",
+              "why": "IP in IPで既に外側が付いている点を述べます。",
+              "choices": [
+                {
+                  "text": "未変換のプライベートIPアドレス",
+                  "explain": "そのままインターネットで配送できるという根拠にはなりません。",
+                  "ok": false
+                },
+                {
+                  "text": "グローバルIPアドレス",
+                  "explain": "VPNルータ同士の公開アドレスによる通信です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "IPsecモード",
+              "why": "本問の構成で選ぶモード名です。",
+              "choices": [
+                {
+                  "text": "トンネル",
+                  "explain": "さらに別の外側IPヘッダを付ける方式で、本文が選択した方ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "トランスポート",
+                  "explain": "既存の外側IPヘッダを残します。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "encapsulation-4",
+          "theme": "外側のIPを残して内側を守る",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "包む順序から根拠を組み立てる",
+          "lead": "元パケットから配送可能な暗号化通信まで並べます。",
+          "lines": [
+            {
+              "code": "内部のIPパケットをIP in IPで包む"
+            },
+            {
+              "code": "外側がVPNルータのグローバルIP間の通信になる"
+            },
+            {
+              "code": "その外側ヘッダを残してIPsecトランスポートモードで保護する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "IP in IPの外側ヘッダが既にあることがモード選択の根拠です。",
+          "ngExplain": "先に外側の住所が付くため、それを配送用に残せます。",
+          "stage": "assemble",
+          "id": "encapsulation-5",
+          "theme": "外側のIPを残して内側を守る",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：IP in IPを使わず、元は内部のプライベートIPだけ。原問の根拠をそのまま使える？",
+          "choices": [
+            {
+              "text": "常にトランスポートモードだけでよい",
+              "explain": "原問固有の二段構成を一般化し過ぎています。",
+              "ok": false
+            },
+            {
+              "text": "使えない。配送可能な外側ヘッダをどう用意するか検討する",
+              "explain": "原問と違い、既にグローバルIPの外側があるとはいえません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "encapsulation-6",
+          "theme": "外側のIPを残して内側を守る",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "mtu",
+      "title": "追加したヘッダの分だけ余白が要る",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "大きすぎる荷物は分割される",
+          "body": "MTU（Maximum Transmission Unit）は一度に運べるIPパケットの大きさの上限です。元のパケットが1500バイトなら、追加ヘッダを付けると1500を超えます。本問はフラグメントとリアセンブルの処理を問題にしており、トンネルMTUとTCP MSS（Maximum Segment Size）を調整します。",
+          "stage": "concept",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "上限",
+                "parts": [
+                  {
+                    "t": "1500バイト以内",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "追加後",
+                "parts": [
+                  {
+                    "t": "追加ヘッダ",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "元の1500バイト",
+                    "w": 3,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：追加後の総サイズが物理側のMTUを超える"
+          },
+          "id": "mtu-1",
+          "theme": "追加したヘッダの分だけ余白が要る",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用数値：物理MTU1500、追加ヘッダ60、元パケット1500バイト。総サイズは？",
+          "choices": [
+            {
+              "text": "1440バイト",
+              "explain": "これは追加後を1500以内にしたいときの元サイズの目安です。",
+              "ok": false
+            },
+            {
+              "text": "1560バイト",
+              "explain": "元のサイズに追加分を足します。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "id": "mtu-2",
+          "theme": "追加したヘッダの分だけ余白が要る",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "quiz",
+          "title": "原問の条件でフラグメントとリアセンブルが発生する理由は？",
+          "choices": [
+            {
+              "text": "カプセル化で物理インタフェースのMTUを超えるため",
+              "explain": "送る側で分割し、受け取る側で元のまとまりに再構成する処理が必要になります。",
+              "ok": true
+            },
+            {
+              "text": "暗号化するとIPアドレスが必ず無効になるため",
+              "explain": "アドレスの有効性ではなくサイズ超過が問題です。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "mtu-3",
+          "theme": "追加したヘッダの分だけ余白が要る",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "送信側と受信側の処理を両方答える",
+          "template": "サイズ超過によりVPNルータで{a}と{b}の処理が発生する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "分割",
+              "why": "大きすぎるパケットを分けます。",
+              "choices": [
+                {
+                  "text": "名前解決",
+                  "explain": "サイズを小さくする処理ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "フラグメント",
+                  "explain": "MTUに収まる断片へ分割します。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "再構成",
+              "why": "断片から元のまとまりへ戻します。",
+              "choices": [
+                {
+                  "text": "経路集約",
+                  "explain": "複数の経路をまとめる機能で、パケット断片の再構成ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "リアセンブル",
+                  "explain": "受信した断片を組み直す処理です。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "mtu-4",
+          "theme": "追加したヘッダの分だけ余白が要る",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：追加分60バイト、外側MTU1500。元パケットの上限を選ぶなら？",
+          "choices": [
+            {
+              "text": "1440バイト",
+              "explain": "1440+60=1500となるためです。TCP MSSはさらに内側IP/TCPヘッダ分を除いて考えます。",
+              "ok": true
+            },
+            {
+              "text": "1500バイトのまま",
+              "explain": "追加すると1560となり、問題を解消しません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "mtu-5",
+          "theme": "追加したヘッダの分だけ余白が要る",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "parsons",
+          "title": "無駄な分割を避ける手順",
+          "lead": "この練習では追加分が分かっているとして、設定を考える順に並べます。",
+          "lines": [
+            {
+              "code": "外側インタフェースのMTUと追加ヘッダ量を確認する"
+            },
+            {
+              "code": "追加後が収まるようトンネルMTUを小さくする"
+            },
+            {
+              "code": "TCPのデータ量も収まるようMSSを調整する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "物理上限、トンネルで許すパケット、TCPデータの順に小さく考えます。",
+          "ngExplain": "MSSはIPパケット全体のサイズではありません。各ヘッダの分を区別します。",
+          "stage": "assemble",
+          "id": "mtu-6",
+          "theme": "追加したヘッダの分だけ余白が要る",
+          "format": "並べ替え",
+          "scaffold": 1
+        }
+      ]
+    },
+    {
+      "id": "bgp",
+      "title": "回線が切れたら経路情報も変える",
+      "targets": [
+        "s1",
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "経路を知らせ合う二つの仕組み",
+          "body": "BGP（Border Gateway Protocol）はAS（Autonomous System：共通の経路方針で管理される範囲）間で経路を交換します。BGPはTCP（Transmission Control Protocol）の179番を使い、社内はOSPF（Open Shortest Path First）で交換します。パッシブインタフェースはOSPFのHelloを送らず、その口で隣接関係を作りません。",
+          "stage": "concept",
+          "id": "bgp-1",
+          "theme": "回線が切れたら経路情報も変える",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "管理方針が共通のルータ群とBGPの通信を組み合わせると？",
+          "choices": [
+            {
+              "text": "VLANとUDP/53",
+              "explain": "VLANはL2の論理範囲、UDP/53は主にDNSの通信です。",
+              "ok": false
+            },
+            {
+              "text": "ASとTCP/179",
+              "explain": "ASは管理単位、TCP/179はBGPの通信条件です。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "bgp-2",
+          "theme": "回線が切れたら経路情報も変える",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "二本のVPNを静的設定だけで使うよりBGPを利用する利点は？",
+          "choices": [
+            {
+              "text": "回線断や機器障害を検知して利用可能な経路へ迂回できる",
+              "explain": "動的な経路の変化を通信先の選択へ反映できます。",
+              "ok": true
+            },
+            {
+              "text": "障害そのものが起こらなくなる",
+              "explain": "冗長化と動的経路制御は障害の影響を抑えるもので、故障を消すものではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "bgp-3",
+          "theme": "回線が切れたら経路情報も変える",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "トンネル内はBGPで経路交換する。OSPFの隣接関係を作らない設定の動作は？",
+          "choices": [
+            {
+              "text": "全ての利用者パケットを捨てる",
+              "explain": "OSPFの隣接形成を抑える設定で、データ転送を全面禁止する意味ではありません。",
+              "ok": false
+            },
+            {
+              "text": "Helloパケットを出さない",
+              "explain": "原問がパッシブインタフェースに求める特徴です。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "id": "bgp-4",
+          "theme": "回線が切れたら経路情報も変える",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "検知から効果までを補う",
+          "template": "BGPで{a}を検知し、トラフィックを{b}できる。OSPFパッシブの口は{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "変化",
+              "why": "到達性に関わる障害を述べます。",
+              "choices": [
+                {
+                  "text": "回線断や機器障害",
+                  "explain": "経路が利用できなくなる原因です。",
+                  "ok": true
+                },
+                {
+                  "text": "全てのアプリの計算ミス",
+                  "explain": "BGPがアプリ内部の正誤を判定するわけではありません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "結果",
+              "why": "利用可能な経路が別に存在する前提です。",
+              "choices": [
+                {
+                  "text": "迂回",
+                  "explain": "障害経路の代わりに残った経路を使います。",
+                  "ok": true
+                },
+                {
+                  "text": "必ず無遅延にする",
+                  "explain": "検知・経路収束には時間が掛かるため、無遅延を保証しません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "OSPF動作",
+              "why": "Helloによる隣接形成を止めます。",
+              "choices": [
+                {
+                  "text": "Helloを送信しない",
+                  "explain": "原問が問う特徴を具体的に表します。",
+                  "ok": true
+                },
+                {
+                  "text": "TCP/179を閉じる",
+                  "explain": "BGPの通信を停止する設定とは異なります。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "bgp-5",
+          "theme": "回線が切れたら経路情報も変える",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "障害対応の因果を並べる",
+          "lead": "別経路が利用可能である前提です。",
+          "lines": [
+            {
+              "code": "主系の回線断又は機器障害が発生する"
+            },
+            {
+              "code": "BGPが障害に伴う到達性の変化を検知する"
+            },
+            {
+              "code": "使用できなくなった経路を外して別経路へ迂回する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "障害の検知と経路変更をつないで、動的制御の利点を説明します。",
+          "ngExplain": "故障の予防ではありません。障害が起きた後の検知と迂回です。",
+          "stage": "assemble",
+          "id": "bgp-6",
+          "theme": "回線が切れたら経路情報も変える",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：両方のVPN経路が停止した。BGPだけで通信を維持できる？",
+          "choices": [
+            {
+              "text": "できない。利用できる代替経路が必要",
+              "explain": "経路制御は存在しない物理・論理経路を作り出せません。",
+              "ok": true
+            },
+            {
+              "text": "できる。BGPが常に三本目を生成する",
+              "explain": "BGPは到達情報を交換する仕組みで、新回線を生成しません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "bgp-7",
+          "theme": "回線が切れたら経路情報も変える",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "preference",
+      "title": "主系を選ばせ、経路を戻さない",
+      "targets": [
+        "s3-3",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "小さいコストを主系にする",
+          "body": "本問ではBGPで得たクラウド宛て経路をOSPFへ再配布します。同条件ならOSPFは小さいコストの経路を選ぶので、待機系VPNb1のコストを大きくします。再配布は別プロトコルへ経路を渡す機能ですが、受けた経路を元の側へ戻すとループの原因になるため制限します。",
+          "stage": "concept",
+          "id": "preference-1",
+          "theme": "主系を選ばせ、経路を戻さない",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用数値：主系VPNa1のコスト10、待機系VPNb1を選ばせない値は？",
+          "choices": [
+            {
+              "text": "5",
+              "explain": "主系より小さくなるので待機系を優先してしまいます。",
+              "ok": false
+            },
+            {
+              "text": "20",
+              "explain": "主系10より大きくし、主系が使えるときはそちらが選ばれます。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "id": "preference-2",
+          "theme": "主系を選ばせ、経路を戻さない",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "quiz",
+          "title": "原図でクラウドからeBGP→OSPFへ取り込んだ経路が、もう一方のVPNからeBGPへ戻る。防ぐべき理由は？",
+          "choices": [
+            {
+              "text": "自社で生成した経路のように再流入し、経路が循環し得るから",
+              "explain": "元の経路の由来を区別し、戻し広告を禁止します。",
+              "ok": true
+            },
+            {
+              "text": "OSPFの全経路を永久に消すため",
+              "explain": "社内で生成した必要な経路はクラウド側へ広告する必要があります。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.34,
+            "bottom": 0.57,
+            "label": "IPA図2：二台のVPNでOSPFとBGPを再配布する位置"
+          },
+          "id": "preference-3",
+          "theme": "主系を選ばせ、経路を戻さない",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "blank",
+          "title": "主系選択と再配布制限",
+          "template": "VPNb1のコストをVPNa1より{a}する。{b}からOSPFへ再配布した経路は{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "コスト",
+              "why": "OSPFは小さい値を選びます。",
+              "choices": [
+                {
+                  "text": "小さく",
+                  "explain": "待機系を通常時にも選んでしまいます。",
+                  "ok": false
+                },
+                {
+                  "text": "大きく",
+                  "explain": "待機系の優先度を下げます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "由来",
+              "why": "クラウド側から受けた経路を区別します。",
+              "choices": [
+                {
+                  "text": "直接接続の社内LANだけ",
+                  "explain": "外部経路の再流入という問題を対象にできません。",
+                  "ok": false
+                },
+                {
+                  "text": "eBGP",
+                  "explain": "外部から取り込んだ経路の由来です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "禁止する方向",
+              "why": "元の経路交換側へ戻しません。",
+              "choices": [
+                {
+                  "text": "全てのOSPF通信を停止する",
+                  "explain": "必要な社内経路交換まで失ってしまいます。",
+                  "ok": false
+                },
+                {
+                  "text": "再びeBGPへ再配布しない",
+                  "explain": "eBGP→OSPF→eBGPという循環を断ちます。",
+                  "ok": true
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "preference-4",
+          "theme": "主系を選ばせ、経路を戻さない",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "ループ防止の説明を組む",
+          "lead": "由来、境界、禁止動作の順で並べます。",
+          "lines": [
+            {
+              "code": "eBGPで受け取った経路を識別する"
+            },
+            {
+              "code": "その経路をOSPFへ再配布する境界で由来を区別する"
+            },
+            {
+              "code": "OSPFから再びeBGPへ戻す再配布を禁止する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "再配布を全面停止せず、外部から来た経路の戻りだけを止めます。",
+          "ngExplain": "由来を区別してから戻りを制限します。全経路広告を止める話ではありません。",
+          "stage": "assemble",
+          "id": "preference-5",
+          "theme": "主系を選ばせ、経路を戻さない",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：OSPF内で新しく作った社内LANの経路。外部由来の戻し広告禁止と同じ理由で止める？",
+          "choices": [
+            {
+              "text": "OSPF由来と見えるものは全て禁止する",
+              "explain": "社内宛ての必要な経路までクラウドに知らせられなくなります。",
+              "ok": false
+            },
+            {
+              "text": "一律には止めない。社内由来の必要経路は別に広告を判断する",
+              "explain": "禁止対象はeBGPから取り込まれた経路の再流入です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "preference-6",
+          "theme": "主系を選ばせ、経路を戻さない",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "monitor",
+      "title": "通信できることと二本あることは別",
+      "targets": [
+        "s1",
+        "s4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "待機系が壊れても業務は動いてしまう",
+          "body": "pingはICMP（Internet Control Message Protocol）のecho requestを送り、echo replyが返ることで到達性を調べます。業務サーバだけを監視すると一本残っている間は成功するため、二本のトンネルを個別に監視します。原問の目的はネットワーク接続の冗長構成が失われたことの検出です。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 230,
+            "nodes": [
+              {
+                "id": "node0",
+                "label": "監視サーバ",
+                "icon": "server",
+                "x": 40,
+                "y": 100
+              },
+              {
+                "id": "node1",
+                "label": "主系VPN",
+                "icon": "router",
+                "x": 145,
+                "y": 45
+              },
+              {
+                "id": "node2",
+                "label": "対向(e)",
+                "icon": "router",
+                "x": 275,
+                "y": 45
+              },
+              {
+                "id": "node3",
+                "label": "待機系VPN",
+                "icon": "router",
+                "x": 145,
+                "y": 150
+              },
+              {
+                "id": "node4",
+                "label": "対向(f)",
+                "icon": "router",
+                "x": 275,
+                "y": 150
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1"
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "label": "トンネルa",
+                "dash": true
+              },
+              {
+                "from": "node0",
+                "to": "node3"
+              },
+              {
+                "from": "node3",
+                "to": "node4",
+                "label": "トンネルb",
+                "dash": true
+              }
+            ],
+            "caption": "説明用：中継機器を省略し二本を別々に監視"
+          },
+          "id": "monitor-1",
+          "theme": "通信できることと二本あることは別",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "pingの要求と正常応答の組は？",
+          "choices": [
+            {
+              "text": "TCP SYN → DNS応答",
+              "explain": "異なるプロトコルの要求と応答を混ぜています。",
+              "ok": false
+            },
+            {
+              "text": "ICMP echo request → echo reply",
+              "explain": "ICMPの応答によって監視先への往復到達性を確認します。",
+              "ok": true
+            }
+          ],
+          "stage": "check",
+          "id": "monitor-2",
+          "theme": "通信できることと二本あることは別",
+          "format": "選択",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "業務サーバへのpingは成功したが、待機トンネルは切断されていた。見逃したものは？",
+          "choices": [
+            {
+              "text": "冗長構成の喪失",
+              "explain": "現在通信できても、主系の次の障害に耐えられません。",
+              "ok": true
+            },
+            {
+              "text": "必ず業務アプリの処理能力不足",
+              "explain": "pingの成功と待機系の故障から、アプリの能力不足は導けません。",
+              "ok": false
+            }
+          ],
+          "stage": "reason",
+          "id": "monitor-3",
+          "theme": "通信できることと二本あることは別",
+          "format": "選択",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図の(e)と(f)をそれぞれ監視対象にする目的は？",
+          "choices": [
+            {
+              "text": "どちらか一方に返答があれば全て正常とするため",
+              "explain": "二本それぞれを監視する狙いと逆です。",
+              "ok": false
+            },
+            {
+              "text": "二本のVPNの健全性を別々に確認するため",
+              "explain": "一本経由で業務サーバに到達できるだけでは待機側の故障を検出できないからです。",
+              "ok": true
+            }
+          ],
+          "stage": "apply",
+          "originalExcerpt": {
+            "page": 14,
+            "top": 0.53,
+            "bottom": 0.91,
+            "label": "IPA図1：VPNトンネル二本と監視対象(e)(f)"
+          },
+          "id": "monitor-4",
+          "theme": "通信できることと二本あることは別",
+          "format": "選択",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "目的と応答を短く答える",
+          "template": "個別監視の目的は{a}を検出すること。pingで待つICMP応答は{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "何の喪失か",
+              "why": "通信断より前に、予備経路の欠落を見つけます。",
+              "choices": [
+                {
+                  "text": "ネットワーク接続の冗長構成が失われたこと",
+                  "explain": "一本残って業務が継続する状態でも検出すべき変化です。",
+                  "ok": true
+                },
+                {
+                  "text": "暗号鍵の長さが不足したこと",
+                  "explain": "pingの到達性監視では暗号強度を直接判定できません。",
+                  "ok": false
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "返答の種類",
+              "why": "要求と応答を分けて覚えます。",
+              "choices": [
+                {
+                  "text": "echo reply",
+                  "explain": "監視対象が返す応答です。",
+                  "ok": true
+                },
+                {
+                  "text": "echo request",
+                  "explain": "監視側が送り出す要求です。",
+                  "ok": false
+                }
+              ]
+            }
+          ],
+          "stage": "assemble",
+          "id": "monitor-5",
+          "theme": "通信できることと二本あることは別",
+          "format": "穴埋め",
+          "scaffold": 1
+        },
+        {
+          "type": "parsons",
+          "title": "二本を監視する理由を答案へ",
+          "lead": "現在の状態、潜在リスク、監視の目的の順で組み立てます。",
+          "lines": [
+            {
+              "code": "一本のVPNが故障しても残りで業務通信は続く"
+            },
+            {
+              "code": "残り一本も故障すると迂回できなくなる"
+            },
+            {
+              "code": "二本を個別監視して冗長構成の喪失を検出する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "『まだ通信できる』だけでは、次の故障に耐えられるか分かりません。",
+          "ngExplain": "業務通信が止まるまで待つのではなく、冗長性を失った時点を検出します。",
+          "stage": "assemble",
+          "id": "monitor-6",
+          "theme": "通信できることと二本あることは別",
+          "format": "並べ替え",
+          "scaffold": 1
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：監視先がICMPを拒否するようになった。ping失敗だけで回線断と断定できる？",
+          "choices": [
+            {
+              "text": "断定できない。監視応答を拒否する設定も切り分ける",
+              "explain": "到達性監視は監視先の応答条件を含めて設計します。",
+              "ok": true
+            },
+            {
+              "text": "必ず物理断。応答拒否は無関係",
+              "explain": "応答が返らない原因にはフィルタ設定なども含まれます。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "monitor-7",
+          "theme": "通信できることと二本あることは別",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "final",
+      "title": "二本の設計を自力で説明する",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2",
+        "s3-1",
+        "s3-2",
+        "s3-3",
+        "s3-4",
+        "s4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "原問へ移る前に",
+          "body": "最後は図の補助を外して判断します。外側と内側、主系と待機系、業務の到達性と冗長性を区別できれば、原問の各説明に条件と理由を付けられます。この確認後は既存の原問画面で補助なしに解答してください。",
+          "stage": "concept",
+          "id": "final-1",
+          "theme": "二本の設計を自力で説明する",
+          "format": "読む",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "IP in IPの後にIPsecトランスポートを使う本問の説明として正しいものは？",
+          "choices": [
+            {
+              "text": "暗号化したらパケットが小さくなるのでMTUは無関係",
+              "explain": "追加ヘッダなどでサイズは増えます。",
+              "ok": false
+            },
+            {
+              "text": "外側はグローバルIP間で配送できるが、追加分によるMTU超過には対策が必要",
+              "explain": "モード選択の理由とサイズ超過の問題を両方区別しています。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "final-2",
+          "theme": "二本の設計を自力で説明する",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "quiz",
+          "title": "VPNb1を待機にしつつ経路循環を防ぐ設計は？",
+          "choices": [
+            {
+              "text": "VPNb1の再配布コストを大きくし、外部由来経路をeBGPへ戻さない",
+              "explain": "優先度と経路の由来を別の条件として制御します。",
+              "ok": true
+            },
+            {
+              "text": "VPNb1のコストを小さくし、経路を全方向へ再配布する",
+              "explain": "待機側を優先し、戻し広告による循環の危険も残します。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer",
+          "id": "final-3",
+          "theme": "二本の設計を自力で説明する",
+          "format": "選択",
+          "scaffold": 0
+        },
+        {
+          "type": "quiz",
+          "title": "待機系監視が失敗し主系で業務は継続中。報告すべき状態は？",
+          "choices": [
+            {
+              "text": "業務が動くので二本とも正常",
+              "explain": "業務到達性と二本の健全性を同一視しています。",
+              "ok": false
+            },
+            {
+              "text": "冗長構成を失った可能性を調査する必要がある",
+              "explain": "業務が継続中でも、個別監視の異常を無視してはいけません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "id": "final-4",
+          "theme": "二本の設計を自力で説明する",
+          "format": "選択",
+          "scaffold": 0
+        }
+      ]
+    }
+  ]
+}

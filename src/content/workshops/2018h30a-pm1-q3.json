@@ -1,0 +1,1450 @@
+{
+  "examKey": "2018h30a/pm1/3",
+  "title": "二つのWANを使い分けて拠点を増やす",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000f01f-att/2018h30a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "labels",
+      "title": "共有網で利用者を区別する",
+      "targets": [
+        "s1",
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "WANと経路冗長化",
+          "body": "離れた拠点を結ぶWAN（Wide Area Network）では、共有する通信設備を専用のネットワークのように使うVPN（Virtual Private Network）を利用できます。IP-VPNは通信事業者の閉域IP網を利用するサービスです。\n\n利用者側のCE（Customer Edge）ルータから受けたパケットに、事業者側のPE（Provider Edge）ルータがラベルを付けます。MPLS（Multiprotocol Label Switching）はラベルを使う転送技術です。設問1・2では転送の印と利用者の区別を結びます。",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "利用者側",
+                "parts": [
+                  {
+                    "t": "IPパケット",
+                    "w": 8,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "事業者網内",
+                "parts": [
+                  {
+                    "t": "ラベル",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "IPパケット",
+                    "w": 8,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：ラベル付与と利用者パケット"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "事業者の共有網で、短い固定長のタグ情報を用いて転送する技術は？",
+          "choices": [
+            {
+              "text": "MPLS",
+              "ok": true,
+              "explain": "IP-VPN内部でラベルを利用する転送技術です。"
+            },
+            {
+              "text": "DNS",
+              "ok": false,
+              "explain": "名前解決を行い、網内のパケットに転送用ラベルを付ける技術ではありません。"
+            },
+            {
+              "text": "HTTP",
+              "ok": false,
+              "explain": "Webの要求・応答の方式であり、IP-VPN網内の転送方式ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "入るときと出るとき",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "WANと経路冗長化",
+          "template": "CEから届いたパケットには{a}が付けられ、対向側の{b}で取り除かれる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "タグの名前",
+              "why": "本文の短い固定長のタグを指します。",
+              "choices": [
+                {
+                  "text": "秘密鍵",
+                  "ok": false,
+                  "explain": "暗号化用の秘密情報をパケットに付けて流すものではありません。"
+                },
+                {
+                  "text": "ラベル",
+                  "ok": true,
+                  "explain": "MPLSで参照する転送用の識別情報です。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "境界の装置",
+              "why": "事業者網の出口側で処理します。",
+              "choices": [
+                {
+                  "text": "PEルータ",
+                  "ok": true,
+                  "explain": "Provider Edgeという事業者側の境界ルータです。"
+                },
+                {
+                  "text": "PC",
+                  "ok": false,
+                  "explain": "PCまでラベルの処理を要求する設計ではありません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "複数の利用者が同じ事業者網を使うとき、タグ情報を利用する原問上の目的は？",
+          "choices": [
+            {
+              "text": "利用者ごとのトラフィックを区別するため",
+              "ok": true,
+              "explain": "共有設備でも異なる利用者のVPNとして扱う必要があります。"
+            },
+            {
+              "text": "通信本文を暗号化するため",
+              "ok": false,
+              "explain": "ラベルによる区別は、内容の暗号化とは別の機能です。"
+            },
+            {
+              "text": "全利用者を同じLANへ統合するため",
+              "ok": false,
+              "explain": "異なる利用者を分けるというIP-VPNの目的と逆です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "練習用の変更条件：異なる2社が同じプライベートIP範囲を使用している。区別に必要な考え方は？",
+          "choices": [
+            {
+              "text": "同じIPなら必ず同じ顧客として転送する",
+              "ok": false,
+              "explain": "利用者を越えた混線につながります。"
+            },
+            {
+              "text": "ラベルがあるので内容も必ず暗号化済みとする",
+              "ok": false,
+              "explain": "ラベル転送だけでは暗号化の保証になりません。"
+            },
+            {
+              "text": "宛先IPだけでなく所属するVPNの識別も使う",
+              "ok": true,
+              "explain": "アドレスが同じでも利用者を分離した転送が必要です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "WANと経路冗長化",
+          "lead": "共有網内の処理を入口から順に説明する。",
+          "lines": [
+            {
+              "code": "入口のPEルータでパケットにラベルを付け、"
+            },
+            {
+              "code": "利用者ごとのトラフィックを区別してMPLSで中継し、"
+            },
+            {
+              "code": "対向側のPEルータでラベルを取り除く。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "入口・網内・出口の役割と、タグを使う理由がそろっています。",
+          "ngExplain": "CEとPEを取り違えず、事業者網の両端を押さえます。"
+        }
+      ]
+    },
+    {
+      "id": "two-wans",
+      "title": "閉域と暗号化を分けて考える",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "WANと経路冗長化",
+          "body": "閉域網を使うことと、データを暗号化することは別です。IPsec（IP Security）はネットワーク層でIP通信の機密性・完全性を保護します。原問のFW（ファイアウォール）は通信の許可・拒否に加え、このVPN機能を持ちます。\n\n通常の拠点間通信にIP-VPNを使い、その障害時の予備経路にインターネットVPNを使います。",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "a",
+                "label": "拠点A",
+                "icon": "router",
+                "x": 40,
+                "y": 90
+              },
+              {
+                "id": "closed",
+                "label": "閉域網",
+                "icon": "cloud",
+                "x": 170,
+                "y": 40
+              },
+              {
+                "id": "internet",
+                "label": "インターネット",
+                "icon": "internet",
+                "x": 170,
+                "y": 145
+              },
+              {
+                "id": "b",
+                "label": "拠点B",
+                "icon": "router",
+                "x": 300,
+                "y": 90
+              }
+            ],
+            "links": [
+              {
+                "from": "a",
+                "to": "closed",
+                "label": "通常"
+              },
+              {
+                "from": "closed",
+                "to": "b"
+              },
+              {
+                "from": "a",
+                "to": "internet",
+                "label": "予備",
+                "dash": true
+              },
+              {
+                "from": "internet",
+                "to": "b",
+                "dash": true
+              }
+            ],
+            "caption": "説明用の模式図（原図ではない）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "IPsecが保護対象とする通信の層は、OSI基本参照モデルでは？",
+          "choices": [
+            {
+              "text": "物理層",
+              "ok": false,
+              "explain": "電気信号や光信号だけを暗号化する機構ではありません。"
+            },
+            {
+              "text": "ネットワーク層",
+              "ok": true,
+              "explain": "IPパケットを保護する位置付けです。"
+            },
+            {
+              "text": "アプリケーション層だけ",
+              "ok": false,
+              "explain": "HTTPだけを対象にする方式ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "主経路と予備経路",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "WANと経路冗長化",
+          "template": "原問の拠点間通信は、正常時に{a}を使い、その障害時は{b}に切り替える。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "主経路",
+              "why": "事業者の閉域IP網を使うサービスです。",
+              "choices": [
+                {
+                  "text": "IP-VPN",
+                  "ok": true,
+                  "explain": "原問で通常利用する回線サービスです。"
+                },
+                {
+                  "text": "インターネットVPN",
+                  "ok": false,
+                  "explain": "原問ではバックアップとして利用します。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "予備経路",
+              "why": "FWのIPsec機能で保護する別の道です。",
+              "choices": [
+                {
+                  "text": "同じ障害中のIP-VPNだけ",
+                  "ok": false,
+                  "explain": "障害時の代替になりません。"
+                },
+                {
+                  "text": "インターネットVPN",
+                  "ok": true,
+                  "explain": "IP-VPN障害時に使う予備経路です。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "『IP-VPNという名前なので、必ずIPsecで暗号化される』が誤りなのは？",
+          "choices": [
+            {
+              "text": "閉域網には複数拠点を接続できないから",
+              "ok": false,
+              "explain": "IP-VPNは拠点間の接続サービスです。"
+            },
+            {
+              "text": "閉域サービスと暗号化プロトコルは別だから",
+              "ok": true,
+              "explain": "IP-VPNの利用だけでIPsecの適用を断定できません。"
+            },
+            {
+              "text": "IPsecはメールだけを扱うから",
+              "ok": false,
+              "explain": "IPsecはIP通信を保護します。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "練習用の変更条件：要件が『通常はインターネットVPN、予備は閉域網』に変わった。主経路は？",
+          "choices": [
+            {
+              "text": "インターネットVPN",
+              "ok": true,
+              "explain": "技術名の強弱ではなく変更された要件で決めます。"
+            },
+            {
+              "text": "必ずIP-VPN",
+              "ok": false,
+              "explain": "原問の主経路を変更後にも固定してはいけません。"
+            },
+            {
+              "text": "暗号化していれば両方を区別しなくてよい",
+              "ok": false,
+              "explain": "暗号化要件と主従の選択は別です。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "WANと経路冗長化",
+          "lead": "原問の二重化方針を主経路から記述する。",
+          "lines": [
+            {
+              "code": "通常の拠点間通信にはIP-VPNを利用し、"
+            },
+            {
+              "code": "その障害時には、"
+            },
+            {
+              "code": "IPsecで保護するインターネットVPNへ切り替える。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "サービス名と利用条件の両方が必要です。",
+          "ngExplain": "VPNの名称だけを並べず、正常時と障害時を区別します。"
+        }
+      ]
+    },
+    {
+      "id": "gre",
+      "title": "運べる形に包んでから保護する",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "WANと経路冗長化",
+          "body": "OSPF（Open Shortest Path First）は経路情報を交換するプロトコルで、隣接ルータへの通知にマルチキャストも使います。原問では、その通信をGRE（Generic Routing Encapsulation）で包み、さらにIPsecで保護するGRE over IPsecを採用します。GREは運ぶ形を整え、IPsecは保護を担います。",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "経路制御",
+                "parts": [
+                  {
+                    "t": "OSPF通信",
+                    "w": 7,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "GRE",
+                "parts": [
+                  {
+                    "t": "GRE",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "OSPF通信",
+                    "w": 7,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "IPsec保護",
+                "parts": [
+                  {
+                    "t": "外側IP",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "保護されたGRE通信",
+                    "w": 9,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用・役割を示す概念図（ヘッダ詳細は省略）"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "この原問でGREを追加する中心的な目的は？",
+          "choices": [
+            {
+              "text": "GRE自体で強い暗号化を行うこと",
+              "ok": false,
+              "explain": "暗号化を担うのは組み合わせるIPsecです。"
+            },
+            {
+              "text": "DNSでホスト名を調べること",
+              "ok": false,
+              "explain": "名前解決はこのカプセル化の目的ではありません。"
+            },
+            {
+              "text": "OSPFのマルチキャスト通信を通すこと",
+              "ok": true,
+              "explain": "経路制御の通信をGREで包んで対向拠点へ運びます。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "役割を取り違えない",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "WANと経路冗長化",
+          "template": "OSPFのマルチキャストを{a}でカプセル化し、通信の保護は{b}で行う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "包む仕組み",
+              "why": "原問のトンネル方式で追加されるカプセル化です。",
+              "choices": [
+                {
+                  "text": "利用者ID",
+                  "ok": false,
+                  "explain": "通信をカプセル化するヘッダではありません。"
+                },
+                {
+                  "text": "GRE",
+                  "ok": true,
+                  "explain": "元の通信を別のIP通信で運ぶ形に包みます。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "保護する仕組み",
+              "why": "機密性・完全性の保護です。",
+              "choices": [
+                {
+                  "text": "IPsec",
+                  "ok": true,
+                  "explain": "カプセル化された通信を暗号技術で保護します。"
+                },
+                {
+                  "text": "GREだけ",
+                  "ok": false,
+                  "explain": "GRE単体に暗号化を任せることはできません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "『IPsecの暗号化が弱いのでGREを足す』と説明すると何が違う？",
+          "choices": [
+            {
+              "text": "GREが必ずTLSへ変換する",
+              "ok": false,
+              "explain": "GREはTLSへのプロトコル変換ではありません。"
+            },
+            {
+              "text": "OSPFは人の認証をする",
+              "ok": false,
+              "explain": "OSPFは経路制御のプロトコルです。"
+            },
+            {
+              "text": "GREは暗号強度ではなく運べる通信形式に関係する",
+              "ok": true,
+              "explain": "原問の理由はOSPFのマルチキャストを通すことです。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "練習用の変更条件：このトンネルでOSPFを使わず、必要な通信が全て通常のユニキャストだけになった。判断は？",
+          "choices": [
+            {
+              "text": "IPsecはアプリ通信を全て禁止する",
+              "ok": false,
+              "explain": "そのような条件はありません。"
+            },
+            {
+              "text": "OSPFマルチキャストという追加理由はなくなる",
+              "ok": true,
+              "explain": "他の要件があればGREを使う場合もありますが、ここでの根拠は消えます。"
+            },
+            {
+              "text": "GREが暗号化を行うので必須と断言する",
+              "ok": false,
+              "explain": "暗号化とカプセル化を混同しています。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "WANと経路冗長化",
+          "lead": "原問のGRE採用理由を短く組み立てる。",
+          "lines": [
+            {
+              "code": "拠点間でOSPFを使用するため、"
+            },
+            {
+              "code": "OSPFのマルチキャスト通信をGREで包み、"
+            },
+            {
+              "code": "IPsecトンネル経由で通す。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "何を通す必要があるかを具体的に説明できています。",
+          "ngExplain": "『安全にする』だけではGREが必要な理由が欠けます。"
+        }
+      ]
+    },
+    {
+      "id": "routes",
+      "title": "受け取る情報と優先順位",
+      "targets": [
+        "s3-2",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "WANと経路冗長化",
+          "body": "L3SW（レイヤ3スイッチ）はIPアドレスに基づいて転送先を選ぶ装置です。原問の各拠点のL3SWはCEとして、隣のPEとBGP4（Border Gateway Protocol version 4）で経路を交換します。\n\n自拠点の経路を広告し、他拠点への経路を受信します。同じ宛先の経路をOSPFからも得たときは、通常時に使いたいサービス側を優先する設計が必要です。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "同一宛先 192.0.2.0/24",
+              "候補1: BGP4 / IP-VPN",
+              "候補2: OSPF / 予備トンネル"
+            ],
+            "caption": "説明用：学習元と利用回線の対応"
+          }
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "東京拠点のCEがPEから学ぶことで、支店へ通信できるようになる情報は？",
+          "choices": [
+            {
+              "text": "ほかの拠点への経路情報",
+              "ok": true,
+              "explain": "他拠点宛てパケットをIP-VPN側へ転送する判断に使います。"
+            },
+            {
+              "text": "東京拠点自身の利用者ID",
+              "ok": false,
+              "explain": "経路選択に必要な他拠点のネットワーク情報ではありません。"
+            },
+            {
+              "text": "全PCのパスワード",
+              "ok": false,
+              "explain": "経路交換で配布する情報ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "主回線の経路を優先する",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "WANと経路冗長化",
+          "template": "同一宛先をBGP4とOSPFから学んだら、正常時は{a}の経路を優先し、{b}側を使う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "経路の学習元",
+              "why": "原問の主回線側で利用するプロトコルです。",
+              "choices": [
+                {
+                  "text": "BGP4",
+                  "ok": true,
+                  "explain": "PEからIP-VPN経由の経路を学びます。"
+                },
+                {
+                  "text": "OSPF",
+                  "ok": false,
+                  "explain": "原問ではLANと予備トンネル側に使います。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "選ぶサービス",
+              "why": "正常時の利用方針に対応させます。",
+              "choices": [
+                {
+                  "text": "インターネットVPN",
+                  "ok": false,
+                  "explain": "予備側なので、両方正常なら原問の優先先ではありません。"
+                },
+                {
+                  "text": "IP-VPN",
+                  "ok": true,
+                  "explain": "通常時に使うという本文の条件を満たします。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "『BGP4は常にOSPFより優先』と一般化しない理由は？",
+          "choices": [
+            {
+              "text": "異なるプロトコル間の優先は設定や実装に依存するから",
+              "ok": true,
+              "explain": "ここでは通常IP-VPNという設計方針からBGP4を優先させます。"
+            },
+            {
+              "text": "OSPFは宛先経路を扱わないから",
+              "ok": false,
+              "explain": "OSPFも経路を学ぶためのプロトコルです。"
+            },
+            {
+              "text": "二つのプロトコルのメトリックをそのまま比較できるから",
+              "ok": false,
+              "explain": "異なる尺度を単純に大小比較する考えは不適切です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "練習用の変更条件：正常時の主回線をOSPFで学ぶ予備側の回線へ変更したい。同じ宛先の優先は？",
+          "choices": [
+            {
+              "text": "原問どおりBGP4を固定で優先する",
+              "ok": false,
+              "explain": "変更後の主回線を使えません。"
+            },
+            {
+              "text": "二つの経路を削除する",
+              "ok": false,
+              "explain": "通信経路そのものを失わせます。"
+            },
+            {
+              "text": "OSPFから学ぶ経路を優先する方針に変える",
+              "ok": true,
+              "explain": "名称ではなく、使いたい回線と学習元を対応付けます。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "WANと経路冗長化",
+          "lead": "原問で経路を学んで選ぶまでを並べる。",
+          "lines": [
+            {
+              "code": "PEルータから他拠点への経路情報をBGP4で受信し、"
+            },
+            {
+              "code": "同一宛先をOSPFからも学んだ場合は、"
+            },
+            {
+              "code": "通常IP-VPNを使うためBGP4から得た経路を優先する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "受信情報の内容と優先選択の理由を説明できています。",
+          "ngExplain": "自拠点の広告と、他拠点経路の受信を取り違えません。"
+        }
+      ]
+    },
+    {
+      "id": "mesh",
+      "title": "拠点追加の作業を数える",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "WANと経路冗長化",
+          "body": "フルメッシュは全拠点の組合せにトンネルを作る構成です。各トンネルの両端を手動設定するなら、新拠点を一つ増やすだけで既存の全拠点にも設定追加が発生します。設問4(1)では回線品質ではなく拡張時の作業範囲が問題です。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "3拠点を手動フルメッシュ接続済み。4拠点目を追加すると既存側のどこを変更する？",
+          "choices": [
+            {
+              "text": "本社だけ",
+              "ok": false,
+              "explain": "それは全支店間を手動接続するフルメッシュの条件に合いません。"
+            },
+            {
+              "text": "既存3拠点の全て",
+              "ok": true,
+              "explain": "新拠点とのトンネルをそれぞれの既存拠点にも設定します。"
+            },
+            {
+              "text": "新拠点だけ",
+              "ok": false,
+              "explain": "トンネルの既存側にも対向先の追加が必要です。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "本数と作業対象",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "WANと経路冗長化",
+          "template": "練習用の小規模例：既存4拠点へ新拠点を直接接続すると、追加トンネルは{a}本で、既存側は{b}を設定変更する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "追加本数",
+              "why": "新拠点と既存各拠点の組合せを数えます。",
+              "choices": [
+                {
+                  "text": "1",
+                  "ok": false,
+                  "explain": "ハブだけへの接続数と混同しています。"
+                },
+                {
+                  "text": "4",
+                  "ok": true,
+                  "explain": "新拠点から既存4拠点へ1本ずつです。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "既存側の対象",
+              "why": "全トンネルの両端を設定する条件です。",
+              "choices": [
+                {
+                  "text": "全4拠点",
+                  "ok": true,
+                  "explain": "既存各拠点に新しい対向先を登録します。"
+                },
+                {
+                  "text": "任意の1拠点だけ",
+                  "ok": false,
+                  "explain": "残りの直接トンネルの設定が欠けます。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "拠点が増えるほどこの方式の運用負担が大きくなる理由は？",
+          "choices": [
+            {
+              "text": "フルメッシュでは隣接拠点にしか届かない",
+              "ok": false,
+              "explain": "全組合せを直接接続するのがフルメッシュです。"
+            },
+            {
+              "text": "追加のたびに全既存拠点へ設定変更が広がる",
+              "ok": true,
+              "explain": "装置の数だけ更新対象が増え、作業や確認の範囲も増えます。"
+            },
+            {
+              "text": "IPsecが必ず暗号化をやめる",
+              "ok": false,
+              "explain": "規模拡大で暗号化が停止する仕様ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "練習用の変更条件：拠点数は固定で追加予定もない。この問題点の評価は？",
+          "choices": [
+            {
+              "text": "追加作業の負担は発生しにくいが、構成上の性質は変わらない",
+              "ok": true,
+              "explain": "追加が頻繁という条件があるほど、この懸念が重要になります。"
+            },
+            {
+              "text": "トンネルが一切不要になる",
+              "ok": false,
+              "explain": "固定拠点間にも接続は必要です。"
+            },
+            {
+              "text": "全拠点が自動的にハブになる",
+              "ok": false,
+              "explain": "構成方式は追加予定の有無だけでは変わりません。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "WANと経路冗長化",
+          "lead": "原問で手動フルメッシュ拡張を避けたい理由を作る。",
+          "lines": [
+            {
+              "code": "新拠点を追加するたびに、"
+            },
+            {
+              "code": "新拠点向けトンネルの設定を全拠点で変更する必要があり、"
+            },
+            {
+              "code": "拡張時の運用負担が大きくなるから。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "追加という条件と全拠点への影響が核心です。",
+          "ngExplain": "『設定が面倒』だけで終えず、いつ・どこに変更が必要かを記述します。"
+        }
+      ]
+    },
+    {
+      "id": "nhrp",
+      "title": "内側の宛先とトンネルの相手",
+      "targets": [
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "WANと経路冗長化",
+          "body": "自動トンネル方式では、本社との固定トンネルを保ち、支店間は通信が発生したときに作ります。NHRP（Next Hop Resolution Protocol）は、対向トンネルを確立するためのアドレス情報を得るのに使います。原問の大阪支店はFW2、名古屋支店はFW3です。設問4(2)は大阪の業務サーバではなく、外側の対向機器を探します。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "名古屋から大阪へのIPsecトンネルをインターネット上に作る。必要な対向先は？",
+          "choices": [
+            {
+              "text": "大阪の業務サーバのプライベートIPだけ",
+              "ok": false,
+              "explain": "内側の最終宛先であり、外側のトンネル終端アドレスではありません。"
+            },
+            {
+              "text": "名古屋PCのMACアドレス",
+              "ok": false,
+              "explain": "拠点内の端末情報であり、大阪の対向装置を指定できません。"
+            },
+            {
+              "text": "大阪のFWのグローバルIPアドレス",
+              "ok": true,
+              "explain": "インターネット上でトンネルを終端する相手のアドレスです。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "原図の機器へ対応させる",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "WANと経路冗長化",
+          "template": "名古屋支店のFW3はNHRPで、大阪支店の{a}の{b}を得る。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "対向機器",
+              "why": "地名と番号は図2で確認します。",
+              "choices": [
+                {
+                  "text": "FW2",
+                  "ok": true,
+                  "explain": "大阪側のIPsec終端装置です。"
+                },
+                {
+                  "text": "FW1",
+                  "ok": false,
+                  "explain": "本社側であり、このS-Sトンネルの対向終端ではありません。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "アドレス種別",
+              "why": "インターネット経由の外側の宛先です。",
+              "choices": [
+                {
+                  "text": "MACアドレス",
+                  "ok": false,
+                  "explain": "WAN越しの対向トンネル指定には使いません。"
+                },
+                {
+                  "text": "グローバルIPアドレス",
+                  "ok": true,
+                  "explain": "対向FWに外側のパケットを届けるために用います。"
+                }
+              ]
+            }
+          ],
+          "originalExcerpt": {
+            "page": 14,
+            "top": 0.085,
+            "bottom": 0.49,
+            "label": "図2：大阪FW2と名古屋FW3（IPA原図）"
+          }
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "支店間通信を常に本社経由にしない利点を、この原問の仕組みから選ぶ。",
+          "choices": [
+            {
+              "text": "本社との固定トンネルも不要になる",
+              "ok": false,
+              "explain": "本文はハブとスポークの固定トンネルを残す条件です。"
+            },
+            {
+              "text": "業務サーバにグローバルIPを必ず設定する",
+              "ok": false,
+              "explain": "必要なのはFWの外側アドレスです。"
+            },
+            {
+              "text": "通信発生時に支店間の直接トンネルを作れる",
+              "ok": true,
+              "explain": "必要な対向情報を動的に得るので、全組合せの事前手動設定を減らせます。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "練習用の変更条件：支店Aが支店Bへ動的トンネルを張る。BのFWはFW9とする。NHRPで求めるものは？",
+          "choices": [
+            {
+              "text": "本社の利用者ID",
+              "ok": false,
+              "explain": "外側の宛先を特定する情報ではありません。"
+            },
+            {
+              "text": "FW9のグローバルIPアドレス",
+              "ok": true,
+              "explain": "番号が変わっても対向支店のトンネル終端を探します。"
+            },
+            {
+              "text": "必ずFW2のIPアドレス",
+              "ok": false,
+              "explain": "原問の装置番号を別の構成へ持ち込んでいます。"
+            }
+          ]
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "WANと経路冗長化",
+          "lead": "原問のS-Sトンネル確立を順に説明する。",
+          "lines": [
+            {
+              "code": "名古屋支店から大阪支店への通信が発生したとき、"
+            },
+            {
+              "code": "FW3はNHRPで大阪支店のFW2のグローバルIPアドレスを得て、"
+            },
+            {
+              "code": "その相手とのS-Sトンネルを確立する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "開始側と対向側、内側と外側のアドレスを区別できています。",
+          "ngExplain": "サーバのIPではなく対向FWの外側アドレスを入れます。"
+        }
+      ]
+    },
+    {
+      "id": "dr",
+      "title": "静かになれば閉じられるトンネル",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "concept",
+          "type": "info",
+          "title": "まず仕組みをつかむ",
+          "stage": "concept",
+          "scaffold": 5,
+          "format": "読む",
+          "theme": "WANと経路冗長化",
+          "body": "OSPFのDR（Designated Router、代表ルータ）は、あるネットワークで経路情報交換をまとめる役割です。原問ではスポークがDRになると制御通信が続き、支店間トンネルが解放されないことが問題になります。対象インタフェースのOSPFプライオリティを0にするとDR/BDR選出の対象から外せます。"
+        },
+        {
+          "id": "check",
+          "type": "quiz",
+          "title": "役割を選ぶ",
+          "stage": "check",
+          "scaffold": 4,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "スポークをDR候補から確実に外す設定は？",
+          "choices": [
+            {
+              "text": "OSPFプライオリティを0にする",
+              "ok": true,
+              "explain": "0はDR/BDRに選出されないことを示します。"
+            },
+            {
+              "text": "プライオリティを最大にする",
+              "ok": false,
+              "explain": "代表に選ばれやすくする方向で、目的と逆です。"
+            },
+            {
+              "text": "IPsecの暗号化を止める",
+              "ok": false,
+              "explain": "代表選出の問題は解消せず、通信保護を失います。"
+            }
+          ]
+        },
+        {
+          "id": "fill",
+          "type": "blank",
+          "title": "対象と設定値をそろえる",
+          "stage": "apply",
+          "scaffold": 3,
+          "format": "穴埋め",
+          "theme": "WANと経路冗長化",
+          "template": "原問のスポークである{a}に、OSPFプライオリティ{b}を設定する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "全対象",
+              "why": "本社ではなく両支店が対象です。",
+              "choices": [
+                {
+                  "text": "FW1だけ",
+                  "ok": false,
+                  "explain": "本社のハブだけ変更してもスポークを除外できません。"
+                },
+                {
+                  "text": "FW2だけ",
+                  "ok": false,
+                  "explain": "名古屋FW3が候補のまま残ります。"
+                },
+                {
+                  "text": "FW2とFW3",
+                  "ok": true,
+                  "explain": "大阪と名古屋の両スポークを候補から外します。"
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "値",
+              "why": "単に低くするのでなく選出対象外にします。",
+              "choices": [
+                {
+                  "text": "0",
+                  "ok": true,
+                  "explain": "選出されないという意味を持つ値です。"
+                },
+                {
+                  "text": "1",
+                  "ok": false,
+                  "explain": "低い値でも候補に残るので確実な除外になりません。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "理由と境界を確かめる",
+          "stage": "reason",
+          "scaffold": 2,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "他の候補より低い正の値にするだけでは不十分なのは？",
+          "choices": [
+            {
+              "text": "他候補がいない場合などに選出され得るから",
+              "ok": true,
+              "explain": "優先されにくいことと候補外になることは違います。"
+            },
+            {
+              "text": "0はOSPF全体を無効にするから",
+              "ok": false,
+              "explain": "0はDR/BDR候補から外す設定で、OSPF停止とは異なります。"
+            },
+            {
+              "text": "プライオリティは経路の暗号鍵だから",
+              "ok": false,
+              "explain": "代表選出で用いる値です。"
+            }
+          ]
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "条件を変えて考える",
+          "stage": "transfer",
+          "scaffold": 1,
+          "format": "選択",
+          "theme": "WANと経路冗長化",
+          "intro": "練習用の変更条件：新支店FW4もスポークとして追加する。同じ設計方針なら？",
+          "choices": [
+            {
+              "text": "既存のFW2・FW3だけで十分",
+              "ok": false,
+              "explain": "新スポークが選出候補として残ります。"
+            },
+            {
+              "text": "全拠点でOSPFを停止する",
+              "ok": false,
+              "explain": "自動経路交換という別の要件を失います。"
+            },
+            {
+              "text": "FW4も対象のOSPFプライオリティを0にする",
+              "ok": true,
+              "explain": "新スポークも代表にならないようにする必要があります。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.32,
+            "bottom": 0.49,
+            "label": "本文：固定トンネルと無通信時の切断方針（IPA原文）"
+          }
+        },
+        {
+          "id": "assemble",
+          "type": "parsons",
+          "title": "条件から答案を組み立てる",
+          "stage": "assemble",
+          "scaffold": 0,
+          "format": "並べ替え",
+          "theme": "WANと経路冗長化",
+          "lead": "原問の問題から追加設定までを組み立てる。",
+          "lines": [
+            {
+              "code": "スポークがDRになってS-Sトンネルが解放されなくなるのを防ぐため、"
+            },
+            {
+              "code": "FW2とFW3の対象インタフェースで、"
+            },
+            {
+              "code": "OSPFプライオリティを0に設定する。"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "対象機器を全て列挙し、目的と値を結び付けています。",
+          "ngExplain": "本社のFW1に限定しないこと、単なる低い正の値にしないことを確認します。"
+        },
+        {
+          "id": "independent",
+          "type": "info",
+          "title": "補助なしの原問へ",
+          "stage": "transfer",
+          "scaffold": 0,
+          "format": "読む",
+          "theme": "WANと経路冗長化",
+          "body": "ここまでで部品ごとの判断を練習しました。次は「公式の原問を解く」から、教材の解説を閉じて原文・原図だけで挑戦してください。用語だけでなく、対象機器・通信方向・条件・結果を設問の指定に合わせてそろえます。原問の答案と学習記録は別に保存されます。"
+        }
+      ]
+    }
+  ]
+}

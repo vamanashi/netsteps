@@ -1,0 +1,1564 @@
+{
+  "examKey": "2019r01a/pm1/2",
+  "title": "WAFとLBの接続・状態・ログを組み立てる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm1_qs.pdf"
+  ],
+  "sections": [
+    {
+      "id": "cname",
+      "title": "接続先IPが変わっても名前を保つ",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "ショップ名から検査サービスへ誘導する",
+          "body": "利用者はshop.asha.comにアクセスします。WAF（Web Application Firewall）が要求を検査します。WAFのIPは事業者側で変更されることがあります。DNS（Domain Name System）の登録方法を選びます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "shop.asha.com",
+                "d": "利用者が使う名前"
+              },
+              {
+                "t": "waf-asha.tsha.net",
+                "d": "WAFサービスの名前"
+              },
+              {
+                "t": "IP-W1",
+                "d": "事業者が管理する接続先IP"
+              }
+            ],
+            "caption": "説明用の通信・処理の流れ"
+          },
+          "format": "読む",
+          "theme": "接続先IPが変わっても名前を保つ",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "AレコードとCNAMEレコードの違いはどれか。",
+          "choices": [
+            {
+              "text": "Aは暗号化、CNAMEは復号を指定する",
+              "ok": false,
+              "explain": "DNSレコードはTLSの処理指定ではありません。"
+            },
+            {
+              "text": "CNAMEにはポート番号を設定する",
+              "ok": false,
+              "explain": "CNAMEの値は正規名です。ポート番号ではありません。"
+            },
+            {
+              "text": "AはIPv4アドレス、CNAMEは別の名前を示す",
+              "ok": true,
+              "explain": "名前を参照すれば、その先のIPを事業者が管理できます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "接続先IPが変わっても名前を保つ",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "T社がIP-W1だけを変更した。A社のCNAMEを変えなくてよい条件は何か。",
+          "choices": [
+            {
+              "text": "利用者が毎回IPを手入力する",
+              "ok": false,
+              "explain": "それではDNSを使う利点になりません。"
+            },
+            {
+              "text": "参照先のWAFの名前が同じである",
+              "ok": true,
+              "explain": "その名前を解決した結果だけが変わります。"
+            },
+            {
+              "text": "DNSのキャッシュ時間が無限である",
+              "ok": false,
+              "explain": "古いIPが残り続ければ変更を反映できません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "接続先IPが変わっても名前を保つ",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "変更する主体と省ける作業を組み立てる。",
+          "template": "{a}がIP-W1を変更しても、{b}の変更作業が不要となる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "T社",
+                  "ok": true,
+                  "explain": "WAFサービスの提供者がIPを管理します。"
+                },
+                {
+                  "text": "利用者のブラウザ",
+                  "ok": false,
+                  "explain": "サービス側のIP割当ては変更しません。"
+                },
+                {
+                  "text": "A社のLB",
+                  "ok": false,
+                  "explain": "WAF入口のIPを割り当てる機器ではありません。"
+                }
+              ],
+              "why": "WAFサービスの提供者がIPを管理します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "T社の名前解決情報全て",
+                  "ok": false,
+                  "explain": "新IPを返す情報はT社で更新する必要があります。"
+                },
+                {
+                  "text": "全利用者のキャッシュ",
+                  "ok": false,
+                  "explain": "古い情報が期限まで残る可能性があります。"
+                },
+                {
+                  "text": "A社DNSサーバ",
+                  "ok": true,
+                  "explain": "CNAMEの参照先名が同じなら登録を維持できます。"
+                }
+              ],
+              "why": "CNAMEの参照先名が同じなら登録を維持できます。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "接続先IPが変わっても名前を保つ",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "original",
+          "type": "parsons",
+          "title": "CNAMEで到達する順序を並べる。",
+          "lead": "図2のshopレコードを起点にします。",
+          "lines": [
+            {
+              "code": "shop.asha.comのCNAMEを取得する"
+            },
+            {
+              "code": "waf-asha.tsha.netのIPアドレスを解決する"
+            },
+            {
+              "code": "得られたIP-W1へHTTPSで接続する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "A社が保存するのはWAFの名前です。IPの変更を名前の参照先で吸収します。",
+          "ngExplain": "CNAME自体はIPアドレスではありません。参照先名も解決します。",
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.07,
+            "bottom": 0.27,
+            "label": "図2：A社のゾーンファイル（IPA原図）"
+          },
+          "format": "並べ替え",
+          "theme": "接続先IPが変わっても名前を保つ",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "T社がWAFの名前も変更し、旧名を廃止した。A社側はどうするか。",
+          "choices": [
+            {
+              "text": "Aレコードに新しい名前を書く",
+              "ok": false,
+              "explain": "Aレコードの値はIPv4アドレスです。"
+            },
+            {
+              "text": "CNAMEの参照先を新しい名前へ変更する",
+              "ok": true,
+              "explain": "IPだけの変更とは条件が異なります。"
+            },
+            {
+              "text": "CNAMEなら何が変わっても変更不要",
+              "ok": false,
+              "explain": "参照先自体がなくなれば名前解決できません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "接続先IPが変わっても名前を保つ",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "health-check",
+      "title": "振分けとアプリケーション監視を区別する",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "応答できるWebサーバへ順に送る",
+          "body": "負荷分散装置（LB）は複数のWebサーバへ要求を振り分けます。LBとWebサーバの間はHTTPです。監視では/index.phpへの応答を確認します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "通信",
+              "目的"
+            ],
+            "rows": [
+              [
+                "LB→Webサーバ",
+                "HTTPの要求"
+              ],
+              [
+                "Webサーバ→LB",
+                "処理結果のHTTP応答"
+              ],
+              [
+                "LBの振分け",
+                "サーバへ順番に送る"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "振分けとアプリケーション監視を区別する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "ラウンドロビン方式で3台へ新規要求を送る順はどれか。",
+          "choices": [
+            {
+              "text": "常にサーバ1",
+              "ok": false,
+              "explain": "1台への固定はラウンドロビンではありません。"
+            },
+            {
+              "text": "直前の応答が最速のサーバだけ",
+              "ok": false,
+              "explain": "応答時間を基準にする別の方式です。"
+            },
+            {
+              "text": "1→2→3→1",
+              "ok": true,
+              "explain": "順番に振り分ける方式です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "振分けとアプリケーション監視を区別する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "TCP接続だけでなくGET /index.phpを試す理由は何か。",
+          "choices": [
+            {
+              "text": "TLSの秘密鍵を配布するため",
+              "ok": false,
+              "explain": "GET要求は秘密鍵配布の手順ではありません。"
+            },
+            {
+              "text": "Webアプリケーションが応答できるか確認するため",
+              "ok": true,
+              "explain": "ポートが開いていてもアプリケーションが失敗する場合があります。"
+            },
+            {
+              "text": "サーバのMACアドレスだけを知るため",
+              "ok": false,
+              "explain": "HTTP応答の検査はMAC解決ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "振分けとアプリケーション監視を区別する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "原問の振分けと監視値を補う。",
+          "template": "ラウンドロビンは{a}に振り分ける。HTTPの標準ポートは{b}、成功応答は{c}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "順番",
+                  "ok": true,
+                  "explain": "原問のアに相当します。"
+                },
+                {
+                  "text": "負荷が高い順",
+                  "ok": false,
+                  "explain": "負荷を評価する方式ではありません。"
+                },
+                {
+                  "text": "送信元IPの数値順",
+                  "ok": false,
+                  "explain": "利用者の数値で順番を決めません。"
+                }
+              ],
+              "why": "原問のアに相当します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "443",
+                  "ok": false,
+                  "explain": "HTTPSの標準ポートです。"
+                },
+                {
+                  "text": "53",
+                  "ok": false,
+                  "explain": "DNSに使うポートです。"
+                },
+                {
+                  "text": "80",
+                  "ok": true,
+                  "explain": "原問はLBから先をHTTPにします。"
+                }
+              ],
+              "why": "原問はLBから先をHTTPにします。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "500",
+                  "ok": false,
+                  "explain": "サーバ内部エラーを示します。"
+                },
+                {
+                  "text": "200",
+                  "ok": true,
+                  "explain": "HTTP 200は正常な処理結果を示します。"
+                },
+                {
+                  "text": "404",
+                  "ok": false,
+                  "explain": "要求されたリソースが見つからない応答です。"
+                }
+              ],
+              "why": "HTTP 200は正常な処理結果を示します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.71,
+            "bottom": 0.9,
+            "label": "表1：レイヤ7監視の要求と成功応答（IPA原図）"
+          },
+          "format": "穴埋め",
+          "theme": "振分けとアプリケーション監視を区別する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "アプリケーションの監視手順を並べる。",
+          "lead": "LBが各サーバへ監視要求を出します。",
+          "lines": [
+            {
+              "code": "各WebサーバのIPへTCP/80で接続する"
+            },
+            {
+              "code": "GET /index.phpを送る"
+            },
+            {
+              "code": "HTTP応答のステータスが200か確かめる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "到達性だけでなくHTTPでの処理結果を検査します。",
+          "ngExplain": "接続先と要求を決めてから応答結果を評価します。",
+          "format": "並べ替え",
+          "theme": "振分けとアプリケーション監視を区別する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "pingとTCP接続は成功し、/index.phpは500を返す。監視結果はどうなるか。",
+          "choices": [
+            {
+              "text": "443に変えるだけで正常になる",
+              "ok": false,
+              "explain": "サーバが返す500の原因をポート変更だけで解決できません。"
+            },
+            {
+              "text": "原問の成功条件を満たさない",
+              "ok": true,
+              "explain": "期待する200ではなく、アプリケーション側のエラーです。"
+            },
+            {
+              "text": "ping成功なので必ず正常",
+              "ok": false,
+              "explain": "原問の監視はレイヤ7の応答まで見ます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "振分けとアプリケーション監視を区別する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "session-id",
+      "title": "中継後のIPと利用者の識別子を分ける",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "別の利用者が同じ送信元になる",
+          "body": "利用者AとBの要求をWAFが中継します。LBから見える送信元は両方ともIP-W2です。買物の状態を維持するには、利用者ごとの識別情報が必要です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "利用者",
+              "LBが見る送信元",
+              "セッションID"
+            ],
+            "rows": [
+              [
+                "A",
+                "IP-W2",
+                "id-A"
+              ],
+              [
+                "B",
+                "IP-W2",
+                "id-B"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "中継後のIPと利用者の識別子を分ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "送信元IPに基づいて同じWebサーバへ固定するとどうなるか。",
+          "choices": [
+            {
+              "text": "利用者の台数分だけIP-W2が自動で増える",
+              "ok": false,
+              "explain": "原問にそのような機能はありません。"
+            },
+            {
+              "text": "Cookieの値に応じて均等に分かれる",
+              "ok": false,
+              "explain": "この選択肢の方式は送信元IPしか見ていません。"
+            },
+            {
+              "text": "複数利用者が同じサーバへ集中する",
+              "ok": true,
+              "explain": "中継後のIPが同じなので識別できません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "中継後のIPと利用者の識別子を分ける",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "セッションID方式が有効な理由はどれか。",
+          "choices": [
+            {
+              "text": "全利用者で同じIDを共有する",
+              "ok": false,
+              "explain": "同じIDでは利用者ごとの状態を区別できません。"
+            },
+            {
+              "text": "同じIP-W2でも利用者の状態を別IDで識別できる",
+              "ok": true,
+              "explain": "IPアドレスとアプリケーションの状態管理を分けます。"
+            },
+            {
+              "text": "CookieがWAFのIPを利用者IPへ戻す",
+              "ok": false,
+              "explain": "CookieはIPヘッダの書換えではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "中継後のIPと利用者の識別子を分ける",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "応答と次の要求のヘッダを補う。",
+          "template": "LBは応答の{a}にIDを入れる。ブラウザは次の要求の{b}にIDを付ける。IP方式では{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "Set-Cookie",
+                  "ok": true,
+                  "explain": "応答からブラウザへCookieを設定します。"
+                },
+                {
+                  "text": "Cookie",
+                  "ok": false,
+                  "explain": "こちらはブラウザからの要求で送るヘッダです。"
+                },
+                {
+                  "text": "X-Forwarded-For",
+                  "ok": false,
+                  "explain": "送信元情報を中継するヘッダです。"
+                }
+              ],
+              "why": "応答からブラウザへCookieを設定します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "Set-Cookie",
+                  "ok": false,
+                  "explain": "サーバから設定を通知する方向です。"
+                },
+                {
+                  "text": "Location",
+                  "ok": false,
+                  "explain": "移動先URLを応答するヘッダです。"
+                },
+                {
+                  "text": "Cookie",
+                  "ok": true,
+                  "explain": "保存したCookieを要求に付けます。"
+                }
+              ],
+              "why": "保存したCookieを要求に付けます。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "DNSが停止する",
+                  "ok": false,
+                  "explain": "名前解決とは別の問題です。"
+                },
+                {
+                  "text": "負荷が偏る",
+                  "ok": true,
+                  "explain": "WAFが送信元IPをまとめるためです。"
+                },
+                {
+                  "text": "暗号化できなくなる",
+                  "ok": false,
+                  "explain": "振分け方式はTLSの可否を直接変えません。"
+                }
+              ],
+              "why": "WAFが送信元IPをまとめるためです。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "中継後のIPと利用者の識別子を分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "状態を維持する流れを並べる。",
+          "lead": "最初の要求にIDがない場合です。",
+          "lines": [
+            {
+              "code": "LBが振分け先を決めてセッションIDを生成する"
+            },
+            {
+              "code": "応答のSet-CookieでIDをブラウザへ渡す"
+            },
+            {
+              "code": "次の要求のCookieを読み同じサーバへ送る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "IDの発行、受渡し、再利用の順です。",
+          "ngExplain": "応答のSet-Cookieと要求のCookieを区別します。",
+          "format": "並べ替え",
+          "theme": "中継後のIPと利用者の識別子を分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "利用者のIPだけが移動で変わり、有効なCookieは残った。何を基に維持できるか。",
+          "choices": [
+            {
+              "text": "DNSのCNAME",
+              "ok": false,
+              "explain": "DNSは利用者の買物状態を識別しません。"
+            },
+            {
+              "text": "Cookie中のセッションID",
+              "ok": true,
+              "explain": "原問で採用した方式は送信元IPに依存しません。"
+            },
+            {
+              "text": "以前の送信元IPしか使えない",
+              "ok": false,
+              "explain": "それはIPベースの維持方式です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "中継後のIPと利用者の識別子を分ける",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "tls-headers",
+      "title": "暗号を解いてからヘッダを編集する",
+      "targets": [
+        "s2-3",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "暗号化された要求をLBで加工する",
+          "body": "WAFは検査後に要求をHTTPSでLBへ送ります。TLS（Transport Layer Security）はHTTPの内容を暗号化します。LBはHTTPヘッダを編集してからWebサーバへ渡します。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "WAF→LB",
+                "d": "HTTPS"
+              },
+              {
+                "t": "LB",
+                "d": "復号してHTTPヘッダを編集"
+              },
+              {
+                "t": "LB→Webサーバ",
+                "d": "HTTP"
+              }
+            ],
+            "caption": "説明用の通信・処理の流れ"
+          },
+          "format": "読む",
+          "theme": "暗号を解いてからヘッダを編集する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "HTTPヘッダを編集する前に必要な処理はどれか。",
+          "choices": [
+            {
+              "text": "DNSのTTLを短くする",
+              "ok": false,
+              "explain": "キャッシュの保持時間は復号を代替しません。"
+            },
+            {
+              "text": "IPパケットの宛先だけを変える",
+              "ok": false,
+              "explain": "IPヘッダを書き換えてもHTTPは暗号化されたままです。"
+            },
+            {
+              "text": "TLSの復号",
+              "ok": true,
+              "explain": "暗号化されたままではHTTPのヘッダを読み書きできません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "暗号を解いてからヘッダを編集する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "LBがTLSを終端する理由として、性能向上以外に該当するものはどれか。",
+          "choices": [
+            {
+              "text": "IPアドレスを不要にするため",
+              "ok": false,
+              "explain": "HTTPSでもIPによる配送は必要です。"
+            },
+            {
+              "text": "HTTPヘッダを編集するため",
+              "ok": true,
+              "explain": "原問は編集機能とTLSアクセラレーションを併用します。"
+            },
+            {
+              "text": "L2スイッチのMAC学習を止めるため",
+              "ok": false,
+              "explain": "TLSはL2スイッチの学習を制御しません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "暗号を解いてからヘッダを編集する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "処理対象を明確にして答案を作る。",
+          "template": "LBは{a}を復号し、{b}を編集する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "HTTPS通信",
+                  "ok": true,
+                  "explain": "TLSを終端してHTTP内容を取り出します。"
+                },
+                {
+                  "text": "DNSのAレコード",
+                  "ok": false,
+                  "explain": "DNSレコードを復号する場面ではありません。"
+                },
+                {
+                  "text": "VLANタグ",
+                  "ok": false,
+                  "explain": "VLAN所属を示す情報で、HTTP暗号文ではありません。"
+                }
+              ],
+              "why": "TLSを終端してHTTP内容を取り出します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "光信号の波長",
+                  "ok": false,
+                  "explain": "アプリケーション層の編集ではありません。"
+                },
+                {
+                  "text": "OSPFのエリア番号",
+                  "ok": false,
+                  "explain": "経路制御の設定であり、HTTP内容ではありません。"
+                },
+                {
+                  "text": "HTTPヘッダ",
+                  "ok": true,
+                  "explain": "設問2(3)で求める具体的な処理対象です。"
+                }
+              ],
+              "why": "設問2(3)で求める具体的な処理対象です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.35,
+            "bottom": 0.49,
+            "label": "本文：LBでのTLS処理とサーバ側HTTP（IPA原文）"
+          },
+          "format": "穴埋め",
+          "theme": "暗号を解いてからヘッダを編集する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "WAFからWebサーバまでの処理を並べる。",
+          "lead": "原問のLBはサーバ側へHTTPで接続します。",
+          "lines": [
+            {
+              "code": "WAFからHTTPSの要求を受信する"
+            },
+            {
+              "code": "LBで復号してHTTPヘッダを編集する"
+            },
+            {
+              "code": "HTTPでWebサーバへ要求を転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "どこで暗号が解けるかを追えば編集場所が決まります。",
+          "ngExplain": "暗号文のままでHTTPヘッダを編集する順序にはできません。",
+          "format": "並べ替え",
+          "theme": "暗号を解いてからヘッダを編集する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "LBをTLSパススルー専用に変え、復号しない。できなくなる処理はどれか。",
+          "choices": [
+            {
+              "text": "物理ポートでの受信",
+              "ok": false,
+              "explain": "TLS終端の有無は物理受信を妨げません。"
+            },
+            {
+              "text": "暗号化されたHTTPヘッダの編集",
+              "ok": true,
+              "explain": "内容を読めないため、そのままでは編集できません。"
+            },
+            {
+              "text": "IPアドレスによるパケット転送",
+              "ok": false,
+              "explain": "暗号化された通信でもIPヘッダは参照できます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "暗号を解いてからヘッダを編集する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "fallback-firewall",
+      "title": "WAFを迂回する要求をFWで許可する",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "WAFだけが長時間停止する",
+          "body": "WAF経由のHTTPSだけをFW（ファイアウォール）が許可しています。ショップ自体とLBは正常です。利用者からLBへ直接接続して販売を継続したい状況です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "状態",
+              "HTTPSの送信元"
+            ],
+            "rows": [
+              [
+                "WAF経由",
+                "IP-W2"
+              ],
+              [
+                "直接接続",
+                "各利用者のIP"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "WAFを迂回する要求をFWで許可する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "DNSをLBへ向けただけでは失敗する理由はどれか。",
+          "choices": [
+            {
+              "text": "CNAMEが全てのTCPを暗号化する",
+              "ok": false,
+              "explain": "CNAMEはTLS機能ではありません。"
+            },
+            {
+              "text": "LBにはHTTP編集機能がない",
+              "ok": false,
+              "explain": "原問のLBにはHTTPヘッダ編集機能があります。"
+            },
+            {
+              "text": "FWがIP-W2以外からのHTTPSを拒否する",
+              "ok": true,
+              "explain": "名前解決先を変更してもFWの許可条件は変わりません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "WAFを迂回する要求をFWで許可する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "迂回時に変更する機器と通信の組はどれか。",
+          "choices": [
+            {
+              "text": "WebサーバでDNSだけを拒否する",
+              "ok": false,
+              "explain": "HTTPSの遮断条件を解決しません。"
+            },
+            {
+              "text": "FWで任意の送信元IPからのHTTPSを許可する",
+              "ok": true,
+              "explain": "多様な利用者IPが直接接続してくるためです。"
+            },
+            {
+              "text": "DNSで任意の送信元IPからの全通信を許可する",
+              "ok": false,
+              "explain": "DNSはFWのアクセス制御を変更できません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "WAFを迂回する要求をFWで許可する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "対象機器・送信元・通信を選ぶ。",
+          "template": "{a}で、{b}からWebシステムへの{c}を許可する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "FW",
+                  "ok": true,
+                  "explain": "原問のカに相当する機器です。"
+                },
+                {
+                  "text": "L2SW",
+                  "ok": false,
+                  "explain": "送信元IPで制限している機器はFWです。"
+                },
+                {
+                  "text": "DNSサーバ",
+                  "ok": false,
+                  "explain": "名前解決の変更は別途必要です。"
+                }
+              ],
+              "why": "原問のカに相当する機器です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "IP-W2だけ",
+                  "ok": false,
+                  "explain": "WAF停止前の条件のままです。"
+                },
+                {
+                  "text": "Webサーバだけ",
+                  "ok": false,
+                  "explain": "外部利用者の接続を許可できません。"
+                },
+                {
+                  "text": "任意のIPアドレス",
+                  "ok": true,
+                  "explain": "直接接続する利用者全体を許可します。"
+                }
+              ],
+              "why": "直接接続する利用者全体を許可します。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "SNMP通信",
+                  "ok": false,
+                  "explain": "商品販売のWebアクセスには使いません。"
+                },
+                {
+                  "text": "HTTPS通信",
+                  "ok": true,
+                  "explain": "正誤表で対象はHTTPS通信と限定されています。"
+                },
+                {
+                  "text": "全ての通信",
+                  "ok": false,
+                  "explain": "HTTPS以外まで拡大する根拠はありません。"
+                }
+              ],
+              "why": "正誤表で対象はHTTPS通信と限定されています。"
+            }
+          ],
+          "format": "穴埋め",
+          "theme": "WAFを迂回する要求をFWで許可する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "直接接続を可能にする判断を並べる。",
+          "lead": "WAFの停止を確認した後の検討です。",
+          "lines": [
+            {
+              "code": "直接接続では送信元が利用者IPになると確認する"
+            },
+            {
+              "code": "FWのIP-W2限定条件が妨げになると判断する"
+            },
+            {
+              "code": "利用者からのHTTPSを許可する設定へ変更する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "FWの変更対象を通信の変化から導きます。",
+          "ngExplain": "送信元が変わることと拒否条件を結び付けます。",
+          "format": "並べ替え",
+          "theme": "WAFを迂回する要求をFWで許可する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "WAF経由だけに戻す際、直接接続の許可を残すと何が起きるか。",
+          "choices": [
+            {
+              "text": "HTTPSが自動でHTTPになる",
+              "ok": false,
+              "explain": "許可元の設定と暗号化方式は別です。"
+            },
+            {
+              "text": "WAFを通らずLBへ直接接続できる経路が残る",
+              "ok": true,
+              "explain": "WAF検査を前提にするならFWの送信元制限も戻します。"
+            },
+            {
+              "text": "DNSを戻しただけで直接IP接続も禁止される",
+              "ok": false,
+              "explain": "DNS変更はIP直指定の接続を遮断しません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "WAFを迂回する要求をFWで許可する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "fallback-dns",
+      "title": "迂回時の資源レコードを作る",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "同じショップ名でLBに到達させる",
+          "body": "平常時のshopはWAFの名前を指すCNAMEです。迂回時にはLBの199.α.β.2へ接続させます。利用者が入力するショップ名は変えません。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "項目",
+              "迂回後の値"
+            ],
+            "rows": [
+              [
+                "所有者名",
+                "shop"
+              ],
+              [
+                "クラス",
+                "IN"
+              ],
+              [
+                "種類",
+                "A"
+              ],
+              [
+                "値",
+                "199.α.β.2"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "迂回時の資源レコードを作る",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "名前からIPv4アドレスを直接返すレコードはどれか。",
+          "choices": [
+            {
+              "text": "CNAMEレコード",
+              "ok": false,
+              "explain": "別の名前を値として登録します。"
+            },
+            {
+              "text": "NSレコード",
+              "ok": false,
+              "explain": "ゾーンの権威DNSサーバを指定します。"
+            },
+            {
+              "text": "Aレコード",
+              "ok": true,
+              "explain": "IPv4アドレスを値として登録します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "迂回時の資源レコードを作る",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "nsではなくshopの行を書き換える理由は何か。",
+          "choices": [
+            {
+              "text": "LBは必ずnsという名前を使うから",
+              "ok": false,
+              "explain": "原問のLBはshop.asha.comとして示されています。"
+            },
+            {
+              "text": "利用者が接続する名前がshop.asha.comだから",
+              "ok": true,
+              "explain": "DNSサーバ自体の名前を変える必要はありません。"
+            },
+            {
+              "text": "nsのIPは全WebサイトのIPを決めるから",
+              "ok": false,
+              "explain": "権威DNSサーバのアドレスとWeb接続先は別です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "迂回時の資源レコードを作る",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "書換え後の1行を完成する。",
+          "template": "shop IN {a} {b}",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "A",
+                  "ok": true,
+                  "explain": "IPv4アドレスを直接指定します。"
+                },
+                {
+                  "text": "CNAME",
+                  "ok": false,
+                  "explain": "右辺がIPアドレスなので適しません。"
+                },
+                {
+                  "text": "MX",
+                  "ok": false,
+                  "explain": "メールの配送先を指定する種類です。"
+                }
+              ],
+              "why": "IPv4アドレスを直接指定します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "199.α.β.1",
+                  "ok": false,
+                  "explain": "DNSサーバのアドレスです。"
+                },
+                {
+                  "text": "192.168.1.1",
+                  "ok": false,
+                  "explain": "内部のWebサーバ1のアドレスです。"
+                },
+                {
+                  "text": "199.α.β.2",
+                  "ok": true,
+                  "explain": "図3に記載されたLBの公開アドレスです。"
+                }
+              ],
+              "why": "図3に記載されたLBの公開アドレスです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.51,
+            "bottom": 0.7,
+            "label": "図3：DNSサーバ・LB・Webサーバのアドレス（IPA原図）"
+          },
+          "format": "穴埋め",
+          "theme": "迂回時の資源レコードを作る",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "レコードを作る判断の順を並べる。",
+          "lead": "図2と図3を結び付けます。",
+          "lines": [
+            {
+              "code": "変更対象をshop.asha.comと定める"
+            },
+            {
+              "code": "迂回先を公開側のLBアドレスと定める"
+            },
+            {
+              "code": "shop IN A 199.α.β.2へ書き換える"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "所有者名、種類、値の三つをそろえます。",
+          "ngExplain": "Webサーバの内部IPとLBの公開IPを取り違えないでください。",
+          "format": "並べ替え",
+          "theme": "迂回時の資源レコードを作る",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "書換え直後、一部の利用者だけ旧WAFへ接続する。考えられる理由はどれか。",
+          "choices": [
+            {
+              "text": "FWがDNS応答のCNAMEを必ず復元する",
+              "ok": false,
+              "explain": "FWの許可条件にその機能はありません。"
+            },
+            {
+              "text": "以前のDNS応答がキャッシュに残っている",
+              "ok": true,
+              "explain": "変更前の情報はTTLが切れるまで使われる場合があります。"
+            },
+            {
+              "text": "Aレコードはブラウザごとに別のIPを自動生成する",
+              "ok": false,
+              "explain": "登録した値が返るので、その説明ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "迂回時の資源レコードを作る",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "client-log",
+      "title": "迂回後も利用者の送信元を記録する",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "中継装置が変わってもログ形式を保つ",
+          "body": "WebアプリケーションはX-Forwarded-For（XFF）から利用者IPを記録します。通常はWAFがその値を追加します。WAFを迂回すると、その追加処理がなくなります。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "通常",
+                "d": "WAFが利用者IPをXFFに追加"
+              },
+              {
+                "t": "迂回",
+                "d": "LBが直接利用者の要求を受信"
+              },
+              {
+                "t": "共通のログ",
+                "d": "WebAPはXFFを参照"
+              }
+            ],
+            "caption": "説明用の通信・処理の流れ"
+          },
+          "format": "読む",
+          "theme": "迂回後も利用者の送信元を記録する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "迂回時に利用者IPをXFFへ追加する機器はどれか。",
+          "choices": [
+            {
+              "text": "DNSサーバ",
+              "ok": false,
+              "explain": "HTTP要求を中継しないためヘッダを編集できません。"
+            },
+            {
+              "text": "停止中のWAF",
+              "ok": false,
+              "explain": "迂回時は要求が到達しません。"
+            },
+            {
+              "text": "LB",
+              "ok": true,
+              "explain": "HTTPヘッダ編集機能を持ち、利用者からの要求を受けます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "迂回後も利用者の送信元を記録する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "XFFに追加するのはどの情報か。",
+          "choices": [
+            {
+              "text": "WebサーバのIP",
+              "ok": false,
+              "explain": "要求の処理先であり利用者IPではありません。"
+            },
+            {
+              "text": "LBが受信した要求の送信元IPアドレス",
+              "ok": true,
+              "explain": "迂回時はこれが直接接続する利用者のIPです。"
+            },
+            {
+              "text": "LB自身の宛先IPだけ",
+              "ok": false,
+              "explain": "記録したい利用者を特定できません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "迂回後も利用者の送信元を記録する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "追加する設定を具体化する。",
+          "template": "LBに、{a}へ{b}を追加する設定を行う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "XFFヘッダ",
+                  "ok": true,
+                  "explain": "WebAPが参照する情報を維持します。"
+                },
+                {
+                  "text": "DNSのNSレコード",
+                  "ok": false,
+                  "explain": "HTTP要求に利用者情報を渡せません。"
+                },
+                {
+                  "text": "Set-Cookieヘッダ",
+                  "ok": false,
+                  "explain": "セッション維持の設定であり、ログ参照元が違います。"
+                }
+              ],
+              "why": "WebAPが参照する情報を維持します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "宛先TCPポート番号",
+                  "ok": false,
+                  "explain": "利用者のIPを記録する要件を満たしません。"
+                },
+                {
+                  "text": "サーバの秘密鍵",
+                  "ok": false,
+                  "explain": "利用者識別の情報ではありません。"
+                },
+                {
+                  "text": "送信元IPアドレス",
+                  "ok": true,
+                  "explain": "直接接続の利用者情報を追加します。"
+                }
+              ],
+              "why": "直接接続の利用者情報を追加します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.06,
+            "bottom": 0.13,
+            "label": "本文：XFFによる記録を継続する条件（IPA原文）"
+          },
+          "format": "穴埋め",
+          "theme": "迂回後も利用者の送信元を記録する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "迂回時のログが残る流れを並べる。",
+          "lead": "利用者からLBへ直接HTTPSで接続します。",
+          "lines": [
+            {
+              "code": "LBが利用者の要求を受信して復号する"
+            },
+            {
+              "code": "XFFに送信元IPアドレスを追加する"
+            },
+            {
+              "code": "WebAPがXFFからアクセスログを記録する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "経路の変更で失われたヘッダ追加をLBが担当します。",
+          "ngExplain": "復号、編集、アプリケーションでの記録の順です。",
+          "format": "並べ替え",
+          "theme": "迂回後も利用者の送信元を記録する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "利用者が任意のXFF値を送れる。運用で信頼すべき情報はどれか。",
+          "choices": [
+            {
+              "text": "XFFという名前があれば全て正しい",
+              "ok": false,
+              "explain": "ヘッダ名だけでは値の信頼性を保証できません。"
+            },
+            {
+              "text": "信頼できる中継点が付けた情報と実際の接続元",
+              "ok": true,
+              "explain": "ヘッダに書かれただけの値を無条件に本人のIPとみなしません。"
+            },
+            {
+              "text": "利用者が書いた一番左の値だけ",
+              "ok": false,
+              "explain": "その値が自己申告なら偽装の可能性があります。"
+            }
+          ],
+          "format": "選択",
+          "theme": "迂回後も利用者の送信元を記録する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

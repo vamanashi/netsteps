@@ -1,0 +1,1954 @@
+{
+  "examKey": "2019r01a/pm2/1",
+  "title": "クラウドPBXへの通信と段階移行を組み立てる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000dict-att/2019r01a_nw_pm2_qs.pdf",
+    "https://datatracker.ietf.org/doc/html/rfc3031",
+    "https://datatracker.ietf.org/doc/html/rfc3261"
+  ],
+  "sections": [
+    {
+      "id": "nat-sip",
+      "title": "NATとSIP登録を分ける",
+      "targets": [
+        "s1-1",
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "NATとSIP登録を分ける",
+          "body": "支店PCの通信はBBRでNAPTされます。本社Webサーバの公開変換はFWが行います。SIP UAはREGISTERでIP-PBXへ位置を登録します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "支店の変換",
+                "PCをBBRでNAPT"
+              ],
+              [
+                "公開サーバ",
+                "FWでNAT"
+              ],
+              [
+                "SIP登録",
+                "REGISTER→401→200 OK"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "NATとSIP登録を分ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "支店側でNAPTされる機器はどれか。",
+          "choices": [
+            {
+              "text": "Webサーバ",
+              "ok": false,
+              "explain": "本社側の公開対象です。"
+            },
+            {
+              "text": "IP-PBX",
+              "ok": false,
+              "explain": "Web閲覧の送信元ではありません。"
+            },
+            {
+              "text": "PC",
+              "ok": true,
+              "explain": "支店の利用端末の送信元IPです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "NATとSIP登録を分ける",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "SIP UAの登録成功応答はどれか。",
+          "choices": [
+            {
+              "text": "BYE",
+              "ok": false,
+              "explain": "通話終了の要求です。"
+            },
+            {
+              "text": "200 OK",
+              "ok": true,
+              "explain": "認証後の成功応答です。"
+            },
+            {
+              "text": "401 Unauthorizedだけ",
+              "ok": false,
+              "explain": "認証チャレンジの途中です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "NATとSIP登録を分ける",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "支店では{a}のIPを{b}が変換し、本社では{c}がWebサーバを公開する。登録要求は{d}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "PC",
+                  "ok": true,
+                  "explain": "支店の送信元です。"
+                },
+                {
+                  "text": "Webサーバ",
+                  "ok": false,
+                  "explain": "本社の宛先です。"
+                },
+                {
+                  "text": "PBX",
+                  "ok": false,
+                  "explain": "Web通信端末ではありません。"
+                }
+              ],
+              "why": "支店の送信元です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "L2SW",
+                  "ok": false,
+                  "explain": "IP変換装置ではありません。"
+                },
+                {
+                  "text": "AP",
+                  "ok": false,
+                  "explain": "ブリッジです。"
+                },
+                {
+                  "text": "BBR",
+                  "ok": true,
+                  "explain": "支店境界のNAPT装置です。"
+                }
+              ],
+              "why": "支店境界のNAPT装置です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "L3SW",
+                  "ok": false,
+                  "explain": "原問の公開機器ではありません。"
+                },
+                {
+                  "text": "FW",
+                  "ok": true,
+                  "explain": "本社公開NATを行います。"
+                },
+                {
+                  "text": "IP電話機",
+                  "ok": false,
+                  "explain": "公開変換しません。"
+                }
+              ],
+              "why": "本社公開NATを行います。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "REGISTER",
+                  "ok": true,
+                  "explain": "位置登録メソッドです。"
+                },
+                {
+                  "text": "INVITE",
+                  "ok": false,
+                  "explain": "発信要求です。"
+                },
+                {
+                  "text": "RTP",
+                  "ok": false,
+                  "explain": "音声転送です。"
+                }
+              ],
+              "why": "位置登録メソッドです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.08,
+            "bottom": 0.72,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "NATとSIP登録を分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から動作までを並べる。",
+          "lead": "通信の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "SIP UAがREGISTERを送る"
+            },
+            {
+              "code": "401のチャレンジに認証情報を付ける"
+            },
+            {
+              "code": "IP-PBXが200 OKを返す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信相手と処理順を見直してください。",
+          "format": "並べ替え",
+          "theme": "NATとSIP登録を分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "登録後の音声を運ぶものはどれか。",
+          "choices": [
+            {
+              "text": "DNS",
+              "ok": false,
+              "explain": "音声は運びません。"
+            },
+            {
+              "text": "RTP",
+              "ok": true,
+              "explain": "メディアを運びます。"
+            },
+            {
+              "text": "REGISTER",
+              "ok": false,
+              "explain": "位置登録です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "NATとSIP登録を分ける",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "voice-fw",
+      "title": "SIP制御とRTP音声を許可する",
+      "targets": [
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "SIP制御とRTP音声を許可する",
+          "body": "外部スマホと本社IP電話機の通話はFWを越えます。SIPはIP-PBXとの制御です。RTPは外部とIP電話機の間の音声です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "SIP",
+                "外部・IP電話機↔IP-PBX"
+              ],
+              [
+                "RTP",
+                "外部↔IP電話機"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "SIP制御とRTP音声を許可する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "SIPの許可先はどれか。",
+          "choices": [
+            {
+              "text": "Webサーバだけ",
+              "ok": false,
+              "explain": "SIPの端点ではありません。"
+            },
+            {
+              "text": "DNSサーバだけ",
+              "ok": false,
+              "explain": "呼制御の端点ではありません。"
+            },
+            {
+              "text": "IP-PBX",
+              "ok": true,
+              "explain": "SIPサーバとして呼を制御します。"
+            }
+          ],
+          "format": "選択",
+          "theme": "SIP制御とRTP音声を許可する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "RTPをIP-PBX間だけ許可すると困る理由は何か。",
+          "choices": [
+            {
+              "text": "FWが音声を作るから",
+              "ok": false,
+              "explain": "FWは音声端末ではありません。"
+            },
+            {
+              "text": "音声端点が外部とIP電話機だから",
+              "ok": true,
+              "explain": "制御経路と音声経路は異なります。"
+            },
+            {
+              "text": "RTPがDNSだから",
+              "ok": false,
+              "explain": "RTPは音声用です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "SIP制御とRTP音声を許可する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "FWでは{a}とのSIPと、{b}とのRTPを許可する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "IP-PBX",
+                  "ok": true,
+                  "explain": "呼制御の相手です。"
+                },
+                {
+                  "text": "DNSサーバ",
+                  "ok": false,
+                  "explain": "名前解決です。"
+                },
+                {
+                  "text": "Webサーバ",
+                  "ok": false,
+                  "explain": "SIP端点ではありません。"
+                }
+              ],
+              "why": "呼制御の相手です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "プロキシサーバ",
+                  "ok": false,
+                  "explain": "Web中継用です。"
+                },
+                {
+                  "text": "L2SW",
+                  "ok": false,
+                  "explain": "音声アプリの端点ではありません。"
+                },
+                {
+                  "text": "IP電話機",
+                  "ok": true,
+                  "explain": "音声端点です。"
+                }
+              ],
+              "why": "音声端点です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.08,
+            "bottom": 0.72,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "SIP制御とRTP音声を許可する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から動作までを並べる。",
+          "lead": "通信の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "SIPの端点を確認する"
+            },
+            {
+              "code": "RTPの端点を確認する"
+            },
+            {
+              "code": "FWで両方の通信を許可する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信相手と処理順を見直してください。",
+          "format": "並べ替え",
+          "theme": "SIP制御とRTP音声を許可する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "クラウド移行後に再確認するものはどれか。",
+          "choices": [
+            {
+              "text": "全Cookie",
+              "ok": false,
+              "explain": "電話経路ではありません。"
+            },
+            {
+              "text": "SIPとRTPの新しい端点",
+              "ok": true,
+              "explain": "経路と相手が変わります。"
+            },
+            {
+              "text": "画面色",
+              "ok": false,
+              "explain": "FW許可に無関係です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "SIP制御とRTP音声を許可する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "vpn",
+      "title": "Y-VPNの技術と経路を読む",
+      "targets": [
+        "s2-1",
+        "s2-2",
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "Y-VPNの技術と経路を読む",
+          "body": "Y-VPNはMPLSを用いたIP-VPNです。網内はフルメッシュです。支店端末の既定出口はY-BBRです。Y-GWの有無で取引先への経路が変わります。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "RFC 3031",
+                "MPLS"
+              ],
+              [
+                "他拠点を経由しない",
+                "フルメッシュ"
+              ],
+              [
+                "支店の出口",
+                "Y-BBR"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "Y-VPNの技術と経路を読む",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "支店スマホから本社IP電話機への音声経路はどれか。",
+          "choices": [
+            {
+              "text": "支店～X-DC～本社",
+              "ok": false,
+              "explain": "Web側のクラウドです。"
+            },
+            {
+              "text": "支店～公衆電話網～本社",
+              "ok": false,
+              "explain": "社内IP通話の経路ではありません。"
+            },
+            {
+              "text": "支店～Y-VPN～本社",
+              "ok": true,
+              "explain": "表2のaです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "Y-VPNの技術と経路を読む",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "取引先への経路が2通りになる理由は何か。",
+          "choices": [
+            {
+              "text": "DNSのTTL",
+              "ok": false,
+              "explain": "電話経路を分けません。"
+            },
+            {
+              "text": "Y-GWの設置有無が異なるため",
+              "ok": true,
+              "explain": "支店から公衆電話網へ出る位置が変わります。"
+            },
+            {
+              "text": "MACの偶奇",
+              "ok": false,
+              "explain": "原文にない条件です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "Y-VPNの技術と経路を読む",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "技術は{a}、構成は{b}、既定出口は{c}、aの経路は{d}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "MPLS",
+                  "ok": true,
+                  "explain": "RFC 3031です。"
+                },
+                {
+                  "text": "VRRP",
+                  "ok": false,
+                  "explain": "出口冗長化です。"
+                },
+                {
+                  "text": "ARP",
+                  "ok": false,
+                  "explain": "アドレス解決です。"
+                }
+              ],
+              "why": "RFC 3031です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "リング",
+                  "ok": false,
+                  "explain": "途中拠点を経由し得ます。"
+                },
+                {
+                  "text": "バス",
+                  "ok": false,
+                  "explain": "原文の答えではありません。"
+                },
+                {
+                  "text": "フルメッシュ",
+                  "ok": true,
+                  "explain": "他拠点を経由しません。"
+                }
+              ],
+              "why": "他拠点を経由しません。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "Y-GW",
+                  "ok": false,
+                  "explain": "公衆電話網用です。"
+                },
+                {
+                  "text": "Y-BBR",
+                  "ok": true,
+                  "explain": "支店の既定出口です。"
+                },
+                {
+                  "text": "AP",
+                  "ok": false,
+                  "explain": "ブリッジです。"
+                }
+              ],
+              "why": "支店の既定出口です。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "支店～Y-VPN～本社",
+                  "ok": true,
+                  "explain": "音声の経路です。"
+                },
+                {
+                  "text": "支店～Y-VNW～本社",
+                  "ok": false,
+                  "explain": "制御経路と混同しています。"
+                },
+                {
+                  "text": "支店～X-VNW～本社",
+                  "ok": false,
+                  "explain": "別サービスです。"
+                }
+              ],
+              "why": "音声の経路です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.08,
+            "bottom": 0.72,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "Y-VPNの技術と経路を読む",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から動作までを並べる。",
+          "lead": "通信の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "発着端末を特定する"
+            },
+            {
+              "code": "シグナリングと通話を分ける"
+            },
+            {
+              "code": "通話欄を支店～Y-VPN～本社で補う"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信相手と処理順を見直してください。",
+          "format": "並べ替え",
+          "theme": "Y-VPNの技術と経路を読む",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "全支店にY-GWを置くと消える差はどれか。",
+          "choices": [
+            {
+              "text": "フルメッシュ",
+              "ok": false,
+              "explain": "拠点間構成は別です。"
+            },
+            {
+              "text": "設置有無による経路差",
+              "ok": true,
+              "explain": "設備条件が同じになります。"
+            },
+            {
+              "text": "MPLSの利用",
+              "ok": false,
+              "explain": "VPN技術は残ります。"
+            }
+          ],
+          "format": "選択",
+          "theme": "Y-VPNの技術と経路を読む",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "hold",
+      "title": "保留転送の操作主体と対象を追う",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "保留転送の操作主体と対象を追う",
+          "body": "本社スマホの利用者が、本社IP電話機へ保留転送します。re-INVITEで通話状態を変え、REFERでセッションを切り替えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "操作主体",
+                "本社のスマホ"
+              ],
+              [
+                "(22)～(27)",
+                "本社IP電話機の保留"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "保留転送の操作主体と対象を追う",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "操作する端末はどれか。",
+          "choices": [
+            {
+              "text": "支店のスマホ",
+              "ok": false,
+              "explain": "最初の発信元です。"
+            },
+            {
+              "text": "本社IP電話機",
+              "ok": false,
+              "explain": "転送先です。"
+            },
+            {
+              "text": "本社のスマホ",
+              "ok": true,
+              "explain": "REFERの送信元です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "保留転送の操作主体と対象を追う",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "空欄bで保留されるものはどれか。",
+          "choices": [
+            {
+              "text": "支店PBX",
+              "ok": false,
+              "explain": "図に登場しません。"
+            },
+            {
+              "text": "本社のIP電話機",
+              "ok": true,
+              "explain": "転送先へre-INVITEします。"
+            },
+            {
+              "text": "IP-PBX",
+              "ok": false,
+              "explain": "利用者端末ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "保留転送の操作主体と対象を追う",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "操作主体は{a}、bは{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "本社のスマホ",
+                  "ok": true,
+                  "explain": "転送操作を行います。"
+                },
+                {
+                  "text": "支店のスマホ",
+                  "ok": false,
+                  "explain": "通話相手です。"
+                },
+                {
+                  "text": "IP-PBX",
+                  "ok": false,
+                  "explain": "中継します。"
+                }
+              ],
+              "why": "転送操作を行います。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "位置情報登録",
+                  "ok": false,
+                  "explain": "REGISTERの処理です。"
+                },
+                {
+                  "text": "DNS転送",
+                  "ok": false,
+                  "explain": "SIP保留ではありません。"
+                },
+                {
+                  "text": "本社のIP電話機の保留",
+                  "ok": true,
+                  "explain": "転送先を一度保留します。"
+                }
+              ],
+              "why": "転送先を一度保留します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 7,
+            "top": 0.08,
+            "bottom": 0.72,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "保留転送の操作主体と対象を追う",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から動作までを並べる。",
+          "lead": "通信の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "既存相手をre-INVITEで保留する"
+            },
+            {
+              "code": "IP電話機をINVITEで呼び出す"
+            },
+            {
+              "code": "REFERでセッションを切り替える"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信相手と処理順を見直してください。",
+          "format": "並べ替え",
+          "theme": "保留転送の操作主体と対象を追う",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "新規INVITEだけでは欠ける処理はどれか。",
+          "choices": [
+            {
+              "text": "NAT公開",
+              "ok": false,
+              "explain": "保留とは別です。"
+            },
+            {
+              "text": "既存通話の保留",
+              "ok": true,
+              "explain": "re-INVITEが必要です。"
+            },
+            {
+              "text": "MPLS転送",
+              "ok": false,
+              "explain": "SIP操作ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "保留転送の操作主体と対象を追う",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "dialog",
+      "title": "Call-IDとSDPで通話を追う",
+      "targets": [
+        "s3-3",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "Call-IDとSDPで通話を追う",
+          "body": "二つのBYEは別のダイアログを終了します。同じCall-IDを持つINVITEを追います。保留動作はre-INVITE内のSDPに従います。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "(31)の対応",
+                "(5)"
+              ],
+              [
+                "(32)の対応",
+                "(16)"
+              ],
+              [
+                "IP電話機の保留",
+                "(23)のSDP"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "Call-IDとSDPで通話を追う",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "(31)と対応するINVITEはどれか。",
+          "choices": [
+            {
+              "text": "(16)",
+              "ok": false,
+              "explain": "IP電話機側の別ダイアログです。"
+            },
+            {
+              "text": "(36)",
+              "ok": false,
+              "explain": "切替後の新しい通話です。"
+            },
+            {
+              "text": "(5)",
+              "ok": true,
+              "explain": "本社スマホ側のダイアログです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "Call-IDとSDPで通話を追う",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "IP電話機が保留音を出す根拠はどれか。",
+          "choices": [
+            {
+              "text": "BYEだけ",
+              "ok": false,
+              "explain": "終了要求です。"
+            },
+            {
+              "text": "(23)中のSDP",
+              "ok": true,
+              "explain": "IP電話機へ届く指定です。"
+            },
+            {
+              "text": "DNS TTL",
+              "ok": false,
+              "explain": "メディア動作ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "Call-IDとSDPで通話を追う",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "(31)は{a}、(32)は{b}、IP電話機は{c}に従う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "(5)",
+                  "ok": true,
+                  "explain": "対応するINVITEです。"
+                },
+                {
+                  "text": "(16)",
+                  "ok": false,
+                  "explain": "別ダイアログです。"
+                },
+                {
+                  "text": "(36)",
+                  "ok": false,
+                  "explain": "切替後です。"
+                }
+              ],
+              "why": "対応するINVITEです。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "(5)",
+                  "ok": false,
+                  "explain": "本社スマホ側です。"
+                },
+                {
+                  "text": "(22)",
+                  "ok": false,
+                  "explain": "re-INVITEです。"
+                },
+                {
+                  "text": "(16)",
+                  "ok": true,
+                  "explain": "IP電話機側です。"
+                }
+              ],
+              "why": "IP電話機側です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "(31)のBYE",
+                  "ok": false,
+                  "explain": "終了要求です。"
+                },
+                {
+                  "text": "(23)のSDP",
+                  "ok": true,
+                  "explain": "保留指定です。"
+                },
+                {
+                  "text": "(11)のDNS",
+                  "ok": false,
+                  "explain": "DNSではありません。"
+                }
+              ],
+              "why": "保留指定です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 7,
+            "top": 0.08,
+            "bottom": 0.72,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "Call-IDとSDPで通話を追う",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から動作までを並べる。",
+          "lead": "通信の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "BYEの方向を確認する"
+            },
+            {
+              "code": "同じCall-IDのINVITEを探す"
+            },
+            {
+              "code": "(5)と(16)に分ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信相手と処理順を見直してください。",
+          "format": "並べ替え",
+          "theme": "Call-IDとSDPで通話を追う",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "SDPを解釈しない電話機で起こり得ることはどれか。",
+          "choices": [
+            {
+              "text": "IPv6へ変わる",
+              "ok": false,
+              "explain": "関係ありません。"
+            },
+            {
+              "text": "期待する保留動作にならない",
+              "ok": true,
+              "explain": "事前確認の理由です。"
+            },
+            {
+              "text": "VPNが必ず停止する",
+              "ok": false,
+              "explain": "端末動作と別です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "Call-IDとSDPで通話を追う",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "isolation",
+      "title": "段階移行中の二つのLANを分離する",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "段階移行中の二つのLANを分離する",
+          "body": "現行端末はL2SW、新端末はPoE-SWに収容します。L3SWのPoE-SW収容ポートを新しいセグメントにします。二つの収容ポート間のルーティングを禁止します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "新環境",
+                "PoE-SW収容ポート"
+              ],
+              [
+                "分離",
+                "L2SW側とのルーティング禁止"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "段階移行中の二つのLANを分離する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "新セグメントにする接続はどれか。",
+          "choices": [
+            {
+              "text": "公衆電話網",
+              "ok": false,
+              "explain": "LANではありません。"
+            },
+            {
+              "text": "インターネット全体",
+              "ok": false,
+              "explain": "範囲が過大です。"
+            },
+            {
+              "text": "PoE-SW収容ポート",
+              "ok": true,
+              "explain": "新環境側です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "段階移行中の二つのLANを分離する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "別セグメントだけでは不足する理由は何か。",
+          "choices": [
+            {
+              "text": "PoE給電ができないため",
+              "ok": false,
+              "explain": "IP分離と給電は別です。"
+            },
+            {
+              "text": "L3SWが相互に転送し得るため",
+              "ok": true,
+              "explain": "ルーティングも止めます。"
+            },
+            {
+              "text": "DNSが必ず停止するため",
+              "ok": false,
+              "explain": "分離理由ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "段階移行中の二つのLANを分離する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "{a}収容ポートを新セグメントにし、{b}収容ポートとの{c}を禁止する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "PoE-SW",
+                  "ok": true,
+                  "explain": "新環境側です。"
+                },
+                {
+                  "text": "FW",
+                  "ok": false,
+                  "explain": "境界です。"
+                },
+                {
+                  "text": "Y-GW",
+                  "ok": false,
+                  "explain": "支店用です。"
+                }
+              ],
+              "why": "新環境側です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "AP",
+                  "ok": false,
+                  "explain": "新環境側です。"
+                },
+                {
+                  "text": "IP-PBX",
+                  "ok": false,
+                  "explain": "DMZ機器です。"
+                },
+                {
+                  "text": "L2SW",
+                  "ok": true,
+                  "explain": "現行環境側です。"
+                }
+              ],
+              "why": "現行環境側です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "NAT",
+                  "ok": false,
+                  "explain": "ここでの相互転送ではありません。"
+                },
+                {
+                  "text": "ルーティング",
+                  "ok": true,
+                  "explain": "L3転送を止めます。"
+                },
+                {
+                  "text": "DNS転送",
+                  "ok": false,
+                  "explain": "LAN分離ではありません。"
+                }
+              ],
+              "why": "L3転送を止めます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.08,
+            "bottom": 0.72,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "段階移行中の二つのLANを分離する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から動作までを並べる。",
+          "lead": "通信の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "新環境の接続を特定する"
+            },
+            {
+              "code": "別セグメントへ分ける"
+            },
+            {
+              "code": "現行側とのルーティングを禁止する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信相手と処理順を見直してください。",
+          "format": "並べ替え",
+          "theme": "段階移行中の二つのLANを分離する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "共有サーバだけ必要な場合はどうするか。",
+          "choices": [
+            {
+              "text": "電話番号を消す",
+              "ok": false,
+              "explain": "解決しません。"
+            },
+            {
+              "text": "必要通信だけ個別許可する",
+              "ok": true,
+              "explain": "分離を維持できます。"
+            },
+            {
+              "text": "全面相互許可する",
+              "ok": false,
+              "explain": "分離が崩れます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "段階移行中の二つのLANを分離する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "cutover",
+      "title": "電話とWebの切替順を合わせる",
+      "targets": [
+        "s4-2",
+        "s4-3",
+        "s4-4"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "電話とWebの切替順を合わせる",
+          "body": "番号移行とIP電話機切替の順がずれると社外との発着信が止まり得ます。支店はb2とb3を同時に行います。Webは本社DNSのAレコードをX-DCへ変えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "c",
+                "公衆電話網の電話番号の移行"
+              ],
+              [
+                "d",
+                "本社と社外の発着信"
+              ],
+              [
+                "支店",
+                "b2とb3"
+              ],
+              [
+                "Web",
+                "本社のAレコード変更"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "電話とWebの切替順を合わせる",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "支店で同時実施する作業はどれか。",
+          "choices": [
+            {
+              "text": "b4とb5",
+              "ok": false,
+              "explain": "PCとスマホ配布です。"
+            },
+            {
+              "text": "b1とb6",
+              "ok": false,
+              "explain": "準備と既存スマホ変更です。"
+            },
+            {
+              "text": "b2とb3",
+              "ok": true,
+              "explain": "旧PBX停止と新IP電話機開始です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "電話とWebの切替順を合わせる",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "Web切替で変更する設置場所と情報はどれか。",
+          "choices": [
+            {
+              "text": "支店でPTRレコード",
+              "ok": false,
+              "explain": "管理元ではありません。"
+            },
+            {
+              "text": "本社プロキシのDNSでAレコード",
+              "ok": true,
+              "explain": "マスタ側の接続先を変えます。"
+            },
+            {
+              "text": "Y-DCでMXレコード",
+              "ok": false,
+              "explain": "WebのX-DCとは別です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "電話とWebの切替順を合わせる",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "cは{a}、dは{b}、同時作業は{c}と{d}。Webは{e}で変更する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "公衆電話網の電話番号の移行",
+                  "ok": true,
+                  "explain": "外線番号の収容先を変えます。"
+                },
+                {
+                  "text": "DNS名の移行",
+                  "ok": false,
+                  "explain": "電話番号ではありません。"
+                },
+                {
+                  "text": "MPLSラベル",
+                  "ok": false,
+                  "explain": "外線番号ではありません。"
+                }
+              ],
+              "why": "外線番号の収容先を変えます。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "PCの印刷",
+                  "ok": false,
+                  "explain": "電話ではありません。"
+                },
+                {
+                  "text": "ゾーン転送",
+                  "ok": false,
+                  "explain": "電話機能ではありません。"
+                },
+                {
+                  "text": "本社と社外の発着信",
+                  "ok": true,
+                  "explain": "順序差の影響です。"
+                }
+              ],
+              "why": "順序差の影響です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "b5",
+                  "ok": false,
+                  "explain": "スマホ配布です。"
+                },
+                {
+                  "text": "b2",
+                  "ok": true,
+                  "explain": "PBX停止です。"
+                },
+                {
+                  "text": "b4",
+                  "ok": false,
+                  "explain": "PC切替です。"
+                }
+              ],
+              "why": "PBX停止です。"
+            },
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "b3",
+                  "ok": true,
+                  "explain": "IP電話機導入です。"
+                },
+                {
+                  "text": "b1",
+                  "ok": false,
+                  "explain": "準備です。"
+                },
+                {
+                  "text": "b6",
+                  "ok": false,
+                  "explain": "既存スマホ変更です。"
+                }
+              ],
+              "why": "IP電話機導入です。"
+            },
+            {
+              "key": "e",
+              "label": "e",
+              "choices": [
+                {
+                  "text": "Y-DCのIP-PBX",
+                  "ok": false,
+                  "explain": "Web DNSではありません。"
+                },
+                {
+                  "text": "支店AP",
+                  "ok": false,
+                  "explain": "DNS管理元ではありません。"
+                },
+                {
+                  "text": "本社プロキシのDNS",
+                  "ok": true,
+                  "explain": "マスタ側です。"
+                }
+              ],
+              "why": "マスタ側です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.08,
+            "bottom": 0.72,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "電話とWebの切替順を合わせる",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から動作までを並べる。",
+          "lead": "通信の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "新サービスを稼働する"
+            },
+            {
+              "code": "番号またはDNSの接続先を切り替える"
+            },
+            {
+              "code": "旧サービスへの依存消滅を確認する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信相手と処理順を見直してください。",
+          "format": "並べ替え",
+          "theme": "電話とWebの切替順を合わせる",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "スレーブDNSだけを変更した場合の問題はどれか。",
+          "choices": [
+            {
+              "text": "PoEが停止する",
+              "ok": false,
+              "explain": "無関係です。"
+            },
+            {
+              "text": "ゾーン転送で旧値に戻り得る",
+              "ok": true,
+              "explain": "マスタを変更します。"
+            },
+            {
+              "text": "電話番号が消える",
+              "ok": false,
+              "explain": "Web DNSとは別です。"
+            }
+          ],
+          "format": "選択",
+          "theme": "電話とWebの切替順を合わせる",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "retire",
+      "title": "最後の依存がなくなってから撤去する",
+      "targets": [
+        "s4-5"
+      ],
+      "steps": [
+        {
+          "id": "situation",
+          "type": "info",
+          "title": "最後の依存がなくなってから撤去する",
+          "body": "本社PCは部署ごとに段階移行します。旧FWと旧プロキシは未切替PCが使います。全機器の撤去可能時点は最後のPC切替完了です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "条件",
+              "判断"
+            ],
+            "rows": [
+              [
+                "最終時点",
+                "本社PCの切替期間終了"
+              ],
+              [
+                "最後まで残す",
+                "本社FW・本社プロキシ"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "format": "読む",
+          "theme": "最後の依存がなくなってから撤去する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "decide",
+          "type": "quiz",
+          "title": "全機器の撤去可能時点はいつか。",
+          "choices": [
+            {
+              "text": "a1完了時",
+              "ok": false,
+              "explain": "準備段階です。"
+            },
+            {
+              "text": "a3完了時",
+              "ok": false,
+              "explain": "電話だけの切替です。"
+            },
+            {
+              "text": "本社PCの切替期間終了時",
+              "ok": true,
+              "explain": "最後の旧経路利用が終わります。"
+            }
+          ],
+          "format": "選択",
+          "theme": "最後の依存がなくなってから撤去する",
+          "scaffold": 3,
+          "stage": "check"
+        },
+        {
+          "id": "reason",
+          "type": "quiz",
+          "title": "最後まで撤去できない機器はどれか。",
+          "choices": [
+            {
+              "text": "X-DCのFW",
+              "ok": false,
+              "explain": "新環境です。"
+            },
+            {
+              "text": "本社FWと本社プロキシ",
+              "ok": true,
+              "explain": "未切替PCが利用します。"
+            },
+            {
+              "text": "本社IP-PBXだけ",
+              "ok": false,
+              "explain": "11月に切替済みです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "最後の依存がなくなってから撤去する",
+          "scaffold": 3,
+          "stage": "reason"
+        },
+        {
+          "id": "assemble",
+          "type": "blank",
+          "title": "答案の要素を組み立てる。",
+          "template": "時点は{a}。残す機器は{b}と{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "本社PCの切替期間が終了した時点",
+                  "ok": true,
+                  "explain": "最後の依存が消えます。"
+                },
+                {
+                  "text": "ネットワーク準備時",
+                  "ok": false,
+                  "explain": "旧PCが残ります。"
+                },
+                {
+                  "text": "IP-PBX切替時",
+                  "ok": false,
+                  "explain": "旧PC経路が残ります。"
+                }
+              ],
+              "why": "最後の依存が消えます。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "本社IP-PBX",
+                  "ok": false,
+                  "explain": "先に切替済みです。"
+                },
+                {
+                  "text": "Y-GW",
+                  "ok": false,
+                  "explain": "支店用です。"
+                },
+                {
+                  "text": "本社のFW",
+                  "ok": true,
+                  "explain": "旧経路で必要です。"
+                }
+              ],
+              "why": "旧経路で必要です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "PoE-SW",
+                  "ok": false,
+                  "explain": "新環境です。"
+                },
+                {
+                  "text": "本社のプロキシサーバ",
+                  "ok": true,
+                  "explain": "未切替PCが使います。"
+                },
+                {
+                  "text": "Webサーバ",
+                  "ok": false,
+                  "explain": "1月に切替済みです。"
+                }
+              ],
+              "why": "未切替PCが使います。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.08,
+            "bottom": 0.72,
+            "label": "原問の図表・条件（IPA原典）"
+          },
+          "format": "穴埋め",
+          "theme": "最後の依存がなくなってから撤去する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "cause",
+          "type": "parsons",
+          "title": "条件から動作までを並べる。",
+          "lead": "通信の因果を順に並べます。",
+          "lines": [
+            {
+              "code": "旧機器ごとの利用者を洗い出す"
+            },
+            {
+              "code": "最後に終わるPC切替を特定する"
+            },
+            {
+              "code": "完了後にFWとプロキシを撤去する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "条件、動作、結果がつながります。",
+          "ngExplain": "通信相手と処理順を見直してください。",
+          "format": "並べ替え",
+          "theme": "最後の依存がなくなってから撤去する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "transfer",
+          "type": "quiz",
+          "title": "PC切替を前倒しした場合はどうなるか。",
+          "choices": [
+            {
+              "text": "準備前に撤去できる",
+              "ok": false,
+              "explain": "新環境が必要です。"
+            },
+            {
+              "text": "撤去時点も前倒しできる",
+              "ok": true,
+              "explain": "依存終了が早まります。"
+            },
+            {
+              "text": "必ず2月末のまま",
+              "ok": false,
+              "explain": "日程条件が変わっています。"
+            }
+          ],
+          "format": "選択",
+          "theme": "最後の依存がなくなってから撤去する",
+          "scaffold": 1,
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

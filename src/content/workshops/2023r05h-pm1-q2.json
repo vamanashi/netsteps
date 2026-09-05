@@ -1,0 +1,1673 @@
+{
+  "examKey": "2023r05h/pm1/2",
+  "title": "河川映像を必要な受信者へ届ける",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm1_qs.pdf"
+  ],
+  "sections": [
+    {
+      "id": "source-copy",
+      "title": "受信者が増えたときの送信量を考える",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "source-copy-1",
+          "format": "読む",
+          "theme": "受信者が増えたときの送信量を考える",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "河川カメラが8Mビット/秒の映像を送ります。同じ映像を3台のレシーバで見ます。ユニキャストは相手ごとに送り、マルチキャストは途中の機器で複製します。原問ではソース側の通信量に着目します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "配信方式",
+              "カメラから送る量"
+            ],
+            "rows": [
+              [
+                "ユニキャストで3台へ",
+                "8×3＝24Mビット/秒"
+              ],
+              [
+                "マルチキャストで3台へ",
+                "8Mビット/秒の1系列"
+              ]
+            ],
+            "caption": "説明用：ソースは送信元、レシーバは受信先"
+          }
+        },
+        {
+          "id": "source-copy-2",
+          "format": "選択",
+          "theme": "受信者が増えたときの送信量を考える",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "同じ映像をユニキャストで5台へ送る。ソースの通信量はどれか。",
+          "choices": [
+            {
+              "text": "8Mビット/秒",
+              "explain": "これはネットワーク側で複製する場合の考え方です。"
+            },
+            {
+              "text": "1.6Mビット/秒",
+              "explain": "受信者で分割して一部ずつ送る条件ではありません。"
+            },
+            {
+              "text": "40Mビット/秒",
+              "explain": "8Mビット/秒を5台分送ります。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "source-copy-3",
+          "format": "選択",
+          "theme": "受信者が増えたときの送信量を考える",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "マルチキャストでソースの負荷を抑えられる理由はどれか。",
+          "choices": [
+            {
+              "text": "レシーバ全てが同じMACアドレスになる",
+              "explain": "端末のMACアドレスを同一にする方式ではありません。"
+            },
+            {
+              "text": "必要な分岐でネットワーク機器が複製する",
+              "explain": "ソース自身が受信者ごとに送る必要を減らします。",
+              "ok": true
+            },
+            {
+              "text": "映像の解像度を必ず下げる",
+              "explain": "映像品質を下げることが方式の前提ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "source-copy-4",
+          "format": "穴埋め",
+          "theme": "受信者が増えたときの送信量を考える",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "欠点を主語と原因から組み立てる。",
+          "template": "ユニキャストでは、{a}の数に応じて{b}の通信量が増加する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "増える数",
+              "choices": [
+                {
+                  "text": "配信先のレシーバ",
+                  "explain": "相手ごとにデータを送るためです。",
+                  "ok": true
+                },
+                {
+                  "text": "経由ルータ",
+                  "explain": "ここでは送信元の複製数を問い、経由数ではありません。"
+                },
+                {
+                  "text": "DNSのゾーン",
+                  "explain": "配信先の台数とは無関係です。"
+                }
+              ],
+              "why": "何が増える条件なのかを先に示します。"
+            },
+            {
+              "key": "b",
+              "label": "負荷が増える側",
+              "choices": [
+                {
+                  "text": "各レシーバ",
+                  "explain": "各レシーバが受ける1映像の量は同じです。"
+                },
+                {
+                  "text": "大型モニターの電源",
+                  "explain": "問われているのは通信量です。"
+                },
+                {
+                  "text": "ソース",
+                  "explain": "カメラから出る複製数が増えます。",
+                  "ok": true
+                }
+              ],
+              "why": "原問指定のソースとレシーバを両方使います。"
+            }
+          ]
+        },
+        {
+          "id": "source-copy-5",
+          "format": "並べ替え",
+          "theme": "受信者が増えたときの送信量を考える",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "ユニキャストの通信増加を説明する。",
+          "lead": "同じ映像を見るレシーバを追加した場合です。",
+          "lines": [
+            {
+              "code": "レシーバが1台増える"
+            },
+            {
+              "code": "ソースがその相手向けの映像データを追加送信する"
+            },
+            {
+              "code": "ソースから出る総通信量が増える"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "増えた受信者と追加送信を結び付けます。",
+          "ngExplain": "原因から動作、結果へつなげます。増えた受信者と追加送信を結び付けます。"
+        },
+        {
+          "id": "source-copy-6",
+          "format": "選択",
+          "theme": "受信者が増えたときの送信量を考える",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "レシーバが3台から6台に増え、全て同じマルチキャスト映像を見る。カメラの送信量はどうなるか。",
+          "choices": [
+            {
+              "text": "半分の4Mビット/秒になる",
+              "explain": "受信者増加で映像の符号化レートは変わりません。"
+            },
+            {
+              "text": "8Mビット/秒のまま",
+              "explain": "カメラは同じ1系列を送り、複製はネットワーク側で行います。",
+              "ok": true
+            },
+            {
+              "text": "48Mビット/秒になる",
+              "explain": "ユニキャストの相手別送信と混同しています。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aggregate-rate",
+      "title": "映像の種類と表示枠の数を区別する",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "aggregate-rate-1",
+          "format": "読む",
+          "theme": "映像の種類と表示枠の数を区別する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "20台のカメラがそれぞれ8Mビット/秒で送ります。レシーバは6台あり、各4映像を同時表示できます。L2SW91からFW01へ向かう共通リンクで流れる映像を数えます。同じ映像は表示枠の数だけ重複しません。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "20台のIPカメラ",
+                "d": "各8Mビット/秒"
+              },
+              {
+                "t": "L2SW95〜L2SW91",
+                "d": "カメラからの通信を上流へ集約"
+              },
+              {
+                "t": "FW01",
+                "d": "執務エリアへ配信"
+              }
+            ],
+            "caption": "説明用：原問の共通リンクを小さく整理"
+          }
+        },
+        {
+          "id": "aggregate-rate-2",
+          "format": "選択",
+          "theme": "映像の種類と表示枠の数を区別する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "全レシーバの表示枠は幾つか。",
+          "choices": [
+            {
+              "text": "20枠",
+              "explain": "カメラの台数です。表示枠とは異なります。"
+            },
+            {
+              "text": "6枠",
+              "explain": "レシーバ1台で4映像を表示できます。"
+            },
+            {
+              "text": "24枠",
+              "explain": "6台×4映像です。20種類全てを表示する余地があります。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "aggregate-rate-3",
+          "format": "選択",
+          "theme": "映像の種類と表示枠の数を区別する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "最大値の計算で数える独立した映像は幾つか。",
+          "choices": [
+            {
+              "text": "120種類",
+              "explain": "カメラ台数と受信台数を掛けるのはユニキャストの考え方です。"
+            },
+            {
+              "text": "20種類",
+              "explain": "送信元のカメラは20台です。同じ映像の重複表示は別系列にしません。",
+              "ok": true
+            },
+            {
+              "text": "24種類",
+              "explain": "表示枠が24あっても、存在する映像は20種類です。"
+            }
+          ]
+        },
+        {
+          "id": "aggregate-rate-4",
+          "format": "穴埋め",
+          "theme": "映像の種類と表示枠の数を区別する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "共通リンクの最大レートを求める。",
+          "template": "{a}台×8Mビット/秒＝{b}Mビット/秒。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "送信元数",
+              "choices": [
+                {
+                  "text": "20",
+                  "explain": "全カメラの異なる映像を合計します。",
+                  "ok": true
+                },
+                {
+                  "text": "24",
+                  "explain": "表示枠数であり、映像の種類数ではありません。"
+                },
+                {
+                  "text": "6",
+                  "explain": "レシーバの台数です。"
+                }
+              ],
+              "why": "図1では全カメラの通信がL2SW91側へ集まります。"
+            },
+            {
+              "key": "b",
+              "label": "合計",
+              "choices": [
+                {
+                  "text": "192",
+                  "explain": "24枠全てを別カメラとみなしています。"
+                },
+                {
+                  "text": "960",
+                  "explain": "受信者ごとに同じ映像を足しています。"
+                },
+                {
+                  "text": "160",
+                  "explain": "20×8です。",
+                  "ok": true
+                }
+              ],
+              "why": "原問の値は160Mビット/秒です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.06,
+            "bottom": 0.79,
+            "label": "図1の集約リンクと新設機器の条件（IPA原図・原文）"
+          }
+        },
+        {
+          "id": "aggregate-rate-5",
+          "format": "並べ替え",
+          "theme": "映像の種類と表示枠の数を区別する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "最大値の根拠を並べる。",
+          "lead": "表示枠とカメラ数の両方を確認します。",
+          "lines": [
+            {
+              "code": "6台×4枠で24映像分の表示枠がある"
+            },
+            {
+              "code": "20台全ての異なるカメラ映像を受信できる"
+            },
+            {
+              "code": "共通リンクでは20×8＝160Mビット/秒を見込む"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "表示枠は全カメラ分を受けられるかの確認に使います。",
+          "ngExplain": "原因から動作、結果へつなげます。表示枠は全カメラ分を受けられるかの確認に使います。"
+        },
+        {
+          "id": "aggregate-rate-6",
+          "format": "選択",
+          "theme": "映像の種類と表示枠の数を区別する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "カメラ数は20台のまま、各6Mビット/秒へ変更した。全映像を運ぶレートはどれか。",
+          "choices": [
+            {
+              "text": "6Mビット/秒",
+              "explain": "異なる20台の映像まで1系列にまとめることはできません。"
+            },
+            {
+              "text": "120Mビット/秒",
+              "explain": "20種類×6Mビット/秒です。",
+              "ok": true
+            },
+            {
+              "text": "144Mビット/秒",
+              "explain": "24表示枠ではなく20種類を合計します。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "source-group",
+      "title": "送り手とグループの組で映像を識別する",
+      "targets": [
+        "s2-3",
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "source-group-1",
+          "format": "読む",
+          "theme": "送り手とグループの組で映像を識別する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "カメラAとBは別のIPアドレスを持ちます。同じグループアドレスGへ映像を送ります。IGMPv3では送り手SとグループGの組を選べます。IGMPはInternet Group Management Protocolです。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "方式",
+              "受信要求",
+              "Aだけ選べるか"
+            ],
+            "rows": [
+              [
+                "IGMPv2",
+                "G",
+                "同じGの送り手を指定できない"
+              ],
+              [
+                "IGMPv3の送信元指定",
+                "(A,G)",
+                "送り手Aを指定できる"
+              ]
+            ],
+            "caption": "説明用：SはソースIP、Gはグループアドレス"
+          }
+        },
+        {
+          "id": "source-group-2",
+          "format": "選択",
+          "theme": "送り手とグループの組で映像を識別する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "同じGを使うAとBからAだけ受信したい。指定する情報はどれか。",
+          "choices": [
+            {
+              "text": "Gだけ",
+              "explain": "同じGのAとBを区別できません。"
+            },
+            {
+              "text": "AのMACアドレスだけ",
+              "explain": "IGMPv3の送信元指定はIPアドレスを用います。"
+            },
+            {
+              "text": "AのIPアドレスとG",
+              "explain": "送信元とグループの組で区別します。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "source-group-3",
+          "format": "選択",
+          "theme": "送り手とグループの組で映像を識別する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "IGMPv2へ変更してもカメラごとに映像を選びたい。必要な変更はどれか。",
+          "choices": [
+            {
+              "text": "個別IPだけにしてGは同じまま",
+              "explain": "IGMPv2は受信要求で送信元を指定できません。"
+            },
+            {
+              "text": "個別のIPアドレスに加え、個別のグループアドレスを使う",
+              "explain": "Gだけで識別するので、カメラごとにGを分けます。",
+              "ok": true
+            },
+            {
+              "text": "全カメラを同じIPアドレスにする",
+              "explain": "送信元の重複を起こし、カメラも識別できません。"
+            }
+          ]
+        },
+        {
+          "id": "source-group-4",
+          "format": "穴埋め",
+          "theme": "送り手とグループの組で映像を識別する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "IGMPv2の設計を二要素で組み立てる。",
+          "template": "全カメラに{a}IPアドレスと{b}グループアドレスを使う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ソース",
+              "choices": [
+                {
+                  "text": "個別の",
+                  "explain": "カメラ自身を識別します。",
+                  "ok": true
+                },
+                {
+                  "text": "同一の",
+                  "explain": "送信元を一意に識別できなくなります。"
+                },
+                {
+                  "text": "未設定の",
+                  "explain": "IPパケットを送る機器にはIP設定が必要です。"
+                }
+              ],
+              "why": "グループだけでなくIPアドレスも答えます。"
+            },
+            {
+              "key": "b",
+              "label": "グループ",
+              "choices": [
+                {
+                  "text": "同一の",
+                  "explain": "v2では送り手を絞れません。"
+                },
+                {
+                  "text": "ループバック用の",
+                  "explain": "マルチキャスト配信先になりません。"
+                },
+                {
+                  "text": "個別の",
+                  "explain": "Gだけで映像を選べるようにします。",
+                  "ok": true
+                }
+              ],
+              "why": "v3の原設計との変更点です。"
+            }
+          ]
+        },
+        {
+          "id": "source-group-5",
+          "format": "並べ替え",
+          "theme": "送り手とグループの組で映像を識別する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "送信元指定が設計を容易にする理由を並べる。",
+          "lead": "v3で(S,G)を使う設計です。",
+          "lines": [
+            {
+              "code": "カメラごとにソースIPアドレスが異なる"
+            },
+            {
+              "code": "同じGでも(S,G)の組で映像を区別できる"
+            },
+            {
+              "code": "カメラごとにGを変える必要が減り、グループアドレス設計が容易になる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "グループを共用できる理由まで説明します。",
+          "ngExplain": "原因から動作、結果へつなげます。グループを共用できる理由まで説明します。"
+        },
+        {
+          "id": "source-group-6",
+          "format": "選択",
+          "theme": "送り手とグループの組で映像を識別する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "新カメラCを、既存Gのまま追加する。v3でCだけ選ぶ条件はどれか。",
+          "choices": [
+            {
+              "text": "全カメラのGを変更しないと追加できない",
+              "explain": "(S,G)で区別できる利点を使えます。"
+            },
+            {
+              "text": "新しいCのIPアドレスと既存Gを指定する",
+              "explain": "送信元の違いを使って選択できます。",
+              "ok": true
+            },
+            {
+              "text": "Gを指定するだけで必ずCだけになる",
+              "explain": "送り手指定が欠けています。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "snooping",
+      "title": "必要なポートだけへフレームを配る",
+      "targets": [
+        "s1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "snooping-1",
+          "format": "読む",
+          "theme": "必要なポートだけへフレームを配る",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "スイッチのポート1に映像を見る端末、ポート2に見ないPCがあります。通常のフラッディングでは不要なポートにも映像を流します。IGMPスヌーピングは参加・離脱の通知を監視します。原問では配信先の決定に必要な情報を二つ答えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "観測した通知",
+              "配信表に結び付ける情報"
+            ],
+            "rows": [
+              [
+                "ポート1からGへ参加",
+                "G → ポート1"
+              ],
+              [
+                "ポート2から参加なし",
+                "ポート2をGの配信先に追加しない"
+              ]
+            ],
+            "caption": "説明用：参加グループとインタフェース"
+          }
+        },
+        {
+          "id": "snooping-2",
+          "format": "選択",
+          "theme": "必要なポートだけへフレームを配る",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "受信ポート以外の同一セグメント全体へ送る動作はどれか。",
+          "choices": [
+            {
+              "text": "ルーティング集約",
+              "explain": "経路プレフィックスをまとめる操作です。"
+            },
+            {
+              "text": "復号",
+              "explain": "符号化された映像を戻す処理です。"
+            },
+            {
+              "text": "フラッディング",
+              "explain": "宛先を限定せず複数ポートへ転送する動作です。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "snooping-3",
+          "format": "選択",
+          "theme": "必要なポートだけへフレームを配る",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "Joinを受信したスイッチが記録する基本情報の組はどれか。",
+          "choices": [
+            {
+              "text": "利用者パスワードと映像ファイル名",
+              "explain": "IGMP通知の監視で扱う情報ではありません。"
+            },
+            {
+              "text": "グループアドレスと受信インタフェース",
+              "explain": "何をどの接続先へ配信するかを結び付けます。",
+              "ok": true
+            },
+            {
+              "text": "グループアドレスとHTTPポート443だけ",
+              "explain": "ポート443はHTTPSです。スイッチの配信先ポートを特定できません。"
+            }
+          ]
+        },
+        {
+          "id": "snooping-4",
+          "format": "穴埋め",
+          "theme": "必要なポートだけへフレームを配る",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "対策と収集情報を組み立てる。",
+          "template": "{a}スヌーピングで、{b}と{c}を対応付ける。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "監視するプロトコル",
+              "choices": [
+                {
+                  "text": "IGMP",
+                  "explain": "端末からの参加・離脱を監視します。",
+                  "ok": true
+                },
+                {
+                  "text": "HTTP",
+                  "explain": "映像選択用Web通信とは別です。"
+                },
+                {
+                  "text": "OSPF",
+                  "explain": "ユニキャスト経路制御です。"
+                }
+              ],
+              "why": "原問の空欄イです。"
+            },
+            {
+              "key": "b",
+              "label": "何を配るか",
+              "choices": [
+                {
+                  "text": "デフォルトルート",
+                  "explain": "特定の配信グループではありません。"
+                },
+                {
+                  "text": "サーバ証明書",
+                  "explain": "映像の配信先決定に使いません。"
+                },
+                {
+                  "text": "グループアドレス",
+                  "explain": "配信対象のグループです。",
+                  "ok": true
+                }
+              ],
+              "why": "設問3(2)の一つ目です。"
+            },
+            {
+              "key": "c",
+              "label": "どこへ配るか",
+              "choices": [
+                {
+                  "text": "URLパス",
+                  "explain": "レイヤー2の出口ではありません。"
+                },
+                {
+                  "text": "インタフェース",
+                  "explain": "参加端末につながる出口です。",
+                  "ok": true
+                },
+                {
+                  "text": "TLSバージョン",
+                  "explain": "配信出口を特定できません。"
+                }
+              ],
+              "why": "設問3(2)の二つ目です。"
+            }
+          ]
+        },
+        {
+          "id": "snooping-5",
+          "format": "並べ替え",
+          "theme": "必要なポートだけへフレームを配る",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "参加から選択配信までを並べる。",
+          "lead": "ある端末が新たにGへ参加します。",
+          "lines": [
+            {
+              "code": "端末がGへのJoinを送る"
+            },
+            {
+              "code": "L2SWがGとJoinを受けたインタフェースを対応付ける"
+            },
+            {
+              "code": "G宛てフレームを必要な接続先へ転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "通知を観測してから転送先を絞ります。",
+          "ngExplain": "原因から動作、結果へつなげます。通知を観測してから転送先を絞ります。"
+        },
+        {
+          "id": "snooping-6",
+          "format": "選択",
+          "theme": "必要なポートだけへフレームを配る",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "ポート3の端末もGへ参加した。配信表はどう変えるか。",
+          "choices": [
+            {
+              "text": "全ポートのスヌーピングを無効にする",
+              "explain": "不要な転送を抑える機能を維持できます。"
+            },
+            {
+              "text": "Gの配信先にポート3を追加する",
+              "explain": "同じグループを受ける出口を増やします。",
+              "ok": true
+            },
+            {
+              "text": "Gのアドレスを全端末で変更する",
+              "explain": "受信者追加だけではGを変える必要はありません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multicast-tree",
+      "title": "参加要求から配信経路を作る",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "multicast-tree-1",
+          "format": "読む",
+          "theme": "参加要求から配信経路を作る",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "レシーバの参加要求は近くのL3スイッチへ届きます。L3スイッチは送り手方向へ要求を伝え、映像が届く経路を作ります。PIM-SMはProtocol Independent Multicast - Sparse Modeです。SSMはSource-Specific Multicastで、送り手を指定する配信に使います。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "レシーバ",
+                "d": "IGMPv3で(S,G)を要求"
+              },
+              {
+                "t": "L3SW11",
+                "d": "ソース方向へPIM Joinを送る"
+              },
+              {
+                "t": "FW01",
+                "d": "必要な出口へ映像を複製・配信"
+              }
+            ],
+            "caption": "説明用：要求は上流へ、映像は受信者へ"
+          }
+        },
+        {
+          "id": "multicast-tree-2",
+          "format": "選択",
+          "theme": "参加要求から配信経路を作る",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "レシーバのIGMPv3メンバーシップレポートの宛先種別はどれか。",
+          "choices": [
+            {
+              "text": "カメラ管理サーバのHTTPアドレス",
+              "explain": "映像選択のWeb操作とは別の制御通信です。"
+            },
+            {
+              "text": "全てのIPカメラのユニキャストIP",
+              "explain": "端末がカメラ全台へ個別要求する方式ではありません。"
+            },
+            {
+              "text": "IGMP用に割り当てられたIPマルチキャストアドレス",
+              "explain": "制御通知にも専用のマルチキャスト宛先を使います。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "multicast-tree-3",
+          "format": "選択",
+          "theme": "参加要求から配信経路を作る",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "L3SW11はソース方向を何から判断するか。",
+          "choices": [
+            {
+              "text": "HTTPのCookie",
+              "explain": "マルチキャスト経路の決定には使いません。"
+            },
+            {
+              "text": "ユニキャストルーティングテーブル",
+              "explain": "原問ではソースへの経路を基にFW01へPIM Joinを送ります。",
+              "ok": true
+            },
+            {
+              "text": "モニターの画面分割数",
+              "explain": "表示枠から上流経路は決まりません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.39,
+            "bottom": 0.73,
+            "label": "図2の(c)〜(e)：参加要求と複製（IPA原文）"
+          }
+        },
+        {
+          "id": "multicast-tree-4",
+          "format": "穴埋め",
+          "theme": "参加要求から配信経路を作る",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "経路形成の用語を埋める。",
+          "template": "全インタフェースで{a}を有効化する。送信元指定の{b}も使い、配信の{c}を作る。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "基本プロトコル",
+              "choices": [
+                {
+                  "text": "PIM-SM",
+                  "explain": "原問で指定されるマルチキャストルーティングです。",
+                  "ok": true
+                },
+                {
+                  "text": "HTTPS",
+                  "explain": "管理用Web通信です。"
+                },
+                {
+                  "text": "DHCP",
+                  "explain": "アドレス配布です。"
+                }
+              ],
+              "why": "原問の空欄オです。"
+            },
+            {
+              "key": "b",
+              "label": "送信元指定",
+              "choices": [
+                {
+                  "text": "SMTP",
+                  "explain": "メール転送です。"
+                },
+                {
+                  "text": "STP",
+                  "explain": "レイヤー2ループの制御です。"
+                },
+                {
+                  "text": "SSM",
+                  "explain": "特定の送り手とグループの組を扱います。",
+                  "ok": true
+                }
+              ],
+              "why": "原問の空欄カです。"
+            },
+            {
+              "key": "c",
+              "label": "分岐する構造",
+              "choices": [
+                {
+                  "text": "DNSゾーン",
+                  "explain": "名前の管理範囲です。"
+                },
+                {
+                  "text": "ツリー",
+                  "explain": "必要な受信先へ分岐する配信経路です。",
+                  "ok": true
+                },
+                {
+                  "text": "暗号鍵",
+                  "explain": "配信経路そのものではありません。"
+                }
+              ],
+              "why": "ディストリビューションツリーを形成します。"
+            }
+          ]
+        },
+        {
+          "id": "multicast-tree-5",
+          "format": "並べ替え",
+          "theme": "参加要求から配信経路を作る",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "レシーバ11へ映像が届く流れを並べる。",
+          "lead": "PIMネイバーは既に発見済みとします。",
+          "lines": [
+            {
+              "code": "レシーバ11がIGMPv3で(S,G) Joinを送る"
+            },
+            {
+              "code": "L3SW11がFW01へPIMの(S,G) Joinを送る"
+            },
+            {
+              "code": "FW01とL3SW11が登録された出口へ映像を複製する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "端末側のIGMPとルータ間のPIMを区別します。",
+          "ngExplain": "原因から動作、結果へつなげます。端末側のIGMPとルータ間のPIMを区別します。",
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.07,
+            "bottom": 0.35,
+            "label": "図2：IPカメラ11の配信イメージ（IPA原図）"
+          }
+        },
+        {
+          "id": "multicast-tree-6",
+          "format": "選択",
+          "theme": "参加要求から配信経路を作る",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "ソースへの経路が別の上流ルータへ変わった。Joinを送る方向の判断はどれか。",
+          "choices": [
+            {
+              "text": "HTTPSの宛先ポートを変えて選ぶ",
+              "explain": "マルチキャストの経路選択には使いません。"
+            },
+            {
+              "text": "新しいソース方向のユニキャスト経路を基にする",
+              "explain": "PIMの上流選択とソースへの経路を対応させます。",
+              "ok": true
+            },
+            {
+              "text": "常にレシーバの方へ送る",
+              "explain": "配信要求はソース方向へ伝えます。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "management-rules",
+      "title": "映像とカメラ管理の通信を分ける",
+      "targets": [
+        "s1",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "management-rules-1",
+          "format": "読む",
+          "theme": "映像とカメラ管理の通信を分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "PCでカメラを選ぶ画面は管理サーバが提供します。PCから管理サーバへはHTTPS、管理サーバからカメラへは独自プロトコルです。映像データは別にマルチキャストで届きます。復号は映像の符号化を戻す処理を意味します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "通信",
+              "相手",
+              "方式"
+            ],
+            "rows": [
+              [
+                "選択画面を開く",
+                "PC → カメラ管理サーバ",
+                "HTTPS"
+              ],
+              [
+                "遠隔制御",
+                "カメラ管理サーバ → IPカメラ",
+                "独自プロトコル"
+              ],
+              [
+                "映像を受信",
+                "IPカメラ → レシーバ",
+                "マルチキャスト"
+              ]
+            ],
+            "caption": "説明用：管理通信と映像通信"
+          }
+        },
+        {
+          "id": "management-rules-2",
+          "format": "選択",
+          "theme": "映像とカメラ管理の通信を分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "FWの管理用許可ルールで、PCからの宛先となる機器はどれか。",
+          "choices": [
+            {
+              "text": "全ての大型モニター",
+              "explain": "モニターは映像表示装置です。Web管理画面を提供しません。"
+            },
+            {
+              "text": "全てのIPカメラ",
+              "explain": "PCのHTTPSの相手は管理サーバです。"
+            },
+            {
+              "text": "カメラ管理サーバ",
+              "explain": "PCはここからWebページを取得します。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "management-rules-3",
+          "format": "選択",
+          "theme": "映像とカメラ管理の通信を分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "HTTPSの許可ルールに設定する宛先ポート番号はどれか。",
+          "choices": [
+            {
+              "text": "TCP/25",
+              "explain": "SMTPのメール転送ポートです。"
+            },
+            {
+              "text": "TCP/443",
+              "explain": "HTTPSの標準ポートです。",
+              "ok": true
+            },
+            {
+              "text": "UDP/53",
+              "explain": "DNSの問合せに使われるポートです。"
+            }
+          ]
+        },
+        {
+          "id": "management-rules-4",
+          "format": "穴埋め",
+          "theme": "映像とカメラ管理の通信を分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "表1のIとIIを埋める。",
+          "template": "Iは{a}、IIは{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "I：二つのルールに登場",
+              "choices": [
+                {
+                  "text": "カメラ管理サーバ",
+                  "explain": "カメラ制御の送信元で、PCのHTTPSの宛先です。",
+                  "ok": true
+                },
+                {
+                  "text": "レシーバ11",
+                  "explain": "映像の受信先であり、管理の中心ではありません。"
+                },
+                {
+                  "text": "FW01",
+                  "explain": "ルールを適用する機器であって管理通信の端点ではありません。"
+                }
+              ],
+              "why": "同じIが送信元と宛先の両方に登場します。"
+            },
+            {
+              "key": "b",
+              "label": "II：宛先ポート",
+              "choices": [
+                {
+                  "text": "80",
+                  "explain": "HTTPの標準ポートです。"
+                },
+                {
+                  "text": "179",
+                  "explain": "BGPのポートです。"
+                },
+                {
+                  "text": "443",
+                  "explain": "HTTPSへの接続を許可します。",
+                  "ok": true
+                }
+              ],
+              "why": "TCPという指定と合わせて読みます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.12,
+            "bottom": 0.37,
+            "label": "表1：ユニキャスト通信の許可ルール（IPA原表）"
+          }
+        },
+        {
+          "id": "management-rules-5",
+          "format": "並べ替え",
+          "theme": "映像とカメラ管理の通信を分ける",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "PCが映像を表示する処理を並べる。",
+          "lead": "映像表示ソフトは導入済みです。",
+          "lines": [
+            {
+              "code": "管理サーバのWebページでカメラを選ぶ"
+            },
+            {
+              "code": "対応するマルチキャスト映像データを受信する"
+            },
+            {
+              "code": "符号化された映像データを復号して表示する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "復号はここでは動画デコードです。TLSの復号だけを指しません。",
+          "ngExplain": "原因から動作、結果へつなげます。復号はここでは動画デコードです。TLSの復号だけを指しません。"
+        },
+        {
+          "id": "management-rules-6",
+          "format": "選択",
+          "theme": "映像とカメラ管理の通信を分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "管理画面は開けるが映像が来ない。HTTPS許可だけで十分か。",
+          "choices": [
+            {
+              "text": "DNSを権威サーバにすれば映像が届く",
+              "explain": "名前解決だけでは映像の参加・配信経路を作れません。"
+            },
+            {
+              "text": "不十分。マルチキャスト経路と参加設定も確認する",
+              "explain": "管理通信と映像データの経路は別です。",
+              "ok": true
+            },
+            {
+              "text": "十分。映像も必ずHTTPSだけで届く",
+              "explain": "原問では映像はマルチキャストです。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pc-join-interfaces",
+      "title": "PC側のインタフェースへ参加受付を広げる",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "pc-join-interfaces-1",
+          "format": "読む",
+          "theme": "PC側のインタフェースへ参加受付を広げる",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "既存設定ではレシーバ側のL2SW12とL2SW22への接続でIGMPv3を使います。新たにL2SW11とL2SW21配下のPCも視聴します。PCの参加要求を受けるL3スイッチ側を追加設定します。スヌーピングは庁舎内L2SWで既に有効です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "領域",
+              "設定する機器",
+              "追加する接続先"
+            ],
+            "rows": [
+              [
+                "執務エリア1",
+                "L3SW11",
+                "L2SW11"
+              ],
+              [
+                "執務エリア2",
+                "L3SW21",
+                "L2SW21"
+              ]
+            ],
+            "caption": "説明用：PCのJoinを受ける位置"
+          }
+        },
+        {
+          "id": "pc-join-interfaces-2",
+          "format": "選択",
+          "theme": "PC側のインタフェースへ参加受付を広げる",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "エリア1のPCの参加要求を受ける設定を追加する機器はどれか。",
+          "choices": [
+            {
+              "text": "L2SW91",
+              "explain": "河川カメラの集約側であり、PCの接続先ではありません。"
+            },
+            {
+              "text": "大型モニター",
+              "explain": "IGMP設定を追加するルータではありません。"
+            },
+            {
+              "text": "L3SW11",
+              "explain": "PC側セグメントのマルチキャストルータです。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "pc-join-interfaces-3",
+          "format": "選択",
+          "theme": "PC側のインタフェースへ参加受付を広げる",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "追加するインタフェースを選ぶ根拠はどれか。",
+          "choices": [
+            {
+              "text": "全てのL2SWを交換する",
+              "explain": "既設機器は必要なプロトコルに対応しています。"
+            },
+            {
+              "text": "新たに視聴するPCの接続先をたどる",
+              "explain": "既存レシーバ側は設定済みです。追加の受信者側を確認します。",
+              "ok": true
+            },
+            {
+              "text": "IPカメラに最も近いポートを選ぶ",
+              "explain": "今回は受信者追加に伴うIGMPの設定です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 9,
+            "top": 0.07,
+            "bottom": 0.4,
+            "label": "図1：PCとレシーバの接続先（IPA原図）"
+          }
+        },
+        {
+          "id": "pc-join-interfaces-4",
+          "format": "穴埋め",
+          "theme": "PC側のインタフェースへ参加受付を広げる",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "機器・接続先・プロトコルをそろえる。",
+          "template": "{a}の、{b}への接続インタフェースで{c}を有効にする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "設定する二台",
+              "choices": [
+                {
+                  "text": "L3SW11とL3SW21",
+                  "explain": "両エリアのL3スイッチです。",
+                  "ok": true
+                },
+                {
+                  "text": "L2SW11とL2SW21",
+                  "explain": "こちらは接続先のL2スイッチです。"
+                },
+                {
+                  "text": "FW01とL2SW91",
+                  "explain": "PC側インタフェースの設定機器ではありません。"
+                }
+              ],
+              "why": "原問(a)には両方の機器名を書きます。"
+            },
+            {
+              "key": "b",
+              "label": "接続先の二台",
+              "choices": [
+                {
+                  "text": "L2SW12とL2SW22",
+                  "explain": "レシーバ側として既に設定済みです。"
+                },
+                {
+                  "text": "L2SW94とL2SW95",
+                  "explain": "河川のカメラ側です。"
+                },
+                {
+                  "text": "L2SW11とL2SW21",
+                  "explain": "新たに視聴するPCがつながります。",
+                  "ok": true
+                }
+              ],
+              "why": "原問(b)には追加対象だけを挙げます。"
+            },
+            {
+              "key": "c",
+              "label": "追加プロトコル",
+              "choices": [
+                {
+                  "text": "VRRP",
+                  "explain": "デフォルトゲートウェイの冗長化です。"
+                },
+                {
+                  "text": "IGMPv3",
+                  "explain": "PCの送信元指定の参加要求を受けます。",
+                  "ok": true
+                },
+                {
+                  "text": "HTTP/2",
+                  "explain": "Web転送の方式です。"
+                }
+              ],
+              "why": "原問(c)はバージョンまで書きます。"
+            }
+          ]
+        },
+        {
+          "id": "pc-join-interfaces-5",
+          "format": "並べ替え",
+          "theme": "PC側のインタフェースへ参加受付を広げる",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "PCの映像参加を有効にする流れを並べる。",
+          "lead": "エリア2を例にします。",
+          "lines": [
+            {
+              "code": "L3SW21のL2SW21接続側でIGMPv3を有効にする"
+            },
+            {
+              "code": "PCが希望する(S,G)の参加要求を送る"
+            },
+            {
+              "code": "L3SW21が上流へ要求し、PC側へ映像を配信する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "設定場所は受信者のいるネットワークから判断します。",
+          "ngExplain": "原因から動作、結果へつなげます。設定場所は受信者のいるネットワークから判断します。"
+        },
+        {
+          "id": "pc-join-interfaces-6",
+          "format": "選択",
+          "theme": "PC側のインタフェースへ参加受付を広げる",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "別のPC群をL2SW23へ追加し、L3SW21へ接続した。追加対象はどれか。",
+          "choices": [
+            {
+              "text": "IPカメラの送信先をPCのユニキャストIPへ変更",
+              "explain": "マルチキャスト配信のまま受信者を追加できます。"
+            },
+            {
+              "text": "L3SW21のL2SW23接続インタフェース",
+              "explain": "新しい受信者ネットワークでJoinを受けます。",
+              "ok": true
+            },
+            {
+              "text": "L3SW11のL2SW11接続だけ",
+              "explain": "別エリアの既存接続を変えても新PC群に届きません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "central-selection",
+      "title": "カメラ追加時の更新箇所を減らす",
+      "targets": [
+        "s4-2",
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "central-selection-1",
+          "format": "読む",
+          "theme": "カメラ追加時の更新箇所を減らす",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "各PCのアプリへカメラ一覧を登録すると、追加のたびに各PCを更新します。Web方式ではカメラ管理サーバのページから選びます。原問の製品はページから映像表示ソフトを起動します。ブラウザだけで標準的にIGMP映像を再生するという前提ではありません。"
+        },
+        {
+          "id": "central-selection-2",
+          "format": "選択",
+          "theme": "カメラ追加時の更新箇所を減らす",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "カメラを1台追加したとき、Web方式で一覧を更新する場所はどれか。",
+          "choices": [
+            {
+              "text": "全PCのアプリ内の登録一覧",
+              "explain": "これはデスクトップ方式の作業です。"
+            },
+            {
+              "text": "全モニターのファームウェア",
+              "explain": "カメラ一覧の追加に必須とされた作業ではありません。"
+            },
+            {
+              "text": "カメラ管理サーバのWebページ",
+              "explain": "一覧を集中管理するため、端末ごとの登録作業を減らせます。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "central-selection-3",
+          "format": "選択",
+          "theme": "カメラ追加時の更新箇所を減らす",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "Web方式を採る根拠として適切なのはどれか。",
+          "choices": [
+            {
+              "text": "映像の復号が不要になる",
+              "explain": "どちらの方式も符号化された映像を復号して表示します。"
+            },
+            {
+              "text": "IPカメラの追加・更新をWebページの改修で反映できる",
+              "explain": "設定対象をまとめられることが利点です。",
+              "ok": true
+            },
+            {
+              "text": "IPカメラの故障がなくなる",
+              "explain": "選択方法を変えてもカメラ故障は防げません。"
+            }
+          ]
+        },
+        {
+          "id": "central-selection-4",
+          "format": "穴埋め",
+          "theme": "カメラ追加時の更新箇所を減らす",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "変更箇所と効果を組み立てる。",
+          "template": "カメラ追加時は{a}を改修すればよく、{b}を減らせる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "更新する対象",
+              "choices": [
+                {
+                  "text": "Webページ",
+                  "explain": "共有のカメラ一覧を更新します。",
+                  "ok": true
+                },
+                {
+                  "text": "全PCの個別カメラ登録",
+                  "explain": "集中管理の利点を使えていません。"
+                },
+                {
+                  "text": "IGMPの規格",
+                  "explain": "機器追加で通信規格を改訂するわけではありません。"
+                }
+              ],
+              "why": "原問の短い答案はWebページの改修だけで対応できることです。"
+            },
+            {
+              "key": "b",
+              "label": "減らす作業",
+              "choices": [
+                {
+                  "text": "映像を受信する必要",
+                  "explain": "表示にはデータ受信が必要です。"
+                },
+                {
+                  "text": "動画を復号する必要",
+                  "explain": "表示ソフトが復号する処理は残ります。"
+                },
+                {
+                  "text": "PCごとのカメラ登録変更",
+                  "explain": "サーバ上の一覧を利用するためです。",
+                  "ok": true
+                }
+              ],
+              "why": "運用上の作業対象を比較します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.57,
+            "bottom": 0.89,
+            "label": "デスクトップ方式とWebブラウザ方式（IPA原文）"
+          }
+        },
+        {
+          "id": "central-selection-5",
+          "format": "並べ替え",
+          "theme": "カメラ追加時の更新箇所を減らす",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "Web方式で追加映像を表示する。",
+          "lead": "PCの表示ソフトは新しい映像形式に対応済みとします。",
+          "lines": [
+            {
+              "code": "管理サーバ側のカメラ一覧を更新する"
+            },
+            {
+              "code": "PCのWebブラウザから更新後のページを開く"
+            },
+            {
+              "code": "追加カメラを選び、起動したソフトで映像を復号する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "一覧の集中管理と、端末側の表示処理を分けます。",
+          "ngExplain": "原因から動作、結果へつなげます。一覧の集中管理と、端末側の表示処理を分けます。"
+        },
+        {
+          "id": "central-selection-6",
+          "format": "選択",
+          "theme": "カメラ追加時の更新箇所を減らす",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "追加カメラが未対応の符号化方式になった。ページ変更だけで十分か。",
+          "choices": [
+            {
+              "text": "IGMPv3をv2へ戻せば復号できる",
+              "explain": "参加プロトコルと映像の符号化方式は別です。"
+            },
+            {
+              "text": "表示ソフトの対応も必要になる",
+              "explain": "原問の一覧更新の利点とは別に、復号できることが必要です。",
+              "ok": true
+            },
+            {
+              "text": "常に十分。Web方式なら全形式を復号できる",
+              "explain": "表示ソフトの能力は自動的には増えません。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

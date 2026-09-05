@@ -1,0 +1,1658 @@
+{
+  "examKey": "2022r04h/pm1/1",
+  "title": "工場を分離したままデータを届ける",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "boundary",
+      "title": "公開サーバからの侵入拡大を抑える",
+      "targets": [
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "公開サーバからの侵入拡大を抑える",
+          "body": "練習用の比較：公開サーバを社内PC（Personal Computer）と同じLAN（Local Area Network）に置く場合を考えます。DMZ（Demilitarized Zone）は外部と通信するサーバ用の分離領域、OA（Office Automation）セグメントは事務用機器の領域です。原問のようにFW（Firewall：ファイアウォール）で両者の通信を制限すると、公開サーバの侵害が社内へ広がるリスクを減らせます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "外部",
+                "d": "公開サーバへ接続"
+              },
+              {
+                "t": "DMZ",
+                "d": "公開サーバを収容"
+              },
+              {
+                "t": "FW",
+                "d": "OAセグメント宛ての通信を制限"
+              }
+            ],
+            "caption": "説明用の流れ"
+          },
+          "id": "boundary-1",
+          "format": "読む",
+          "theme": "公開サーバからの侵入拡大を抑える",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "公開サーバが侵害された後、守りたい対象はどれか。",
+          "choices": [
+            {
+              "text": "公開サーバの名前だけ",
+              "ok": false,
+              "explain": "名前の変更では侵入経路はなくなりません。"
+            },
+            {
+              "text": "インターネット全体",
+              "ok": false,
+              "explain": "社内FWの管理範囲ではありません。"
+            },
+            {
+              "text": "OAセグメントの機器",
+              "ok": true,
+              "explain": "侵入が社内機器へ広がるリスクを減らします。"
+            }
+          ],
+          "id": "boundary-2",
+          "format": "選択",
+          "theme": "公開サーバからの侵入拡大を抑える",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "DMZの効果を生む条件はどれか。",
+          "choices": [
+            {
+              "text": "公開サーバの全通信を暗号化するだけ",
+              "ok": false,
+              "explain": "暗号化は通信保護であり侵入拡大の制限とは別です。"
+            },
+            {
+              "text": "DMZとOA間の通信をFWで制限する",
+              "ok": true,
+              "explain": "境界で到達先を制限することが重要です。"
+            },
+            {
+              "text": "公開サーバをグローバルIPにするだけ",
+              "ok": false,
+              "explain": "アドレスの種類だけでは分離できません。"
+            }
+          ],
+          "id": "boundary-3",
+          "format": "選択",
+          "theme": "公開サーバからの侵入拡大を抑える",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "起点と保護対象を埋める",
+          "template": "社外から{a}に侵入されたとき、{b}への侵入リスクを減らす。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "起点",
+              "choices": [
+                {
+                  "text": "公開サーバ",
+                  "ok": true,
+                  "explain": "外部から到達できるサーバが起点です。"
+                },
+                {
+                  "text": "社内の全PC",
+                  "ok": false,
+                  "explain": "最初に侵入されるのは公開サーバという条件です。"
+                },
+                {
+                  "text": "DNSのキャッシュ",
+                  "ok": false,
+                  "explain": "キャッシュ汚染を問う条件ではありません。"
+                }
+              ],
+              "why": "外部から到達できるサーバが起点です。"
+            },
+            {
+              "key": "b",
+              "label": "保護対象",
+              "choices": [
+                {
+                  "text": "OAセグメントの機器",
+                  "ok": true,
+                  "explain": "分離により社内側への広がりを制限します。"
+                },
+                {
+                  "text": "全ての外部サイト",
+                  "ok": false,
+                  "explain": "他組織のサイトの保護ではありません。"
+                },
+                {
+                  "text": "攻撃者の端末",
+                  "ok": false,
+                  "explain": "保護するのは社内の業務機器です。"
+                }
+              ],
+              "why": "分離により社内側への広がりを制限します。"
+            }
+          ],
+          "id": "boundary-4",
+          "format": "穴埋め",
+          "theme": "公開サーバからの侵入拡大を抑える",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "分離の効果を因果順に並べる",
+          "lead": "公開サーバの侵害後を想定します。",
+          "lines": [
+            {
+              "code": "攻撃者が公開サーバを操作する"
+            },
+            {
+              "code": "社内宛て通信がFWで制限される"
+            },
+            {
+              "code": "OAセグメントへの侵入経路が減る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "起点、通信制限、保護対象の順に説明します。",
+          "ngExplain": "公開サーバの侵害自体が起きないとは言えません。",
+          "id": "boundary-5",
+          "format": "並べ替え",
+          "theme": "公開サーバからの侵入拡大を抑える",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "DMZからOAへの通信を全許可した。何を見直すか。",
+          "choices": [
+            {
+              "text": "全PCを外部公開する",
+              "ok": false,
+              "explain": "侵入経路を増やしてしまいます。"
+            },
+            {
+              "text": "必要な宛先と通信だけ許可する",
+              "ok": true,
+              "explain": "分離した境界に実際の制限が必要です。"
+            },
+            {
+              "text": "DMZという名称を変える",
+              "ok": false,
+              "explain": "名称は通信を制限しません。"
+            }
+          ],
+          "id": "boundary-6",
+          "format": "選択",
+          "theme": "公開サーバからの侵入拡大を抑える",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "protocol",
+      "title": "ログ通知・認証・トンネルを区別する",
+      "targets": [
+        "s1-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "ログ通知・認証・トンネルを区別する",
+          "body": "工場の起動・異常などのイベントを集約するプロトコルがSyslogです。HTTP（Hypertext Transfer Protocol）はWebの要求と応答、HTTPS（HTTP over TLS）はTLS（Transport Layer Security）で保護したHTTPです。社員の外部Web通信はプロキシが中継し、その利用時の認証とトンネル作成を学びます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "目的",
+              "技術"
+            ],
+            "rows": [
+              [
+                "イベント通知",
+                "Syslog"
+              ],
+              [
+                "ハッシュを使う認証",
+                "ダイジェスト"
+              ],
+              [
+                "プロキシへのトンネル要求",
+                "CONNECT"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "protocol-1",
+          "format": "読む",
+          "theme": "ログ通知・認証・トンネルを区別する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "機器の起動イベントを集約するRFC 5424のプロトコルはどれか。",
+          "choices": [
+            {
+              "text": "LDAP",
+              "ok": false,
+              "explain": "利用者などのディレクトリ情報を参照します。"
+            },
+            {
+              "text": "CONNECT",
+              "ok": false,
+              "explain": "HTTPのトンネル作成要求です。"
+            },
+            {
+              "text": "Syslog",
+              "ok": true,
+              "explain": "イベント通知の標準プロトコルです。"
+            }
+          ],
+          "id": "protocol-2",
+          "format": "選択",
+          "theme": "ログ通知・認証・トンネルを区別する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "id": "protocol-7",
+          "type": "info",
+          "title": "Base64とハッシュは何が違うか",
+          "body": "Basic認証はIDとパスワードをBase64で符号化します。これは表記の変換なので復元でき、暗号化ではありません。ダイジェスト認証は、サーバからの値などとパスワードを使ったハッシュ計算の結果で認証します。どちらの認証も通信内容そのものを暗号化する機能ではありません。",
+          "format": "読む",
+          "theme": "Base64とハッシュは何が違うか",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "Basic認証のBase64は何を行うか。",
+          "choices": [
+            {
+              "text": "通信経路の暗号化",
+              "ok": false,
+              "explain": "TLSなどが担う機能です。"
+            },
+            {
+              "text": "認証情報の符号化",
+              "ok": true,
+              "explain": "暗号化とは異なり、秘密鍵なしで元に戻せます。"
+            },
+            {
+              "text": "一方向のハッシュ化",
+              "ok": false,
+              "explain": "ダイジェスト認証と混同しています。"
+            }
+          ],
+          "id": "protocol-3",
+          "format": "選択",
+          "theme": "ログ通知・認証・トンネルを区別する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "protocol-8",
+          "type": "info",
+          "title": "CONNECTは通路を頼む要求",
+          "body": "CONNECTは、プロキシへ指定した宛先までトンネルを作るよう求めるHTTPメソッドです。GETはリソース取得の要求です。原問ではCONNECTの接続先ポートを443だけに制限し、作った通路の中でTLSによる暗号通信を行います。",
+          "format": "読む",
+          "theme": "CONNECTは通路を頼む要求",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "protocol-9",
+          "type": "quiz",
+          "title": "練習用の条件：プロキシで認証が成功し、CONNECTで通路ができた。通信内容を盗み見から守る処理はどれか。",
+          "choices": [
+            {
+              "text": "通路内でTLSを使う",
+              "ok": true,
+              "explain": "認証・トンネル作成・暗号化は別の役割です。"
+            },
+            {
+              "text": "CONNECTを送った事実だけ",
+              "ok": false,
+              "explain": "CONNECT自体は通信データを暗号化しません。"
+            },
+            {
+              "text": "Base64でアドレスを書く",
+              "ok": false,
+              "explain": "符号化は秘匿性を提供しません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：プロキシで認証が成功し、CONNECTで通路ができた。通信内容を盗み見から守る処理はどれか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "原文の三つの空欄を役割で埋める",
+          "template": "イベント通知は{a}、ハッシュ利用の認証は{b}、トンネル要求は{c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "Syslog",
+                  "ok": true,
+                  "explain": "ログイベントを転送します。"
+                },
+                {
+                  "text": "SMTP",
+                  "ok": false,
+                  "explain": "メール転送のプロトコルです。"
+                },
+                {
+                  "text": "HTTP",
+                  "ok": false,
+                  "explain": "Webの要求と応答です。"
+                }
+              ],
+              "why": "ログイベントを転送します。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "ダイジェスト",
+                  "ok": true,
+                  "explain": "ハッシュを利用する認証です。"
+                },
+                {
+                  "text": "Basic",
+                  "ok": false,
+                  "explain": "Base64による符号化です。"
+                },
+                {
+                  "text": "CONNECT",
+                  "ok": false,
+                  "explain": "認証方式ではありません。"
+                }
+              ],
+              "why": "ハッシュを利用する認証です。"
+            },
+            {
+              "key": "c",
+              "label": "c",
+              "choices": [
+                {
+                  "text": "CONNECT",
+                  "ok": true,
+                  "explain": "トンネルの作成を要求します。"
+                },
+                {
+                  "text": "GET",
+                  "ok": false,
+                  "explain": "リソースを取得します。"
+                },
+                {
+                  "text": "POST",
+                  "ok": false,
+                  "explain": "サーバへデータを送信します。"
+                }
+              ],
+              "why": "トンネルの作成を要求します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 4,
+            "top": 0.08,
+            "bottom": 0.59,
+            "label": "原文：イベント転送とプロキシ認証"
+          },
+          "id": "protocol-4",
+          "format": "穴埋め",
+          "theme": "ログ通知・認証・トンネルを区別する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "プロキシ経由のHTTPS通信を並べる",
+          "lead": "認証後に443番へトンネルを作ります。",
+          "lines": [
+            {
+              "code": "プロキシで利用者認証を行う"
+            },
+            {
+              "code": "CONNECTで宛先443番へのトンネルを要求する"
+            },
+            {
+              "code": "トンネル内でTLS通信を行う"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "認証、トンネル確立、TLS通信の順です。",
+          "ngExplain": "CONNECT自体が暗号化を行うわけではありません。",
+          "id": "protocol-5",
+          "format": "並べ替え",
+          "theme": "ログ通知・認証・トンネルを区別する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "トンネル先は443番だけ許可する。25番へのCONNECTはどうなるか。",
+          "choices": [
+            {
+              "text": "CONNECTなら無条件で通る",
+              "ok": false,
+              "explain": "CONNECTでも宛先制限は適用されます。"
+            },
+            {
+              "text": "許可対象外になる",
+              "ok": true,
+              "explain": "原問ではトンネル先のポートを制限します。"
+            },
+            {
+              "text": "自動で443番に書き換わる",
+              "ok": false,
+              "explain": "許可制限はポート変換ではありません。"
+            }
+          ],
+          "id": "protocol-6",
+          "format": "選択",
+          "theme": "ログ通知・認証・トンネルを区別する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "fta",
+      "title": "直結範囲と本人確認を判断する",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "直結範囲と本人確認を判断する",
+          "body": "FTA（File Transfer Appliance：ファイル転送アプライアンス）は管理LANとOAのLANに直結します。IP（Internet Protocol）の静的経路や動的経路は設定せず、異なるLAN間のルーティングも行いません。利用者情報はLDAP（Lightweight Directory Access Protocol）で参照する既存サーバに一元管理されています。",
+          "fig": {
+            "kind": "topo",
+            "height": 225,
+            "nodes": [
+              {
+                "id": "control",
+                "x": 62,
+                "y": 35,
+                "label": "制御網",
+                "icon": "l2sw"
+              },
+              {
+                "id": "bridge",
+                "x": 62,
+                "y": 103,
+                "label": "制御サーバ",
+                "sub": "IP転送しない",
+                "icon": "server"
+              },
+              {
+                "id": "manage",
+                "x": 62,
+                "y": 175,
+                "label": "管理網",
+                "icon": "l2sw"
+              },
+              {
+                "id": "fta",
+                "x": 174,
+                "y": 175,
+                "label": "FTA",
+                "icon": "server"
+              },
+              {
+                "id": "office",
+                "x": 280,
+                "y": 175,
+                "label": "OA網",
+                "icon": "l2sw"
+              }
+            ],
+            "links": [
+              {
+                "from": "control",
+                "to": "bridge"
+              },
+              {
+                "from": "bridge",
+                "to": "manage"
+              },
+              {
+                "from": "manage",
+                "to": "fta"
+              },
+              {
+                "from": "fta",
+                "to": "office"
+              }
+            ],
+            "caption": "説明用：接続とIP転送を分ける"
+          },
+          "id": "fta-1",
+          "format": "読む",
+          "theme": "直結範囲と本人確認を判断する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "FTAが認証情報を取得する既存サーバはどれか。",
+          "choices": [
+            {
+              "text": "データヒストリアン",
+              "ok": false,
+              "explain": "測定値やログを蓄積する装置です。"
+            },
+            {
+              "text": "キャプチャサーバ",
+              "ok": false,
+              "explain": "ミラーパケットを保存する装置です。"
+            },
+            {
+              "text": "LDAPサーバ",
+              "ok": true,
+              "explain": "LDAPはLightweight Directory Access Protocolです。利用者情報を参照します。"
+            }
+          ],
+          "id": "fta-2",
+          "format": "選択",
+          "theme": "直結範囲と本人確認を判断する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "同じサブネットの端末からFTAへ送るために必要なのはどれか。",
+          "choices": [
+            {
+              "text": "常にデフォルトルート",
+              "ok": false,
+              "explain": "直結の経路があればそちらを使います。"
+            },
+            {
+              "text": "直接接続の経路",
+              "ok": true,
+              "explain": "静的経路を追加しなくても直結先と通信できます。"
+            },
+            {
+              "text": "常にOSPFの経路交換",
+              "ok": false,
+              "explain": "直結通信に動的経路交換は不要です。"
+            }
+          ],
+          "id": "fta-3",
+          "format": "選択",
+          "theme": "直結範囲と本人確認を判断する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "到達できる全セグメントを選ぶ",
+          "template": "FTAにアクセスできるのは{a}と{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "工場側",
+              "choices": [
+                {
+                  "text": "管理セグメント",
+                  "ok": true,
+                  "explain": "FTAが直接接続しています。"
+                },
+                {
+                  "text": "制御セグメント",
+                  "ok": false,
+                  "explain": "制御サーバはルーティングしません。"
+                },
+                {
+                  "text": "DMZ",
+                  "ok": false,
+                  "explain": "FTAに到達する経路がありません。"
+                }
+              ],
+              "why": "FTAが直接接続しています。"
+            },
+            {
+              "key": "b",
+              "label": "事務所側",
+              "choices": [
+                {
+                  "text": "OAセグメント",
+                  "ok": true,
+                  "explain": "FTAが直接接続しています。"
+                },
+                {
+                  "text": "インターネット",
+                  "ok": false,
+                  "explain": "外部公開や経路設定はありません。"
+                },
+                {
+                  "text": "制御セグメント",
+                  "ok": false,
+                  "explain": "管理側へのIP転送がありません。"
+                }
+              ],
+              "why": "FTAが直接接続しています。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.28,
+            "bottom": 0.57,
+            "label": "原図2：FTAの接続先"
+          },
+          "id": "fta-4",
+          "format": "穴埋め",
+          "theme": "直結範囲と本人確認を判断する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "制御側から直接利用できない理由を並べる",
+          "lead": "物理的な線とIP転送を区別します。",
+          "lines": [
+            {
+              "code": "FTAは管理セグメントに接続する"
+            },
+            {
+              "code": "制御サーバは制御と管理の間をルーティングしない"
+            },
+            {
+              "code": "制御セグメントからFTAへの経路がない"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "制御サーバのアプリ処理とIP転送は別です。",
+          "ngExplain": "物理接続があるだけでは経路は成立しません。",
+          "id": "fta-5",
+          "format": "並べ替え",
+          "theme": "直結範囲と本人確認を判断する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "FTAに第三のLANを直結した。何が変わるか。",
+          "choices": [
+            {
+              "text": "LDAPの利用者数が自動で増える",
+              "ok": false,
+              "explain": "ネットワーク接続と利用者情報は別です。"
+            },
+            {
+              "text": "そのLANからFTA自身への到達範囲",
+              "ok": true,
+              "explain": "直結先が増えるためです。"
+            },
+            {
+              "text": "全LAN間のルーティングが自動で有効になる",
+              "ok": false,
+              "explain": "インタフェース追加とIP転送有効化は別です。"
+            }
+          ],
+          "id": "fta-6",
+          "format": "選択",
+          "theme": "直結範囲と本人確認を判断する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "permission",
+      "title": "本人確認と操作権限を分ける",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "本人確認と操作権限を分ける",
+          "body": "送信者がファイルを登録し、上長が承認します。指定された受信者だけが取得できます。本人確認と操作ごとの権限確認を別々に考えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "確認",
+              "目的"
+            ],
+            "rows": [
+              [
+                "認証",
+                "FTA利用者が本人か"
+              ],
+              [
+                "認可",
+                "承認や取得を実行できるか"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "permission-1",
+          "format": "読む",
+          "theme": "本人確認と操作権限を分ける",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "ログインできた社員が他人宛てのファイルを取得できない理由はどれか。",
+          "choices": [
+            {
+              "text": "本人確認が必ず失敗した",
+              "ok": false,
+              "explain": "ログイン成功という条件と矛盾します。"
+            },
+            {
+              "text": "HTTPSは取得に使えない",
+              "ok": false,
+              "explain": "HTTPSでもダウンロードできます。"
+            },
+            {
+              "text": "認可条件を満たさない",
+              "ok": true,
+              "explain": "認証済みでも操作権限は別に確認します。"
+            }
+          ],
+          "id": "permission-2",
+          "format": "選択",
+          "theme": "本人確認と操作権限を分ける",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "上長が交代した。承認操作について変更するのはどれか。",
+          "choices": [
+            {
+              "text": "ミラーポート速度",
+              "ok": false,
+              "explain": "承認者の権限には関係しません。"
+            },
+            {
+              "text": "承認権限の割当て",
+              "ok": true,
+              "explain": "承認できる利用者を変更します。"
+            },
+            {
+              "text": "全ファイルのMACアドレス",
+              "ok": false,
+              "explain": "ファイルにMACアドレスは割り当てません。"
+            }
+          ],
+          "id": "permission-3",
+          "format": "選択",
+          "theme": "本人確認と操作権限を分ける",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "二つの目的を完成させる",
+          "template": "認証では{a}を、認可では{b}を確認する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "認証",
+              "choices": [
+                {
+                  "text": "利用者が本人であること",
+                  "ok": true,
+                  "explain": "身元の確認です。"
+                },
+                {
+                  "text": "全操作が許可されること",
+                  "ok": false,
+                  "explain": "認証だけで全操作を許可しません。"
+                },
+                {
+                  "text": "通信速度",
+                  "ok": false,
+                  "explain": "性能確認ではありません。"
+                }
+              ],
+              "why": "身元の確認です。"
+            },
+            {
+              "key": "b",
+              "label": "認可",
+              "choices": [
+                {
+                  "text": "操作ごとに実行権限を有すること",
+                  "ok": true,
+                  "explain": "役割や受信者指定に従って操作を制限します。"
+                },
+                {
+                  "text": "利用者のパスワードだけ",
+                  "ok": false,
+                  "explain": "パスワードによる身元確認は認証です。"
+                },
+                {
+                  "text": "ファイルが暗号化されていること",
+                  "ok": false,
+                  "explain": "暗号化と権限は別です。"
+                }
+              ],
+              "why": "役割や受信者指定に従って操作を制限します。"
+            }
+          ],
+          "id": "permission-4",
+          "format": "穴埋め",
+          "theme": "本人確認と操作権限を分ける",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "受渡しを処理順に並べる",
+          "lead": "通知はFTAが内部メールサーバへ送ります。",
+          "lines": [
+            {
+              "code": "送信者が受信者を指定してアップロードする"
+            },
+            {
+              "code": "上長へ承認依頼を通知する"
+            },
+            {
+              "code": "上長が内容を確認して承認する"
+            },
+            {
+              "code": "受信者へ通知し、受信者が取得する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "承認を経て指定された受信者が取得します。",
+          "ngExplain": "アップロードだけで直ちに配布する流れではありません。",
+          "id": "permission-5",
+          "format": "並べ替え",
+          "theme": "本人確認と操作権限を分ける",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "認可をなくし、本人確認だけ残すと何が問題か。",
+          "choices": [
+            {
+              "text": "FTAの直結経路が消える",
+              "ok": false,
+              "explain": "権限と経路は別です。"
+            },
+            {
+              "text": "一般社員にも承認を許すおそれがある",
+              "ok": true,
+              "explain": "操作単位の制限がなくなります。"
+            },
+            {
+              "text": "ログインIDが必ず消える",
+              "ok": false,
+              "explain": "本人確認は残る条件です。"
+            }
+          ],
+          "id": "permission-6",
+          "format": "選択",
+          "theme": "本人確認と操作権限を分ける",
+          "scaffold": 3,
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.09,
+            "bottom": 0.44,
+            "label": "原表1：受渡しと認証・認可"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mirror",
+      "title": "複製方式と取り込む帯域を判断する",
+      "targets": [
+        "s3-1",
+        "s3-2",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "複製方式と取り込む帯域を判断する",
+          "body": "L2SW（Layer 2 Switch）は、同じVLAN（Virtual LAN：論理的なLAN）内でMAC（Media Access Control）アドレスを基にフレームを転送します。複数のコントローラから制御サーバへ測定値が集まります。NPB（Network Packet Broker）は入力と出力の組をあらかじめ設定し、ミラーパケットを可視化・保存先へ複製する装置です。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "対象",
+              "判断"
+            ],
+            "rows": [
+              [
+                "L2SWの未知宛先",
+                "同じVLANの入力以外へ転送"
+              ],
+              [
+                "測定値の集約先",
+                "制御サーバ"
+              ],
+              [
+                "双方向のミラー出力",
+                "合計1Gビット/秒まで"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "mirror-1",
+          "format": "読む",
+          "theme": "複製方式と取り込む帯域を判断する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "mirror-7",
+          "type": "info",
+          "title": "学習する送信元と、探す宛先を区別する",
+          "body": "L2SWは受信フレームの送信元MACと入力ポートを学習します。転送先は宛先MACを表で探し、見つからない場合は同じVLANの入力以外の転送可能なポートへ複製します。この動作をフラッディングと呼びます。",
+          "format": "読む",
+          "theme": "学習する宛先と、探す宛先を区別する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "宛先MACが未学習のL2SWの動作はどれか。",
+          "choices": [
+            {
+              "text": "送信元へ送り返す",
+              "ok": false,
+              "explain": "送信元学習と宛先転送を混同しています。"
+            },
+            {
+              "text": "全VLANへ転送する",
+              "ok": false,
+              "explain": "VLANを越えて複製しません。"
+            },
+            {
+              "text": "フラッディング",
+              "ok": true,
+              "explain": "同じVLANの入力以外へ転送します。"
+            }
+          ],
+          "id": "mirror-2",
+          "format": "選択",
+          "theme": "複製方式と取り込む帯域を判断する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "全コントローラの測定値を1ポートで得るなら接続先はどれか。",
+          "choices": [
+            {
+              "text": "データヒストリアン",
+              "ok": false,
+              "explain": "制御サーバから一日一回受け取る側です。"
+            },
+            {
+              "text": "制御サーバ",
+              "ok": true,
+              "explain": "測定データが全コントローラから集まります。"
+            },
+            {
+              "text": "一台のコントローラ",
+              "ok": false,
+              "explain": "他のコントローラのデータが欠けます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.28,
+            "bottom": 0.57,
+            "label": "原図2：測定データが集まるポート"
+          },
+          "id": "mirror-3",
+          "format": "選択",
+          "theme": "複製方式と取り込む帯域を判断する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "mirror-8",
+          "type": "quiz",
+          "title": "練習用の条件：元ポートは送信700Mビット/秒、受信600Mビット/秒。両方向のミラーを一本の1G出力へ集めると、比較する量はどれか。",
+          "choices": [
+            {
+              "text": "700＋600＝1300Mビット/秒",
+              "ok": true,
+              "explain": "送受信両方向のコピーが同じ出力方向を使います。"
+            },
+            {
+              "text": "大きい方の700Mビット/秒だけ",
+              "ok": false,
+              "explain": "もう一方向の複製も出力を占有します。"
+            },
+            {
+              "text": "700−600＝100Mビット/秒",
+              "ok": false,
+              "explain": "送受信のコピーは相殺されません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：元ポートは送信700Mビット/秒、受信600Mビット/秒。両方向のミラーを一本の1G出力へ集めると、比較する量はどれか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "一本のミラー出力の制約を組み立てる",
+          "template": "{a}を合計{b}までしか取り込めない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "合計対象",
+              "choices": [
+                {
+                  "text": "送信側と受信側のトラフィック",
+                  "ok": true,
+                  "explain": "両方向の複製が一本に集まります。"
+                },
+                {
+                  "text": "送信側だけのトラフィック",
+                  "ok": false,
+                  "explain": "受信側の複製も出力を使います。"
+                },
+                {
+                  "text": "管理用ログだけ",
+                  "ok": false,
+                  "explain": "測定パケットのミラーを扱う条件です。"
+                }
+              ],
+              "why": "両方向の複製が一本に集まります。"
+            },
+            {
+              "key": "b",
+              "label": "上限",
+              "choices": [
+                {
+                  "text": "1Gビット/秒",
+                  "ok": true,
+                  "explain": "1000BASE-SXの一本分です。"
+                },
+                {
+                  "text": "2Gビット/秒",
+                  "ok": false,
+                  "explain": "元ポートの全二重の合計とは違います。"
+                },
+                {
+                  "text": "1Gバイト/秒",
+                  "ok": false,
+                  "explain": "ビットとバイトを混同しています。"
+                }
+              ],
+              "why": "1000BASE-SXの一本分です。"
+            }
+          ],
+          "id": "mirror-4",
+          "format": "穴埋め",
+          "theme": "複製方式と取り込む帯域を判断する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "帯域不足の根拠を並べる",
+          "lead": "練習用の条件：送信700Mビット/秒、受信600Mビット/秒を1Gの出力へ複製します。",
+          "lines": [
+            {
+              "code": "両方向を足して1300Mビット/秒にする"
+            },
+            {
+              "code": "一本の出力1000Mビット/秒と比較する"
+            },
+            {
+              "code": "帯域を超えるので全パケットを取り込めない"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "入力方向ではなく複製出力の合計量で比べます。",
+          "ngExplain": "元ポートは全二重でもミラー出力一本には収まりません。",
+          "id": "mirror-5",
+          "format": "並べ替え",
+          "theme": "複製方式と取り込む帯域を判断する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "練習用の条件変更：送信700M、受信600Mビット/秒を、それぞれ別の1G入力へ渡すタップにした。NPB入力帯域には収まるか。",
+          "choices": [
+            {
+              "text": "測定値の生成量が半分になる",
+              "ok": false,
+              "explain": "複製方式は測定値の生成量を変えません。"
+            },
+            {
+              "text": "各方向が1G未満なので入力帯域に収まる",
+              "ok": true,
+              "explain": "各入力は1G未満です。ただしNPBから先の出力帯域まで十分かは、フィルタ後の量などを別に確認します。"
+            },
+            {
+              "text": "必ず同じ1300Mの一本になる",
+              "ok": false,
+              "explain": "二本へ分ける変更条件を見落としています。"
+            }
+          ],
+          "id": "mirror-6",
+          "format": "選択",
+          "theme": "複製方式と取り込む帯域を判断する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "capture",
+      "title": "他装置宛てのフレームを受信する",
+      "targets": [
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "他装置宛てのフレームを受信する",
+          "body": "ミラー複製は元のフレームの宛先MACを保持します。NIC（Network Interface Card：ネットワーク接続部）は通常、自分宛てのユニキャストなどを受け付け、他装置宛てのユニキャストを除外します。プロミスキャスモードにすると、NICまで届いた他装置宛てのフレームも取り込めます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "項目",
+              "値"
+            ],
+            "rows": [
+              [
+                "複製の宛先MAC",
+                "制御サーバのMAC"
+              ],
+              [
+                "保存サーバのMAC",
+                "別のMAC"
+              ],
+              [
+                "受信設定",
+                "プロミスキャスモード"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "capture-1",
+          "format": "読む",
+          "theme": "他装置宛てのフレームを受信する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "ケーブルまで届いたミラーを通常設定のNICが捨てる理由はどれか。",
+          "choices": [
+            {
+              "text": "IPアドレスが必ず暗号化されるから",
+              "ok": false,
+              "explain": "ミラー複製は暗号化ではありません。"
+            },
+            {
+              "text": "Syslogに変わるから",
+              "ok": false,
+              "explain": "元のフレームの複製です。"
+            },
+            {
+              "text": "宛先MACが自分以外だから",
+              "ok": true,
+              "explain": "通常は他装置宛てのフレームを受信対象から外します。"
+            }
+          ],
+          "id": "capture-2",
+          "format": "選択",
+          "theme": "他装置宛てのフレームを受信する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "受信対象を広げる設定はどれか。",
+          "choices": [
+            {
+              "text": "フローモード",
+              "ok": false,
+              "explain": "複数経路への振分けで使う方式です。"
+            },
+            {
+              "text": "プロミスキャスモード",
+              "ok": true,
+              "explain": "他のMAC宛てのフレームも取り込みます。"
+            },
+            {
+              "text": "トンネルモード",
+              "ok": false,
+              "explain": "カプセル化に関する方式です。"
+            }
+          ],
+          "id": "capture-3",
+          "format": "選択",
+          "theme": "他装置宛てのフレームを受信する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "設定と対象を結び付ける",
+          "template": "{a}に設定し、宛先MACが{b}のフレームも受信する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "モード",
+              "choices": [
+                {
+                  "text": "プロミスキャスモード",
+                  "ok": true,
+                  "explain": "NICの受信フィルタを広げます。"
+                },
+                {
+                  "text": "Basic認証",
+                  "ok": false,
+                  "explain": "利用者認証方式です。"
+                },
+                {
+                  "text": "VRRPマスタ",
+                  "ok": false,
+                  "explain": "仮想ルータの役割です。"
+                }
+              ],
+              "why": "NICの受信フィルタを広げます。"
+            },
+            {
+              "key": "b",
+              "label": "追加対象",
+              "choices": [
+                {
+                  "text": "自分のMACアドレス以外",
+                  "ok": true,
+                  "explain": "元の宛先を保持したミラーを取り込みます。"
+                },
+                {
+                  "text": "自分のMACアドレスだけ",
+                  "ok": false,
+                  "explain": "それなら通常設定でも対象です。"
+                },
+                {
+                  "text": "自分のIPアドレス以外",
+                  "ok": false,
+                  "explain": "ここはMACによる選別を問います。"
+                }
+              ],
+              "why": "元の宛先を保持したミラーを取り込みます。"
+            }
+          ],
+          "id": "capture-4",
+          "format": "穴埋め",
+          "theme": "他装置宛てのフレームを受信する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "取り込みまでの条件を並べる",
+          "lead": "配送と受信設定を両方確認します。",
+          "lines": [
+            {
+              "code": "スイッチで対象ポートを複製する"
+            },
+            {
+              "code": "NPBから保存サーバのNICへ届ける"
+            },
+            {
+              "code": "プロミスキャスモードで他装置宛ても取り込む"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "届ける設定と受け取る設定が必要です。",
+          "ngExplain": "受信設定だけでは他ポートの通信は配送されません。",
+          "id": "capture-5",
+          "format": "並べ替え",
+          "theme": "他装置宛てのフレームを受信する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "プロミスキャス設定済みでもミラー設定がない。別ポート間の全通信を取得できるか。",
+          "choices": [
+            {
+              "text": "暗号化を解除すれば取得できる",
+              "ok": false,
+              "explain": "暗号化以前に配送されていません。"
+            },
+            {
+              "text": "取得できない",
+              "ok": true,
+              "explain": "NICに届かないフレームは受信できません。"
+            },
+            {
+              "text": "全て取得できる",
+              "ok": false,
+              "explain": "NIC設定はスイッチの複製を有効にしません。"
+            }
+          ],
+          "id": "capture-6",
+          "format": "選択",
+          "theme": "他装置宛てのフレームを受信する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "storage",
+      "title": "速度と保存期間を容量に換算する",
+      "targets": [
+        "s3-5"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "速度と保存期間を容量に換算する",
+          "body": "平均100kビット毎秒を1000日保存します。圧縮せず、付随情報の容量は無視します。原問の十進単位で時間とビットを順に換算します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "換算",
+              "値"
+            ],
+            "rows": [
+              [
+                "1日",
+                "86400秒"
+              ],
+              [
+                "1バイト",
+                "8ビット"
+              ],
+              [
+                "1Gバイト",
+                "10の9乗バイト"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "storage-1",
+          "format": "読む",
+          "theme": "速度と保存期間を容量に換算する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "100kビット/秒をバイト/秒にする式はどれか。",
+          "choices": [
+            {
+              "text": "100×1000×8",
+              "ok": false,
+              "explain": "バイトからビットへの逆換算です。"
+            },
+            {
+              "text": "100÷1000÷8",
+              "ok": false,
+              "explain": "kビットをビットにするには1000倍です。"
+            },
+            {
+              "text": "100×1000÷8",
+              "ok": true,
+              "explain": "kを1000に直し、8ビットを1バイトにします。"
+            }
+          ],
+          "id": "storage-2",
+          "format": "選択",
+          "theme": "速度と保存期間を容量に換算する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "1000日の秒数はどれか。",
+          "choices": [
+            {
+              "text": "8640000秒",
+              "ok": false,
+              "explain": "桁が一つ足りません。"
+            },
+            {
+              "text": "86400000秒",
+              "ok": true,
+              "explain": "86400秒を1000倍します。"
+            },
+            {
+              "text": "24000秒",
+              "ok": false,
+              "explain": "時間への換算を秒として扱っています。"
+            }
+          ],
+          "id": "storage-3",
+          "format": "選択",
+          "theme": "速度と保存期間を容量に換算する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "式と容量を埋める",
+          "template": "100×1000×86400×1000÷{a}÷10の9乗＝{b}Gバイト。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "換算",
+              "choices": [
+                {
+                  "text": "8",
+                  "ok": true,
+                  "explain": "ビットをバイトに直します。"
+                },
+                {
+                  "text": "1000",
+                  "ok": false,
+                  "explain": "kの換算は済んでいます。"
+                },
+                {
+                  "text": "60",
+                  "ok": false,
+                  "explain": "既に秒に直しています。"
+                }
+              ],
+              "why": "ビットをバイトに直します。"
+            },
+            {
+              "key": "b",
+              "label": "容量",
+              "choices": [
+                {
+                  "text": "1080",
+                  "ok": true,
+                  "explain": "総量は1.08×10の12乗バイトです。"
+                },
+                {
+                  "text": "8640",
+                  "ok": false,
+                  "explain": "8で割らずビット量を使った値です。"
+                },
+                {
+                  "text": "1.08",
+                  "ok": false,
+                  "explain": "GとTの桁を混同しています。"
+                }
+              ],
+              "why": "総量は1.08×10の12乗バイトです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 8,
+            "top": 0.67,
+            "bottom": 0.88,
+            "label": "原文：平均速度と保存期間の条件"
+          },
+          "id": "storage-4",
+          "format": "穴埋め",
+          "theme": "速度と保存期間を容量に換算する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "単位をそろえる手順を並べる",
+          "lead": "速度×時間で総量を得ます。",
+          "lines": [
+            {
+              "code": "速度をビット/秒、期間を秒にする"
+            },
+            {
+              "code": "速度と期間を掛ける"
+            },
+            {
+              "code": "8で割りバイトにする"
+            },
+            {
+              "code": "10の9乗で割りGバイトにする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "秒を消してデータ量を求めます。",
+          "ngExplain": "速度だけでは容量になりません。保存時間が必要です。",
+          "id": "storage-5",
+          "format": "並べ替え",
+          "theme": "速度と保存期間を容量に換算する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "200kビット/秒を500日保存すると容量はどうなるか。",
+          "choices": [
+            {
+              "text": "540Gバイト",
+              "ok": false,
+              "explain": "速度が2倍の条件を落としています。"
+            },
+            {
+              "text": "1080Gバイトで同じ",
+              "ok": true,
+              "explain": "速度が2倍、期間が半分で積は同じです。"
+            },
+            {
+              "text": "2160Gバイト",
+              "ok": false,
+              "explain": "期間が半分の条件を落としています。"
+            }
+          ],
+          "id": "storage-6",
+          "format": "選択",
+          "theme": "速度と保存期間を容量に換算する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

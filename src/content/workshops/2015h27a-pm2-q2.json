@@ -1,0 +1,2494 @@
+{
+  "examKey": "2015h27a/pm2/2",
+  "title": "アドレス共有からVM移動まで通信の外側を読む",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm2_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000gxj0-att/2015h27a_nw_pm2_ans.pdf",
+    "https://www.rfc-editor.org/info/rfc3947/",
+    "https://www.rfc-editor.org/info/rfc7348/",
+    "https://www.rfc-editor.org/info/rfc1112/"
+  ],
+  "sections": [
+    {
+      "id": "nat444",
+      "title": "三つのIPv4領域を二段階でつなぐ",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "共有するのはIP、区別するのはポート",
+          "body": "NAT（Network Address Translation）はアドレスを変換します。原問のNAT444は宅内、ISP共有、インターネットの三つのIPv4領域を、CPE（Customer Premises Equipment、宅内機器）とCGN（Carrier-Grade NAT、事業者側の大規模NAT）の二段でつなぎます。TCP（Transmission Control Protocol）とUDP（User Datagram Protocol）の16ビットのポート番号も使い、同じ外部IPを複数顧客で共有します。",
+          "fig": {
+            "kind": "topo",
+            "height": 170,
+            "nodes": [
+              {
+                "id": "pc",
+                "label": "宅内PC",
+                "icon": "pc",
+                "x": 30,
+                "y": 85
+              },
+              {
+                "id": "cpe",
+                "label": "CPE",
+                "icon": "router",
+                "x": 120,
+                "y": 85
+              },
+              {
+                "id": "cgn",
+                "label": "CGN",
+                "icon": "router",
+                "x": 210,
+                "y": 85
+              },
+              {
+                "id": "internet",
+                "label": "外部サーバ",
+                "icon": "internet",
+                "x": 300,
+                "y": 85
+              }
+            ],
+            "links": [
+              {
+                "from": "pc",
+                "to": "cpe",
+                "label": "宅内IPv4"
+              },
+              {
+                "from": "cpe",
+                "to": "cgn",
+                "label": "共有IPv4"
+              },
+              {
+                "from": "cgn",
+                "to": "internet",
+                "label": "外部IPv4"
+              }
+            ],
+            "caption": "説明用：3領域、NATはCPEとCGNの2か所"
+          },
+          "id": "nat444-1",
+          "format": "読む",
+          "theme": "三つのIPv4領域を二段階でつなぐ",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "NAT444の三つの4が示す領域数と変換回数は？",
+          "choices": [
+            {
+              "text": "NAT変換が3回",
+              "explain": "三つの領域の間の境界は二つです。"
+            },
+            {
+              "text": "IPv4領域が3種類、境界の変換は2回",
+              "ok": true,
+              "explain": "領域の数と境界の数を分けます。"
+            }
+          ],
+          "id": "nat444-2",
+          "format": "選択",
+          "theme": "三つのIPv4領域を二段階でつなぐ",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "顧客当たり利用できるポート数が減ると困る理由は？",
+          "choices": [
+            {
+              "text": "同時に作れる通信の数が制約される",
+              "ok": true,
+              "explain": "複数顧客で有限のポート番号を分け合います。"
+            },
+            {
+              "text": "ポート番号のビット長が顧客ごとに短くなる",
+              "explain": "欄自体は16ビットのまま、割当て数が減ります。"
+            }
+          ],
+          "id": "nat444-3",
+          "format": "選択",
+          "theme": "三つのIPv4領域を二段階でつなぐ",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "空欄a・b・cを役割から埋める",
+          "template": "NAT444の領域数aは{a}、ポート番号はb={b}ビット。サーバからデータ接続を始めるFTPのc={c}モードはNATに注意する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "3",
+                  "ok": true,
+                  "explain": "宅内・ISP共有・グローバルの三領域です。"
+                },
+                {
+                  "text": "4",
+                  "explain": "数字4はIPv4を示すので、四領域ではありません。"
+                }
+              ],
+              "why": "宅内・ISP共有・グローバルの三領域です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "16",
+                  "ok": true,
+                  "explain": "TCP/UDPの各ポート番号は16ビットです。"
+                },
+                {
+                  "text": "32",
+                  "explain": "IPv4アドレスの長さと混同しています。"
+                }
+              ],
+              "why": "TCP/UDPの各ポート番号は16ビットです。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "アクティブ",
+                  "ok": true,
+                  "explain": "FTP（File Transfer Protocol）ではサーバから指定ポートへデータ接続を開始します。"
+                },
+                {
+                  "text": "パッシブ",
+                  "explain": "クライアント側からデータ接続を開始する方式です。"
+                }
+              ],
+              "why": "FTP（File Transfer Protocol）ではサーバから指定ポートへデータ接続を開始します。"
+            }
+          ],
+          "id": "nat444-4",
+          "format": "穴埋め",
+          "theme": "三つのIPv4領域を二段階でつなぐ",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "一つの外部IPで通信を区別する",
+          "lead": "要求が外へ出る順に並べてください。",
+          "lines": [
+            {
+              "code": "宅内PCが送信元IPとポートを使って送る"
+            },
+            {
+              "code": "CPEがISP共有領域のIPとポートへ変換する"
+            },
+            {
+              "code": "CGNが外部IPとポートへ変換する"
+            },
+            {
+              "code": "外部サーバへ要求が届く"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "アドレスとポートの対応を各段で記録し、応答時に戻します。",
+          "ngExplain": "444を三回の変換と解釈しないでください。",
+          "id": "nat444-5",
+          "format": "並べ替え",
+          "theme": "三つのIPv4領域を二段階でつなぐ",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：FTPサーバが宅内PCの未開放ポートへ新規接続する",
+          "choices": [
+            {
+              "text": "クライアント発の制御接続があれば全ポートが開く",
+              "explain": "別のデータ接続まで自動的に全許可されるとは限りません。"
+            },
+            {
+              "text": "NATの対応付けがなく接続できないおそれがある",
+              "ok": true,
+              "explain": "外部から始まるアクティブモードのデータ接続が典型です。"
+            }
+          ],
+          "id": "nat444-6",
+          "format": "選択",
+          "theme": "三つのIPv4領域を二段階でつなぐ",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "overlap",
+      "title": "内側と外側で同じネットワークを使わない",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "同じ住所帯が両側にあると迷う",
+          "body": "CPEの宅内側とISP側に同じネットワークアドレスを使うと、どちらへ送るべきかを正しく区別できないことがあります。原問のシェアードアドレス100.64.0.0/10は、通常の宅内プライベート領域と分けるために使います。単にIPの末尾が同じではなく、ネットワーク範囲の重複が条件です。",
+          "id": "overlap-1",
+          "format": "読む",
+          "theme": "内側と外側で同じネットワークを使わない",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用：宅内192.168.1.0/24、CPEのISP側も192.168.1.0/24なら？",
+          "choices": [
+            {
+              "text": "ホスト末尾さえ違えば必ず安全",
+              "explain": "同じ範囲が両側にある問題は解消しません。"
+            },
+            {
+              "text": "内外のネットワーク範囲が重なる",
+              "ok": true,
+              "explain": "ネットワークの識別が衝突し、正しく経路選択できないおそれがあります。"
+            }
+          ],
+          "id": "overlap-2",
+          "format": "選択",
+          "theme": "内側と外側で同じネットワークを使わない",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "宅内192.168.1.0/24、ISP側192.168.2.0/24なら同じ問題か？",
+          "choices": [
+            {
+              "text": "この二つは重ならない",
+              "ok": true,
+              "explain": "同じ192.168から始まっていても/24のネットワークが違います。"
+            },
+            {
+              "text": "プライベートIPなら必ず重なる",
+              "explain": "ネットワークプレフィックスの比較が必要です。"
+            }
+          ],
+          "id": "overlap-3",
+          "format": "選択",
+          "theme": "内側と外側で同じネットワークを使わない",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "原問の機器名で条件を書く",
+          "template": "{a}のネットワークアドレスと、{b}間のネットワークアドレスが重なったときに問題となる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "PC",
+                  "ok": true,
+                  "explain": "宅内側の範囲を表します。"
+                },
+                {
+                  "text": "インターネットのWebサーバ",
+                  "explain": "問題となるのはCPEの内外です。"
+                }
+              ],
+              "why": "宅内側の範囲を表します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "CPEとCGN装置",
+                  "ok": true,
+                  "explain": "ISP共有側の範囲です。"
+                },
+                {
+                  "text": "WebサーバとDNS",
+                  "explain": "原問の重複条件ではありません。"
+                }
+              ],
+              "why": "ISP共有側の範囲です。"
+            }
+          ],
+          "id": "overlap-4",
+          "format": "穴埋め",
+          "theme": "内側と外側で同じネットワークを使わない",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "重複による問題を説明",
+          "lead": "場所と状態と影響の順です。",
+          "lines": [
+            {
+              "code": "PCの属する宅内ネットワークを確認する"
+            },
+            {
+              "code": "CPEとCGNの間のネットワークを確認する"
+            },
+            {
+              "code": "二つが重なると内外の区別に支障が出る"
+            },
+            {
+              "code": "インターネットアクセスができなくなることがある"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "全プライベートIPの使用を禁止するという答案ではありません。",
+          "ngExplain": "同じホスト番号だけではネットワークの重複を証明できません。",
+          "id": "overlap-5",
+          "format": "並べ替え",
+          "theme": "内側と外側で同じネットワークを使わない",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：PCが192.168.10.7/24、ISP側が192.168.20.7/24",
+          "choices": [
+            {
+              "text": "末尾が同じだから必ず重複する",
+              "explain": "異なるネットワークでは同じホスト番号を使えます。"
+            },
+            {
+              "text": "末尾7は同じでもネットワークは重ならない",
+              "ok": true,
+              "explain": "比較対象は192.168.10.0/24と192.168.20.0/24です。"
+            }
+          ],
+          "id": "overlap-6",
+          "format": "選択",
+          "theme": "内側と外側で同じネットワークを使わない",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "logging",
+      "title": "共有IPの後ろにいる利用者をたどる",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "IPだけでは一人に戻れない",
+          "body": "CGNの外部IPは複数顧客が共有し、外部ポート番号も時刻が変わると再利用されます。Webサーバで送信元IP・送信元ポート・アクセス時刻を記録すれば、事業者の変換記録と照合する材料になります。原問の三要素は、Webログだけで個人が自動確定するという意味ではありません。",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "練習用ログA 10:00 203.0.113.8:41000",
+              "練習用ログB 10:00 203.0.113.8:41001",
+              "練習用ログC 12:00 203.0.113.8:41000"
+            ],
+            "caption": "説明用：IP・ポートの再利用と時刻"
+          },
+          "id": "logging-1",
+          "format": "読む",
+          "theme": "共有IPの後ろにいる利用者をたどる",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "同じIPで同時に来た通信を分ける追加情報は？",
+          "choices": [
+            {
+              "text": "宛先Webサーバの共通ポート80だけ",
+              "explain": "全員が同じサービスへ来ると区別できません。"
+            },
+            {
+              "text": "送信元ポート番号",
+              "ok": true,
+              "explain": "CGNの外部側対応を区別する手掛かりです。"
+            }
+          ],
+          "id": "logging-2",
+          "format": "選択",
+          "theme": "共有IPの後ろにいる利用者をたどる",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "IPとポートが同じでもアクセス時刻が必要な理由は？",
+          "choices": [
+            {
+              "text": "ポートの割当て先が時間とともに変わり得る",
+              "ok": true,
+              "explain": "どの時点の変換記録かを照合します。"
+            },
+            {
+              "text": "時刻があればCGNの記録が絶対不要",
+              "explain": "対応表との照合は別途必要です。"
+            }
+          ],
+          "id": "logging-3",
+          "format": "選択",
+          "theme": "共有IPの後ろにいる利用者をたどる",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "記録する三つを選ぶ",
+          "template": "Webサーバのログに{a}、{b}、{c}を残す。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "送信元IPアドレス",
+                  "ok": true,
+                  "explain": "外から見えた共用アドレスを記録します。"
+                },
+                {
+                  "text": "PCの宅内MACアドレス",
+                  "explain": "ルータ越しのWebサーバには届きません。"
+                }
+              ],
+              "why": "外から見えた共用アドレスを記録します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "送信元ポート番号",
+                  "ok": true,
+                  "explain": "共用IP内の通信を区別します。"
+                },
+                {
+                  "text": "宛先ポートだけ",
+                  "explain": "同じサービス利用者を分けられません。"
+                }
+              ],
+              "why": "共用IP内の通信を区別します。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "アクセス時刻",
+                  "ok": true,
+                  "explain": "ポート再利用の前後を区別します。"
+                },
+                {
+                  "text": "ブラウザの色設定",
+                  "explain": "CGNの変換対応と照合する要素ではありません。"
+                }
+              ],
+              "why": "ポート再利用の前後を区別します。"
+            }
+          ],
+          "id": "logging-4",
+          "format": "穴埋め",
+          "theme": "共有IPの後ろにいる利用者をたどる",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "外部ログから宅内へたどる",
+          "lead": "調査の手順を並べてください。",
+          "lines": [
+            {
+              "code": "Web側の送信元IP・ポート・時刻を特定する"
+            },
+            {
+              "code": "同時刻のCGN変換記録を照合する"
+            },
+            {
+              "code": "対応する顧客・CPE側の記録を調べる"
+            },
+            {
+              "code": "必要な宅内側の記録と照合する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "外部観測値を変換ごとの記録で戻す考え方です。",
+          "ngExplain": "外部IPだけを特定顧客の固定IPと思わないでください。",
+          "id": "logging-5",
+          "format": "並べ替え",
+          "theme": "共有IPの後ろにいる利用者をたどる",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：IPとポートは記録したが時刻が丸一日ずれている",
+          "choices": [
+            {
+              "text": "ポートさえあればいつの記録でも同じ",
+              "explain": "同じポートを永遠に一人が使うとは限りません。"
+            },
+            {
+              "text": "再利用された別の割当てと誤って照合するおそれがある",
+              "ok": true,
+              "explain": "時刻の正確さとタイムゾーンも照合の前提です。"
+            }
+          ],
+          "id": "logging-6",
+          "format": "選択",
+          "theme": "共有IPの後ろにいる利用者をたどる",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "ah",
+      "title": "改変を検出する仕組みとNATの衝突",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "安全のための照合が変換を拒む",
+          "body": "IPsecはIP通信を保護する仕組みで、AH（Authentication Header）はIPヘッダのアドレスなども認証対象に含めます。NATが途中でIPアドレスを変えると、受信側の再計算結果が送信側の認証データと一致しなくなります。原問の認証エラーは暗号を解けないからではなく認証対象が変わるためです。",
+          "id": "ah-1",
+          "format": "読む",
+          "theme": "改変を検出する仕組みとNATの衝突",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "AH付きパケットで途中の送信元IPを書き換えると？",
+          "choices": [
+            {
+              "text": "AHが自動的に全NATを信頼する",
+              "explain": "NATだから認証を省く仕組みではありません。"
+            },
+            {
+              "text": "認証対象が変わり照合に失敗する",
+              "ok": true,
+              "explain": "受信側が計算する値が元の認証データと一致しません。"
+            }
+          ],
+          "id": "ah-2",
+          "format": "選択",
+          "theme": "改変を検出する仕組みとNATの衝突",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "『暗号化されたのでNATが読めない』がAHの答えにならない理由は？",
+          "choices": [
+            {
+              "text": "ここでの問題はIPヘッダの認証と改変の不一致だから",
+              "ok": true,
+              "explain": "暗号化と認証を区別します。"
+            },
+            {
+              "text": "AHはアドレスを一切認証しないから",
+              "explain": "IPヘッダの認証対象にIPアドレスが含まれます。"
+            }
+          ],
+          "id": "ah-3",
+          "format": "選択",
+          "theme": "改変を検出する仕組みとNATの衝突",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "原因と結果をつなぐ",
+          "template": "AHでは{a}が認証対象なので、NATによる{b}で認証データが計算値と一致しなくなる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "IPヘッダのアドレス",
+                  "ok": true,
+                  "explain": "変更される欄が認証対象にあることが理由です。"
+                },
+                {
+                  "text": "Ethernetの宛先MACだけ",
+                  "explain": "AHの原問の問題箇所ではありません。"
+                }
+              ],
+              "why": "変更される欄が認証対象にあることが理由です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "IPアドレスの書換え",
+                  "ok": true,
+                  "explain": "認証する内容が途中で変わります。"
+                },
+                {
+                  "text": "ケーブル長の変化",
+                  "explain": "認証対象データの改変ではありません。"
+                }
+              ],
+              "why": "認証する内容が途中で変わります。"
+            }
+          ],
+          "id": "ah-4",
+          "format": "穴埋め",
+          "theme": "改変を検出する仕組みとNATの衝突",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "認証エラーまでの流れ",
+          "lead": "送信側、途中、受信側の順です。",
+          "lines": [
+            {
+              "code": "送信側がIPアドレスを含む対象から認証データを作る"
+            },
+            {
+              "code": "NATがIPアドレスを書き換える"
+            },
+            {
+              "code": "受信側が書換え後の対象から計算する"
+            },
+            {
+              "code": "認証データと計算結果が一致しない"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "改変検出として正常に働いた結果、NAT経路で問題になります。",
+          "ngExplain": "IPヘッダの全ビットが無条件に対象という意味ではなく、アドレスの変更が論点です。",
+          "id": "ah-5",
+          "format": "並べ替え",
+          "theme": "改変を検出する仕組みとNATの衝突",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：アドレスが全く変換されない経路",
+          "choices": [
+            {
+              "text": "AHは経路に関係なく必ず認証失敗する",
+              "explain": "対象が変わらなければこの不一致は起きません。"
+            },
+            {
+              "text": "少なくともNATのIP書換えによるこの原因はない",
+              "ok": true,
+              "explain": "ほかの原因での失敗まで否定はしません。"
+            }
+          ],
+          "id": "ah-6",
+          "format": "選択",
+          "theme": "改変を検出する仕組みとNATの衝突",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "esp",
+      "title": "暗号の外にポート番号を置く",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "書き換えたい欄が見えない",
+          "body": "ESP（Encapsulating Security Payload）はデータを暗号化して保護します。元のTCP/UDPヘッダが暗号化されているためNATはそのポートを読めず、外側のESPヘッダにもTCP/UDPのようなポート欄がありません。原問で必要なポート変換のため、新しいUDPヘッダをESPの外へ追加するのがNATトラバーサルです。",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "元のESP",
+                "parts": [
+                  {
+                    "t": "IP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "ESP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "暗号化されたTCP/UDPとデータ",
+                    "w": 4,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "UDPで包んだESP",
+                "parts": [
+                  {
+                    "t": "IP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "新UDP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "ESP",
+                    "w": 1,
+                    "role": "header"
+                  },
+                  {
+                    "t": "暗号化部分",
+                    "w": 4,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：外に追加したUDPポートを変換できる。幅は模式的。"
+          },
+          "id": "esp-1",
+          "format": "読む",
+          "theme": "暗号の外にポート番号を置く",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "元のTCP/UDPポートをそのままNATで書き換えられない理由は？",
+          "choices": [
+            {
+              "text": "TCPにはポート番号自体がない",
+              "explain": "TCPにもUDPにもポート欄はあります。"
+            },
+            {
+              "text": "暗号化範囲の内側で読めない",
+              "ok": true,
+              "explain": "元のトランスポートヘッダも保護されています。"
+            }
+          ],
+          "id": "esp-2",
+          "format": "選択",
+          "theme": "暗号の外にポート番号を置く",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "ESPヘッダだけを探しても通常のポート変換ができない理由は？",
+          "choices": [
+            {
+              "text": "ESPヘッダにポート番号の欄がない",
+              "ok": true,
+              "explain": "TCP/UDPのような欄を持たないためです。"
+            },
+            {
+              "text": "ESPのポート番号が常に0だから",
+              "explain": "0という値ではなく欄そのものがありません。"
+            }
+          ],
+          "id": "esp-3",
+          "format": "選択",
+          "theme": "暗号の外にポート番号を置く",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "二つの境界を示す",
+          "template": "元のTCP/UDPヘッダは{a}され、ESPヘッダには{b}がない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "暗号化",
+                  "ok": true,
+                  "explain": "元のポートをNATから見えなくします。"
+                },
+                {
+                  "text": "平文で公開",
+                  "explain": "原問の暗号化範囲と異なります。"
+                }
+              ],
+              "why": "元のポートをNATから見えなくします。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "ポート番号",
+                  "ok": true,
+                  "explain": "通常のポート変換に使う欄がありません。"
+                },
+                {
+                  "text": "全ての識別情報",
+                  "explain": "ESPにも識別情報はありますがTCP/UDPポートではありません。"
+                }
+              ],
+              "why": "通常のポート変換に使う欄がありません。"
+            }
+          ],
+          "id": "esp-4",
+          "format": "穴埋め",
+          "theme": "暗号の外にポート番号を置く",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "NATが使える欄を追加する",
+          "lead": "暗号化部分を壊さずに通過させます。",
+          "lines": [
+            {
+              "code": "ESPの内部のポートは変換できないと確認する"
+            },
+            {
+              "code": "ESPの外側を新しいUDPヘッダで包む"
+            },
+            {
+              "code": "NATが外側UDPのポートを変換する"
+            },
+            {
+              "code": "受信側が外側UDPを外してESPを処理する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "暗号化済みの元のポートを書き換える解決ではありません。",
+          "ngExplain": "ESP単独が全ての種類のNATで絶対に通過不能と一般化せず、本問のポート変換を伴う共有を考えます。",
+          "id": "esp-5",
+          "format": "並べ替え",
+          "theme": "暗号の外にポート番号を置く",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：暗号化された内側だけを変更し認証データはそのまま",
+          "choices": [
+            {
+              "text": "内部は自由に変えても暗号の保護は常に保たれる",
+              "explain": "保護対象の改変を勝手に受け入れる仕組みではありません。"
+            },
+            {
+              "text": "完全性の照合等が壊れ正常処理できないおそれがある",
+              "ok": true,
+              "explain": "外側に変換用の欄を用意する理由です。"
+            }
+          ],
+          "id": "esp-6",
+          "format": "選択",
+          "theme": "暗号の外にポート番号を置く",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "nat-t",
+      "title": "受信側で変換後の送信元ポートを許す",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "宛先サービスと送り手のポート",
+          "body": "IKE（Internet Key Exchange）はIPsecの鍵交換を行い、原問ではISAKMP（Internet Security Association and Key Management Protocol）メッセージを使います。NATトラバーサルでは500から4500への切替を行いますが、途中のNATが送信元ポートをさらに別番号へ変える場合があります。受信側で送信元を500・4500だけに制限すると正当な交渉まで落とします。",
+          "id": "nat-t-1",
+          "format": "読む",
+          "theme": "受信側で変換後の送信元ポートを許す",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用：送信元4500がNATで62000へ、宛先4500は維持。受信側が見る送信元は？",
+          "choices": [
+            {
+              "text": "4500",
+              "explain": "NATの手前の値をそのまま見るわけではありません。"
+            },
+            {
+              "text": "62000",
+              "ok": true,
+              "explain": "変換後の値が外から見える番号です。"
+            }
+          ],
+          "id": "nat-t-2",
+          "format": "選択",
+          "theme": "受信側で変換後の送信元ポートを許す",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "送信元ポート4500だけを許可する規則が失敗する理由は？",
+          "choices": [
+            {
+              "text": "正当なISAKMPでも送信元番号が変換されるため",
+              "ok": true,
+              "explain": "相手サービスの宛先番号と送信元の変換を分けます。"
+            },
+            {
+              "text": "宛先も全ての番号へ自由に変わるから",
+              "explain": "この条件では宛先4500を維持しています。"
+            }
+          ],
+          "id": "nat-t-3",
+          "format": "選択",
+          "theme": "受信側で変換後の送信元ポートを許す",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "必要な変更範囲を限定",
+          "template": "{a}ポート番号が500と4500{b}のISAKMPメッセージも受信できるようにする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "送信元",
+                  "ok": true,
+                  "explain": "NATによって変換される側を許容します。"
+                },
+                {
+                  "text": "宛先",
+                  "explain": "原問で緩和するのは送信元の条件です。"
+                }
+              ],
+              "why": "NATによって変換される側を許容します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "以外",
+                  "ok": true,
+                  "explain": "変換後の任意の送信元番号にも対応します。"
+                },
+                {
+                  "text": "だけ",
+                  "explain": "元の問題を残す制限です。"
+                }
+              ],
+              "why": "変換後の任意の送信元番号にも対応します。"
+            }
+          ],
+          "id": "nat-t-4",
+          "format": "穴埋め",
+          "theme": "受信側で変換後の送信元ポートを許す",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "フィルタ修正の理由",
+          "lead": "変換から誤遮断回避まで。",
+          "lines": [
+            {
+              "code": "NATがISAKMPの送信元ポートを変換する"
+            },
+            {
+              "code": "受信側に500・4500以外の送信元で届く"
+            },
+            {
+              "code": "該当する正当なISAKMPを受け入れられる条件へ変更する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "全通信を無制限に開放する話ではなく、送信元ポート条件の見直しです。",
+          "ngExplain": "宛先ポートも全開放しなければならないと拡大しないでください。",
+          "id": "nat-t-5",
+          "format": "並べ替え",
+          "theme": "受信側で変換後の送信元ポートを許す",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図3確認：練習用変更条件で新UDP送信元が61000となった。暗号化部分を変える必要は？",
+          "choices": [
+            {
+              "text": "内側TCPも61000へ変えなければならない",
+              "explain": "内側は暗号化されておりNATが通常のポート変換をする場所ではありません。"
+            },
+            {
+              "text": "ない。外側UDPの変換後ポートで扱う",
+              "ok": true,
+              "explain": "外部で見える欄を用意したのがNATトラバーサルです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.225,
+            "bottom": 0.454,
+            "label": "IPA原図3：NATトラバーサルの包み方と暗号化範囲"
+          },
+          "id": "nat-t-6",
+          "format": "選択",
+          "theme": "受信側で変換後の送信元ポートを許す",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "multicast",
+      "title": "グループ宛ては普通の送信元学習で覚えない",
+      "targets": [
+        "s1",
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "受信者の集まりへ送る",
+          "body": "マルチキャストは特定の受信者グループへ送る通信です。IPv4では旧クラスDの224.0.0.0～239.255.255.255を使い、NICは対応するマルチキャストMAC（Media Access Control）アドレス宛てを受信します。通常のL2スイッチは送信元MACから学習しますが、マルチキャストMACは送信元にならないため同じ方法では覚えられません。",
+          "id": "multicast-1",
+          "format": "読む",
+          "theme": "グループ宛ては普通の送信元学習で覚えない",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "宛先224.1.1.1を受け取るNICが登録するフレームの宛先は？",
+          "choices": [
+            {
+              "text": "ビデオサーバの送信元MACだけ",
+              "explain": "受信対象グループは宛先MACで選びます。"
+            },
+            {
+              "text": "対応するマルチキャストMACアドレス",
+              "ok": true,
+              "explain": "IPのグループに対応したレイヤ2宛先を受信します。"
+            }
+          ],
+          "id": "multicast-2",
+          "format": "選択",
+          "theme": "グループ宛ては普通の送信元学習で覚えない",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "通常のMAC学習だけではグループの所在を覚えられない理由は？",
+          "choices": [
+            {
+              "text": "送信元から学習するのにグループMACは送信元にならない",
+              "ok": true,
+              "explain": "宛先に現れても通常の送信元学習には使われません。"
+            },
+            {
+              "text": "マルチキャストでは全送信元MACが空になる",
+              "explain": "送信元には送信したノードのユニキャストMACがあります。"
+            }
+          ],
+          "id": "multicast-3",
+          "format": "選択",
+          "theme": "グループ宛ては普通の送信元学習で覚えない",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "空欄d・eと学習の理由",
+          "template": "マルチキャストIPはクラス{a}。NICは{b}宛てを受信する。このMACは{c}にならないので通常学習できない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "D",
+                  "ok": true,
+                  "explain": "224/4の旧クラス名称です。"
+                },
+                {
+                  "text": "C",
+                  "explain": "一般の旧クラスCのネットワークと混同しています。"
+                }
+              ],
+              "why": "224/4の旧クラス名称です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "マルチキャストMACアドレス",
+                  "ok": true,
+                  "explain": "グループIPに対応する宛先です。"
+                },
+                {
+                  "text": "ブロードキャストMACだけ",
+                  "explain": "特定グループ向けと全員向けは異なります。"
+                }
+              ],
+              "why": "グループIPに対応する宛先です。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "送信元アドレス",
+                  "ok": true,
+                  "explain": "通常学習は送信元欄を使います。"
+                },
+                {
+                  "text": "宛先アドレス",
+                  "explain": "グループMACは宛先として使います。"
+                }
+              ],
+              "why": "通常学習は送信元欄を使います。"
+            }
+          ],
+          "id": "multicast-4",
+          "format": "穴埋め",
+          "theme": "グループ宛ては普通の送信元学習で覚えない",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "フラッディングの理由を組む",
+          "lead": "本問の通常のL2スイッチを想定します。",
+          "lines": [
+            {
+              "code": "スイッチは受信フレームの送信元MACを学習する"
+            },
+            {
+              "code": "マルチキャストMACは送信元として現れない"
+            },
+            {
+              "code": "通常学習で転送先ポートを特定できない"
+            },
+            {
+              "code": "受信ポート以外へフラッディングする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "IGMPスヌーピングなどの追加機能がない場合の説明です。",
+          "ngExplain": "宛先を見て転送する処理と、送信元を見て学習する処理は別です。",
+          "id": "multicast-5",
+          "format": "並べ替え",
+          "theme": "グループ宛ては普通の送信元学習で覚えない",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：静的なマルチキャスト転送先を設定した",
+          "choices": [
+            {
+              "text": "マルチキャストは絶対に常時全ポート送信",
+              "explain": "本問の通常動作を全実装へ一般化しすぎです。"
+            },
+            {
+              "text": "通常学習できなくても指定ポートへ絞れる場合がある",
+              "ok": true,
+              "explain": "学習とは別の方法で転送表を用意できます。"
+            }
+          ],
+          "id": "multicast-6",
+          "format": "選択",
+          "theme": "グループ宛ては普通の送信元学習で覚えない",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "igmp",
+      "title": "参加を申告するのは受信したい側",
+      "targets": [
+        "s4-2",
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "送信と参加は別の役割",
+          "body": "IGMP（Internet Group Management Protocol）はホストが同じサブネットのルータへ受信グループへの参加・離脱を知らせる仕組みです。原問のビデオサーバは配信する側なので、その送信のために受信グループへ参加する必要はありません。ルータ間での経路通知はIGMPとは別です。",
+          "id": "igmp-1",
+          "format": "読む",
+          "theme": "参加を申告するのは受信したい側",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "ビデオの配信だけを行うサーバがIGMP参加しない理由は？",
+          "choices": [
+            {
+              "text": "サーバだからマルチキャストを一切使えない",
+              "explain": "サーバは配信の送信者です。"
+            },
+            {
+              "text": "マルチキャストパケットを送信する側だから",
+              "ok": true,
+              "explain": "グループへの参加は受信者としての通知です。"
+            }
+          ],
+          "id": "igmp-2",
+          "format": "選択",
+          "theme": "参加を申告するのは受信したい側",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "受信者のjoinを知らせる直接の相手は？",
+          "choices": [
+            {
+              "text": "同じサブネットのルータ",
+              "ok": true,
+              "explain": "配下に受信者がいると知らせます。"
+            },
+            {
+              "text": "必ず遠くのビデオサーバ",
+              "explain": "IGMPで送信サーバへ直接購読要求を出す仕組みではありません。"
+            }
+          ],
+          "id": "igmp-3",
+          "format": "選択",
+          "theme": "参加を申告するのは受信したい側",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "通信の役割を言葉にする",
+          "template": "原問のビデオサーバは{a}側なので、この配信のためのIGMP参加は不要。受信者は{b}へ参加を知らせる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "送信する",
+                  "ok": true,
+                  "explain": "受信するための参加と区別します。"
+                },
+                {
+                  "text": "受信だけする",
+                  "explain": "原問では配信元です。"
+                }
+              ],
+              "why": "受信するための参加と区別します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "同一サブネットのルータ",
+                  "ok": true,
+                  "explain": "近隣ルータに受信グループを通知します。"
+                },
+                {
+                  "text": "DNSサーバ",
+                  "explain": "名前解決の要求ではありません。"
+                }
+              ],
+              "why": "近隣ルータに受信グループを通知します。"
+            }
+          ],
+          "id": "igmp-4",
+          "format": "穴埋め",
+          "theme": "参加を申告するのは受信したい側",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "参加からデータ受信まで",
+          "lead": "原問でPCが参加する場合です。",
+          "lines": [
+            {
+              "code": "PCがグループへの受信参加を決める"
+            },
+            {
+              "code": "PCが近隣ルータへIGMP joinを送る"
+            },
+            {
+              "code": "ルータが配下のグループの存在を把握する"
+            },
+            {
+              "code": "グループ宛てデータが配下へ転送される"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "送信者が受信者と同じ参加処理をしなければ配信できないわけではありません。",
+          "ngExplain": "ルータ間のマルチキャスト経路制御をIGMP joinそのものと混同しないでください。",
+          "id": "igmp-5",
+          "format": "並べ替え",
+          "theme": "参加を申告するのは受信したい側",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：同じビデオサーバが別の配信を受信する役割も持つ",
+          "choices": [
+            {
+              "text": "サーバという名前なら受信参加は常に不要",
+              "explain": "原問で不要なのは送信だけという条件によります。"
+            },
+            {
+              "text": "受信したいグループについて参加が必要になる",
+              "ok": true,
+              "explain": "機器名ではなく送受信の役割で判断します。"
+            }
+          ],
+          "id": "igmp-6",
+          "format": "選択",
+          "theme": "参加を申告するのは受信したい側",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "snooping",
+      "title": "グループのMACとポート集合を作る",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "参加通知で転送先を補う",
+          "body": "IGMPスヌーピングはスイッチが参加・離脱通知を読み、グループの受信ポートを管理する機能です。IPv4マルチキャストMACは01-00-5eにグループIPの下位23ビットを付けます。原問は未参加から①PC1参加、②PC3参加、③PC1離脱と進み、指定された受信ポート集合を更新します。",
+          "fig": {
+            "kind": "bits",
+            "cells": [
+              {
+                "top": "224.1.1.1",
+                "steps": [
+                  "下位23ビット",
+                  "01-01-01"
+                ]
+              },
+              {
+                "top": "固定部分",
+                "steps": [
+                  "01-00-5e",
+                  "後ろへ下位23ビットを付加"
+                ]
+              }
+            ],
+            "total": "01-00-5e-01-01-01",
+            "caption": "説明用：IP下位23ビットをMACへ対応"
+          },
+          "id": "snooping-1",
+          "format": "読む",
+          "theme": "グループのMACとポート集合を作る",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "練習用：p1が参加済みでp3が新規参加。受信ポート集合は？",
+          "choices": [
+            {
+              "text": "p3だけ",
+              "explain": "新規参加で既存参加者を消してはいけません。"
+            },
+            {
+              "text": "p1とp3",
+              "ok": true,
+              "explain": "既存の参加者を残して新しい参加者を足します。"
+            }
+          ],
+          "id": "snooping-2",
+          "format": "選択",
+          "theme": "グループのMACとポート集合を作る",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "その後p1が離脱してもp3へ送り続ける理由は？",
+          "choices": [
+            {
+              "text": "グループ参加はポートごとに残るから",
+              "ok": true,
+              "explain": "一人の離脱は全グループの解散ではありません。"
+            },
+            {
+              "text": "leaveは全て無視するから",
+              "explain": "原問では離脱したp1を除きます。"
+            }
+          ],
+          "id": "snooping-3",
+          "format": "選択",
+          "theme": "グループのMACとポート集合を作る",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "原問のMACと三状態",
+          "template": "ア={a}。イは①後{b}、②後{c}、③後{d}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "01-00-5e-01-01-01",
+                  "ok": true,
+                  "explain": "224.1.1.1の下位23ビットに対応します。"
+                },
+                {
+                  "text": "01-00-5e-00-00-02",
+                  "explain": "leaveの宛先224.0.0.2に対応し、受信グループのMACではありません。"
+                }
+              ],
+              "why": "224.1.1.1の下位23ビットに対応します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "p1",
+                  "ok": true,
+                  "explain": "最初はPC1だけが参加します。"
+                },
+                {
+                  "text": "p1,p3",
+                  "explain": "PC3は②まで参加していません。"
+                }
+              ],
+              "why": "最初はPC1だけが参加します。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "p1,p3",
+                  "ok": true,
+                  "explain": "PC1を残しPC3を追加します。"
+                },
+                {
+                  "text": "p3",
+                  "explain": "PC1はまだ離脱していません。"
+                }
+              ],
+              "why": "PC1を残しPC3を追加します。"
+            },
+            {
+              "key": "d",
+              "label": "空欄4",
+              "choices": [
+                {
+                  "text": "p3",
+                  "ok": true,
+                  "explain": "PC1の離脱後もPC3は残ります。"
+                },
+                {
+                  "text": "なし",
+                  "explain": "PC3を消すイベントはありません。"
+                }
+              ],
+              "why": "PC1の離脱後もPC3は残ります。"
+            }
+          ],
+          "id": "snooping-4",
+          "format": "穴埋め",
+          "theme": "グループのMACとポート集合を作る",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "原問の三つの通知を状態にする",
+          "lead": "問題の簡略化された参加・離脱動作に従います。",
+          "lines": [
+            {
+              "code": "未参加の空集合から始める"
+            },
+            {
+              "code": "①joinでp1を追加する"
+            },
+            {
+              "code": "②joinでp3を追加する"
+            },
+            {
+              "code": "③leaveでp1を除く"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "表2の対象グループの受信ポートを答えます。ルータ向けポートや実装固有のleave確認動作はこの表に追加しません。",
+          "ngExplain": "leaveフレームの宛先MACで対象グループの表を置き換えないでください。",
+          "id": "snooping-5",
+          "format": "並べ替え",
+          "theme": "グループのMACとポート集合を作る",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図5確認：練習用変更条件で③の離脱者がPC3だったら最後の受信ポートは？",
+          "intro": "練習用の条件：PC1はp1、PC3はp3に接続。①でPC1、②でPC3が参加した後、③の離脱者だけをPC3へ変更します。",
+          "choices": [
+            {
+              "text": "p3",
+              "explain": "原問の答えをそのまま再利用せず、離脱したポートを見ます。"
+            },
+            {
+              "text": "p1",
+              "ok": true,
+              "explain": "p1,p3からPC3側のp3を除きます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 18,
+            "top": 0.49,
+            "bottom": 0.69,
+            "label": "IPA原図5：PCとポートの配置、join/leaveの矢印。下のMAC表は含めない"
+          },
+          "id": "snooping-6",
+          "format": "選択",
+          "theme": "グループのMACとポート集合を作る",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "vni",
+      "title": "IP網の上に論理LANを増やす",
+      "targets": [
+        "s5-1"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "運ぶ封筒と中身のLANを分ける",
+          "body": "VXLAN（Virtual eXtensible Local Area Network）はEthernetフレームをUDP/IPで包んでレイヤ3網を越えて運ぶ仕組みです。VNI（VXLAN Network Identifier）は24ビットなので、2の24乗という膨大な数の論理セグメントを識別できます。原問のVLAN（Virtual LAN）数4,094という制約を緩和する理由です。",
+          "fig": {
+            "kind": "header",
+            "rows": [
+              {
+                "fields": [
+                  {
+                    "t": "Flags",
+                    "bits": 8
+                  },
+                  {
+                    "t": "予約",
+                    "bits": 24
+                  }
+                ]
+              },
+              {
+                "fields": [
+                  {
+                    "t": "VNI",
+                    "bits": 24,
+                    "hi": true
+                  },
+                  {
+                    "t": "予約",
+                    "bits": 8
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：VNIは24ビット"
+          },
+          "id": "vni-1",
+          "format": "読む",
+          "theme": "IP網の上に論理LANを増やす",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "24ビットで識別できる値の組合せの式は？",
+          "choices": [
+            {
+              "text": "24×2",
+              "explain": "ビット数に比例するのではなく組合せが指数で増えます。"
+            },
+            {
+              "text": "2の24乗",
+              "ok": true,
+              "explain": "各ビットが0か1なので2を24回掛けます。"
+            }
+          ],
+          "id": "vni-2",
+          "format": "選択",
+          "theme": "IP網の上に論理LANを増やす",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "VLANより多くの論理網を扱える根拠は？",
+          "choices": [
+            {
+              "text": "24ビットのVNIで多数のセグメントを区別できる",
+              "ok": true,
+              "explain": "識別子の数が論理分離の拡張性を支えます。"
+            },
+            {
+              "text": "物理LANケーブルが24本必須だから",
+              "explain": "識別子の長さとケーブル本数は無関係です。"
+            }
+          ],
+          "id": "vni-3",
+          "format": "選択",
+          "theme": "IP網の上に論理LANを増やす",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "理由を数量と意味で書く",
+          "template": "VNIは{a}ビットで、{b}のVXLANセグメントを識別できる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "24",
+                  "ok": true,
+                  "explain": "VXLANネットワーク識別子の幅です。"
+                },
+                {
+                  "text": "12",
+                  "explain": "VLAN IDの幅と混同しています。"
+                }
+              ],
+              "why": "VXLANネットワーク識別子の幅です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "2の24乗",
+                  "ok": true,
+                  "explain": "膨大な数の論理セグメントを構成できる理由です。"
+                },
+                {
+                  "text": "24個だけ",
+                  "explain": "ビット数を値の個数と誤解しています。"
+                }
+              ],
+              "why": "膨大な数の論理セグメントを構成できる理由です。"
+            }
+          ],
+          "id": "vni-4",
+          "format": "穴埋め",
+          "theme": "IP網の上に論理LANを増やす",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "VMを論理網に所属させる",
+          "lead": "VMはVirtual Machine、仮想マシンです。",
+          "lines": [
+            {
+              "code": "顧客の論理網へVNIを割り当てる"
+            },
+            {
+              "code": "同じ論理網のVMを同じVNIに対応させる"
+            },
+            {
+              "code": "元フレームをVXLANで包む"
+            },
+            {
+              "code": "外側IPで物理ネットワークを越えて運ぶ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "内側LANと外側のIP経路が分離されています。",
+          "ngExplain": "VNIが増えるだけで物理ネットワークの帯域が無限になるわけではありません。",
+          "id": "vni-5",
+          "format": "並べ替え",
+          "theme": "IP網の上に論理LANを増やす",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：識別子が仮に8ビットしかなかったら組合せは？",
+          "choices": [
+            {
+              "text": "16",
+              "explain": "8×2では二進数の組合せを数えられません。"
+            },
+            {
+              "text": "256",
+              "ok": true,
+              "explain": "2の8乗です。原問のVNIを8ビットに変更するという仮想練習です。"
+            }
+          ],
+          "id": "vni-6",
+          "format": "選択",
+          "theme": "IP網の上に論理LANを増やす",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "unknown-destination",
+      "title": "行き先の場所が不明ならグループへ問う",
+      "targets": [
+        "s5-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "内側のVMと外側の終端",
+          "body": "VTEP（VXLAN Tunnel End Point）はVXLANの包みを付け外しする終端です。ARP（Address Resolution Protocol）はIPからMACを調べ、相手の場所が分からない段階では原問の方式でグループ宛てに包んで送ります。外側の送信元はVMでなく送信VTEP、宛先はVNIに対応するグループです。",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "内側",
+                "parts": [
+                  {
+                    "t": "VM2からのARP要求",
+                    "w": 4,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "外側",
+                "parts": [
+                  {
+                    "t": "VTEP1→グループのIP",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "UDP/VXLAN",
+                    "w": 2,
+                    "role": "header"
+                  },
+                  {
+                    "t": "内側フレーム",
+                    "w": 4,
+                    "role": "data"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：内側ARPと外側のグループ宛てIP"
+          },
+          "id": "unknown-destination-1",
+          "format": "読む",
+          "theme": "行き先の場所が不明ならグループへ問う",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "VM3の所在VTEPをまだ知らない。最初から特定VTEPへのユニキャストにできない理由は？",
+          "choices": [
+            {
+              "text": "ARPは絶対にIP網を越えて運べないから",
+              "explain": "VXLANの中身として包めば越えられます。"
+            },
+            {
+              "text": "どのVTEPへ送れば相手VMがいるか不明だから",
+              "ok": true,
+              "explain": "相手の存在場所を探索する段階です。"
+            }
+          ],
+          "id": "unknown-destination-2",
+          "format": "選択",
+          "theme": "行き先の場所が不明ならグループへ問う",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "原問：VM2はVNI5002、グループ224.1.1.2、VTEP1は10.0.0.254。外側送信元は？",
+          "choices": [
+            {
+              "text": "10.0.0.254",
+              "ok": true,
+              "explain": "包みを送るVTEP1のIPです。"
+            },
+            {
+              "text": "10.0.0.15",
+              "explain": "VM2の内側IPを外側へ流用する誤りです。"
+            }
+          ],
+          "id": "unknown-destination-3",
+          "format": "選択",
+          "theme": "行き先の場所が不明ならグループへ問う",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "理由と二つの外側IP",
+          "template": "マルチキャストなのは{a}ため。外側宛先IP={b}、送信元IP={c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "宛先VMの存在場所が不明な",
+                  "ok": true,
+                  "explain": "本問の探索段階の理由です。"
+                },
+                {
+                  "text": "応答先を既に完全に学習した",
+                  "explain": "既知なら不要な配布を減らすユニキャストを検討できます。"
+                }
+              ],
+              "why": "本問の探索段階の理由です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "224.1.1.2",
+                  "ok": true,
+                  "explain": "VNI5002に割り当てたグループです。"
+                },
+                {
+                  "text": "224.1.1.1",
+                  "explain": "VNI5001の別グループです。"
+                },
+                {
+                  "text": "10.0.0.20",
+                  "explain": "VM3の内側IPであって外側探索先ではありません。"
+                }
+              ],
+              "why": "VNI5002に割り当てたグループです。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "10.0.0.254",
+                  "ok": true,
+                  "explain": "送信したVTEP1です。"
+                },
+                {
+                  "text": "10.10.0.254",
+                  "explain": "移動先側のVTEP2であり、この要求の送信者ではありません。"
+                }
+              ],
+              "why": "送信したVTEP1です。"
+            }
+          ],
+          "id": "unknown-destination-4",
+          "format": "穴埋め",
+          "theme": "行き先の場所が不明ならグループへ問う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "移動したVMのMACを探す",
+          "lead": "原問の最初の要求を組みます。",
+          "lines": [
+            {
+              "code": "VM2がVM3のMACを求めてARP要求を出す"
+            },
+            {
+              "code": "VTEP1がVNI5002のフレームとして包む"
+            },
+            {
+              "code": "外側宛先224.1.1.2へ送る"
+            },
+            {
+              "code": "参加中のVTEP2が解除してVM3へ渡す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "外側マルチキャストは移動先が分からない段階の配送です。",
+          "ngExplain": "外側宛先をVM3のIPにしてもVTEPを探索する処理にはなりません。",
+          "id": "unknown-destination-5",
+          "format": "並べ替え",
+          "theme": "行き先の場所が不明ならグループへ問う",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "原図7確認：練習用変更条件でVNI5002のグループだけ224.1.2.2へ変更すると？",
+          "choices": [
+            {
+              "text": "常に224.1.1.2で固定",
+              "explain": "原問の値を条件変更後も固定してはいけません。"
+            },
+            {
+              "text": "要求の外側宛先は224.1.2.2へ変わる",
+              "ok": true,
+              "explain": "対応するグループの設定が決定要素です。送信元VTEP1は変わりません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 21,
+            "top": 0.064,
+            "bottom": 0.455,
+            "label": "IPA原図7：VMの移動先とVTEP・VNIの対応。通信手順図8は含めない"
+          },
+          "id": "unknown-destination-6",
+          "format": "選択",
+          "theme": "行き先の場所が不明ならグループへ問う",
+          "stage": "transfer",
+          "scaffold": 0
+        },
+        {
+          "type": "info",
+          "title": "次は原問を補助なしで解く",
+          "body": "この教材での操作はここまでです。次は既存の原問画面を開き、解説・選択肢・解答例を見ずに、大問全体へ取り組んでください。複数の空欄や指定された回答の個数も自分で確認します。原問の答案は教材の回答とは別に保存されます。",
+          "id": "unicast-reply-original-ready",
+          "format": "読む",
+          "theme": "分かった返送先には一対一で返す",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "join-after-move",
+      "title": "移動先もグループの受信者になる",
+      "targets": [
+        "s5-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "所属が変わったら近隣へ知らせる",
+          "body": "VM3が物理サーバ2へ移ると、VTEP2はVNI5002向けのパケットを受け取る必要があります。原問では224.1.1.2のIGMP joinを隣のL3SW2へ送ります。参加先グループ、送るメッセージ、通知相手の三つを揃えると要求が届く理由を説明できます。",
+          "id": "join-after-move-1",
+          "format": "読む",
+          "theme": "移動先もグループの受信者になる",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "移動したVMのVNIに対応するグループへVTEP2が参加する目的は？",
+          "choices": [
+            {
+              "text": "VM3の内側IPをL3SW2のIPに変えるため",
+              "explain": "参加通知はVMのアドレス変換ではありません。"
+            },
+            {
+              "text": "そのグループ宛ての外側パケットを受け取るため",
+              "ok": true,
+              "explain": "移動先へ探索要求が届けられる条件を作ります。"
+            }
+          ],
+          "id": "join-after-move-2",
+          "format": "選択",
+          "theme": "移動先もグループの受信者になる",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "通知先が遠方のVTEP1ではなくL3SW2なのはなぜ？",
+          "choices": [
+            {
+              "text": "IGMPは同じサブネットのルータへ受信参加を知らせるから",
+              "ok": true,
+              "explain": "近隣のL3スイッチがルータとして扱います。"
+            },
+            {
+              "text": "L3SW2が全VMのアプリを実行するから",
+              "explain": "L3SW2の役割は配送でありVMのアプリ実行ではありません。"
+            }
+          ],
+          "id": "join-after-move-3",
+          "format": "選択",
+          "theme": "移動先もグループの受信者になる",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "三要素のある答案",
+          "template": "VTEP2はグループ{a}の{b}メッセージを{c}へ送る。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "224.1.1.2",
+                  "ok": true,
+                  "explain": "VM3のVNI5002のグループです。"
+                },
+                {
+                  "text": "224.1.1.3",
+                  "explain": "VM4の別VNIのグループです。"
+                }
+              ],
+              "why": "VM3のVNI5002のグループです。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "IGMP join",
+                  "ok": true,
+                  "explain": "受信参加を知らせます。"
+                },
+                {
+                  "text": "IGMP leave",
+                  "explain": "離脱の通知では届くようになりません。"
+                }
+              ],
+              "why": "受信参加を知らせます。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "L3SW2",
+                  "ok": true,
+                  "explain": "VTEP2に接続する近隣ルータです。"
+                },
+                {
+                  "text": "L3SW1",
+                  "explain": "VTEP1側でありVTEP2の近隣ではありません。"
+                }
+              ],
+              "why": "VTEP2に接続する近隣ルータです。"
+            }
+          ],
+          "id": "join-after-move-4",
+          "format": "穴埋め",
+          "theme": "移動先もグループの受信者になる",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "移動から探索要求の到達へ",
+          "lead": "原問の構成で時系列を並べてください。",
+          "lines": [
+            {
+              "code": "VTEP2がVM3の移動を認識する"
+            },
+            {
+              "code": "VNI5002のグループ224.1.1.2を確認する"
+            },
+            {
+              "code": "L3SW2へそのグループのIGMP joinを送る"
+            },
+            {
+              "code": "同グループの要求がVTEP2へ届くようになる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "単に『参加する』では通知先とグループが不足します。",
+          "ngExplain": "VM3へ直接IGMPを送る話ではありません。",
+          "id": "join-after-move-5",
+          "format": "並べ替え",
+          "theme": "移動先もグループの受信者になる",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：別VNI5003のVMが移動、対応グループは224.1.1.3",
+          "choices": [
+            {
+              "text": "移動するVMに関係なく224.1.1.2へ参加",
+              "explain": "VNIごとのグループ対応を無視しています。"
+            },
+            {
+              "text": "L3SW2へ224.1.1.3のIGMP joinを送る",
+              "ok": true,
+              "explain": "参加先は受け入れるVMのVNIによって決まります。"
+            }
+          ],
+          "id": "join-after-move-6",
+          "format": "選択",
+          "theme": "移動先もグループの受信者になる",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    },
+    {
+      "id": "unicast-reply",
+      "title": "分かった返送先には一対一で返す",
+      "targets": [
+        "s5-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "全員へ毎回配らない",
+          "body": "VTEP2は届いた要求の外側送信元からVTEP1を把握できます。原問ではVM3のARP応答を包み、VTEP2からVTEP1へユニキャストで返します。全通信をマルチキャストにすると不要な複製が広がり、L3SWやネットワークの負荷が増えます。",
+          "id": "unicast-reply-1",
+          "format": "読む",
+          "theme": "分かった返送先には一対一で返す",
+          "stage": "concept",
+          "scaffold": 5
+        },
+        {
+          "type": "quiz",
+          "title": "要求が10.0.0.254から来た。応答側VTEP2が返送先を指定できる理由は？",
+          "choices": [
+            {
+              "text": "全てのVMが同じMACだから",
+              "explain": "VMごとのMACは別で、その仮定はありません。"
+            },
+            {
+              "text": "要求の外側送信元がVTEP1だと分かったから",
+              "ok": true,
+              "explain": "最初の探索時と違い、応答先が既知です。"
+            }
+          ],
+          "id": "unicast-reply-2",
+          "format": "選択",
+          "theme": "分かった返送先には一対一で返す",
+          "stage": "check",
+          "scaffold": 4
+        },
+        {
+          "type": "quiz",
+          "title": "規模が大きい網で全VTEP間通信をマルチキャストにすると？",
+          "choices": [
+            {
+              "text": "不要な転送が増え、L3SWとネットワークの負荷が高まる",
+              "ok": true,
+              "explain": "関係のない受信先へも複製を運ぶ負担が増えます。"
+            },
+            {
+              "text": "宛先の数が増えても転送量は絶対不変",
+              "explain": "ネットワーク内では分岐に応じた複製が必要です。"
+            }
+          ],
+          "id": "unicast-reply-3",
+          "format": "選択",
+          "theme": "分かった返送先には一対一で返す",
+          "stage": "reason",
+          "scaffold": 3
+        },
+        {
+          "type": "blank",
+          "title": "問題点と応答の外側IP",
+          "template": "全マルチキャストでは{a}。原問の応答は宛先IP={b}、送信元IP={c}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄1",
+              "choices": [
+                {
+                  "text": "不要な転送でL3SWや網の負荷が増える",
+                  "ok": true,
+                  "explain": "規模とともに顕在化する影響です。"
+                },
+                {
+                  "text": "必ずIPの認証データが壊れる",
+                  "explain": "AHとNATの問題とは異なります。"
+                }
+              ],
+              "why": "規模とともに顕在化する影響です。"
+            },
+            {
+              "key": "b",
+              "label": "空欄2",
+              "choices": [
+                {
+                  "text": "10.0.0.254",
+                  "ok": true,
+                  "explain": "要求元VTEP1へ戻します。"
+                },
+                {
+                  "text": "224.1.1.2",
+                  "explain": "応答はグループへ配るのでなく既知のVTEPへ返します。"
+                },
+                {
+                  "text": "10.0.0.15",
+                  "explain": "VM2の内側IPではありません。"
+                }
+              ],
+              "why": "要求元VTEP1へ戻します。"
+            },
+            {
+              "key": "c",
+              "label": "空欄3",
+              "choices": [
+                {
+                  "text": "10.10.0.254",
+                  "ok": true,
+                  "explain": "応答を包むVTEP2のIPです。"
+                },
+                {
+                  "text": "10.0.0.20",
+                  "explain": "VM3の内側IPと外側送信元は別です。"
+                }
+              ],
+              "why": "応答を包むVTEP2のIPです。"
+            }
+          ],
+          "id": "unicast-reply-4",
+          "format": "穴埋め",
+          "theme": "分かった返送先には一対一で返す",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "parsons",
+          "title": "既知の相手へ返す流れ",
+          "lead": "VM3からVM2へのARP応答です。",
+          "lines": [
+            {
+              "code": "VM3がARP応答を出す"
+            },
+            {
+              "code": "VTEP2が送信元10.10.0.254で包む"
+            },
+            {
+              "code": "宛先10.0.0.254のVTEP1へユニキャストで送る"
+            },
+            {
+              "code": "VTEP1が解除してVM2へARP応答を渡す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "内側はVM間、外側はVTEP間の通信です。",
+          "ngExplain": "最初の要求に使ったマルチキャスト宛先を応答にもそのまま流用しないでください。",
+          "id": "unicast-reply-5",
+          "format": "並べ替え",
+          "theme": "分かった返送先には一対一で返す",
+          "stage": "assemble",
+          "scaffold": 2
+        },
+        {
+          "type": "quiz",
+          "title": "練習用変更条件：要求元のVTEP1が10.0.1.254へ変わり、他の条件は同じ",
+          "choices": [
+            {
+              "text": "外側宛先10.0.0.254、送信元10.0.0.20",
+              "explain": "古い要求元と内側VMのIPを使ってしまっています。"
+            },
+            {
+              "text": "外側宛先10.0.1.254、送信元10.10.0.254",
+              "ok": true,
+              "explain": "返送先だけを新しい要求元へ変えます。"
+            }
+          ],
+          "id": "unicast-reply-6",
+          "format": "選択",
+          "theme": "分かった返送先には一対一で返す",
+          "stage": "transfer",
+          "scaffold": 0
+        }
+      ]
+    }
+  ]
+}

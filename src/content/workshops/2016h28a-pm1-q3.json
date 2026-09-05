@@ -1,0 +1,1490 @@
+{
+  "examKey": "2016h28a/pm1/3",
+  "title": "メールの箱を失わず新サーバへ移る",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000g6fw-att/2016h28a_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "dns",
+      "title": "名前の台帳を複製する",
+      "targets": [
+        "s1-1",
+        "s1-2",
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "dns-1",
+          "format": "読む",
+          "theme": "名前の台帳を複製する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "通知と台帳のコピーは別",
+          "body": "DNS（Domain Name System）は名前に対応する情報を管理します。原問のDNS1は原本を持つプライマリ、DNS2は社内情報だけ、DNS3は公開情報だけを持つセカンダリです。変更を知らせるNOTIFYを受けると、必要なゾーン情報をゾーン転送で複製します。設問1のa・c・更新通知をこの役割から決めます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 210,
+            "nodes": [
+              {
+                "id": "primary",
+                "label": "DNS1 原本",
+                "icon": "server",
+                "x": 60,
+                "y": 100
+              },
+              {
+                "id": "internal",
+                "label": "DNS2 社内用",
+                "icon": "server",
+                "x": 250,
+                "y": 45
+              },
+              {
+                "id": "external",
+                "label": "DNS3 公開用",
+                "icon": "server",
+                "x": 250,
+                "y": 155
+              }
+            ],
+            "links": [
+              {
+                "from": "primary",
+                "to": "internal",
+                "label": "社内ゾーン同期"
+              },
+              {
+                "from": "primary",
+                "to": "external",
+                "label": "公開ゾーン同期"
+              }
+            ],
+            "caption": "説明用：通知後に必要なゾーン情報を転送"
+          }
+        },
+        {
+          "id": "dns-2",
+          "format": "選択",
+          "theme": "名前の台帳を複製する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "ゾーン情報そのものを複製する処理は？",
+          "choices": [
+            {
+              "text": "SMTP",
+              "explain": "Simple Mail Transfer Protocolでありメール転送です。",
+              "ok": false
+            },
+            {
+              "text": "ゾーン転送",
+              "explain": "DNSの管理領域の情報を複製します。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "dns-3",
+          "format": "選択",
+          "theme": "名前の台帳を複製する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "DNS3が公開情報の更新を取りに行く相手がDNS1なのは？",
+          "choices": [
+            {
+              "text": "DNS2の番号が3に近いから",
+              "explain": "番号の大小ではなく保有情報と役割で判断します。",
+              "ok": false
+            },
+            {
+              "text": "DNS1が公開情報の原本を持つプライマリだから",
+              "explain": "DNS2は本問で非公開の社内情報だけを持ちます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "dns-4",
+          "format": "穴埋め",
+          "theme": "名前の台帳を複製する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "台帳の役割を埋める",
+          "template": "更新通知を契機に{a}を行う。DNS3が要求する相手cは{b}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "why": "データを複製する処理です。",
+              "choices": [
+                {
+                  "text": "メール転送",
+                  "explain": "DNSの台帳ではなくメールの配送です。",
+                  "ok": false
+                },
+                {
+                  "text": "ゾーン転送",
+                  "explain": "NOTIFY自体の通知とは別です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "c",
+              "why": "公開ゾーンのプライマリです。",
+              "choices": [
+                {
+                  "text": "DNS2",
+                  "explain": "非公開の社内ゾーンだけを保有します。",
+                  "ok": false
+                },
+                {
+                  "text": "DNS1",
+                  "explain": "原本を保有します。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dns-5",
+          "format": "並べ替え",
+          "theme": "名前の台帳を複製する",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "更新の伝わり方",
+          "lead": "原問の通知を契機とする順序。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "DNS1の公開ゾーン情報を更新する"
+            },
+            {
+              "code": "DNS1がDNS3へ公開ゾーン情報の更新を通知する"
+            },
+            {
+              "code": "DNS3が必要なゾーン情報をDNS1から転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "通知は更新を知らせ、転送は内容を複製します。",
+          "ngExplain": "NOTIFYをゾーンデータ全体のコピーと同一視しないでください。"
+        },
+        {
+          "id": "dns-6",
+          "format": "選択",
+          "theme": "名前の台帳を複製する",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：公開ゾーンの原本をDNS4へ移す。取得先を決める基準は？",
+          "choices": [
+            {
+              "text": "以前と同じDNS1を必ず使う",
+              "explain": "原本の配置が変わったという条件を無視しています。",
+              "ok": false
+            },
+            {
+              "text": "公開ゾーンの新しいプライマリDNS4",
+              "explain": "サーバ番号の暗記ではなく原本の所在に従います。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "rr",
+      "title": "分散が偏る条件を考える",
+      "targets": [
+        "s1-4"
+      ],
+      "steps": [
+        {
+          "id": "rr-1",
+          "format": "読む",
+          "theme": "分散が偏る条件を考える",
+          "scaffold": 5,
+          "type": "info",
+          "title": "DNSはメールごとには引かない",
+          "body": "DNSラウンドロビンは複数の宛先を順序を変えて返す方式です。一度得た宛先をキャッシュしている間は、送信元が同じ宛先を使い続けます。送信元が少数だと選択回数が少なく、偏った選択が長時間続きます。設問1(4)では『偏る条件』と『偏りが続く理由』を分けて答えます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "console",
+            "lines": [
+              "送信元X: DNS応答 -> MSV1を選択",
+              "キャッシュ有効中: 100通ともMSV1へ",
+              "送信元Y: MSV1を選ぶと更に偏る"
+            ],
+            "caption": "説明用：練習用：宛先選択の回数とメール通数は別"
+          }
+        },
+        {
+          "id": "rr-2",
+          "format": "選択",
+          "theme": "分散が偏る条件を考える",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "少数の送信元が大量に送る場合、分散が偏ることはある？",
+          "choices": [
+            {
+              "text": "ない。必ず1通ごとに別サーバを選ぶ",
+              "explain": "DNSのキャッシュ利用を無視しています。",
+              "ok": false
+            },
+            {
+              "text": "ある。宛先を選ぶ主体が少ない",
+              "explain": "メール数が多くてもDNS選択がメールごととは限りません。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "rr-3",
+          "format": "選択",
+          "theme": "分散が偏る条件を考える",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "一度生じた偏りが長く続く理由は？",
+          "choices": [
+            {
+              "text": "SMTPが宛先名を暗号化するから",
+              "explain": "暗号化の有無ではなく宛先情報の再利用が原因です。",
+              "ok": false
+            },
+            {
+              "text": "DNSキャッシュが生存する間は宛先を変えないから",
+              "explain": "この条件で同じサーバへの転送が継続します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "rr-4",
+          "format": "穴埋め",
+          "theme": "分散が偏る条件を考える",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "条件と理由を別々に",
+          "template": "偏りやすいのは送信元が{a}の場合。{b}の間、宛先を変えないので偏りが続く。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "条件",
+              "why": "宛先を選ぶ主体の数を考えます。",
+              "choices": [
+                {
+                  "text": "十分多数で各々独立に選択",
+                  "explain": "少数の場合より選択は均されやすく、原問の条件ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "少数",
+                  "explain": "選択結果が均されにくくなります。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "理由",
+              "why": "名前解決結果の再利用です。",
+              "choices": [
+                {
+                  "text": "メールボックスが空",
+                  "explain": "メールボックスの空き具合をDNSが見て選ぶ方式ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "DNSキャッシュが生存している",
+                  "explain": "以前選んだ宛先を使います。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "rr-5",
+          "format": "並べ替え",
+          "theme": "分散が偏る条件を考える",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "偏りを因果で説明する",
+          "lead": "条件→動作→継続の順。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "送信元が少数で宛先選択が偏る"
+            },
+            {
+              "code": "各送信元がDNSキャッシュの宛先を再利用する"
+            },
+            {
+              "code": "キャッシュが生存する間、同じ宛先への偏りが続く"
+            }
+          ],
+          "shuffled": [
+            0,
+            2,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "発生条件と継続理由の両要素が必要です。",
+          "ngExplain": "『キャッシュがある』だけでは、どの条件で偏りやすいかを説明できません。"
+        },
+        {
+          "id": "rr-6",
+          "format": "選択",
+          "theme": "分散が偏る条件を考える",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：独立した送信元が数千へ増えた。少数の場合に比べて？",
+          "choices": [
+            {
+              "text": "必ず各サーバが同じ通数になる",
+              "explain": "DNSはメール通数や負荷を厳密に配分する装置ではありません。",
+              "ok": false
+            },
+            {
+              "text": "宛先選択が分散しやすいが、厳密な均等は保証しない",
+              "explain": "送信量やキャッシュ利用もあり完全均等とは言えません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "vip",
+      "title": "二つの仮想入口を用意する",
+      "targets": [
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "vip-1",
+          "format": "読む",
+          "theme": "二つの仮想入口を用意する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "仮想アドレスは引き継げる入口",
+          "body": "VRRP（Virtual Router Redundancy Protocol）は仮想IPの担当を切り替える仕組みです。本問は新MSV1と新MSV2で2グループを作り、通常時はVIP1を新MSV1、VIP2を新MSV2が担当します。両サーバが共用ストレージの全メールボックスへアクセスできるので、故障時に引き継げます。",
+          "stage": "concept",
+          "fig": {
+            "kind": "topo",
+            "height": 235,
+            "nodes": [
+              {
+                "id": "pc",
+                "label": "PC",
+                "icon": "pc",
+                "x": 35,
+                "y": 110
+              },
+              {
+                "id": "first",
+                "label": "新MSV1",
+                "sub": "通常VIP1担当",
+                "icon": "server",
+                "x": 145,
+                "y": 50
+              },
+              {
+                "id": "second",
+                "label": "新MSV2",
+                "sub": "通常VIP2担当",
+                "icon": "server",
+                "x": 145,
+                "y": 170
+              },
+              {
+                "id": "storage",
+                "label": "共用MBOX",
+                "icon": "server",
+                "x": 285,
+                "y": 110
+              }
+            ],
+            "links": [
+              {
+                "from": "pc",
+                "to": "first",
+                "label": "VIP1"
+              },
+              {
+                "from": "pc",
+                "to": "second",
+                "label": "VIP2"
+              },
+              {
+                "from": "first",
+                "to": "storage"
+              },
+              {
+                "from": "second",
+                "to": "storage"
+              }
+            ],
+            "caption": "説明用：仮想入口と共用メールボックス"
+          }
+        },
+        {
+          "id": "vip-2",
+          "format": "選択",
+          "theme": "二つの仮想入口を用意する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "通常時の処理を二台へ分ける設定は？",
+          "choices": [
+            {
+              "text": "両グループで常に同じサーバだけ優先する",
+              "explain": "通常時の担当が片側に集まり分散しません。",
+              "ok": false
+            },
+            {
+              "text": "グループごとに優先度の高いサーバを変える",
+              "explain": "VIP1とVIP2の担当を別々にします。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "vip-3",
+          "format": "選択",
+          "theme": "二つの仮想入口を用意する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "故障後、片側が両方のVIPを担当してもメールボックスへアクセスできる理由は？",
+          "choices": [
+            {
+              "text": "VRRPが全メールを自動コピーする",
+              "explain": "VRRPはメールデータ複製の機能ではありません。",
+              "ok": false
+            },
+            {
+              "text": "両サーバから共用ストレージ上の全MBOXを利用できる",
+              "explain": "VIPの切替だけでデータが複製されるわけではありません。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "vip-4",
+          "format": "穴埋め",
+          "theme": "二つの仮想入口を用意する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "原問の担当を決める",
+          "template": "MGWの転送先VIP1は通常{a}が担当し、VIP2は{b}が担当する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "d",
+              "why": "図2では外部メールが新MSV1へ入ります。",
+              "choices": [
+                {
+                  "text": "新MSV2",
+                  "explain": "これはVRRPg2で優先させる側です。",
+                  "ok": false
+                },
+                {
+                  "text": "新MSV1",
+                  "explain": "VRRPg1で優先度を高くします。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "e",
+              "why": "PC負荷をもう一台へ分けます。",
+              "choices": [
+                {
+                  "text": "MGW1",
+                  "explain": "VRRPの二つの新MSVの構成員ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "新MSV2",
+                  "explain": "VRRPg2で優先度を高くします。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "vip-5",
+          "format": "並べ替え",
+          "theme": "二つの仮想入口を用意する",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "新MSV1の故障を追う",
+          "lead": "原問の冗長化を順に。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "正常時は新MSV1がVIP1、新MSV2がVIP2を担当する"
+            },
+            {
+              "code": "新MSV1の故障でVIP1の担当を切り替える"
+            },
+            {
+              "code": "新MSV2がVIP1とVIP2へのアクセスを処理する"
+            },
+            {
+              "code": "新MSV2が共用ストレージのMBOXへアクセスする"
+            }
+          ],
+          "shuffled": [
+            2,
+            3,
+            0,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "入口の引継ぎとデータの共有の両方でサービスを継続します。",
+          "ngExplain": "VIPの切替をメールデータの移動と読み替えないようにします。"
+        },
+        {
+          "id": "vip-6",
+          "format": "選択",
+          "theme": "二つの仮想入口を用意する",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：VIP1の通常担当を新MSV2にしたい。VRRPg1で優先度を高くするのは？",
+          "choices": [
+            {
+              "text": "新MSV1",
+              "explain": "原問の通常担当です。練習では担当を新MSV2へ変える条件です。"
+            },
+            {
+              "text": "新MSV2",
+              "ok": true,
+              "explain": "新たに通常担当としたい側をVRRPg1で優先します。"
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "records",
+      "title": "名前を仮想入口へ結び付ける",
+      "targets": [
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "records-1",
+          "format": "読む",
+          "theme": "名前を仮想入口へ結び付ける",
+          "scaffold": 5,
+          "type": "info",
+          "title": "共通名は実IPではなく仮想IPへ",
+          "body": "Aレコードはホスト名とIPv4アドレスを対応付けます。PCには共通名msvcを設定するので、msvcにVIP1とVIP2の2件を登録します。実IPのIP1・IP2を返すと、故障してもその実IPのサーバを使い続けてしまい、VIP引継ぎの利点を使えません。設問2(2)は両レコードの組合せまで答えます。",
+          "stage": "concept"
+        },
+        {
+          "id": "records-2",
+          "format": "選択",
+          "theme": "名前を仮想入口へ結び付ける",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "PCが設定する共通ホスト名は？",
+          "choices": [
+            {
+              "text": "msv1だけ",
+              "explain": "個別サーバ名であり2台共通の設定ではありません。",
+              "ok": false
+            },
+            {
+              "text": "msvc",
+              "explain": "原問では2台共通のアクセス名です。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "records-3",
+          "format": "選択",
+          "theme": "名前を仮想入口へ結び付ける",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "AレコードをVIP1とVIP2にする理由は？",
+          "choices": [
+            {
+              "text": "VIPならDNSキャッシュが無効になる",
+              "explain": "キャッシュ無効化ではなくアドレスの担当機器が変わります。",
+              "ok": false
+            },
+            {
+              "text": "キャッシュされた入口でも故障時に担当を引き継げる",
+              "explain": "DNS応答更新を待たずVIPの担当を切り替えられます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "records-4",
+          "format": "穴埋め",
+          "theme": "名前を仮想入口へ結び付ける",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "必要な2件を完成",
+          "template": "1件目は msvc → {a}、2件目は msvc → {b}。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "1件目",
+              "why": "VRRPg1の入口です。",
+              "choices": [
+                {
+                  "text": "IP1",
+                  "explain": "新MSV1の実IPでありこの目的ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "VIP1",
+                  "explain": "仮想アドレスで引継ぎ可能です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "2件目",
+              "why": "VRRPg2の入口です。",
+              "choices": [
+                {
+                  "text": "IP2",
+                  "explain": "新MSV2の実IPです。",
+                  "ok": false
+                },
+                {
+                  "text": "VIP2",
+                  "explain": "もう一方の仮想アドレスです。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "records-5",
+          "format": "並べ替え",
+          "theme": "名前を仮想入口へ結び付ける",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "名前からMBOXまで",
+          "lead": "正常時のPCアクセス。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "PCが共通名msvcをDNSで解決する"
+            },
+            {
+              "code": "VIP1またはVIP2を宛先に選ぶ"
+            },
+            {
+              "code": "そのVIPを担当する新MSVへアクセスする"
+            },
+            {
+              "code": "共用ストレージの自分のMBOXを利用する"
+            }
+          ],
+          "shuffled": [
+            1,
+            3,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "名前、仮想入口、担当サーバ、データの順です。",
+          "ngExplain": "DNSがメールボックスのデータそのものを返すわけではありません。"
+        },
+        {
+          "id": "records-6",
+          "format": "選択",
+          "theme": "名前を仮想入口へ結び付ける",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原図の通常転送先である新MSV1が故障した。PCはVIP1をキャッシュ中。期待する動作は？",
+          "choices": [
+            {
+              "text": "必ずDNSのキャッシュ期限まで全面停止する",
+              "explain": "実IPを使う場合とVIPを使う場合を混同しています。",
+              "ok": false
+            },
+            {
+              "text": "新MSV2へ引き継がれたVIP1で利用を続ける",
+              "explain": "宛先IPを変えずに担当を変えるのがVIPの役割です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.535,
+            "bottom": 0.75,
+            "label": "図2の通常時メール転送経路（IPA原図）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fw",
+      "title": "送る向きごとの許可を確認する",
+      "targets": [
+        "s1-1",
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "fw-1",
+          "format": "読む",
+          "theme": "送る向きごとの許可を確認する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "応答の許可と逆向きの新規接続は違う",
+          "body": "FW（Firewall）は通してよい通信を決めます。原問のMGW（中継メールサーバ）と新MSV間では、社内への受信も社外への送信もSMTPが必要です。ステートフル検査で応答が通っても、逆向きに開始する別のSMTP接続まで自動許可されるわけではありません。設問3(1)では機器と双方向の許可を答えます。",
+          "stage": "concept"
+        },
+        {
+          "id": "fw-2",
+          "format": "選択",
+          "theme": "送る向きごとの許可を確認する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "MGWとMSVのメール転送で使うプロトコルbは？",
+          "choices": [
+            {
+              "text": "POP3",
+              "explain": "メールボックスからPCが取得する用途です。",
+              "ok": false
+            },
+            {
+              "text": "SMTP",
+              "explain": "サーバ間のメール転送に使います。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "fw-3",
+          "format": "選択",
+          "theme": "送る向きごとの許可を確認する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "MGW→新MSVだけを新規許可する設定が不十分な理由は？",
+          "choices": [
+            {
+              "text": "SMTPは常に同一接続で全方向のメールを送るから",
+              "explain": "独立に開始されるメール送信を無視しています。",
+              "ok": false
+            },
+            {
+              "text": "新MSVからMGWへ開始する社外送信も必要だから",
+              "explain": "同じ接続の応答と、逆向きの新規接続は別です。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "fw-4",
+          "format": "穴埋め",
+          "theme": "送る向きごとの許可を確認する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "機器名と変更内容",
+          "template": "{a}で、新MSVとMGW間の{b}通信を{c}許可する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "機器",
+              "why": "既存NWの境界制御です。",
+              "choices": [
+                {
+                  "text": "共用ストレージ",
+                  "explain": "メール転送の境界フィルタではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "FW",
+                  "explain": "新MSVを通信許可に加えます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "方式",
+              "why": "サーバ間メール配送です。",
+              "choices": [
+                {
+                  "text": "DNSのみ",
+                  "explain": "名前解決を許可してもメール転送は通りません。",
+                  "ok": false
+                },
+                {
+                  "text": "SMTP",
+                  "explain": "送信と受信の転送に使います。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "c",
+              "label": "方向",
+              "why": "別々に開始する通信を考えます。",
+              "choices": [
+                {
+                  "text": "MGWから新MSVへだけ",
+                  "explain": "新MSV発の社外送信が不足します。",
+                  "ok": false
+                },
+                {
+                  "text": "双方向とも",
+                  "explain": "新MSV発・MGW発の両方を含みます。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "fw-5",
+          "format": "並べ替え",
+          "theme": "送る向きごとの許可を確認する",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "必要な許可を導く",
+          "lead": "業務の向きから設定へ。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "新MSVも社外からメールを受信し社外へ送信する"
+            },
+            {
+              "code": "受信はMGW発、送信は新MSV発のSMTP接続になる"
+            },
+            {
+              "code": "FWで新MSVとMGW間のSMTPを双方向とも許可する"
+            }
+          ],
+          "shuffled": [
+            1,
+            0,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "機器名・両端・プロトコル・方向がそろった答案です。",
+          "ngExplain": "『FWを開ける』だけでは何をどちら向きに通すか不足します。"
+        },
+        {
+          "id": "fw-6",
+          "format": "選択",
+          "theme": "送る向きごとの許可を確認する",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：新MSVからの外向き投稿は通るがMGWの新規接続だけ失敗。見る設定は？",
+          "choices": [
+            {
+              "text": "PCのPOP3受信済みフラグ",
+              "explain": "MGWとサーバ間の接続失敗には直接関係しません。",
+              "ok": false
+            },
+            {
+              "text": "FWのMGW→新MSVのSMTP許可",
+              "explain": "成功している逆向きの通信とは別の開始方向です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "directory",
+      "title": "宛先の箱を名簿で選ぶ",
+      "targets": [
+        "s3-2",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "directory-1",
+          "format": "読む",
+          "theme": "宛先の箱を名簿で選ぶ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "移行途中はメールの箱が混在する",
+          "body": "LDAP（Lightweight Directory Access Protocol）のサーバは、メールアドレスとそのMBOXを持つメールサーバとの対応を保持します。移行済みの人は新MSV、未変更の人は旧MSVに箱があります。新MSVに入ったメールも未変更社員宛てなら旧MSVへ転送しなければなりません。申告後に更新するのはその社員の対応情報です。",
+          "stage": "concept"
+        },
+        {
+          "id": "directory-2",
+          "format": "選択",
+          "theme": "宛先の箱を名簿で選ぶ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "新MSVへ入った未変更社員宛てメールの配送先を決める情報は？",
+          "choices": [
+            {
+              "text": "全員共通のDNS名msvcだけ",
+              "explain": "共通アクセス名は個別MBOXの所在を表しません。",
+              "ok": false
+            },
+            {
+              "text": "LDAPのメールアドレスと収容MSVの対応",
+              "explain": "宛先ごとにどの箱へ入れるか決めます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "directory-3",
+          "format": "選択",
+          "theme": "宛先の箱を名簿で選ぶ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "移行済み社員→未変更社員のメールにLDAPによるルーティングが必要なのは？",
+          "choices": [
+            {
+              "text": "未変更社員にはメールアドレスがないから",
+              "explain": "アドレスは継続利用し、収容サーバが異なります。",
+              "ok": false
+            },
+            {
+              "text": "新MSVで受けても宛先のMBOXが旧MSVにあるから",
+              "explain": "入口のサーバと最終的な箱の所在は一致しない場合があります。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "directory-4",
+          "format": "穴埋め",
+          "theme": "宛先の箱を名簿で選ぶ",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "誰の何を変更するか",
+          "template": "申請した社員の{a}に対応するメールサーバを{b}へ変更する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "検索キー",
+              "why": "人ごとの宛先を特定します。",
+              "choices": [
+                {
+                  "text": "全社のMXレコード",
+                  "explain": "社員単位のMBOX移行情報ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "メールアドレス",
+                  "explain": "LDAPの収容先との対応です。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "新しい値",
+              "why": "新しい箱の所在です。",
+              "choices": [
+                {
+                  "text": "全員分の旧MSV",
+                  "explain": "申請者の移行を反映しません。",
+                  "ok": false
+                },
+                {
+                  "text": "新MSV",
+                  "explain": "以後この社員宛てを新側へ配送します。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "directory-5",
+          "format": "並べ替え",
+          "theme": "宛先の箱を名簿で選ぶ",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "社員単位の移行を組み立てる",
+          "lead": "原問の移行工程。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "社員がPCに新MSVの送受信設定を追加し旧設定も残す"
+            },
+            {
+              "code": "社員が変更したことを申告する"
+            },
+            {
+              "code": "LDAPの申請者メールアドレスに対応する収容先を新MSVへ変える"
+            },
+            {
+              "code": "申請者宛ての新しいメールが新MSVのMBOXへ届く"
+            }
+          ],
+          "shuffled": [
+            0,
+            3,
+            2,
+            1
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "PC設定と配送先対応の変更を両方行います。",
+          "ngExplain": "旧メールの移動・複製は原問では行わないため、過去メールのために旧設定も残します。"
+        },
+        {
+          "id": "directory-6",
+          "format": "選択",
+          "theme": "宛先の箱を名簿で選ぶ",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "練習用変更：PCだけ新設定へ変え、LDAPの対応は旧MSVのまま。新着メールの箱は？",
+          "choices": [
+            {
+              "text": "必ず新MSV",
+              "explain": "PC設定だけではLDAPの収容先情報は更新されません。",
+              "ok": false
+            },
+            {
+              "text": "旧MSV",
+              "explain": "配送はLDAPの対応情報に従うためです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "paths",
+      "title": "混在期間の配送経路をたどる",
+      "targets": [
+        "s3-2",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "paths-1",
+          "format": "読む",
+          "theme": "混在期間の配送経路をたどる",
+          "scaffold": 5,
+          "type": "info",
+          "title": "入口の変更と全員の移行は同時ではない",
+          "body": "開始工程でMGWの転送先は新MSVのVIP1になりますが、全員の箱が直ちに移るわけではありません。外部→未変更社員はMGWから新MSVへ入り、旧MSVへ転送されます。未変更社員→外部ではPCが旧MSVへ送り、そこからMGWへ出ます。設問3(3)は二方向を別々に追います。",
+          "stage": "concept"
+        },
+        {
+          "id": "paths-2",
+          "format": "選択",
+          "theme": "混在期間の配送経路をたどる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "社外から未変更社員宛て。MGWの次に経由する順序は？",
+          "choices": [
+            {
+              "text": "旧MSV → 新MSV",
+              "explain": "入口と未変更社員の箱の所在が逆です。",
+              "ok": false
+            },
+            {
+              "text": "新MSV → 旧MSV",
+              "explain": "入口は切替済みでも箱の所在は旧側なので二段になります。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "paths-3",
+          "format": "選択",
+          "theme": "混在期間の配送経路をたどる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "未変更社員が社外へ送る際、PCの直後が旧MSVなのは？",
+          "choices": [
+            {
+              "text": "社外へのメールは常に新MSV禁止だから",
+              "explain": "移行済み社員は新MSVからも送信できます。",
+              "ok": false
+            },
+            {
+              "text": "その社員はPCの送受信設定をまだ変えていないから",
+              "explain": "受信側のMGW入口変更とは別に、本人の送信設定を見ます。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "paths-4",
+          "format": "穴埋め",
+          "theme": "混在期間の配送経路をたどる",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "原問のA・Bを完成",
+          "template": "社外 → MGW → {a} → 未変更社員の箱。未変更社員PC → {b} → MGW → 社外。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "A",
+              "why": "入口から箱までの経由です。",
+              "choices": [
+                {
+                  "text": "旧MSVのみ",
+                  "explain": "MGWの転送先変更を無視しています。",
+                  "ok": false
+                },
+                {
+                  "text": "新MSV → 旧MSV",
+                  "explain": "入口を新に変えた後でLDAPが旧へ導きます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "B",
+              "why": "PCの未変更の設定です。",
+              "choices": [
+                {
+                  "text": "新MSV → 旧MSV",
+                  "explain": "外部から受信する際の経路と混同しています。",
+                  "ok": false
+                },
+                {
+                  "text": "旧MSV",
+                  "explain": "ここから直接MGWへ送ります。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "paths-5",
+          "format": "並べ替え",
+          "theme": "混在期間の配送経路をたどる",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "外部から未変更社員へ",
+          "lead": "通過順にタップして並べる。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "社外の送信元メールサーバ"
+            },
+            {
+              "code": "MGW"
+            },
+            {
+              "code": "新MSV"
+            },
+            {
+              "code": "旧MSVの未変更社員MBOX"
+            }
+          ],
+          "shuffled": [
+            1,
+            3,
+            0,
+            2
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "LDAPが新側の入口から旧側の箱へつなぎます。",
+          "ngExplain": "新MSVへ来たら全員のメールを新の箱へ入れるのは終了工程の動作です。"
+        },
+        {
+          "id": "paths-6",
+          "format": "選択",
+          "theme": "混在期間の配送経路をたどる",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "原図の移行中NWで、移行済み社員から未変更社員へのメールにも新→旧の転送が要る？",
+          "choices": [
+            {
+              "text": "不要。社内メールはLDAPを使わない",
+              "explain": "原問のメールルーティングは社内宛てにも適用します。",
+              "ok": false
+            },
+            {
+              "text": "要る。送信入口は新側、宛先MBOXは旧側だから",
+              "explain": "社外発だけでなく移行済み社員発も必要な組合せです。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer",
+          "originalExcerpt": {
+            "page": 13,
+            "top": 0.59,
+            "bottom": 0.875,
+            "label": "図3の新旧MSV並行稼働（IPA原図・問題本文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "handoff",
+      "title": "保存済みメールと新着を区別する",
+      "targets": [
+        "s1-3",
+        "s1-4",
+        "s2-1",
+        "s2-2",
+        "s3-1",
+        "s3-2",
+        "s3-3",
+        "s3-4"
+      ],
+      "steps": [
+        {
+          "id": "handoff-1",
+          "format": "読む",
+          "theme": "保存済みメールと新着を区別する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "移行は一つのスイッチではない",
+          "body": "共通名とVIPはサーバ故障に備える仕組み、LDAP対応は社員ごとの新着配送先、旧設定を残すのは旧箱にあるメールを取得するためです。原問では古いメールを移動・複製しません。終了工程ではLDAPルーティングを止めて新側に格納し、後日旧MSVを停止します。これらの時点を混同せず答案を作ります。",
+          "stage": "concept"
+        },
+        {
+          "id": "handoff-2",
+          "format": "選択",
+          "theme": "保存済みメールと新着を区別する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "終了工程で未変更社員の新着メールが読めなくなる条件は？",
+          "choices": [
+            {
+              "text": "VRRPが全メールを削除する",
+              "explain": "VRRPは入口の引継ぎでありメール削除ではありません。",
+              "ok": false
+            },
+            {
+              "text": "新側に格納されるのにPCが旧側だけを見ている",
+              "explain": "メールそのものの未着と、読むサーバの不一致を分けます。",
+              "ok": true
+            }
+          ],
+          "stage": "apply"
+        },
+        {
+          "id": "handoff-3",
+          "format": "選択",
+          "theme": "保存済みメールと新着を区別する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "移行済み社員も旧MSVの設定をしばらく残す理由は？",
+          "choices": [
+            {
+              "text": "LDAPが一切変更されないから",
+              "explain": "申告に基づいて新着配送先は新側へ変更されます。",
+              "ok": false
+            },
+            {
+              "text": "旧MBOXのメールを新MBOXへ移動・複製しないから",
+              "explain": "旧側の過去メールを取り出す経路を残します。",
+              "ok": true
+            }
+          ],
+          "stage": "reason"
+        },
+        {
+          "id": "handoff-4",
+          "format": "穴埋め",
+          "theme": "保存済みメールと新着を区別する",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "設計を短い答案へ",
+          "template": "共通名msvcに{a}を2件登録する。社員申告後はLDAPの{b}を新MSVへ変更する。",
+          "stage": "apply",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "DNSの宛先",
+              "why": "2台の実IPと区別します。",
+              "choices": [
+                {
+                  "text": "IP1とIP2",
+                  "explain": "実IPでは故障時のVIP引継ぎを活用できません。",
+                  "ok": false
+                },
+                {
+                  "text": "VIP1とVIP2",
+                  "explain": "仮想入口の担当を引き継げます。",
+                  "ok": true
+                }
+              ]
+            },
+            {
+              "key": "b",
+              "label": "対応情報",
+              "why": "社員単位の配送先です。",
+              "choices": [
+                {
+                  "text": "DNSの全公開ゾーン",
+                  "explain": "社員のMBOX所在を示すLDAP情報ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "申請者のメールアドレスに対応するサーバ",
+                  "explain": "どの情報の何を変更するかが具体的です。",
+                  "ok": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "handoff-5",
+          "format": "並べ替え",
+          "theme": "保存済みメールと新着を区別する",
+          "scaffold": 1,
+          "type": "parsons",
+          "title": "段階移行の大きな順序",
+          "lead": "原問の時系列を整理する。",
+          "stage": "assemble",
+          "lines": [
+            {
+              "code": "新MSVを追加しFWのSMTP双方向許可とMGW転送先を設定する"
+            },
+            {
+              "code": "社員ごとにPC設定とLDAP対応を新側へ変更する"
+            },
+            {
+              "code": "移行期間終了後にLDAPルーティングを止め新側へ格納する"
+            },
+            {
+              "code": "周知した期間後に旧MSVを停止する"
+            }
+          ],
+          "shuffled": [
+            2,
+            3,
+            1,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "入口切替、個別移行、強制切替、旧環境停止は別時点です。",
+          "ngExplain": "個別移行前に旧MSVを止めると未変更社員のメール利用経路を失います。"
+        },
+        {
+          "id": "handoff-6",
+          "format": "選択",
+          "theme": "保存済みメールと新着を区別する",
+          "scaffold": 0,
+          "type": "quiz",
+          "title": "補助なし確認：移行工程中、社外発の未変更社員宛てが新MSVで滞留。まず確かめる対応情報は？",
+          "choices": [
+            {
+              "text": "PC共通名を実IP1に変更",
+              "explain": "宛先別の箱の所在を直さず、冗長化の入口も変えてしまいます。",
+              "ok": false
+            },
+            {
+              "text": "宛先メールアドレスから旧MSVへのLDAP対応",
+              "explain": "新MSVから未変更社員の箱へ転送する根拠です。",
+              "ok": true
+            },
+            {
+              "text": "公開DNSのNOTIFY停止",
+              "explain": "DNSの台帳更新と宛先別MBOXルーティングは別です。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

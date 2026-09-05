@@ -1,0 +1,1728 @@
+{
+  "examKey": "2022r04h/pm1/3",
+  "title": "チケットで一度の認証を複数サービスへつなぐ",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_qs.pdf",
+    "https://www.rfc-editor.org/rfc/rfc2782",
+    "https://www.rfc-editor.org/rfc/rfc2181",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt80000009sgk-att/2022r04h_nw_pm1_ans.pdf",
+    "https://www.rfc-editor.org/rfc/rfc4120",
+    "https://www.rfc-editor.org/rfc/rfc2181.txt"
+  ],
+  "sections": [
+    {
+      "id": "local",
+      "title": "直接通信に必要なPC設定を選ぶ",
+      "targets": [
+        "s1-1",
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "直接通信に必要なPC設定を選ぶ",
+          "body": "PC（Personal Computer）は社内サーバへ直接接続し、外部Webにはプロキシ（通信の中継役）を使います。FQDN（Fully Qualified Domain Name）はドメインまで含めた完全なホスト名、DNS（Domain Name System）はその名前をIP（Internet Protocol）アドレスへ解決する仕組みです。プロキシ例外には直接つなぐ業務・営業支援サーバの名前を登録します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "用途",
+              "設定"
+            ],
+            "rows": [
+              [
+                "社内サーバをプロキシから除外",
+                "業務・営業支援サーバのFQDN"
+              ],
+              [
+                "名前解決",
+                "社内DNSサーバのIP"
+              ],
+              [
+                "他ネットワークへの転送",
+                "デフォルトゲートウェイのIP"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "local-1",
+          "format": "読む",
+          "theme": "直接通信に必要なPC設定を選ぶ",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "社内サーバを直接利用するため、プロキシ例外に入れるものはどれか。",
+          "choices": [
+            {
+              "text": "社内DNSの全キャッシュ",
+              "ok": false,
+              "explain": "プロキシ例外の指定対象ではありません。"
+            },
+            {
+              "text": "PCのMACアドレス",
+              "ok": false,
+              "explain": "アクセス先を識別できません。"
+            },
+            {
+              "text": "業務サーバと営業支援サーバのFQDN",
+              "ok": true,
+              "explain": "名前でアクセスする対象を例外にします。"
+            }
+          ],
+          "id": "local-2",
+          "format": "選択",
+          "theme": "直接通信に必要なPC設定を選ぶ",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "PCが外部DNSへの転送を社内DNSに依頼するため必要なのはどれか。",
+          "choices": [
+            {
+              "text": "Webサーバの秘密鍵",
+              "ok": false,
+              "explain": "名前解決先の設定ではありません。"
+            },
+            {
+              "text": "社内DNSサーバのIPアドレス",
+              "ok": true,
+              "explain": "スタブリゾルバの問合せ先です。"
+            },
+            {
+              "text": "外部DNSのMACアドレス",
+              "ok": false,
+              "explain": "PCは社内DNSへ問い合わせる条件です。"
+            }
+          ],
+          "id": "local-3",
+          "format": "選択",
+          "theme": "直接通信に必要なPC設定を選ぶ",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "local-7",
+          "type": "info",
+          "title": "名前解決と経路設定は別の仕事",
+          "body": "DHCP（Dynamic Host Configuration Protocol）は端末へネットワーク設定を配布します。DNSサーバのIPは名前の問合せ先、デフォルトゲートウェイのIPは別サブネットへ送る次ホップです。原問ではPCのIP・サブネットマスクに加え、この二つのIPが必要です。",
+          "format": "読む",
+          "theme": "名前解決と経路設定は別の仕事",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "blank",
+          "title": "DHCPで渡す二つの情報を埋める",
+          "template": "名前解決には{a}、別サブネットへの送信には{b}を使う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "名前解決",
+              "choices": [
+                {
+                  "text": "社内DNSサーバのIPアドレス",
+                  "ok": true,
+                  "explain": "PCの問合せ先です。"
+                },
+                {
+                  "text": "プロキシのパスワード",
+                  "ok": false,
+                  "explain": "DNSの問合せ先にはなりません。"
+                },
+                {
+                  "text": "PC自身のFQDNだけ",
+                  "ok": false,
+                  "explain": "問い合わせるサーバを指定できません。"
+                }
+              ],
+              "why": "PCの問合せ先です。"
+            },
+            {
+              "key": "b",
+              "label": "転送",
+              "choices": [
+                {
+                  "text": "デフォルトゲートウェイのIPアドレス",
+                  "ok": true,
+                  "explain": "直結外宛ての次ホップです。"
+                },
+                {
+                  "text": "DNSサーバのポート番号だけ",
+                  "ok": false,
+                  "explain": "経路の次ホップにはなりません。"
+                },
+                {
+                  "text": "サブネットマスクだけ",
+                  "ok": false,
+                  "explain": "同一ネットワーク判定はできますが転送先がありません。"
+                }
+              ],
+              "why": "直結外宛ての次ホップです。"
+            }
+          ],
+          "id": "local-4",
+          "format": "穴埋め",
+          "theme": "直接通信に必要なPC設定を選ぶ",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "社内サーバへ直接接続する処理を並べる",
+          "lead": "ブラウザはFQDNで業務サーバを開きます。",
+          "lines": [
+            {
+              "code": "FQDNがプロキシ例外に一致する"
+            },
+            {
+              "code": "社内DNSへFQDNを問い合わせる"
+            },
+            {
+              "code": "得たIPが別サブネットならデフォルトゲートウェイへ送る"
+            },
+            {
+              "code": "業務サーバへ直接接続する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "例外、名前解決、経路の順に確認します。",
+          "ngExplain": "プロキシ例外だけでは名前解決と経路設定を代替しません。",
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.08,
+            "bottom": 0.57,
+            "label": "原文：PCのプロキシ・DNS・DHCP設定"
+          },
+          "id": "local-5",
+          "format": "並べ替え",
+          "theme": "直接通信に必要なPC設定を選ぶ",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "社内サーバをIPアドレスで直接指定する運用に変えた。不要になり得るものはどれか。",
+          "choices": [
+            {
+              "text": "宛先サーバの到達経路",
+              "ok": false,
+              "explain": "IP指定は経路を作りません。"
+            },
+            {
+              "text": "その接続のためのDNS名前解決",
+              "ok": true,
+              "explain": "IPを直接使う接続だけなら名前変換は不要です。"
+            },
+            {
+              "text": "別サブネットへのデフォルトゲートウェイ",
+              "ok": false,
+              "explain": "IP指定でも別ネットワークへは転送先が必要です。"
+            }
+          ],
+          "id": "local-6",
+          "format": "選択",
+          "theme": "直接通信に必要なPC設定を選ぶ",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "fw",
+      "title": "通信の役割からFW表を埋める",
+      "targets": [
+        "s1-3",
+        "s1-4"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "通信の役割からFW表を埋める",
+          "body": "FW（Firewall：ファイアウォール）は通信を許可・拒否します。DMZ（Demilitarized Zone）は外部向けサーバ用の分離領域です。原問の外部DNSは公開する名前を管理し、社内DNSからの再帰問合せも受けます。公開Webは外部からHTTPS（HTTP over TLS）を受け、プロキシは内部からのWeb要求を外へ中継します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "通信",
+              "送信元→宛先"
+            ],
+            "rows": [
+              [
+                "外部から名前解決",
+                "インターネット→外部DNS"
+              ],
+              [
+                "外部からHTTPS",
+                "インターネット→公開Web"
+              ],
+              [
+                "プロキシの外向きWeb",
+                "プロキシ→インターネット"
+              ],
+              [
+                "社内DNSの再帰問合せ",
+                "社内DNS→外部DNS"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "fw-1",
+          "format": "読む",
+          "theme": "通信の役割からFW表を埋める",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "fw-7",
+          "type": "info",
+          "title": "FWの行は方向・相手・サービスを読む",
+          "body": "TCP（Transmission Control Protocol）やUDP（User Datagram Protocol）の宛先ポートでサービスを指定します。DNSは53番、原問のHTTPSはTCP 443番、HTTP（Hypertext Transfer Protocol）は80番です。TLS（Transport Layer Security）がHTTPSの通信を保護します。表のanyは、その方向の任意のアドレスという指定です。",
+          "format": "読む",
+          "theme": "FWの行は方向・相手・サービスを読む",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "DNSの通常問合せで表のTCP/53と組にするものはどれか。",
+          "choices": [
+            {
+              "text": "UDP/443",
+              "ok": false,
+              "explain": "DNSの通常ポートは53です。HTTPSでUDPを用いる場合とは区別します。"
+            },
+            {
+              "text": "TCP/88",
+              "ok": false,
+              "explain": "Kerberosのサービスポートです。"
+            },
+            {
+              "text": "UDP/53",
+              "ok": true,
+              "explain": "通常のDNS問合せで使います。大きな応答などではTCPも使います。"
+            }
+          ],
+          "id": "fw-2",
+          "format": "選択",
+          "theme": "通信の役割からFW表を埋める",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "PCセグメントから外部へ直接Web通信を許可するべきか。",
+          "choices": [
+            {
+              "text": "DNS通信も全てプロキシへ送る",
+              "ok": false,
+              "explain": "DNSの問合せ先は社内DNSです。"
+            },
+            {
+              "text": "許可せずプロキシを経由させる",
+              "ok": true,
+              "explain": "原問ではプロキシがWeb通信を中継します。"
+            },
+            {
+              "text": "全宛先のTCP/80を直接許可する",
+              "ok": false,
+              "explain": "プロキシ経由という設計を外れます。"
+            }
+          ],
+          "id": "fw-3",
+          "format": "選択",
+          "theme": "通信の役割からFW表を埋める",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "id": "fw-8",
+          "type": "quiz",
+          "title": "練習用の条件：外部からの名前解決をDMZで受け付ける行。送信元any、宛先は空欄、サービスはTCP/UDP 53。宛先はどれか。",
+          "choices": [
+            {
+              "text": "公開Webサーバ",
+              "ok": false,
+              "explain": "公開Webを利用する行はTCP 443です。"
+            },
+            {
+              "text": "社内DNSサーバ",
+              "ok": false,
+              "explain": "原問では内部LANにあり、外部からの公開用ではありません。"
+            },
+            {
+              "text": "外部DNSサーバ",
+              "ok": true,
+              "explain": "外部向けの名前を管理し、53番で受け付けます。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：外部からの名前解決をDMZで受け付ける行。送信元any、宛先は空欄、サービスはTCP/UDP 53。宛先はどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "id": "fw-9",
+          "type": "quiz",
+          "title": "練習用の条件：社員の外部Web要求は必ずプロキシで中継する。DMZ→インターネット、TCP 80/443の行の送信元と宛先はどれか。",
+          "choices": [
+            {
+              "text": "外部DNSサーバ → 社内DNSサーバ",
+              "ok": false,
+              "explain": "Webの中継ではなく、方向も違います。"
+            },
+            {
+              "text": "プロキシサーバ → any",
+              "ok": true,
+              "explain": "外部の様々なサイトへ、プロキシ自身から接続します。"
+            },
+            {
+              "text": "PCセグメント → any",
+              "ok": false,
+              "explain": "PCはプロキシへ接続し、直接外へ出る設計ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：社員の外部Web要求は必ずプロキシで中継する。DMZ→インターネット、TCP 80/443の行の送信元と宛先はどれか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "表1の役割を埋める",
+          "template": "原表1で、外部からDNSを受けるアは{a}、HTTPSを受けるウは{b}。外向きWebの送信元エは{c}、宛先オは{d}。外部DNSへ再帰問合せする内部の送信元カは{e}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ア",
+              "choices": [
+                {
+                  "text": "外部DNSサーバ",
+                  "ok": true,
+                  "explain": "インターネットからのDNSと内部からの再帰を受けます。"
+                },
+                {
+                  "text": "公開Webサーバ",
+                  "ok": false,
+                  "explain": "DNS問合せの宛先ではありません。"
+                },
+                {
+                  "text": "PCセグメント",
+                  "ok": false,
+                  "explain": "DMZ内の宛先ではありません。"
+                }
+              ],
+              "why": "インターネットからのDNSと内部からの再帰を受けます。"
+            },
+            {
+              "key": "b",
+              "label": "ウ",
+              "choices": [
+                {
+                  "text": "公開Webサーバ",
+                  "ok": true,
+                  "explain": "外部からHTTPSを受けます。"
+                },
+                {
+                  "text": "社内DNSサーバ",
+                  "ok": false,
+                  "explain": "内部LANにあります。"
+                },
+                {
+                  "text": "プロキシサーバ",
+                  "ok": false,
+                  "explain": "外部公開Webの役割ではありません。"
+                }
+              ],
+              "why": "外部からHTTPSを受けます。"
+            },
+            {
+              "key": "c",
+              "label": "エ",
+              "choices": [
+                {
+                  "text": "プロキシサーバ",
+                  "ok": true,
+                  "explain": "外向きWeb通信の送信元です。"
+                },
+                {
+                  "text": "外部DNSサーバ",
+                  "ok": false,
+                  "explain": "Web中継の送信元ではありません。"
+                },
+                {
+                  "text": "公開Webサーバ",
+                  "ok": false,
+                  "explain": "社員のWeb中継をしません。"
+                }
+              ],
+              "why": "外向きWeb通信の送信元です。"
+            },
+            {
+              "key": "d",
+              "label": "オ",
+              "choices": [
+                {
+                  "text": "any",
+                  "ok": true,
+                  "explain": "プロキシは外部の複数サイトへ接続します。"
+                },
+                {
+                  "text": "社内DNSサーバ",
+                  "ok": false,
+                  "explain": "外部Webの宛先ではありません。"
+                },
+                {
+                  "text": "PCセグメント",
+                  "ok": false,
+                  "explain": "DMZから内部への方向になります。"
+                }
+              ],
+              "why": "プロキシは外部の複数サイトへ接続します。"
+            },
+            {
+              "key": "e",
+              "label": "カ",
+              "choices": [
+                {
+                  "text": "社内DNSサーバ",
+                  "ok": true,
+                  "explain": "外部DNSへ再帰問合せを行います。"
+                },
+                {
+                  "text": "公開Webサーバ",
+                  "ok": false,
+                  "explain": "名前解決要求の送信元ではありません。"
+                },
+                {
+                  "text": "any",
+                  "ok": false,
+                  "explain": "原文は社内DNSに限定できます。"
+                }
+              ],
+              "why": "外部DNSへ再帰問合せを行います。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.49,
+            "bottom": 0.91,
+            "label": "原表1：FWで許可する通信"
+          },
+          "id": "fw-4",
+          "format": "穴埋め",
+          "theme": "通信の役割からFW表を埋める",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "プロキシ名の解決から外部Web中継までを並べる",
+          "lead": "練習用の条件：PCはプロキシのFQDNをまだ解決しておらず、社内DNSはそのDMZの名前を外部DNSへ問い合わせます。外部Webサイト名はプロキシ側で解決します。",
+          "lines": [
+            {
+              "code": "PCが社内DNSへプロキシのFQDNを問い合わせる"
+            },
+            {
+              "code": "社内DNSが外部DNSへ問い合わせ、得たプロキシのIPをPCへ返す"
+            },
+            {
+              "code": "PCが解決したプロキシへ外部サイト名を含むWeb要求を送る"
+            },
+            {
+              "code": "プロキシが外部サイト名を解決して接続する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "PCが解決するプロキシ名と、プロキシが解決する外部サイト名を区別します。",
+          "ngExplain": "外部サイト名をPCで必ず解決するわけではありません。プロキシに届くまでの名前解決が先です。",
+          "id": "fw-5",
+          "format": "並べ替え",
+          "theme": "通信の役割からFW表を埋める",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "外部DNSの再帰問合せを社外anyにも許可すると何が増えるか。",
+          "choices": [
+            {
+              "text": "KerberosのST",
+              "ok": false,
+              "explain": "DNS再帰はチケット発行ではありません。"
+            },
+            {
+              "text": "外部からオープンリゾルバとして悪用されるリスク",
+              "ok": true,
+              "explain": "原文は社外からの再帰を拒否します。"
+            },
+            {
+              "text": "社内PCのデフォルトゲートウェイ",
+              "ok": false,
+              "explain": "DNSの受入れ設定では増えません。"
+            }
+          ],
+          "id": "fw-6",
+          "format": "選択",
+          "theme": "通信の役割からFW表を埋める",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "tickets",
+      "title": "TGTとSTの役割を区別する",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "TGTとSTの役割を区別する",
+          "body": "SSO（Single Sign-On）は一度の認証で複数サービスを利用する仕組みです。KDC（Key Distribution Center：鍵配布センタ）はTGT（Ticket Granting Ticket：サービス用チケットを求めるためのチケット）を発行します。PCはTGTで対象サーバ用のST（Service Ticket）を取得し、そのサーバへ提示します。次の暗号の説明は原問の簡略化されたモデルに従います。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "①",
+                "d": "PC→KDC 認証要求"
+              },
+              {
+                "t": "②",
+                "d": "KDC→PC TGT"
+              },
+              {
+                "t": "⑤",
+                "d": "PC→KDC ST要求"
+              },
+              {
+                "t": "⑥",
+                "d": "KDC→PC ST"
+              },
+              {
+                "t": "⑦",
+                "d": "PC→サーバ ST提示"
+              }
+            ],
+            "caption": "説明用の流れ"
+          },
+          "id": "tickets-1",
+          "format": "読む",
+          "theme": "TGTとSTの役割を区別する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "tickets-7",
+          "type": "info",
+          "title": "②にはTGT、⑥にはSTが含まれる",
+          "body": "原問の②は、TGTをPCの鍵で保護して渡す説明です。⑥ではサーバの鍵で暗号化したSTをセッション鍵などと一緒に、さらにPCの鍵で包んで渡します。PCは外側を開いて暗号化されたSTを取り出しますが、STの中身を開くのはサーバです。②と⑥を混同しないようにします。",
+          "fig": {
+            "kind": "encap",
+            "layers": [
+              {
+                "label": "②の説明",
+                "parts": [
+                  {
+                    "t": "PCの鍵で保護したTGT",
+                    "w": 1,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "⑥の内側",
+                "parts": [
+                  {
+                    "t": "サーバの鍵で暗号化したST",
+                    "w": 3,
+                    "role": "data"
+                  },
+                  {
+                    "t": "セッション鍵等",
+                    "w": 2,
+                    "role": "data"
+                  }
+                ]
+              },
+              {
+                "label": "⑥の外側",
+                "parts": [
+                  {
+                    "t": "全体をPCの鍵で保護",
+                    "w": 1,
+                    "role": "header"
+                  }
+                ]
+              }
+            ],
+            "caption": "説明用：原問の暗号モデル"
+          },
+          "format": "読む",
+          "theme": "②にはTGT、⑥にはSTが含まれる",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "tickets-8",
+          "type": "quiz",
+          "title": "練習用の条件：正規PCは⑥の外側を開けるが、営業支援サーバの鍵を持たない。STを提示できるか。",
+          "choices": [
+            {
+              "text": "STのサーバ名を書き換えてから提示する",
+              "ok": false,
+              "explain": "署名・暗号で保護された内容を勝手に変更する手順ではありません。"
+            },
+            {
+              "text": "できる。暗号化されたSTを取り出し、そのままサーバへ渡す",
+              "ok": true,
+              "explain": "取り出すことと、中身を復号することは別です。"
+            },
+            {
+              "text": "できない。PCがSTの中身も必ず復号する",
+              "ok": false,
+              "explain": "STを開いて検証するのは提示先サーバです。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件：正規PCは⑥の外側を開けるが、営業支援サーバの鍵を持たない。STを提示できるか。",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "quiz",
+          "title": "②を盗聴した攻撃者が⑦を正しく行えない直接の理由はどれか。",
+          "choices": [
+            {
+              "text": "STはネットワークに一度も流れない",
+              "ok": false,
+              "explain": "原問ではSTは⑥で払い出され、⑦で提示されます。②はTGTの応答です。"
+            },
+            {
+              "text": "サーバはIPだけで利用者を認証する",
+              "ok": false,
+              "explain": "原問はSTを用います。"
+            },
+            {
+              "text": "⑦で提示するためのSTを取り出せない",
+              "ok": true,
+              "explain": "原問の②に含まれるのはSTではなくPCの鍵で保護されたTGTです。盗聴データだけでは正規PCとして後続のST取得・取出しを進められず、⑦に必要なSTを用意できません。"
+            }
+          ],
+          "id": "tickets-2",
+          "format": "選択",
+          "theme": "TGTとSTの役割を区別する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "Kerberosのポート88を使う通信はどの相手との通信か。",
+          "choices": [
+            {
+              "text": "全ての①〜⑧",
+              "ok": false,
+              "explain": "HTTP側の通信まで88番ではありません。"
+            },
+            {
+              "text": "PCとKDCの①②⑤⑥",
+              "ok": true,
+              "explain": "認証要求、TGT、ST要求、ST払出しです。"
+            },
+            {
+              "text": "PCと営業支援サーバの③④⑦⑧",
+              "ok": false,
+              "explain": "こちらはHTTP通信です。"
+            }
+          ],
+          "id": "tickets-3",
+          "format": "選択",
+          "theme": "TGTとSTの役割を区別する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "88番を使う全通信を分類する",
+          "template": "KDCとの{a}、{b}、{c}、{d}が88番を使う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "最初の要求",
+              "choices": [
+                {
+                  "text": "①",
+                  "ok": true,
+                  "explain": "PCからKDCへの認証要求です。"
+                },
+                {
+                  "text": "③",
+                  "ok": false,
+                  "explain": "営業支援サーバへのHTTP要求です。"
+                },
+                {
+                  "text": "⑦",
+                  "ok": false,
+                  "explain": "STをサーバへ示すHTTP要求です。"
+                }
+              ],
+              "why": "PCからKDCへの認証要求です。"
+            },
+            {
+              "key": "b",
+              "label": "TGT応答",
+              "choices": [
+                {
+                  "text": "②",
+                  "ok": true,
+                  "explain": "KDCからPCへの応答です。"
+                },
+                {
+                  "text": "④",
+                  "ok": false,
+                  "explain": "HTTP 401応答です。"
+                },
+                {
+                  "text": "⑧",
+                  "ok": false,
+                  "explain": "HTTP 200応答です。"
+                }
+              ],
+              "why": "KDCからPCへの応答です。"
+            },
+            {
+              "key": "c",
+              "label": "ST要求",
+              "choices": [
+                {
+                  "text": "⑤",
+                  "ok": true,
+                  "explain": "PCからKDCへTGTを提示します。"
+                },
+                {
+                  "text": "③",
+                  "ok": false,
+                  "explain": "HTTP要求です。"
+                },
+                {
+                  "text": "④",
+                  "ok": false,
+                  "explain": "サーバからのHTTP応答です。"
+                }
+              ],
+              "why": "PCからKDCへTGTを提示します。"
+            },
+            {
+              "key": "d",
+              "label": "ST払出し",
+              "choices": [
+                {
+                  "text": "⑥",
+                  "ok": true,
+                  "explain": "KDCからPCへSTを渡します。"
+                },
+                {
+                  "text": "⑦",
+                  "ok": false,
+                  "explain": "PCからサーバへの提示です。"
+                },
+                {
+                  "text": "⑧",
+                  "ok": false,
+                  "explain": "サーバの認証成功応答です。"
+                }
+              ],
+              "why": "KDCからPCへSTを渡します。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 17,
+            "top": 0.43,
+            "bottom": 0.83,
+            "label": "原図2：KerberosとHTTPの通信順"
+          },
+          "id": "tickets-4",
+          "format": "穴埋め",
+          "theme": "TGTとSTの役割を区別する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "SSOのチケット利用を並べる",
+          "lead": "原問の簡略モデルで、最初の認証から対象サーバ用STの取得・提示を整理します。API（Application Programming Interface）はプログラムから認証機能を呼び出す窓口です。IDは利用者識別子、PWはPassword（パスワード）です。",
+          "lines": [
+            {
+              "code": "利用者のIDとパスワードでKDCの認証を受けTGTを得る"
+            },
+            {
+              "code": "TGTをKDCに提示して対象サーバ用STを求める"
+            },
+            {
+              "code": "PCの鍵で保護された応答からSTを取り出す"
+            },
+            {
+              "code": "STを対象サーバへ提示する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "TGTを直接業務サーバへ提示する流れではありません。",
+          "ngExplain": "STは対象サーバごとに発行されます。",
+          "id": "tickets-5",
+          "format": "並べ替え",
+          "theme": "TGTとSTの役割を区別する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "id": "tickets-9",
+          "type": "info",
+          "title": "原問のモデルと標準のKerberosを区別する",
+          "body": "原問は「PCの鍵」でTGTやSTの応答全体を保護する説明に簡略化しています。RFC 4120の標準では、TGT自体とクライアント向けの暗号化情報は別で、ST要求への応答の暗号化情報には通常TGTのセッション鍵などを使います。標準ではチケットに加えてAuthenticator（認証子）も使い、盗聴したチケットのコピーだけで認証は完了しません。",
+          "format": "読む",
+          "theme": "原問のモデルと標準のKerberosを区別する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "別の業務サーバも利用する。通常新たに必要なのはどれか。",
+          "choices": [
+            {
+              "text": "同じSTの宛先名だけを書き換える",
+              "ok": false,
+              "explain": "STは対象サーバの鍵で保護されています。"
+            },
+            {
+              "text": "そのサーバ用のST",
+              "ok": true,
+              "explain": "TGTを使って対象別のSTを得ます。"
+            },
+            {
+              "text": "利用者のPWをそのサーバへ直接送る",
+              "ok": false,
+              "explain": "SSOはKDCのチケットを利用します。"
+            }
+          ],
+          "id": "tickets-6",
+          "format": "選択",
+          "theme": "TGTとSTの役割を区別する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "title": "有効期限を同じ時刻基準で判断する",
+      "targets": [
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "有効期限を同じ時刻基準で判断する",
+          "body": "練習用の条件：PCでは10時、サーバでは10時10分を示しています。STの有効期限が10時05分なら、同じ瞬間でも期限内かどうかの判断が食い違います。PCと認証に関わるサーバを同じ時刻基準へ合わせる必要があります。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "機器",
+              "時計",
+              "判定"
+            ],
+            "rows": [
+              [
+                "PC",
+                "10:00",
+                "有効"
+              ],
+              [
+                "サーバ",
+                "10:10",
+                "期限切れ"
+              ],
+              [
+                "対策",
+                "時刻同期",
+                "同じ基準で判定"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "clock-1",
+          "format": "読む",
+          "theme": "有効期限を同じ時刻基準で判断する",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "チケットの内容が正しくても拒否される原因はどれか。",
+          "choices": [
+            {
+              "text": "FQDNが必ず短いこと",
+              "ok": false,
+              "explain": "文字数は期限判定に関係しません。"
+            },
+            {
+              "text": "DNSがUDPを使うこと",
+              "ok": false,
+              "explain": "チケットの時刻判定とは別です。"
+            },
+            {
+              "text": "PCとサーバの時計のずれ",
+              "ok": true,
+              "explain": "有効期限の判定が一致しません。"
+            }
+          ],
+          "id": "clock-2",
+          "format": "選択",
+          "theme": "有効期限を同じ時刻基準で判断する",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "対応策はどれか。",
+          "choices": [
+            {
+              "text": "全通信をプロキシへ送る",
+              "ok": false,
+              "explain": "時計のずれは解消しません。"
+            },
+            {
+              "text": "PCとサーバで時刻同期を行う",
+              "ok": true,
+              "explain": "同じ時刻基準で期限を判断します。"
+            },
+            {
+              "text": "STの期限を無限にする",
+              "ok": false,
+              "explain": "失効や漏えい時のリスクが増えます。"
+            }
+          ],
+          "id": "clock-3",
+          "format": "選択",
+          "theme": "有効期限を同じ時刻基準で判断する",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "原因と対策を埋める",
+          "template": "時計が{a}と期限判定がずれる。PCとサーバで{b}する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "原因",
+              "choices": [
+                {
+                  "text": "一致しない",
+                  "ok": true,
+                  "explain": "同じ瞬間でも表示時刻が異なります。"
+                },
+                {
+                  "text": "必ず一致する",
+                  "ok": false,
+                  "explain": "問題が起きる条件と反対です。"
+                },
+                {
+                  "text": "IPアドレスになる",
+                  "ok": false,
+                  "explain": "時計はアドレスへ変わりません。"
+                }
+              ],
+              "why": "同じ瞬間でも表示時刻が異なります。"
+            },
+            {
+              "key": "b",
+              "label": "対策",
+              "choices": [
+                {
+                  "text": "時刻同期を行う",
+                  "ok": true,
+                  "explain": "共通の時刻へ合わせます。"
+                },
+                {
+                  "text": "DNSラウンドロビンする",
+                  "ok": false,
+                  "explain": "負荷分散の設定です。"
+                },
+                {
+                  "text": "プロキシ例外にする",
+                  "ok": false,
+                  "explain": "Web経路の設定です。"
+                }
+              ],
+              "why": "共通の時刻へ合わせます。"
+            }
+          ],
+          "id": "clock-4",
+          "format": "穴埋め",
+          "theme": "有効期限を同じ時刻基準で判断する",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "拒否に至る因果を並べる",
+          "lead": "サーバ側の時計が進んでいます。",
+          "lines": [
+            {
+              "code": "PCが有効と思うSTを提示する"
+            },
+            {
+              "code": "サーバが自身の時計で期限を比較する"
+            },
+            {
+              "code": "サーバでは有効期限を過ぎている"
+            },
+            {
+              "code": "サーバがSTを使用不可と判断する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "同じSTでも時計が違うと判定が分かれます。",
+          "ngExplain": "暗号の正しさだけでは期限判定をそろえられません。",
+          "id": "clock-5",
+          "format": "並べ替え",
+          "theme": "有効期限を同じ時刻基準で判断する",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "KDCだけ時刻同期し、業務サーバは同期しない。十分か。",
+          "choices": [
+            {
+              "text": "十分。DNSが時刻を補正する",
+              "ok": false,
+              "explain": "通常のDNSは時刻同期を行いません。"
+            },
+            {
+              "text": "不十分。提示先サーバの期限判定もずれ得る",
+              "ok": true,
+              "explain": "PCとサーバの両方をそろえる必要があります。"
+            },
+            {
+              "text": "十分。KDCが発行すれば時計は不要",
+              "ok": false,
+              "explain": "サーバも期限を判断します。"
+            }
+          ],
+          "id": "clock-6",
+          "format": "選択",
+          "theme": "有効期限を同じ時刻基準で判断する",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "srv",
+      "title": "サービス名から接続先を探す",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "サービス名から接続先を探す",
+          "body": "SRV（Service）レコードはサービスを提供するホストとポートをDNSで調べるための記録です。Targetは接続先FQDN、Portはサービスのポート番号です。TTL（Time To Live）は新しく取得したキャッシュを保持できる時間を秒で示します。原問のDS（Directory Server：ディレクトリサーバ）でKDCが動いています。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "フィールド",
+              "原問の値"
+            ],
+            "rows": [
+              [
+                "Service/Proto",
+                "_kerberos._tcp"
+              ],
+              [
+                "TTL",
+                "43200秒"
+              ],
+              [
+                "Port",
+                "88"
+              ],
+              [
+                "Target",
+                "DS1またはDS2のFQDN"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "srv-1",
+          "format": "読む",
+          "theme": "サービス名から接続先を探す",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "SRVを使わないPCへ直接設定する情報はどれか。",
+          "choices": [
+            {
+              "text": "サーバのMACアドレスだけ",
+              "ok": false,
+              "explain": "ルータを越えるサービス発見に使いません。"
+            },
+            {
+              "text": "全社員のパスワード",
+              "ok": false,
+              "explain": "接続先の発見情報ではありません。"
+            },
+            {
+              "text": "Kerberos認証を行うサーバのFQDN",
+              "ok": true,
+              "explain": "SRVが返す接続先情報を別途与えます。"
+            }
+          ],
+          "id": "srv-2",
+          "format": "選択",
+          "theme": "サービス名から接続先を探す",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "id": "srv-7",
+          "type": "quiz",
+          "title": "原問のTTLは43200秒。分へ直すときに先に選ぶ式はどれか。",
+          "choices": [
+            {
+              "text": "43200÷60",
+              "ok": true,
+              "explain": "1分＝60秒なので、秒の値を60で割ります。"
+            },
+            {
+              "text": "43200×60",
+              "ok": false,
+              "explain": "分を秒へ直す逆方向の換算です。"
+            },
+            {
+              "text": "43200÷3600",
+              "ok": false,
+              "explain": "これは時間への換算で、分ではありません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "原問のTTLは43200秒。分へ直すときに先に選ぶ式はどれか。",
+          "scaffold": 4,
+          "stage": "apply"
+        },
+        {
+          "type": "quiz",
+          "title": "43200秒は何分か。",
+          "choices": [
+            {
+              "text": "12分",
+              "ok": false,
+              "explain": "12時間と12分を混同しています。"
+            },
+            {
+              "text": "720分",
+              "ok": true,
+              "explain": "43200÷60です。"
+            },
+            {
+              "text": "43200分",
+              "ok": false,
+              "explain": "秒から分への換算をしていません。"
+            }
+          ],
+          "id": "srv-3",
+          "format": "選択",
+          "theme": "サービス名から接続先を探す",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "SRVの値を用途へ結び付ける",
+          "template": "PCはTargetから{a}を得る。TTL 43200秒は{b}分。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "接続先",
+              "choices": [
+                {
+                  "text": "認証サーバのFQDN",
+                  "ok": true,
+                  "explain": "サービスを提供するホスト名です。"
+                },
+                {
+                  "text": "利用者の秘密鍵",
+                  "ok": false,
+                  "explain": "DNSへ秘密鍵を載せません。"
+                },
+                {
+                  "text": "PCのデフォルトゲートウェイ",
+                  "ok": false,
+                  "explain": "SRVのTargetではありません。"
+                }
+              ],
+              "why": "サービスを提供するホスト名です。"
+            },
+            {
+              "key": "b",
+              "label": "保持時間",
+              "choices": [
+                {
+                  "text": "720",
+                  "ok": true,
+                  "explain": "秒を60で割ります。"
+                },
+                {
+                  "text": "43200",
+                  "ok": false,
+                  "explain": "単位が秒のままです。"
+                },
+                {
+                  "text": "72",
+                  "ok": false,
+                  "explain": "ゼロが一つ不足しています。"
+                }
+              ],
+              "why": "秒を60で割ります。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 19,
+            "top": 0.05,
+            "bottom": 0.81,
+            "label": "原図3・4：SRVレコードの形式と値"
+          },
+          "id": "srv-4",
+          "format": "穴埋め",
+          "theme": "サービス名から接続先を探す",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "id": "srv-8",
+          "type": "info",
+          "title": "PriorityとWeightの順に候補を選ぶ",
+          "body": "Priorityは優先度で、小さい値を優先します。同じPriorityの候補同士ではWeight（重み）に応じて選びます。原問はDS1とDS2が共に120、Weightが2と1なので、同じ優先度内の使用比率を考えます。",
+          "format": "読む",
+          "theme": "PriorityとWeightの順に候補を選ぶ",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "id": "srv-9",
+          "type": "quiz",
+          "title": "練習用の条件変更：稼働中の候補AはPriority 10・Weight 1、候補BはPriority 20・Weight 100。先に選ぶ対象はどちらか。",
+          "choices": [
+            {
+              "text": "常に半々",
+              "ok": false,
+              "explain": "優先度を無視した選択です。"
+            },
+            {
+              "text": "A",
+              "ok": true,
+              "explain": "Priorityの小さい候補を優先し、異なるPriority同士でWeightを比較しません。"
+            },
+            {
+              "text": "B",
+              "ok": false,
+              "explain": "Weightが大きくても、Priorityの優先順位は逆転しません。"
+            }
+          ],
+          "format": "選択",
+          "theme": "練習用の条件変更：稼働中の候補AはPriority 10・Weight 1、候補BはPriority 20・Weight 100。先に選ぶ対象はどちらか。",
+          "scaffold": 2,
+          "stage": "transfer"
+        },
+        {
+          "type": "parsons",
+          "title": "SRVを使った接続先決定を並べる",
+          "lead": "PCにはKDCのFQDNを固定設定しません。",
+          "lines": [
+            {
+              "code": "Kerberosのサービス名をDNSへ問い合わせる"
+            },
+            {
+              "code": "SRVのPriorityとWeightから候補を選ぶ"
+            },
+            {
+              "code": "TargetのFQDNをIPアドレスへ解決する"
+            },
+            {
+              "code": "Port 88でKDCへ接続する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "SRVはサービスからホストとポートを得る仕組みです。",
+          "ngExplain": "SRVのTargetはIPアドレスではなくホスト名です。",
+          "id": "srv-5",
+          "format": "並べ替え",
+          "theme": "サービス名から接続先を探す",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "練習用の条件変更：TTL 3600秒の応答を新しく取得した。キャッシュ保持時間は何分か。",
+          "choices": [
+            {
+              "text": "3600分になる",
+              "ok": false,
+              "explain": "秒から分への換算が必要です。"
+            },
+            {
+              "text": "60分になる",
+              "ok": true,
+              "explain": "新規取得した応答では3600÷60＝60分です。以前取得したTTL 43200秒のキャッシュが直ちに短くなるわけではありません。"
+            },
+            {
+              "text": "720分のまま",
+              "ok": false,
+              "explain": "TTL値を変更した条件を反映していません。"
+            }
+          ],
+          "id": "srv-6",
+          "format": "選択",
+          "theme": "サービス名から接続先を探す",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "weight",
+      "title": "重み比をAレコードの個数へ写す",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "type": "info",
+          "title": "重み比をAレコードの個数へ写す",
+          "body": "原問のSRVは同じPriorityで、DS1のWeightが2、DS2が1です。原問の想定では、共通Target名DSにadd1を二件、add2を一件登録して比率を表します。ただし同一内容のAレコードの重複は標準DNSの重み指定ではありません。この節は公式解答の想定と、実運用での制約を分けて学びます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "方式",
+              "DS1",
+              "DS2"
+            ],
+            "rows": [
+              [
+                "SRV Weight",
+                "2",
+                "1"
+              ],
+              [
+                "原問が求めるAレコード",
+                "add1を2件",
+                "add2を1件"
+              ]
+            ],
+            "caption": "説明用の図表"
+          },
+          "id": "weight-1",
+          "format": "読む",
+          "theme": "重み比をAレコードの個数へ写す",
+          "scaffold": 5,
+          "stage": "concept"
+        },
+        {
+          "type": "quiz",
+          "title": "原問の重み比をAレコードの登録数へ移す組はどれか。",
+          "choices": [
+            {
+              "text": "add1を一つ、add2を二つ",
+              "ok": false,
+              "explain": "比率が逆になります。"
+            },
+            {
+              "text": "add1とadd2を一つずつ",
+              "ok": false,
+              "explain": "一対一になります。"
+            },
+            {
+              "text": "add1を二つ、add2を一つ",
+              "ok": true,
+              "explain": "出題の想定では二対一を個数で表します。"
+            }
+          ],
+          "id": "weight-2",
+          "format": "選択",
+          "theme": "重み比をAレコードの個数へ写す",
+          "scaffold": 5,
+          "stage": "check"
+        },
+        {
+          "type": "quiz",
+          "title": "DS1の利用比率を下げたい。出題の想定内で行う変更はどれか。",
+          "choices": [
+            {
+              "text": "TTLだけを長くする",
+              "ok": false,
+              "explain": "保持時間であり登録比率ではありません。"
+            },
+            {
+              "text": "add1の個数を相対的に減らす",
+              "ok": true,
+              "explain": "返される候補内の比率を下げます。"
+            },
+            {
+              "text": "DS2のFQDNを削除する",
+              "ok": false,
+              "explain": "DS1の比率が上がります。"
+            }
+          ],
+          "id": "weight-3",
+          "format": "選択",
+          "theme": "重み比をAレコードの個数へ写す",
+          "scaffold": 4,
+          "stage": "reason"
+        },
+        {
+          "type": "blank",
+          "title": "原問が求める設定文を組み立てる",
+          "template": "DSのホスト名に対し、{a}のAレコードを{b}、{c}のAレコードを{d}記述する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "DS1",
+              "choices": [
+                {
+                  "text": "add1",
+                  "ok": true,
+                  "explain": "DS1のIPです。"
+                },
+                {
+                  "text": "add2",
+                  "ok": false,
+                  "explain": "DS2のIPです。"
+                },
+                {
+                  "text": "88",
+                  "ok": false,
+                  "explain": "ポート番号です。"
+                }
+              ],
+              "why": "DS1のIPです。"
+            },
+            {
+              "key": "b",
+              "label": "DS1の個数",
+              "choices": [
+                {
+                  "text": "二つ",
+                  "ok": true,
+                  "explain": "Weight 2に対応させます。"
+                },
+                {
+                  "text": "一つ",
+                  "ok": false,
+                  "explain": "これでは一対一です。"
+                },
+                {
+                  "text": "三つ",
+                  "ok": false,
+                  "explain": "全体比は三対一になります。"
+                }
+              ],
+              "why": "Weight 2に対応させます。"
+            },
+            {
+              "key": "c",
+              "label": "DS2",
+              "choices": [
+                {
+                  "text": "add2",
+                  "ok": true,
+                  "explain": "DS2のIPです。"
+                },
+                {
+                  "text": "add1",
+                  "ok": false,
+                  "explain": "DS1のIPです。"
+                },
+                {
+                  "text": "43200",
+                  "ok": false,
+                  "explain": "TTLです。"
+                }
+              ],
+              "why": "DS2のIPです。"
+            },
+            {
+              "key": "d",
+              "label": "DS2の個数",
+              "choices": [
+                {
+                  "text": "一つ",
+                  "ok": true,
+                  "explain": "Weight 1に対応させます。"
+                },
+                {
+                  "text": "二つ",
+                  "ok": false,
+                  "explain": "一対一になります。"
+                },
+                {
+                  "text": "三つ",
+                  "ok": false,
+                  "explain": "二対三になります。"
+                }
+              ],
+              "why": "Weight 1に対応させます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 20,
+            "top": 0.42,
+            "bottom": 0.88,
+            "label": "原設問と図5：SRV変更後の負荷分散"
+          },
+          "id": "weight-4",
+          "format": "穴埋め",
+          "theme": "重み比をAレコードの個数へ写す",
+          "scaffold": 4,
+          "stage": "assemble"
+        },
+        {
+          "type": "parsons",
+          "title": "比率を移す考え方を並べる",
+          "lead": "これは原問が置いた設定方法です。",
+          "lines": [
+            {
+              "code": "元のSRV WeightがDS1:DS2＝2:1と読む"
+            },
+            {
+              "code": "共通Targetの名前DSを決める"
+            },
+            {
+              "code": "名前DSにadd1を二件、add2を一件対応させる"
+            },
+            {
+              "code": "DNSラウンドロビンで応答させる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "元の比率を登録数へ対応させます。",
+          "ngExplain": "TTLやPortの値は二対一の比率を作りません。",
+          "id": "weight-5",
+          "format": "並べ替え",
+          "theme": "重み比をAレコードの個数へ写す",
+          "scaffold": 3,
+          "stage": "assemble"
+        },
+        {
+          "type": "quiz",
+          "title": "標準DNSでは同じ内容の重複RR（Resource Record：資源レコード）を登録数の重みとして使えるか。",
+          "choices": [
+            {
+              "text": "TTLを変えれば推奨される",
+              "ok": false,
+              "explain": "同じ名前・種類のRRの集合（RRset）内でTTLだけを変える方法も、標準の重み指定にはなりません。"
+            },
+            {
+              "text": "サーバは重複を抑止するため、実運用では製品仕様を確認する",
+              "ok": true,
+              "explain": "RFC 2181は同一データの重複を無意味としています。"
+            },
+            {
+              "text": "重複数が必ず標準的な重みになる",
+              "ok": false,
+              "explain": "DNS標準は同一Aレコードの個数を重みとして定義しません。"
+            }
+          ],
+          "id": "weight-6",
+          "format": "選択",
+          "theme": "重み比をAレコードの個数へ写す",
+          "scaffold": 3,
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

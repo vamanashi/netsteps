@@ -1,0 +1,2399 @@
+{
+  "examKey": "2024r06h/pm2/1",
+  "title": "VXLANの転送をEVPNの制御へ移す",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm2_qs.pdf",
+    "https://www.rfc-editor.org/rfc/rfc7348",
+    "https://www.rfc-editor.org/rfc/rfc8365",
+    "https://www.rfc-editor.org/rfc/rfc4456"
+  ],
+  "sections": [
+    {
+      "id": "encapsulation",
+      "title": "VXLANでレイヤー2をレイヤー3へ載せる",
+      "targets": [
+        "s1-1",
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "id": "encapsulation-01",
+          "format": "読む",
+          "theme": "VXLANでレイヤー2をレイヤー3へ載せる",
+          "scaffold": 5,
+          "type": "info",
+          "title": "離れたVMを同じレイヤー2へ入れる",
+          "body": "VXLANはVirtual eXtensible LANです。VTEPがイーサネットフレームをUDPとIPで包みます。24ビットのVNIで論理ネットワークを識別します。物理側はレイヤー3で到達できれば構成できます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "外側から",
+              "役割"
+            ],
+            "rows": [
+              [
+                "IPv4ヘッダー",
+                "VTEP間の宛先"
+              ],
+              [
+                "UDPヘッダー",
+                "VXLANの搬送"
+              ],
+              [
+                "VXLANヘッダー",
+                "VNI"
+              ],
+              [
+                "イーサネットフレーム",
+                "VM間の元データ"
+              ]
+            ],
+            "caption": "説明用：VXLANパケットの層"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "encapsulation-02",
+          "format": "選択",
+          "theme": "VXLANでレイヤー2をレイヤー3へ載せる",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "24ビットのVNIで表せる番号の規模はどれか。",
+          "choices": [
+            {
+              "text": "24個",
+              "explain": "24はビット数であり、組合せ数ではありません。",
+              "ok": false
+            },
+            {
+              "text": "約1,677万個",
+              "explain": "2の24乗は16,777,216です。",
+              "ok": true
+            },
+            {
+              "text": "4,094個だけ",
+              "explain": "VLAN IDの規模と混同しています。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "encapsulation-03",
+          "format": "選択",
+          "theme": "VXLANでレイヤー2をレイヤー3へ載せる",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "レイヤー2のオーバーレイを運ぶ物理ネットワークはどれか。",
+          "choices": [
+            {
+              "text": "レイヤー3ネットワーク",
+              "explain": "VTEP間をIPで到達可能にします。",
+              "ok": true
+            },
+            {
+              "text": "同じ一台のL2スイッチだけ",
+              "explain": "VXLANはIP網を越えて論理的なL2を構成できます。",
+              "ok": false
+            },
+            {
+              "text": "メールのアプリケーション層だけ",
+              "explain": "VXLANはデータセンターのネットワーク仮想化技術です。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "encapsulation-04",
+          "format": "穴埋め",
+          "theme": "VXLANでレイヤー2をレイヤー3へ載せる",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "空欄と三つの格納場所を完成する",
+          "template": "VNIは{a}ビット、下位の搬送はレイヤー{b}で、VXLANは{c}を使う。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄a",
+              "choices": [
+                {
+                  "text": "24",
+                  "explain": "VXLANヘッダーのVNIは24ビットです。",
+                  "ok": true
+                },
+                {
+                  "text": "12",
+                  "explain": "VLAN IDと混同しています。",
+                  "ok": false
+                }
+              ],
+              "why": "VXLANヘッダーのVNIは24ビットです。"
+            },
+            {
+              "key": "b",
+              "label": "空欄b",
+              "choices": [
+                {
+                  "text": "2",
+                  "explain": "内側はL2ですが、アンダーレイはL3です。",
+                  "ok": false
+                },
+                {
+                  "text": "3",
+                  "explain": "IPネットワーク上へL2をオーバーレイします。",
+                  "ok": true
+                }
+              ],
+              "why": "IPネットワーク上へL2をオーバーレイします。"
+            },
+            {
+              "key": "c",
+              "label": "空欄c",
+              "choices": [
+                {
+                  "text": "UDP",
+                  "explain": "IPv4とVXLANの間にUDPヘッダーがあります。",
+                  "ok": true
+                },
+                {
+                  "text": "TCP",
+                  "explain": "原問のVXLANの搬送はUDPです。",
+                  "ok": false
+                }
+              ],
+              "why": "IPv4とVXLANの間にUDPヘッダーがあります。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 3,
+            "top": 0.12,
+            "bottom": 0.72,
+            "label": "VXLANの説明と図1・図2（IPA原文・原図）"
+          }
+        },
+        {
+          "id": "encapsulation-05",
+          "format": "穴埋め",
+          "theme": "VXLANでレイヤー2をレイヤー3へ載せる",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "学習情報が入る場所を対応させる",
+          "template": "VMのMACアドレスは{a}、VNIは{b}、VTEPのIPアドレスは{c}に含まれる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "下線①",
+              "choices": [
+                {
+                  "text": "IPv4ヘッダー",
+                  "explain": "外側IPv4はVTEP間のIPを運びます。",
+                  "ok": false
+                },
+                {
+                  "text": "イーサネットフレーム",
+                  "explain": "内側フレームの送信元MACなどから学習します。",
+                  "ok": true
+                }
+              ],
+              "why": "内側フレームの送信元MACなどから学習します。"
+            },
+            {
+              "key": "b",
+              "label": "下線②",
+              "choices": [
+                {
+                  "text": "VXLANヘッダー",
+                  "explain": "論理セグメントを識別するVNIが入ります。",
+                  "ok": true
+                },
+                {
+                  "text": "UDPヘッダー",
+                  "explain": "UDPは搬送に使いますがVNIは持ちません。",
+                  "ok": false
+                }
+              ],
+              "why": "論理セグメントを識別するVNIが入ります。"
+            },
+            {
+              "key": "c",
+              "label": "下線③",
+              "choices": [
+                {
+                  "text": "イーサネットフレーム",
+                  "explain": "内側フレームに外側VTEPのIPはありません。",
+                  "ok": false
+                },
+                {
+                  "text": "IPv4ヘッダー",
+                  "explain": "外側の送信元IPからリモートVTEPを識別します。",
+                  "ok": true
+                }
+              ],
+              "why": "外側の送信元IPからリモートVTEPを識別します。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 4,
+            "top": 0.05,
+            "bottom": 0.45,
+            "label": "図2と①～③の学習情報（IPA原図・原文）"
+          }
+        },
+        {
+          "id": "encapsulation-06",
+          "format": "並べ替え",
+          "theme": "VXLANでレイヤー2をレイヤー3へ載せる",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "カプセル化の順序を並べる",
+          "lead": "VMから出たフレームをリモートVTEPへ送ります。",
+          "lines": [
+            {
+              "code": "VMのイーサネットフレームをVTEPが受信する"
+            },
+            {
+              "code": "対応するVNIをVXLANヘッダーへ設定する"
+            },
+            {
+              "code": "UDPヘッダーを付ける"
+            },
+            {
+              "code": "VTEP間のIPをIPv4ヘッダーへ設定して送る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "内側のフレームを残したまま、VXLAN、UDP、IPの順に外側へ包みます。",
+          "ngExplain": "先に元のフレームがあり、その外へオーバーレイの情報を追加します。",
+          "stage": "reason"
+        },
+        {
+          "id": "encapsulation-07",
+          "format": "選択",
+          "theme": "VXLANでレイヤー2をレイヤー3へ載せる",
+          "scaffold": 2,
+          "type": "quiz",
+          "title": "条件変更：VNIだけ同じで、外側IPの宛先が存在しない。通信できるか。",
+          "choices": [
+            {
+              "text": "できる。VNIが経路を自動生成する",
+              "explain": "VNIはL2オーバーレイの識別子で、IP経路そのものではありません。",
+              "ok": false
+            },
+            {
+              "text": "できる。MACアドレスがIPルータを置換する",
+              "explain": "アンダーレイでは外側IPを使って転送します。",
+              "ok": false
+            },
+            {
+              "text": "できない。リモートVTEPへIPで到達できない",
+              "explain": "論理セグメントの一致と、アンダーレイの到達性が両方必要です。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "bum",
+      "title": "未知の宛先を必要なVTEPへ広げる",
+      "targets": [
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "bum-01",
+          "format": "読む",
+          "theme": "未知の宛先を必要なVTEPへ広げる",
+          "scaffold": 5,
+          "type": "info",
+          "title": "宛先MACをまだ知らない",
+          "body": "VTEPは既知ユニキャストなら対応するリモートVTEPへ送れます。Broadcast、Unknown Unicast、MulticastをまとめてBUMと呼びます。未知の宛先は、同じ論理L2に参加する相手へ届けて応答を得ます。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 55,
+                "y": 65,
+                "label": "送信元VTEP"
+              },
+              {
+                "id": "node1",
+                "x": 165,
+                "y": 65,
+                "label": "同じVNIのVTEP群"
+              },
+              {
+                "id": "node2",
+                "x": 275,
+                "y": 65,
+                "label": "接続VM"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：BUMを同じ論理L2へ広げる"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "bum-02",
+          "format": "選択",
+          "theme": "未知の宛先を必要なVTEPへ広げる",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "既知ユニキャストで参照する対応はどれか。",
+          "choices": [
+            {
+              "text": "送信元VMの画面解像度",
+              "explain": "フレーム転送の対応表には使いません。",
+              "ok": false
+            },
+            {
+              "text": "全VTEPの同じ物理ポート番号",
+              "explain": "既知宛先なら一つのリモートVTEPへ送れます。",
+              "ok": false
+            },
+            {
+              "text": "宛先MACに対応するリモートVTEPのIP",
+              "explain": "外側IPの宛先へそのVTEPを設定します。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "bum-03",
+          "format": "選択",
+          "theme": "未知の宛先を必要なVTEPへ広げる",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "Unknown Unicastを一つのVTEPだけへ推測で送る問題はどれか。",
+          "choices": [
+            {
+              "text": "VNIが必ず別の値に変わる",
+              "explain": "宛先MACの既知・未知でVNIを書き換えません。",
+              "ok": false
+            },
+            {
+              "text": "実際の宛先が別VTEPなら届かない",
+              "explain": "まだ対応を学習していないため、必要な範囲へ広げます。",
+              "ok": true
+            },
+            {
+              "text": "必ず正しいVTEPになる",
+              "explain": "未知である以上、一つへ特定する根拠がありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "bum-04",
+          "format": "穴埋め",
+          "theme": "未知の宛先を必要なVTEPへ広げる",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "マルチキャスト宛先を使う目的を完成する",
+          "template": "BUMを、同じ{a}ネットワークをもつ{b}へ転送するためである。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "論理範囲",
+              "choices": [
+                {
+                  "text": "レイヤー2",
+                  "explain": "同じVNIのブロードキャストドメインが対象です。",
+                  "ok": true
+                },
+                {
+                  "text": "全レイヤー3",
+                  "explain": "全IPネットワークへ無制限に送る目的ではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "同じVNIのブロードキャストドメインが対象です。"
+            },
+            {
+              "key": "b",
+              "label": "転送先",
+              "choices": [
+                {
+                  "text": "最短の一台だけ",
+                  "explain": "未知宛先を一台へ限定する根拠がありません。",
+                  "ok": false
+                },
+                {
+                  "text": "全てのリモートVTEP",
+                  "explain": "同じL2に参加するVTEP群へ届けます。",
+                  "ok": true
+                }
+              ],
+              "why": "同じL2に参加するVTEP群へ届けます。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "bum-05",
+          "format": "並べ替え",
+          "theme": "未知の宛先を必要なVTEPへ広げる",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "ARP要求が広がる理由を並べる",
+          "lead": "ARP要求はブロードキャストです。",
+          "lines": [
+            {
+              "code": "送信元VMが宛先MACを知らずARP要求を送る"
+            },
+            {
+              "code": "VTEPがBUMフレームと判定する"
+            },
+            {
+              "code": "VNIに対応するマルチキャストグループを宛先にする"
+            },
+            {
+              "code": "同じ論理L2をもつ全リモートVTEPへ届ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "L3全体への無制限な拡散でなく、VNIに対応する範囲へ広げます。",
+          "ngExplain": "ARP要求の性質、BUM判定、転送範囲の順にします。",
+          "stage": "reason"
+        },
+        {
+          "id": "bum-06",
+          "format": "選択",
+          "theme": "未知の宛先を必要なVTEPへ広げる",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：宛先MACとリモートVTEPを既に学習済み。どう送るか。",
+          "choices": [
+            {
+              "text": "フレームを破棄する",
+              "explain": "学習済みなら転送先を決められます。",
+              "ok": false
+            },
+            {
+              "text": "該当リモートVTEPへユニキャストする",
+              "explain": "対応が分かっているため全VTEPへの複製は不要です。",
+              "ok": true
+            },
+            {
+              "text": "必ずマルチキャストで全VTEPへ送る",
+              "explain": "既知ユニキャストの転送方法と異なります。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "ospf",
+      "title": "LSDBから等コスト経路を使う",
+      "targets": [
+        "s2-1",
+        "s2-2",
+        "s2-3"
+      ],
+      "steps": [
+        {
+          "id": "ospf-01",
+          "format": "読む",
+          "theme": "LSDBから等コスト経路を使う",
+          "scaffold": 5,
+          "type": "info",
+          "title": "VTEP間のIP到達性を支える",
+          "body": "各L3SWはOSPFでLSAを交換します。LSAはLink State Advertisementです。集めた情報をLSDBへ入れ、各装置を根とする最短経路ツリーを計算します。同じ宛先へ等コストの経路があればECMPで利用できます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "LSAを受信",
+                "d": "リンク状態を集める"
+              },
+              {
+                "t": "LSDBを作成",
+                "d": "同じトポロジ情報を保持"
+              },
+              {
+                "t": "最短経路ツリー",
+                "d": "各L3SWを根に計算"
+              },
+              {
+                "t": "経路表",
+                "d": "転送へ利用"
+              }
+            ],
+            "caption": "説明用：OSPFの計算順序"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "ospf-02",
+          "format": "選択",
+          "theme": "LSDBから等コスト経路を使う",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "LSAを集めて作るデータベースはどれか。",
+          "choices": [
+            {
+              "text": "PACファイル",
+              "explain": "プロキシ選択の設定です。",
+              "ok": false
+            },
+            {
+              "text": "LSDB",
+              "explain": "Link State Databaseです。",
+              "ok": true
+            },
+            {
+              "text": "ARPキャッシュだけ",
+              "explain": "ARPはIPとMACの対応です。OSPFのトポロジ全体ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "ospf-03",
+          "format": "選択",
+          "theme": "LSDBから等コスト経路を使う",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "OSPFのネットワーク内でルータIDが識別するものはどれか。",
+          "choices": [
+            {
+              "text": "OSPFが動作する各L3SW",
+              "explain": "原問では各L3SWのループバックIPをルータIDに使います。",
+              "ok": true
+            },
+            {
+              "text": "各VMのWebブラウザ",
+              "explain": "OSPFを動作させるルータを識別します。",
+              "ok": false
+            },
+            {
+              "text": "一つ一つのVXLANパケット",
+              "explain": "パケットごとの番号ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "ospf-04",
+          "format": "選択",
+          "theme": "LSDBから等コスト経路を使う",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "ECMPを成立させる設計はどれか。",
+          "choices": [
+            {
+              "text": "経路ごとに必ず異なるコストにする",
+              "explain": "最小の一経路だけが選ばれやすくなります。",
+              "ok": false
+            },
+            {
+              "text": "全リンクのIPアドレスを同じにする",
+              "explain": "アドレス重複は等コスト設計になりません。",
+              "ok": false
+            },
+            {
+              "text": "複数経路のコスト合計を同じ値にする",
+              "explain": "Equal-Cost Multipathは等コストの複数経路を使います。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "ospf-05",
+          "format": "穴埋め",
+          "theme": "LSDBから等コスト経路を使う",
+          "scaffold": 3,
+          "type": "blank",
+          "title": "OSPFの二空欄と設計を完成する",
+          "template": "LSAから{a}を作り、{b}ツリーを計算する。ECMPには各経路の{c}を同じにする。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄d",
+              "choices": [
+                {
+                  "text": "LSDB",
+                  "explain": "全LSAを基にトポロジを保持します。",
+                  "ok": true
+                },
+                {
+                  "text": "VNI",
+                  "explain": "VXLANの論理セグメント識別子です。",
+                  "ok": false
+                }
+              ],
+              "why": "全LSAを基にトポロジを保持します。"
+            },
+            {
+              "key": "b",
+              "label": "空欄e",
+              "choices": [
+                {
+                  "text": "最大遅延",
+                  "explain": "OSPFのこの計算名ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "最短経路",
+                  "explain": "各L3SWを根に計算します。",
+                  "ok": true
+                }
+              ],
+              "why": "各L3SWを根に計算します。"
+            },
+            {
+              "key": "c",
+              "label": "必要条件",
+              "choices": [
+                {
+                  "text": "コスト合計値",
+                  "explain": "送信元から宛先までの経路ごとに合計を比較します。",
+                  "ok": true
+                },
+                {
+                  "text": "MACアドレス",
+                  "explain": "ECMPの選択条件ではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "送信元から宛先までの経路ごとに合計を比較します。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.47,
+            "bottom": 0.88,
+            "label": "図3とLSDB・最短経路ツリー（IPA原図・原文）"
+          }
+        },
+        {
+          "id": "ospf-06",
+          "format": "並べ替え",
+          "theme": "LSDBから等コスト経路を使う",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "ECMPを使える状態まで並べる",
+          "lead": "二つの物理経路を活用する設計です。",
+          "lines": [
+            {
+              "code": "各L3SWがLSAを交換してLSDBを作る"
+            },
+            {
+              "code": "LSDBから宛先までの複数経路を計算する"
+            },
+            {
+              "code": "各経路のコスト合計を同じに設計する"
+            },
+            {
+              "code": "等コストの複数経路へトラフィックを分散する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "リンク単体のコストでなく、宛先までの合計値をそろえます。",
+          "ngExplain": "経路を知る処理の後で、等コストの候補を利用できます。",
+          "stage": "reason"
+        },
+        {
+          "id": "ospf-07",
+          "format": "選択",
+          "theme": "LSDBから等コスト経路を使う",
+          "scaffold": 2,
+          "type": "quiz",
+          "title": "条件変更：一方の経路コスト合計が20、他方が30。通常の最短経路選択はどうか。",
+          "choices": [
+            {
+              "text": "両方へ必ず同量を分散する",
+              "explain": "ECMPには等しいコストが必要です。",
+              "ok": false
+            },
+            {
+              "text": "30の経路だけを選ぶ",
+              "explain": "OSPFは小さいコストの経路を優先します。",
+              "ok": false
+            },
+            {
+              "text": "20の経路が優先される",
+              "explain": "等コストでないため、原問のECMP条件を満たしません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "loopback",
+      "title": "物理ポート障害からVTEPを切り離す",
+      "targets": [
+        "s2-4"
+      ],
+      "steps": [
+        {
+          "id": "loopback-01",
+          "format": "読む",
+          "theme": "物理ポート障害からVTEPを切り離す",
+          "scaffold": 5,
+          "type": "info",
+          "title": "装置には複数の物理経路がある",
+          "body": "VTEPのIPを一つの物理ポートへ付けると、そのポートが落ちたときIPも使えなくなります。ループバックインタフェースは物理ポートに直接結び付きません。OSPFが別の物理経路を選べれば、同じVTEP IPへ到達できます。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 55,
+                "y": 65,
+                "label": "リモートVTEP"
+              },
+              {
+                "id": "node1",
+                "x": 165,
+                "y": 65,
+                "label": "L3SWのループバック"
+              },
+              {
+                "id": "node2",
+                "x": 275,
+                "y": 65,
+                "label": "物理経路A/B"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：一つの論理IPへ複数の物理経路"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "loopback-02",
+          "format": "選択",
+          "theme": "物理ポート障害からVTEPを切り離す",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "ループバックIPをVTEPに使う直接の利点はどれか。",
+          "choices": [
+            {
+              "text": "一つの物理インタフェース障害でもVTEPとして動作できる",
+              "explain": "別の物理経路からループバックへ到達できるためです。",
+              "ok": true
+            },
+            {
+              "text": "VNIが24ビットから48ビットになる",
+              "explain": "VTEPのIP選択でVNIの長さは変わりません。",
+              "ok": false
+            },
+            {
+              "text": "全物理リンクが不要になる",
+              "explain": "実際にパケットを運ぶ物理経路は必要です。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "loopback-03",
+          "format": "選択",
+          "theme": "物理ポート障害からVTEPを切り離す",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "この利点に必要な前提はどれか。",
+          "choices": [
+            {
+              "text": "物理ポートが一つだけで代替もない",
+              "explain": "ループバックだけで消えた回線を生成しません。",
+              "ok": false
+            },
+            {
+              "text": "IP経路を全く使わない",
+              "explain": "VTEP間は外側IPで通信します。",
+              "ok": false
+            },
+            {
+              "text": "ループバックIPへの別の到達経路がある",
+              "explain": "代替経路がなければ、物理障害時に到達できません。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "loopback-04",
+          "format": "穴埋め",
+          "theme": "物理ポート障害からVTEPを切り離す",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "対象と継続できる機能を入れる",
+          "template": "VTEPに{a}のIPを使うと、一つの物理インタフェース障害時も{b}できる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "アドレスの場所",
+              "choices": [
+                {
+                  "text": "障害になる物理インタフェースだけ",
+                  "explain": "そのポートが落ちるとアドレスへの到達も失います。",
+                  "ok": false
+                },
+                {
+                  "text": "ループバックインタフェース",
+                  "explain": "物理ポートから独立した論理インタフェースです。",
+                  "ok": true
+                }
+              ],
+              "why": "物理ポートから独立した論理インタフェースです。"
+            },
+            {
+              "key": "b",
+              "label": "継続する役割",
+              "choices": [
+                {
+                  "text": "VTEPとして動作",
+                  "explain": "別の物理経路でカプセル化した通信を届けられます。",
+                  "ok": true
+                },
+                {
+                  "text": "全VMを自動作成",
+                  "explain": "VTEPの冗長性とVM作成は別です。",
+                  "ok": false
+                }
+              ],
+              "why": "別の物理経路でカプセル化した通信を届けられます。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "loopback-05",
+          "format": "並べ替え",
+          "theme": "物理ポート障害からVTEPを切り離す",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "障害時の到達を並べる",
+          "lead": "二つの物理経路がある構成です。",
+          "lines": [
+            {
+              "code": "VTEPのIPをループバックへ割り当てる"
+            },
+            {
+              "code": "OSPFがそのIPへの複数の物理経路を学習する"
+            },
+            {
+              "code": "一つの物理インタフェースが故障する"
+            },
+            {
+              "code": "残る経路で同じVTEP IPへ到達して動作を続ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "IPアドレスが物理ポートの状態と一体にならない点が理由です。",
+          "ngExplain": "先に代替到達性を用意し、その後の障害で継続できます。",
+          "stage": "reason"
+        },
+        {
+          "id": "loopback-06",
+          "format": "選択",
+          "theme": "物理ポート障害からVTEPを切り離す",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：L3SW全体が停止した。ループバックIPなら動作を続けるか。",
+          "choices": [
+            {
+              "text": "必ず別の装置へ自動移動する",
+              "explain": "原問にVTEP状態の自動移動という条件はありません。",
+              "ok": false
+            },
+            {
+              "text": "ループバックIPだけが単独でパケットを処理する",
+              "explain": "IPアドレス自体が処理装置になるわけではありません。",
+              "ok": false
+            },
+            {
+              "text": "続けられない。VTEPを実行する装置自体が停止した",
+              "explain": "物理ポート一つの障害に対する利点を、装置全体へ広げません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "matrix",
+      "title": "VNIの一致から通信可否を読む",
+      "targets": [
+        "s2-5"
+      ],
+      "steps": [
+        {
+          "id": "matrix-01",
+          "format": "読む",
+          "theme": "VNIの一致から通信可否を読む",
+          "scaffold": 5,
+          "type": "info",
+          "title": "VLAN番号が違っても同じVXLANへ入る",
+          "body": "VM23はL3SW21のVLAN 230に接続します。対応表ではVNI 10040です。同じVNI 10040にはVM32のVLAN 320が入ります。他のVMは別のVNIです。IPアドレスが似ていても、L2通信可否はVNIで判断します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "VM",
+              "VLAN",
+              "VNI"
+            ],
+            "rows": [
+              [
+                "VM11",
+                "110",
+                "10010"
+              ],
+              [
+                "VM12",
+                "120",
+                "10020"
+              ],
+              [
+                "VM13",
+                "130",
+                "10030"
+              ],
+              [
+                "VM23",
+                "230",
+                "10040"
+              ],
+              [
+                "VM31",
+                "310",
+                "10010"
+              ],
+              [
+                "VM32",
+                "320",
+                "10040"
+              ],
+              [
+                "VM33",
+                "330",
+                "10030"
+              ]
+            ],
+            "caption": "説明用：図4から必要な行を整理"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "matrix-02",
+          "format": "選択",
+          "theme": "VNIの一致から通信可否を読む",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "VM23と同じVNIをもつ相手はどれか。",
+          "choices": [
+            {
+              "text": "VM31",
+              "explain": "VM31はVNI 10010です。",
+              "ok": false
+            },
+            {
+              "text": "VM33",
+              "explain": "VM33はVNI 10030です。",
+              "ok": false
+            },
+            {
+              "text": "VM32",
+              "explain": "VM32のVLAN 320はVNI 10040へ対応します。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "matrix-03",
+          "format": "選択",
+          "theme": "VNIの一致から通信可否を読む",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "VM23とVM32のIPアドレスは別でも、L2通信可と判断する根拠はどれか。",
+          "choices": [
+            {
+              "text": "物理サーバが必ず同じである",
+              "explain": "VM23とVM32は別の物理サーバです。",
+              "ok": false
+            },
+            {
+              "text": "同じVNI 10040に所属する",
+              "explain": "原問の表1はレイヤー2の通信可否を問います。",
+              "ok": true
+            },
+            {
+              "text": "VM名の末尾が両方2である",
+              "explain": "名前の文字は論理ネットワークを決めません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "matrix-04",
+          "format": "穴埋め",
+          "theme": "VNIの一致から通信可否を読む",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "表1の六つの通信可否を完成する",
+          "template": "VM23からVM11は{a}、VM12は{b}、VM13は{c}、VM31は{d}、VM32は{e}、VM33は{f}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "ア",
+              "choices": [
+                {
+                  "text": "○",
+                  "explain": "IPの先頭が同じでもVNIが異なります。",
+                  "ok": false
+                },
+                {
+                  "text": "×",
+                  "explain": "VM11はVNI 10010です。",
+                  "ok": true
+                }
+              ],
+              "why": "VM11はVNI 10010です。"
+            },
+            {
+              "key": "b",
+              "label": "イ",
+              "choices": [
+                {
+                  "text": "×",
+                  "explain": "VM12はVNI 10020です。",
+                  "ok": true
+                },
+                {
+                  "text": "○",
+                  "explain": "VLAN番号の下二桁だけで一致を決めません。",
+                  "ok": false
+                }
+              ],
+              "why": "VM12はVNI 10020です。"
+            },
+            {
+              "key": "c",
+              "label": "ウ",
+              "choices": [
+                {
+                  "text": "○",
+                  "explain": "VM13とVM23は異なるVNIです。",
+                  "ok": false
+                },
+                {
+                  "text": "×",
+                  "explain": "VM13はVNI 10030です。",
+                  "ok": true
+                }
+              ],
+              "why": "VM13はVNI 10030です。"
+            },
+            {
+              "key": "d",
+              "label": "エ",
+              "choices": [
+                {
+                  "text": "×",
+                  "explain": "VM31はVNI 10010です。",
+                  "ok": true
+                },
+                {
+                  "text": "○",
+                  "explain": "IPアドレスだけでL2の所属を決めません。",
+                  "ok": false
+                }
+              ],
+              "why": "VM31はVNI 10010です。"
+            },
+            {
+              "key": "e",
+              "label": "オ",
+              "choices": [
+                {
+                  "text": "×",
+                  "explain": "物理サーバが別でもVXLANで同じL2にできます。",
+                  "ok": false
+                },
+                {
+                  "text": "○",
+                  "explain": "VM32はVM23と同じVNI 10040です。",
+                  "ok": true
+                }
+              ],
+              "why": "VM32はVM23と同じVNI 10040です。"
+            },
+            {
+              "key": "f",
+              "label": "カ",
+              "choices": [
+                {
+                  "text": "×",
+                  "explain": "VM33はVNI 10030です。",
+                  "ok": true
+                },
+                {
+                  "text": "○",
+                  "explain": "末尾のVM番号が近くてもVNIは異なります。",
+                  "ok": false
+                }
+              ],
+              "why": "VM33はVNI 10030です。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.13,
+            "bottom": 0.89,
+            "label": "図4のVLAN・VNI対応表（IPA原図・原表）"
+          }
+        },
+        {
+          "id": "matrix-05",
+          "format": "並べ替え",
+          "theme": "VNIの一致から通信可否を読む",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "通信可否を判定する順序",
+          "lead": "VM23から各VMへのL2通信を判定します。",
+          "lines": [
+            {
+              "code": "送信元VM23のVLAN 230を確認する"
+            },
+            {
+              "code": "対応表でVNI 10040へ変換されると読む"
+            },
+            {
+              "code": "通信先VMのVLANからVNIを同じように読む"
+            },
+            {
+              "code": "VNIが10040のVM32だけを通信可とする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "VMのIPアドレスは重複もあります。原問の対応表でVNIを追います。",
+          "ngExplain": "送信元と通信先の両方をVNIへ変換してから比較します。",
+          "stage": "reason"
+        },
+        {
+          "id": "matrix-06",
+          "format": "選択",
+          "theme": "VNIの一致から通信可否を読む",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：VM33のVLAN 330の対応をVNI 10040へ変更した。VM23との可否はどうか。",
+          "choices": [
+            {
+              "text": "VLAN IDも230へ変更しないと絶対不可",
+              "explain": "拠点ローカルのVLAN IDが異なっても同じVNIへ対応付けられます。",
+              "ok": false
+            },
+            {
+              "text": "同じL2として通信可になる",
+              "explain": "両方がVNI 10040へ対応するためです。",
+              "ok": true
+            },
+            {
+              "text": "VM名が違うので必ず不可",
+              "explain": "所属は名前でなくVNIの対応で決まります。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "arp-learning",
+      "title": "ARPの往復から三つ組を学ぶ",
+      "targets": [
+        "s3-1",
+        "s3-2",
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "arp-learning-01",
+          "format": "読む",
+          "theme": "ARPの往復から三つ組を学ぶ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "要求は広げ、応答は学習先へ返す",
+          "body": "VM11がVM31のMACを尋ねます。VNI 10010のマルチキャストグループは239.0.0.1です。L3SW31は要求パケットの外側と内側から、VM11を返送するための三つの情報を学習します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "学習するもの",
+              "値"
+            ],
+            "rows": [
+              [
+                "VM11のMAC",
+                "AC-αβ-F1-00-00-11"
+              ],
+              [
+                "VNI",
+                "10010"
+              ],
+              [
+                "L3SW11のVTEP IP",
+                "10.0.0.11"
+              ]
+            ],
+            "caption": "説明用：ARP要求からL3SW31が得る情報"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "arp-learning-02",
+          "format": "選択",
+          "theme": "ARPの往復から三つ組を学ぶ",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "ARP要求を包んだVXLANパケットの宛先IPはどれか。",
+          "choices": [
+            {
+              "text": "10.0.0.31",
+              "explain": "まだVM31のMAC所在を尋ねるブロードキャストの段階です。",
+              "ok": false
+            },
+            {
+              "text": "192.168.1.3",
+              "explain": "これはVM31の内側IPで、外側VXLANの宛先ではありません。",
+              "ok": false
+            },
+            {
+              "text": "239.0.0.1",
+              "explain": "VM11のVLAN 110はVNI 10010とグループ239.0.0.1へ対応します。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "arp-learning-03",
+          "format": "選択",
+          "theme": "ARPの往復から三つ組を学ぶ",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "L3SW31が応答をL3SW11へユニキャストするため、要求から学ぶべき外側情報はどれか。",
+          "choices": [
+            {
+              "text": "マルチキャストグループだけ",
+              "explain": "応答は学習した一つのVTEPへ返せます。",
+              "ok": false
+            },
+            {
+              "text": "L3SW11のVTEP IP 10.0.0.11",
+              "explain": "返信するVXLANパケットの外側宛先に使います。",
+              "ok": true
+            },
+            {
+              "text": "VM11のIPだけ",
+              "explain": "外側VXLANの宛先VTEPはVMのIPではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "arp-learning-04",
+          "format": "穴埋め",
+          "theme": "ARPの往復から三つ組を学ぶ",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "表2の四空欄を完成する",
+          "template": "L3SW11のキは{a}、クは{b}。L3SW31のケは{c}、コは{d}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "キ VNI",
+              "choices": [
+                {
+                  "text": "10040",
+                  "explain": "VM32やVM23のVNIです。",
+                  "ok": false
+                },
+                {
+                  "text": "10010",
+                  "explain": "VM31もVM11と同じVNI 10010です。",
+                  "ok": true
+                }
+              ],
+              "why": "VM31もVM11と同じVNI 10010です。"
+            },
+            {
+              "key": "b",
+              "label": "ク リモートVTEP",
+              "choices": [
+                {
+                  "text": "10.0.0.31",
+                  "explain": "VM31が接続するL3SW31のループバックIPです。",
+                  "ok": true
+                },
+                {
+                  "text": "10.0.0.11",
+                  "explain": "これはL3SW11自身のVTEP IPです。",
+                  "ok": false
+                }
+              ],
+              "why": "VM31が接続するL3SW31のループバックIPです。"
+            },
+            {
+              "key": "c",
+              "label": "ケ VNI",
+              "choices": [
+                {
+                  "text": "239.0.0.1",
+                  "explain": "これはグループアドレスでVNIではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "10010",
+                  "explain": "VM11からのARP要求も同じVNIです。",
+                  "ok": true
+                }
+              ],
+              "why": "VM11からのARP要求も同じVNIです。"
+            },
+            {
+              "key": "d",
+              "label": "コ リモートVTEP",
+              "choices": [
+                {
+                  "text": "10.0.0.11",
+                  "explain": "VM11が接続するL3SW11のVTEP IPです。",
+                  "ok": true
+                },
+                {
+                  "text": "10.0.0.31",
+                  "explain": "これはL3SW31自身です。",
+                  "ok": false
+                }
+              ],
+              "why": "VM11が接続するL3SW11のVTEP IPです。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 7,
+            "top": 0.38,
+            "bottom": 0.91,
+            "label": "ARP要求の動作と図4の対応（IPA原文）"
+          }
+        },
+        {
+          "id": "arp-learning-05",
+          "format": "並べ替え",
+          "theme": "ARPの往復から三つ組を学ぶ",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "ARP往復で情報を学ぶ順序",
+          "lead": "L3SW31から見た処理です。",
+          "lines": [
+            {
+              "code": "L3SW11がVM11のARP要求をVNI 10010で送る"
+            },
+            {
+              "code": "L3SW31が内側フレームからVM11のMACを読む"
+            },
+            {
+              "code": "VXLANヘッダーからVNI、外側IPからL3SW11のVTEP IPを読む"
+            },
+            {
+              "code": "三つ組を使ってARP応答をL3SW11へユニキャストする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "MACだけでなく、論理ネットワークと到達先VTEPを組にします。",
+          "ngExplain": "情報の出所を内側フレーム、VXLAN、外側IPに分けます。",
+          "stage": "reason"
+        },
+        {
+          "id": "arp-learning-06",
+          "format": "選択",
+          "theme": "ARPの往復から三つ組を学ぶ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：同じMACを別VNIで受信した。学習表では同一項目に上書きするか。",
+          "choices": [
+            {
+              "text": "外側IPを一切記録しない",
+              "explain": "リモートVTEPへの返送に外側IPが必要です。",
+              "ok": false
+            },
+            {
+              "text": "VNIを含む別の対応として扱う",
+              "explain": "MACだけでなくVNIを組み合わせて学習します。",
+              "ok": true
+            },
+            {
+              "text": "MACだけが同じなら必ず同一L2とする",
+              "explain": "異なるVNIは別の論理L2です。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "reflector",
+      "title": "iBGPピア数と反射ループを抑える",
+      "targets": [
+        "s4-1"
+      ],
+      "steps": [
+        {
+          "id": "reflector-01",
+          "format": "読む",
+          "theme": "iBGPピア数と反射ループを抑える",
+          "scaffold": 5,
+          "type": "info",
+          "title": "全台同士の接続を減らす",
+          "body": "iBGPを全台でフルメッシュにすると、台数の増加に伴いピア数が急増します。ルートリフレクタがクライアント間の経路を反射します。冗長なリフレクタでは、同じクラスターを識別するIDで反射ループを防ぎます。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 55,
+                "y": 65,
+                "label": "RR1/RR2"
+              },
+              {
+                "id": "node1",
+                "x": 165,
+                "y": 65,
+                "label": "クライアント群"
+              },
+              {
+                "id": "node2",
+                "x": 275,
+                "y": 65,
+                "label": "EVPN経路"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：ルートリフレクタで集約"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "reflector-02",
+          "format": "選択",
+          "theme": "iBGPピア数と反射ループを抑える",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "ルートリフレクタを使う利点はどれか。",
+          "choices": [
+            {
+              "text": "全てのVNIを一つに統合する",
+              "explain": "ピア構成と論理セグメントの統合は別です。",
+              "ok": false
+            },
+            {
+              "text": "OSPFのLSDBを削除できる",
+              "explain": "アンダーレイのIP到達性にはOSPFが引き続き使われます。",
+              "ok": false
+            },
+            {
+              "text": "iBGPピアの数を減らせる",
+              "explain": "各クライアントが全台と直接ピアを張らずに済みます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "reflector-03",
+          "format": "選択",
+          "theme": "iBGPピア数と反射ループを抑える",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "二台のRRを同じクラスターとして扱うIDはどれか。",
+          "choices": [
+            {
+              "text": "ARPのオペコード",
+              "explain": "ARP要求と応答の種別です。",
+              "ok": false
+            },
+            {
+              "text": "クラスターID",
+              "explain": "反射経路のループ防止に使います。",
+              "ok": true
+            },
+            {
+              "text": "VLAN ID",
+              "explain": "ローカルなL2の識別です。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "reflector-04",
+          "format": "穴埋め",
+          "theme": "iBGPピア数と反射ループを抑える",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "利点とID名を完成する",
+          "template": "ルートリフレクタにより{a}を減らす。冗長なRRへ同じ{b}を設定する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "減らすもの",
+              "choices": [
+                {
+                  "text": "iBGPピアの数",
+                  "explain": "フルメッシュを避ける利点です。",
+                  "ok": true
+                },
+                {
+                  "text": "VTEPのIPアドレス数",
+                  "explain": "各VTEPの識別は引き続き必要です。",
+                  "ok": false
+                }
+              ],
+              "why": "フルメッシュを避ける利点です。"
+            },
+            {
+              "key": "b",
+              "label": "ループ防止のID",
+              "choices": [
+                {
+                  "text": "VNI",
+                  "explain": "EVPNの論理L2を識別する番号です。",
+                  "ok": false
+                },
+                {
+                  "text": "クラスターID",
+                  "explain": "冗長RRを同じクラスターとして識別します。",
+                  "ok": true
+                }
+              ],
+              "why": "冗長RRを同じクラスターとして識別します。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "reflector-05",
+          "format": "並べ替え",
+          "theme": "iBGPピア数と反射ループを抑える",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "反射による経路交換を並べる",
+          "lead": "一つのクライアントから別のクライアントへ伝えます。",
+          "lines": [
+            {
+              "code": "クライアントがRRへEVPN経路を広告する"
+            },
+            {
+              "code": "RRが別クライアントへ経路を反射する"
+            },
+            {
+              "code": "受信側がRRとのピアだけで経路を学習する"
+            },
+            {
+              "code": "全クライアント間の直接iBGPピアを省ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "経路の反射が、フルメッシュの接続を置き換えます。",
+          "ngExplain": "まずRRへ集め、そこからクライアントへ配ります。",
+          "stage": "reason"
+        },
+        {
+          "id": "reflector-06",
+          "format": "選択",
+          "theme": "iBGPピア数と反射ループを抑える",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：クライアントが8台から20台に増える。RRの利点はどうなるか。",
+          "choices": [
+            {
+              "text": "RRがあれば冗長性の設計は不要になる",
+              "explain": "RR自体や到達経路の冗長化は別に必要です。",
+              "ok": false
+            },
+            {
+              "text": "全台フルメッシュとの差が大きくなる",
+              "explain": "フルメッシュのピア数は台数に対して急増するためです。",
+              "ok": true
+            },
+            {
+              "text": "台数が増えるほど全台直接接続が減る",
+              "explain": "フルメッシュでは逆に接続数が増えます。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "evpn-learning",
+      "title": "データを流す前に所在を学ぶ",
+      "targets": [
+        "s4-2",
+        "s4-4"
+      ],
+      "steps": [
+        {
+          "id": "evpn-learning-01",
+          "format": "読む",
+          "theme": "データを流す前に所在を学ぶ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "受信パケットからの学習を制御プレーンへ移す",
+          "body": "現行方式はVXLANパケットを受けてMACとVTEPを学びます。EVPNではMP-BGPを使い、MAC、VNI、リモートVTEPなどを先に交換します。所在が分かるユニキャストは、未知として全体へ広げずに済みます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "方式",
+              "学習の時点",
+              "情報源"
+            ],
+            "rows": [
+              [
+                "現行",
+                "パケット受信後",
+                "データプレーン"
+              ],
+              [
+                "EVPN",
+                "転送前に可能",
+                "MP-BGP"
+              ]
+            ],
+            "caption": "説明用：学習方法の違い"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "evpn-learning-02",
+          "format": "選択",
+          "theme": "データを流す前に所在を学ぶ",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "EVPNでリモートVTEPのIPを学ぶ方法はどれか。",
+          "choices": [
+            {
+              "text": "VNIの24ビットからIPを計算する",
+              "explain": "VNIからVTEP IPを算出する規則ではありません。",
+              "ok": false
+            },
+            {
+              "text": "MP-BGPを用いて学習する",
+              "explain": "EVPN経路として制御プレーンで交換します。",
+              "ok": true
+            },
+            {
+              "text": "ARP要求を全VTEPへ無限に送り続ける",
+              "explain": "事前学習によって未知転送を減らせます。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "evpn-learning-03",
+          "format": "選択",
+          "theme": "データを流す前に所在を学ぶ",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "MACの所在を事前学習すると、どのBUMを減らせるか。",
+          "choices": [
+            {
+              "text": "Unknown Unicast",
+              "explain": "宛先MACのVTEPが分かれば既知ユニキャストとして送れます。",
+              "ok": true
+            },
+            {
+              "text": "Broadcastの全て",
+              "explain": "ARP要求など必要なブロードキャストまで必ずなくなるわけではありません。",
+              "ok": false
+            },
+            {
+              "text": "Multicastの全て",
+              "explain": "アプリケーションのマルチキャストを無条件に消す機能ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "evpn-learning-04",
+          "format": "穴埋め",
+          "theme": "データを流す前に所在を学ぶ",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "二つの空欄を完成する",
+          "template": "事前学習で減らせるのは{a}のフラッディングである。サーバを識別する値は{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "空欄f",
+              "choices": [
+                {
+                  "text": "Unknown Unicast",
+                  "explain": "未知だったMACの所在をMP-BGPで知れるためです。",
+                  "ok": true
+                },
+                {
+                  "text": "全てのBroadcast",
+                  "explain": "宛先が全員であるブロードキャストとは性質が異なります。",
+                  "ok": false
+                }
+              ],
+              "why": "未知だったMACの所在をMP-BGPで知れるためです。"
+            },
+            {
+              "key": "b",
+              "label": "空欄g",
+              "choices": [
+                {
+                  "text": "LSDB",
+                  "explain": "OSPFのリンク状態データベースです。",
+                  "ok": false
+                },
+                {
+                  "text": "ESI",
+                  "explain": "Ethernet Segment Identifierで、同じ接続セグメントを識別します。",
+                  "ok": true
+                }
+              ],
+              "why": "Ethernet Segment Identifierで、同じ接続セグメントを識別します。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 11,
+            "top": 0.18,
+            "bottom": 0.76,
+            "label": "EVPN機能2・3と空欄f・g（IPA原文）"
+          }
+        },
+        {
+          "id": "evpn-learning-05",
+          "format": "並べ替え",
+          "theme": "データを流す前に所在を学ぶ",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "Unknown Unicastを減らす因果を並べる",
+          "lead": "宛先VMが別のVTEPに接続されています。",
+          "lines": [
+            {
+              "code": "接続元VTEPがVMのMACとVNIをMP-BGPで広告する"
+            },
+            {
+              "code": "他のVTEPがMACに対応するリモートVTEP IPを事前学習する"
+            },
+            {
+              "code": "宛先MACを既知として一つのVTEPへ送る"
+            },
+            {
+              "code": "Unknown Unicastのフラッディングを低減する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "EVPNが転送するのは制御情報です。実データはVXLANで送ります。",
+          "ngExplain": "先に所在を広告するので、最初のデータから宛先を絞れます。",
+          "stage": "reason"
+        },
+        {
+          "id": "evpn-learning-06",
+          "format": "選択",
+          "theme": "データを流す前に所在を学ぶ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：MP-BGPでMAC経路を受け取れず、データプレーン学習も無効。未知MACをどう扱うか。",
+          "choices": [
+            {
+              "text": "既知ユニキャストとして一つへ送る根拠がない",
+              "explain": "所在情報がないので、破棄又はBUMの方針に従う必要があります。",
+              "ok": true
+            },
+            {
+              "text": "VNIだけからMAC所在を一意に算出できる",
+              "explain": "同じVNIに複数のVTEPが参加します。",
+              "ok": false
+            },
+            {
+              "text": "OSPFがVMのMACを必ず広告する",
+              "explain": "OSPFはこのEVPN MAC経路の交換を担いません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "multihoming",
+      "title": "二本を待機でなく同時に使う",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "multihoming-01",
+          "format": "読む",
+          "theme": "二本を待機でなく同時に使う",
+          "scaffold": 5,
+          "type": "info",
+          "title": "物理サーバを二台のVTEPへつなぐ",
+          "body": "現行は二つのNICをアクティブ／スタンバイで使います。新構成では同じESIを使う論理インタフェースを二台へ作り、リンクアグリゲーションで接続します。両NICをアクティブにして帯域を利用します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "構成",
+              "利用する回線"
+            ],
+            "rows": [
+              [
+                "アクティブ／スタンバイ",
+                "通常は一方"
+              ],
+              [
+                "アクティブ／アクティブ",
+                "通常から二方"
+              ]
+            ],
+            "caption": "説明用：サーバの二つのNIC"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "multihoming-02",
+          "format": "選択",
+          "theme": "二本を待機でなく同時に使う",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "現行より増える通常時の利用可能帯域はなぜか。",
+          "choices": [
+            {
+              "text": "二つの回線を同時に利用できる",
+              "explain": "アクティブ／アクティブでリンクを束ねるためです。",
+              "ok": true
+            },
+            {
+              "text": "VNIの桁数が増える",
+              "explain": "VNIは同じ24ビットです。",
+              "ok": false
+            },
+            {
+              "text": "IPマルチキャストを必ず増やす",
+              "explain": "新構成はマルチキャストルーティングを使いません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "multihoming-03",
+          "format": "選択",
+          "theme": "二本を待機でなく同時に使う",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "同じ物理サーバへの二台のVTEPで同じESIを使う理由はどれか。",
+          "choices": [
+            {
+              "text": "二台を同じIPアドレスにする",
+              "explain": "ESIはIPアドレスの重複設定ではありません。",
+              "ok": false
+            },
+            {
+              "text": "二つのVNIを無条件に統合する",
+              "explain": "ESIとVNIは異なる識別対象です。",
+              "ok": false
+            },
+            {
+              "text": "同じEthernet Segmentへの接続だと識別する",
+              "explain": "マルチホームされた同一セグメントとして扱います。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "multihoming-04",
+          "format": "穴埋め",
+          "theme": "二本を待機でなく同時に使う",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "比較した利点を完成する",
+          "template": "現行の待機構成と比べ、{a}の帯域を{b}利用できる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "対象",
+              "choices": [
+                {
+                  "text": "二つの回線",
+                  "explain": "二つのNICをアクティブにします。",
+                  "ok": true
+                },
+                {
+                  "text": "一つの停止回線だけ",
+                  "explain": "停止中の回線の帯域は利用できません。",
+                  "ok": false
+                }
+              ],
+              "why": "二つのNICをアクティブにします。"
+            },
+            {
+              "key": "b",
+              "label": "利点",
+              "choices": [
+                {
+                  "text": "必ずゼロに",
+                  "explain": "帯域をなくす設計ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "有効に",
+                  "explain": "両方を通常時から使うことができます。",
+                  "ok": true
+                }
+              ],
+              "why": "両方を通常時から使うことができます。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "multihoming-05",
+          "format": "並べ替え",
+          "theme": "二本を待機でなく同時に使う",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "EVPNマルチホームの設計を並べる",
+          "lead": "一台の物理サーバを二台のL3SWへつなぎます。",
+          "lines": [
+            {
+              "code": "両L3SWの論理インタフェースへ同じESIを設定する"
+            },
+            {
+              "code": "二つのNICをアクティブ／アクティブにする"
+            },
+            {
+              "code": "リンクアグリゲーションで二回線を束ねる"
+            },
+            {
+              "code": "二つの回線の帯域を通常時から利用する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "ESIは同じ接続先を制御プレーンで識別する材料です。",
+          "ngExplain": "同じセグメントの識別を用意してから、両リンクを束ねます。",
+          "stage": "reason"
+        },
+        {
+          "id": "multihoming-06",
+          "format": "選択",
+          "theme": "二本を待機でなく同時に使う",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：両NICをアクティブにしたが、L3SW間で同一セグメントの制御ができない。安全か。",
+          "choices": [
+            {
+              "text": "物理リンクが二本なら自動的に安全",
+              "explain": "論理的な接続関係の共有が必要です。",
+              "ok": false
+            },
+            {
+              "text": "ESIはMACアドレスを暗号化するためだけに使う",
+              "explain": "ESIはEthernet Segmentの識別子です。",
+              "ok": false
+            },
+            {
+              "text": "二重転送やループを避ける制御が別途必要",
+              "explain": "単に両方を上げるだけでは、マルチホームを正しく扱えません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "head-end",
+      "title": "マルチキャストなしでBUMを複製する",
+      "targets": [
+        "s4-5"
+      ],
+      "steps": [
+        {
+          "id": "head-end-01",
+          "format": "読む",
+          "theme": "マルチキャストなしでBUMを複製する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "一つのBUMを複数のユニキャストへ変える",
+          "body": "新構成はIPマルチキャストルーティングを使いません。VTEPはEVPNで、同じVNIに参加するリモートVTEPを学習します。ARP要求を受けると、各参加VTEP宛てのIPユニキャストを複製して送ります。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "ARP要求 VLAN ID付き",
+                "d": "VLANからVNIを決定"
+              },
+              {
+                "t": "EVPNの参加情報",
+                "d": "同じVNIのVTEPを列挙"
+              },
+              {
+                "t": "ユニキャスト複製",
+                "d": "各VTEP IPへ送信"
+              }
+            ],
+            "caption": "説明用：Ingress Replicationの考え方"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "head-end-02",
+          "format": "選択",
+          "theme": "マルチキャストなしでBUMを複製する",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "ARP要求の転送先を選ぶ最初の対応はどれか。",
+          "choices": [
+            {
+              "text": "VLAN IDに対応するVNI",
+              "explain": "ローカルVLANをオーバーレイの識別子へ変換します。",
+              "ok": true
+            },
+            {
+              "text": "ARPの送信時刻に対応するAS番号",
+              "explain": "時間でVNIを選びません。",
+              "ok": false
+            },
+            {
+              "text": "VM名に対応するDNSサーバ",
+              "explain": "BUM転送先のVTEP選択には使いません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "head-end-03",
+          "format": "選択",
+          "theme": "マルチキャストなしでBUMを複製する",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "同じVNIをもたないVTEPへも送るか。",
+          "choices": [
+            {
+              "text": "全IPアドレスへ送る",
+              "explain": "転送範囲をVNIで限定します。",
+              "ok": false
+            },
+            {
+              "text": "必ず一台だけへ送る",
+              "explain": "同じVNIに複数のリモートVTEPが参加し得ます。",
+              "ok": false
+            },
+            {
+              "text": "送らない",
+              "explain": "別の論理L2へARP要求を漏らさないためです。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "head-end-04",
+          "format": "穴埋め",
+          "theme": "マルチキャストなしでBUMを複製する",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "原問の転送先を完成する",
+          "template": "VLAN IDに対応する{a}をもち、{b}リモートVTEPへ転送する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "一致条件",
+              "choices": [
+                {
+                  "text": "ルータID",
+                  "explain": "OSPF装置の識別であり、L2所属の条件ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "VNI",
+                  "explain": "同じ論理レイヤー2への参加を示します。",
+                  "ok": true
+                }
+              ],
+              "why": "同じ論理レイヤー2への参加を示します。"
+            },
+            {
+              "key": "b",
+              "label": "範囲",
+              "choices": [
+                {
+                  "text": "全ての",
+                  "explain": "ARP要求は同じ論理L2の全参加先へ届けます。",
+                  "ok": true
+                },
+                {
+                  "text": "コスト最大の一つの",
+                  "explain": "BUMの必要範囲を一台へ限定できません。",
+                  "ok": false
+                }
+              ],
+              "why": "ARP要求は同じ論理L2の全参加先へ届けます。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 10,
+            "top": 0.31,
+            "bottom": 0.75,
+            "label": "マルチキャストを使わない新設計（IPA原文）"
+          }
+        },
+        {
+          "id": "head-end-05",
+          "format": "並べ替え",
+          "theme": "マルチキャストなしでBUMを複製する",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "ARP要求をユニキャスト複製する順序",
+          "lead": "送信元VTEPでの処理です。",
+          "lines": [
+            {
+              "code": "ARP要求フレームのVLAN IDを読む"
+            },
+            {
+              "code": "対応表からVNIを得る"
+            },
+            {
+              "code": "EVPNで学習した同じVNIのリモートVTEPを列挙する"
+            },
+            {
+              "code": "各VTEP IP宛てにVXLANパケットを複製する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "内側はブロードキャストでも、外側は複数のIPユニキャストです。",
+          "ngExplain": "転送先一覧を制御プレーンで得てから、送信元で複製します。",
+          "stage": "reason"
+        },
+        {
+          "id": "head-end-06",
+          "format": "選択",
+          "theme": "マルチキャストなしでBUMを複製する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：同じVNIのリモートVTEPが3台。キャプチャで期待する外側宛先はどうなるか。",
+          "choices": [
+            {
+              "text": "一つのマルチキャストIPだけ",
+              "explain": "新構成はBUM転送にIPユニキャストを使います。",
+              "ok": false
+            },
+            {
+              "text": "ARP対象VMの内側IPだけ",
+              "explain": "外側宛先にはVTEP IPを設定します。",
+              "ok": false
+            },
+            {
+              "text": "3台それぞれのVTEP IP",
+              "explain": "各リモートVTEPへ一つずつユニキャストします。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

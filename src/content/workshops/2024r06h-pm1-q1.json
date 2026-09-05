@@ -1,0 +1,1569 @@
+{
+  "examKey": "2024r06h/pm1/1",
+  "title": "ゲーム配信を止めない監視と経路制御",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/m42obm000000afqx-att/2024r06h_nw_pm1_qs.pdf",
+    "https://www.rfc-editor.org/rfc/rfc8955",
+    "https://www.rfc-editor.org/rfc/rfc9110.html",
+    "https://www.rfc-editor.org/rfc/rfc792.html"
+  ],
+  "sections": [
+    {
+      "id": "health",
+      "title": "通信できることと配信できること",
+      "targets": [
+        "s1-1"
+      ],
+      "steps": [
+        {
+          "id": "health-service-intro",
+          "type": "info",
+          "title": "ダウンロードすると、誰がファイルを返すのか",
+          "format": "読む",
+          "theme": "通信できることと配信できること",
+          "scaffold": 5,
+          "stage": "concept",
+          "body": "ゲームをダウンロードするPCがクライアントです。要求されたファイルを返すコンピュータが配信サーバです。HTTP（Hypertext Transfer Protocol）は、要求と応答をやり取りする通信の規則です。\n\n利用者が増えたら、配信サーバを複数台に分けます。ロードバランサー（LB：Load Balancer）は、利用者の接続をどのサーバへ渡すか決めます。日本語では負荷分散装置と呼びます。この練習では、まずサーバが2台の小さな構成を考えます。",
+          "fig": {
+            "kind": "topo",
+            "height": 190,
+            "nodes": [
+              {"id": "pc", "x": 42, "y": 80, "icon": "pc", "label": "利用者PC"},
+              {"id": "lb", "x": 158, "y": 80, "icon": "server", "label": "LB", "hi": true},
+              {"id": "first", "x": 280, "y": 35, "icon": "server", "label": "配信サーバA"},
+              {"id": "second", "x": 280, "y": 130, "icon": "server", "label": "配信サーバB"}
+            ],
+            "links": [{"from": "pc", "to": "lb"}, {"from": "lb", "to": "first"}, {"from": "lb", "to": "second"}],
+            "caption": "説明用：LBが配信先のサーバを選ぶ"
+          }
+        },
+        {
+          "id": "health-service-role",
+          "type": "quiz",
+          "title": "LBの役割として、この構成に合うものはどれか。",
+          "format": "選択",
+          "theme": "通信できることと配信できること",
+          "scaffold": 5,
+          "stage": "check",
+          "choices": [
+            {"text": "利用者の接続を、配信サーバAかBへ振り分ける", "ok": true, "explain": "接続先を選ぶ役割です。ファイルを返す処理は配信サーバが担当します。"},
+            {"text": "利用者PCへIPアドレスなどのネットワーク設定を配る", "ok": false, "explain": "これはDHCPサーバの役割です。接続を配信サーバへ分ける処理とは異なります。"},
+            {"text": "配信サーバの名前に対応するIPアドレスを回答する", "ok": false, "explain": "これはDNSサーバの役割です。この構成のLBは、届いた接続を振り分けます。"}
+          ]
+        },
+        {
+          "id": "health-process-intro",
+          "type": "info",
+          "title": "電源が入っていることと、仕事ができることは違う",
+          "format": "読む",
+          "theme": "通信できることと配信できること",
+          "scaffold": 5,
+          "stage": "concept",
+          "body": "サーバの中では、OS（Operating System）が通信などの基本機能を動かします。その上で動くHTTPサーバのプログラムが、ファイルを返す仕事をします。実行中のプログラムをプロセスと呼びます。\n\nHTTPサーバのプロセスだけが停止することもあります。OSは動き続けるため、ネットワークの応答があっても配信できるとは限りません。pingはICMP（Internet Control Message Protocol）のエコー要求と応答で疎通を調べます。HTTPによるファイル取得までは試しません。",
+          "fig": {
+            "kind": "console",
+            "lines": ["説明用：同じサーバへの二つの確認", "ping 192.0.2.10", "Reply from 192.0.2.10", "", "curl http://192.0.2.10/game.zip", "curl: (7) Failed to connect"],
+            "highlight": [2, 5],
+            "caption": "疎通は成功してもHTTP接続は失敗し得る"
+          }
+        },
+        {
+          "id": "health-process-check",
+          "type": "quiz",
+          "title": "OSが動作し、HTTPサーバのプロセスだけが停止した。起こり得る状態はどれか。",
+          "format": "選択",
+          "theme": "通信できることと配信できること",
+          "scaffold": 5,
+          "stage": "check",
+          "choices": [
+            {"text": "pingの応答は返るが、HTTPでファイルを取得できない", "ok": true, "explain": "応答する機能が違います。ICMPの応答だけでは、HTTPサーバの動作確認になりません。"},
+            {"text": "HTTPが停止すると、ICMPも同じプロセスなので必ず停止する", "ok": false, "explain": "ICMPとHTTPは同じプロセスではありません。OSがICMPに応答し続ける場合があります。"},
+            {"text": "pingの応答が返れば、OSが代わりにゲームファイルを返す", "ok": false, "explain": "OSの疎通応答はファイル配信の代行ではありません。要求された処理を実行するHTTPサーバが必要です。"}
+          ]
+        },
+        {
+          "id": "health-01",
+          "format": "読む",
+          "theme": "通信できることと配信できること",
+          "scaffold": 5,
+          "type": "info",
+          "title": "サーバに届いても配信できない",
+          "body": "2台の配信サーバへ接続を分けます。ロードバランサー（LB）が、利用できるサーバを選びます。片方ではOSが動いていても、Web配信の処理が停止しています。監視の対象を分けて考えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "対象",
+              "現在の状態"
+            ],
+            "rows": [
+              [
+                "OSのICMP Echo応答",
+                "応答する"
+              ],
+              [
+                "HTTPの配信処理",
+                "停止している"
+              ]
+            ],
+            "caption": "説明用：小さな障害状況"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "health-02",
+          "format": "選択",
+          "theme": "通信できることと配信できること",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "このサーバへpingが成功した。何が分かるか。",
+          "choices": [
+            {
+              "text": "HTTPでファイルを取得できる",
+              "explain": "HTTPの処理は別です。OSだけ動く障害を見逃します。",
+              "ok": false
+            },
+            {
+              "text": "全ての利用者が正常にダウンロードできる",
+              "explain": "一つの監視経路の応答だけでは、利用者の経路も配信も確認できません。",
+              "ok": false
+            },
+            {
+              "text": "ICMP Echoへの応答が返る",
+              "explain": "ICMPはInternet Control Message Protocolです。応答だけではWeb処理の稼働を証明できません。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "health-03",
+          "format": "選択",
+          "theme": "通信できることと配信できること",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "監視先からHTTP応答が返らない。LBが取る処置はどれか。",
+          "choices": [
+            {
+              "text": "pingへの応答があれば、HTTPの失敗は無視して振り分けを続ける",
+              "explain": "OSの応答と配信処理の稼働は別です。利用者が使うHTTPの失敗を無視すると、配信できないサーバへ接続を送ります。",
+              "ok": false
+            },
+            {
+              "text": "その配信サーバを新規の振分け先から外す",
+              "explain": "停止した配信処理へ新しい利用者を送らずに済みます。",
+              "ok": true
+            },
+            {
+              "text": "接続数が少ないので、正常なサーバより優先して振り分ける",
+              "explain": "少ない接続数は健全性の証明ではありません。まず稼働を確認し、利用可能なサーバの中から振分け先を選びます。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "health-04",
+          "format": "穴埋め",
+          "theme": "通信できることと配信できること",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "見逃す条件と対象を分ける",
+          "template": "{a}に応答しても、{b}が停止した状態は検知できない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "応答の種類",
+              "choices": [
+                {
+                  "text": "HTTPでのファイル取得",
+                  "explain": "ファイル取得を確認できるなら、単なるICMP監視とは異なります。",
+                  "ok": false
+                },
+                {
+                  "text": "ICMP Echo",
+                  "explain": "ネットワーク層の応答とHTTP処理を区別します。",
+                  "ok": true
+                }
+              ],
+              "why": "ネットワーク層の応答とHTTP処理を区別します。"
+            },
+            {
+              "key": "b",
+              "label": "見逃す対象",
+              "choices": [
+                {
+                  "text": "HTTPサーバのプロセス",
+                  "explain": "配信アプリケーションが対象です。",
+                  "ok": true
+                },
+                {
+                  "text": "LBの電源",
+                  "explain": "今回は配信サーバ上の処理を監視しています。",
+                  "ok": false
+                }
+              ],
+              "why": "配信アプリケーションが対象です。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "health-05",
+          "format": "並べ替え",
+          "theme": "通信できることと配信できること",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "ICMP監視だけで起きる問題を組み立てる",
+          "lead": "障害の条件から、利用者への影響まで並べます。",
+          "lines": [
+            {
+              "code": "HTTPサーバのプロセスが停止する"
+            },
+            {
+              "code": "OSはICMP Echoへ応答する"
+            },
+            {
+              "code": "LBが停止を検知できず振分けを続ける"
+            },
+            {
+              "code": "利用者がファイルを取得できなくなる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "監視が確認している機能より上の層で障害が起きています。",
+          "ngExplain": "OSの応答と配信処理の状態を分けてから、振分けへの影響を考えます。",
+          "stage": "reason"
+        },
+        {
+          "id": "health-06",
+          "format": "選択",
+          "theme": "通信できることと配信できること",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：TCP接続は成功するがHTTPが500を返す。追加すべき確認はどれか。",
+          "choices": [
+            {
+              "text": "サーバのIPアドレスの桁数を確認する",
+              "explain": "アドレスの形式はHTTP処理の成功条件ではありません。",
+              "ok": false
+            },
+            {
+              "text": "HTTP応答の状態や期待する内容を確かめる",
+              "explain": "TCPの受付だけでは、正常な配信処理まで確認できません。",
+              "ok": true
+            },
+            {
+              "text": "ICMP Echoだけへ変更する",
+              "explain": "確認範囲が狭まり、同じ問題を見逃します。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "balance",
+      "title": "処理中の接続数から増設を考える",
+      "targets": [
+        "s1-2"
+      ],
+      "steps": [
+        {
+          "id": "balance-01",
+          "format": "読む",
+          "theme": "処理中の接続数から増設を考える",
+          "scaffold": 5,
+          "type": "info",
+          "title": "長い配信と短い配信が混在する",
+          "body": "同じ性能のサーバAとBがあります。Aでは長い配信が6件、Bでは短い配信が1件続いています。次の利用者をどちらへ送るかを考えます。原問でも配信サイズにばらつきがあります。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "サーバ",
+              "処理中",
+              "過去の割当て"
+            ],
+            "rows": [
+              [
+                "A",
+                "6件",
+                "10件"
+              ],
+              [
+                "B",
+                "1件",
+                "10件"
+              ]
+            ],
+            "caption": "説明用：完了した接続は同時接続に数えない"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "balance-02",
+          "format": "選択",
+          "theme": "処理中の接続数から増設を考える",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "同時接続数を均等に近づけるなら次はどこへ送るか。",
+          "choices": [
+            {
+              "text": "過去に10件ずつなので判断材料はない",
+              "explain": "現在の同時接続数が、選択の判断材料です。",
+              "ok": false
+            },
+            {
+              "text": "B",
+              "explain": "処理中の接続が1件なので、Aより少ない側へ送ります。",
+              "ok": true
+            },
+            {
+              "text": "A",
+              "explain": "過去の割当てが同じでも、現在はAに多く残っています。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "balance-03",
+          "format": "選択",
+          "theme": "処理中の接続数から増設を考える",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "接続時間が異なると、順番に割り当てるだけでは何が残るか。",
+          "choices": [
+            {
+              "text": "処理中の接続数の偏り",
+              "explain": "ラウンドロビンは新規接続を順番に分けます。終了時刻の違いまでは補正しません。",
+              "ok": true
+            },
+            {
+              "text": "IPアドレスの重複",
+              "explain": "振分けの順番は、IPアドレスの割当てを変えません。",
+              "ok": false
+            },
+            {
+              "text": "必ず同時接続数がゼロになる",
+              "explain": "長時間の接続が残るのでゼロになるとは限りません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "balance-04",
+          "format": "穴埋め",
+          "theme": "処理中の接続数から増設を考える",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "原問の二つの判断を完成する",
+          "template": "同時接続数の均等化には{a}方式を使う。ゲームβの増設先は{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "方式",
+              "choices": [
+                {
+                  "text": "最少接続数",
+                  "explain": "同時に処理中の接続数を比較します。",
+                  "ok": true
+                },
+                {
+                  "text": "ラウンドロビン",
+                  "explain": "接続時間が異なると同時接続数が偏ります。",
+                  "ok": false
+                }
+              ],
+              "why": "同時に処理中の接続数を比較します。"
+            },
+            {
+              "key": "b",
+              "label": "所属セグメント",
+              "choices": [
+                {
+                  "text": "203.x.11.21",
+                  "explain": "これはLB側の公開アドレスであり、増設先のセグメントではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "172.22.1.0/24",
+                  "explain": "表1のゲームβの行をたどります。",
+                  "ok": true
+                },
+                {
+                  "text": "172.21.1.0/24",
+                  "explain": "これはゲームαの配信サーバです。",
+                  "ok": false
+                }
+              ],
+              "why": "表1のゲームβの行をたどります。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 4,
+            "top": 0.08,
+            "bottom": 0.54,
+            "label": "表1と配信時間の条件（IPA原文・原表）"
+          }
+        },
+        {
+          "id": "balance-05",
+          "format": "並べ替え",
+          "theme": "処理中の接続数から増設を考える",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "増設先を決める根拠を並べる",
+          "lead": "βの性能を上げる場合を考えます。",
+          "lines": [
+            {
+              "code": "性能を上げる対象がゲームβだと確認する"
+            },
+            {
+              "code": "表1でβに対応する配信サーバの所属セグメントを読む"
+            },
+            {
+              "code": "172.22.1.0/24へ配信サーバを増設する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "同じ公開IPでも、背後の配信先はゲームごとに分かれています。",
+          "ngExplain": "公開IPの列ではなく、対象ゲームの配信サーバ欄をたどります。",
+          "stage": "reason"
+        },
+        {
+          "id": "balance-06",
+          "format": "選択",
+          "theme": "処理中の接続数から増設を考える",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：全接続の長さもサーバ性能も同じなら、順番の振分けはどうか。",
+          "choices": [
+            {
+              "text": "負荷を均等にしやすい",
+              "explain": "接続の処理量がそろう条件では、順番に分ける方式も適しています。",
+              "ok": true
+            },
+            {
+              "text": "接続時間に関係なく必ず大きく偏る",
+              "explain": "時間や処理量の差が小さければ、偏りは生じにくくなります。",
+              "ok": false
+            },
+            {
+              "text": "サーバの所属セグメントを全て変える必要がある",
+              "explain": "方式の選択とセグメントの割当ては別の判断です。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "tls",
+      "title": "暗号化を終える装置を特定する",
+      "targets": [
+        "s1-3"
+      ],
+      "steps": [
+        {
+          "id": "tls-01",
+          "format": "読む",
+          "theme": "暗号化を終える装置を特定する",
+          "scaffold": 5,
+          "type": "info",
+          "title": "暗号化する区間を分ける",
+          "body": "利用者はHTTPSでLBへ接続します。LBから配信サーバへはHTTPで接続します。TLS（Transport Layer Security）を終える位置に注目します。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 55,
+                "y": 65,
+                "label": "利用者 HTTPS"
+              },
+              {
+                "id": "node1",
+                "x": 165,
+                "y": 65,
+                "label": "LB"
+              },
+              {
+                "id": "node2",
+                "x": 275,
+                "y": 65,
+                "label": "配信 HTTP"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：TLSをLBで終端する練習構成"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "tls-02",
+          "format": "選択",
+          "theme": "暗号化を終える装置を特定する",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "HTTPSからHTTPへ変わる位置はどこか。",
+          "choices": [
+            {
+              "text": "L2スイッチ",
+              "explain": "L2スイッチは通常、フレームを中継する装置です。",
+              "ok": false
+            },
+            {
+              "text": "利用者の後ろのインターネット全体",
+              "explain": "インターネット全体で一括してTLSを終端するわけではありません。",
+              "ok": false
+            },
+            {
+              "text": "LB",
+              "explain": "LBがTLSを終端し、平文のHTTPを背後へ送ります。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "tls-03",
+          "format": "選択",
+          "theme": "暗号化を終える装置を特定する",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "この構成でサーバ証明書を必須とする装置はどれか。",
+          "choices": [
+            {
+              "text": "全てのL2スイッチ",
+              "explain": "単にフレームを転送するだけならTLS証明書は使いません。",
+              "ok": false
+            },
+            {
+              "text": "LB",
+              "explain": "利用者とTLS通信するサーバ側の装置だからです。",
+              "ok": true
+            },
+            {
+              "text": "HTTPだけで通信する配信サーバ",
+              "explain": "この区間にはTLSがありません。証明書が必須の位置ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "tls-04",
+          "format": "穴埋め",
+          "theme": "暗号化を終える装置を特定する",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "装置と根拠を結び付ける",
+          "template": "{a}が利用者との{b}を終端するため、サーバ証明書が必要である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "装置",
+              "choices": [
+                {
+                  "text": "LB",
+                  "explain": "HTTPSを受け付ける装置です。",
+                  "ok": true
+                },
+                {
+                  "text": "配信サーバ",
+                  "explain": "原問の配信サーバはHTTPで受け付けます。",
+                  "ok": false
+                }
+              ],
+              "why": "HTTPSを受け付ける装置です。"
+            },
+            {
+              "key": "b",
+              "label": "処理",
+              "choices": [
+                {
+                  "text": "Ethernet通信だけ",
+                  "explain": "フレーム転送だけではサーバ証明書の根拠になりません。",
+                  "ok": false
+                },
+                {
+                  "text": "TLS通信",
+                  "explain": "暗号化されたHTTPSの通信を処理します。",
+                  "ok": true
+                }
+              ],
+              "why": "暗号化されたHTTPSの通信を処理します。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 4,
+            "top": 0.08,
+            "bottom": 0.25,
+            "label": "表1のLBの443番と配信サーバの80番（IPA原表）"
+          }
+        },
+        {
+          "id": "tls-05",
+          "format": "並べ替え",
+          "theme": "暗号化を終える装置を特定する",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "証明書の位置を説明する",
+          "lead": "通信区間の違いを根拠にします。",
+          "lines": [
+            {
+              "code": "端末からLBまではHTTPSである"
+            },
+            {
+              "code": "LBから配信サーバまではHTTPである"
+            },
+            {
+              "code": "LBでTLSを終端する"
+            },
+            {
+              "code": "LBにサーバ証明書を入れる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "プロトコルの変化点から、証明書を使用する主体を特定できます。",
+          "ngExplain": "HTTPSの宛先を先に確認してから、証明書を置く装置を決めます。",
+          "stage": "reason"
+        },
+        {
+          "id": "tls-06",
+          "format": "選択",
+          "theme": "暗号化を終える装置を特定する",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：LBがTLSを終端せず、暗号化通信を背後へ通す。証明書はどこか。",
+          "choices": [
+            {
+              "text": "どこにも不要",
+              "explain": "HTTPSでサーバを認証するための証明書は必要です。",
+              "ok": false
+            },
+            {
+              "text": "TLSを終端する背後のサーバ",
+              "explain": "証明書は実際にTLSを終端するサーバ側に必要です。",
+              "ok": true
+            },
+            {
+              "text": "常にLBだけ",
+              "explain": "装置名だけで決めず、TLSを終える位置を確認します。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "path",
+      "title": "BGP属性から配信経路を選ぶ",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "path-01",
+          "format": "読む",
+          "theme": "BGP属性から配信経路を選ぶ",
+          "scaffold": 5,
+          "type": "info",
+          "title": "同じ宛先へ二つの経路がある",
+          "body": "BGP（Border Gateway Protocol）はAS間で経路を交換します。ASは一つの方針で管理されるネットワークです。同じ宛先でも、属性を比較して利用する経路を決めます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "属性",
+              "役割",
+              "優先"
+            ],
+            "rows": [
+              [
+                "LOCAL_PREF",
+                "自AS内の優先度",
+                "大きい値"
+              ],
+              [
+                "MED",
+                "隣接ASへ示す入口の目安",
+                "小さい値"
+              ],
+              [
+                "AS PATH",
+                "経由するASの列",
+                "他条件が同じなら短い列"
+              ]
+            ],
+            "caption": "説明用：原問で扱う三つの比較"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "path-02",
+          "format": "選択",
+          "theme": "BGP属性から配信経路を選ぶ",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "他条件は同じ。LOCAL_PREFが100と200ならどちらか。",
+          "choices": [
+            {
+              "text": "値を足して300の経路を作る",
+              "explain": "属性は経路を選ぶ比較値で、足して新経路を作りません。",
+              "ok": false
+            },
+            {
+              "text": "200",
+              "explain": "LOCAL_PREFは値が大きい経路を優先します。",
+              "ok": true
+            },
+            {
+              "text": "100",
+              "explain": "MEDの小さい値を優先する規則と混同しています。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "path-03",
+          "format": "選択",
+          "theme": "BGP属性から配信経路を選ぶ",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "同じ隣接ASからの比較で、他条件が同じ。MEDが20と80ならどちらか。",
+          "choices": [
+            {
+              "text": "20",
+              "explain": "MEDは比較可能な経路間で小さい値を優先します。",
+              "ok": true
+            },
+            {
+              "text": "80",
+              "explain": "LOCAL_PREFとは優先する大小が逆です。",
+              "ok": false
+            },
+            {
+              "text": "どちらでもAS番号を小さく書き換える",
+              "explain": "MEDの比較ではAS番号を書き換えません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "path-04",
+          "format": "穴埋め",
+          "theme": "BGP属性から配信経路を選ぶ",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "AS PATHだけで東京POPからの戻りを選ぶ",
+          "template": "トランジット経由はAS-F、AS-Gを通る。直接のAS-Gとの接続は{a}を通り、AS PATHが{b}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "場所",
+              "choices": [
+                {
+                  "text": "シンガポールPOP",
+                  "explain": "原問では東京POPとシンガポールPOPの直接接続はありません。",
+                  "ok": false
+                },
+                {
+                  "text": "IX",
+                  "explain": "IXはレイヤー2の相互接続点です。AS-Gと直接BGP接続できます。",
+                  "ok": true
+                }
+              ],
+              "why": "IXはレイヤー2の相互接続点です。AS-Gと直接BGP接続できます。"
+            },
+            {
+              "key": "b",
+              "label": "比較",
+              "choices": [
+                {
+                  "text": "短い",
+                  "explain": "AS-Gだけなので、AS-Fを経由する列より短くなります。",
+                  "ok": true
+                },
+                {
+                  "text": "長い",
+                  "explain": "IXを一つの中継ASとして数えません。",
+                  "ok": false
+                }
+              ],
+              "why": "AS-Gだけなので、AS-Fを経由する列より短くなります。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 5,
+            "top": 0.31,
+            "bottom": 0.79,
+            "label": "図2とAS Path長だけで選ぶ条件（IPA原図・原文）"
+          }
+        },
+        {
+          "id": "path-05",
+          "format": "並べ替え",
+          "theme": "BGP属性から配信経路を選ぶ",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "IXを通る根拠を組み立てる",
+          "lead": "東京POPからAS-Gへ配信する経路です。",
+          "lines": [
+            {
+              "code": "LPとMEDなどは経路選択に影響しないという条件を確認する"
+            },
+            {
+              "code": "AS-F経由とIXでの直接接続のAS PATH長を比べる"
+            },
+            {
+              "code": "AS-Gへの直接接続の方が短いと判断する"
+            },
+            {
+              "code": "IXを通って配信する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "地理的な距離でなく、原問が指定した属性で選びます。",
+          "ngExplain": "AS PATH以外の条件をそろえてから列の長さを比べます。",
+          "stage": "reason"
+        },
+        {
+          "id": "path-06",
+          "format": "選択",
+          "theme": "BGP属性から配信経路を選ぶ",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：長いAS PATHの経路に高いLOCAL_PREFを設定した。結論はどうか。",
+          "choices": [
+            {
+              "text": "AS PATHが短い経路を必ず選ぶとはいえない",
+              "explain": "LOCAL_PREFの比較が先に影響するためです。",
+              "ok": true
+            },
+            {
+              "text": "IXを通る経路が無条件で選ばれる",
+              "explain": "原問の『他属性は影響しない』という条件が変わっています。",
+              "ok": false
+            },
+            {
+              "text": "物理距離だけで決まる",
+              "explain": "BGPは地図上の距離だけで経路を選びません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "trust",
+      "title": "隣接接続と経路内容を別々に守る",
+      "targets": [
+        "s2-3",
+        "s2-4"
+      ],
+      "steps": [
+        {
+          "id": "trust-01",
+          "format": "読む",
+          "theme": "隣接接続と経路内容を別々に守る",
+          "scaffold": 5,
+          "type": "info",
+          "title": "正規の相手でも経路内容を確認する",
+          "body": "隣接するBGPルータと共通パスワードを設定します。原問はMD5認証で接続を守る構成です。別に経路フィルターを置き、許可しないアドレスブロックを拒否します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "対策",
+              "確認するもの"
+            ],
+            "rows": [
+              [
+                "BGP接続の認証",
+                "通信相手"
+              ],
+              [
+                "経路フィルタリング",
+                "広告された経路内容"
+              ]
+            ],
+            "caption": "説明用：二つの防御対象"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "trust-02",
+          "format": "選択",
+          "theme": "隣接接続と経路内容を別々に守る",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "パスワードを知らない装置による参加を防ぐ対象は何か。",
+          "choices": [
+            {
+              "text": "不正なBGP接続",
+              "explain": "隣接との認証は、無関係な装置による接続を防ぐためです。",
+              "ok": true
+            },
+            {
+              "text": "全てのゲーム利用者のログイン",
+              "explain": "ゲーム利用者の認証とは対象が異なります。",
+              "ok": false
+            },
+            {
+              "text": "HTTPファイルの圧縮失敗",
+              "explain": "BGPの認証は配信ファイルの形式を検査しません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "trust-03",
+          "format": "選択",
+          "theme": "隣接接続と経路内容を別々に守る",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "認証済みの隣接から誤った宛先経路が届いた。必要な対策はどれか。",
+          "choices": [
+            {
+              "text": "証明書を配信サーバへ追加するだけ",
+              "explain": "TLSの証明書ではBGP広告の内容を制限できません。",
+              "ok": false
+            },
+            {
+              "text": "最少接続数方式へ変更する",
+              "explain": "LBの振分け方式はAS間の経路誤りを修正しません。",
+              "ok": false
+            },
+            {
+              "text": "許可する経路をフィルターで制限する",
+              "explain": "接続相手の確認だけでは、広告内容の正しさを保証できません。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "trust-04",
+          "format": "穴埋め",
+          "theme": "隣接接続と経路内容を別々に守る",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "影響を受ける通信を限定する",
+          "template": "不正な経路を採用すると、{a}への{b}ができなくなるおそれがある。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "対象",
+              "choices": [
+                {
+                  "text": "不正な経路に含まれるアドレスブロック",
+                  "explain": "誤った宛先経路が、その利用者宛ての転送を妨げます。",
+                  "ok": true
+                },
+                {
+                  "text": "全てのサーバのローカルディスク",
+                  "explain": "BGP経路情報はディスクのデータを変更しません。",
+                  "ok": false
+                }
+              ],
+              "why": "誤った宛先経路が、その利用者宛ての転送を妨げます。"
+            },
+            {
+              "key": "b",
+              "label": "影響",
+              "choices": [
+                {
+                  "text": "証明書の発行",
+                  "explain": "経路が直接決めるのはパケットの転送先です。",
+                  "ok": false
+                },
+                {
+                  "text": "コンテンツ配信",
+                  "explain": "正しい利用者へパケットが届かなくなる影響です。",
+                  "ok": true
+                }
+              ],
+              "why": "正しい利用者へパケットが届かなくなる影響です。"
+            }
+          ],
+          "stage": "assemble"
+        },
+        {
+          "id": "trust-05",
+          "format": "並べ替え",
+          "theme": "隣接接続と経路内容を別々に守る",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "認証後も経路フィルターが要る理由を並べる",
+          "lead": "接続と内容を区別して説明します。",
+          "lines": [
+            {
+              "code": "隣接BGP接続の相手を認証する"
+            },
+            {
+              "code": "受信した経路内容が許可範囲か別に確認する"
+            },
+            {
+              "code": "不正な経路の採用を防止する"
+            },
+            {
+              "code": "該当アドレスブロックへの配信不能を防ぐ"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "誰から受けたかと、何を受け入れるかは別の判断です。",
+          "ngExplain": "認証だけで全ての広告内容が正しくなるわけではありません。",
+          "stage": "reason"
+        },
+        {
+          "id": "trust-06",
+          "format": "選択",
+          "theme": "隣接接続と経路内容を別々に守る",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：接続は認証済みだが顧客の/24を誤ったASへ向けた。最も直接的な影響はどれか。",
+          "choices": [
+            {
+              "text": "全ての顧客のゲーム保存データが消える",
+              "explain": "経路の誤りで端末内データが削除されるわけではありません。",
+              "ok": false
+            },
+            {
+              "text": "HTTP監視をICMPへ変えれば直る",
+              "explain": "監視方式を変えてもAS間の誤った転送先は直りません。",
+              "ok": false
+            },
+            {
+              "text": "その/24内の利用者への戻りの配信が届かなくなる",
+              "explain": "宛先経路が誤ると、配信パケットが正しく転送されません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "rtbh",
+      "title": "攻撃を入口で捨てる効果",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "rtbh-01",
+          "format": "読む",
+          "theme": "攻撃を入口で捨てる効果",
+          "scaffold": 5,
+          "type": "info",
+          "title": "内部へ運ぶ前に攻撃を止める",
+          "body": "大量の攻撃パケットが入口ルータからFWへ流れています。FWはファイアウォールです。FWで捨てても、その手前の回線は攻撃を運び続けます。RTBHは経路制御で廃棄を指示する方式です。",
+          "fig": {
+            "kind": "net",
+            "height": 150,
+            "nodes": [
+              {
+                "id": "node0",
+                "x": 55,
+                "y": 65,
+                "label": "入口BGPルータ"
+              },
+              {
+                "id": "node1",
+                "x": 165,
+                "y": 65,
+                "label": "FW"
+              },
+              {
+                "id": "node2",
+                "x": 275,
+                "y": 65,
+                "label": "配信LB"
+              }
+            ],
+            "links": [
+              {
+                "from": "node0",
+                "to": "node1",
+                "arrow": true
+              },
+              {
+                "from": "node1",
+                "to": "node2",
+                "arrow": true
+              }
+            ],
+            "caption": "説明用：攻撃が内部へ進む順序"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "rtbh-02",
+          "format": "選択",
+          "theme": "攻撃を入口で捨てる効果",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "内部回線の負担も減らすには、どこで廃棄するか。",
+          "choices": [
+            {
+              "text": "利用者が保存したファイルの中",
+              "explain": "ネットワークへの流入を防ぐ位置ではありません。",
+              "ok": false
+            },
+            {
+              "text": "入口のBGPルータ",
+              "explain": "FWより攻撃元に近い位置で止められます。",
+              "ok": true
+            },
+            {
+              "text": "配信LBの後ろ",
+              "explain": "そこへ届くまで内部の装置や回線を使います。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "rtbh-03",
+          "format": "選択",
+          "theme": "攻撃を入口で捨てる効果",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "宛先IPのホスト経路を廃棄用インタフェースへ向けると何が起きるか。",
+          "choices": [
+            {
+              "text": "そのIP宛てのパケットが廃棄される",
+              "explain": "RTBH（Remote Triggered Black Hole）の原問の動作です。",
+              "ok": true
+            },
+            {
+              "text": "そのIPの暗号化だけが強くなる",
+              "explain": "廃棄経路は暗号アルゴリズムを変更しません。",
+              "ok": false
+            },
+            {
+              "text": "正常な通信だけが自動的に残る",
+              "explain": "宛先だけで選ぶため、同じ宛先の正常な通信も対象です。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "rtbh-04",
+          "format": "穴埋め",
+          "theme": "攻撃を入口で捨てる効果",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "比較する位置と効果を入れる",
+          "template": "FW1での遮断より{a}で遮断する方が、攻撃パケットを{b}で止められる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "装置",
+              "choices": [
+                {
+                  "text": "LB11",
+                  "explain": "FW1より配信側にあるので、遮断位置が遅くなります。",
+                  "ok": false
+                },
+                {
+                  "text": "BGPルータ1",
+                  "explain": "図3でインターネット側に置かれています。",
+                  "ok": true
+                }
+              ],
+              "why": "図3でインターネット側に置かれています。"
+            },
+            {
+              "key": "b",
+              "label": "位置",
+              "choices": [
+                {
+                  "text": "攻撃元に近いところ",
+                  "explain": "比較対象はFW1です。入口側で遮断する利点を説明します。",
+                  "ok": true
+                },
+                {
+                  "text": "ゲーム端末内",
+                  "explain": "E社POPのBGPルータはゲーム端末内の装置ではありません。",
+                  "ok": false
+                }
+              ],
+              "why": "比較対象はFW1です。入口側で遮断する利点を説明します。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 6,
+            "top": 0.29,
+            "bottom": 0.64,
+            "label": "図3のBGPルータ1・FW1・LB11（IPA原図）"
+          }
+        },
+        {
+          "id": "rtbh-05",
+          "format": "並べ替え",
+          "theme": "攻撃を入口で捨てる効果",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "RTBHの処理を組み立てる",
+          "lead": "検知から廃棄までを順にします。",
+          "lines": [
+            {
+              "code": "検知サーバが攻撃の宛先IPアドレスを特定する"
+            },
+            {
+              "code": "RTBH対象を示す属性付きホスト経路を広告する"
+            },
+            {
+              "code": "BGPルータがネクストホップを廃棄用に設定する"
+            },
+            {
+              "code": "攻撃宛先へのパケットを入口で廃棄する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "NetFlowは観測用です。廃棄の指示は経路広告で伝えます。",
+          "ngExplain": "検知と経路広告が先です。ルータが廃棄経路を設定してから遮断できます。",
+          "stage": "reason"
+        },
+        {
+          "id": "rtbh-06",
+          "format": "選択",
+          "theme": "攻撃を入口で捨てる効果",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：攻撃でISPからPOPへの回線自体が飽和した。POP入口での廃棄だけで解消するか。",
+          "choices": [
+            {
+              "text": "既に通過した上流回線の消費は解消できない",
+              "explain": "遮断より手前の帯域は消費済みです。さらに上流での対処を検討します。",
+              "ok": true
+            },
+            {
+              "text": "入口で捨てれば通過済みの帯域も戻る",
+              "explain": "廃棄は過去の回線利用を取り消しません。",
+              "ok": false
+            },
+            {
+              "text": "配信LBで捨てる方が上流帯域を節約できる",
+              "explain": "さらに内側での廃棄になるので上流帯域は減りません。",
+              "ok": false
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    },
+    {
+      "id": "flowspec",
+      "title": "必要な通信を残す遮断条件",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "flowspec-01",
+          "format": "読む",
+          "theme": "必要な通信を残す遮断条件",
+          "scaffold": 5,
+          "type": "info",
+          "title": "同じ宛先へ正常通信と攻撃が届く",
+          "body": "宛先192.0.2.10へHTTPSと大量のUDPが届きます。HTTPSは残したい通信です。宛先だけで遮断すると両方を失います。BGP FlowSpecでは複数の条件を組み合わせます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "通信",
+              "宛先",
+              "方針"
+            ],
+            "rows": [
+              [
+                "正常なHTTPS",
+                "192.0.2.10:443/TCP",
+                "残す"
+              ],
+              [
+                "攻撃UDP",
+                "192.0.2.10:9999/UDP",
+                "捨てる"
+              ]
+            ],
+            "caption": "説明用：宛先は同じでも通信の特徴が異なる"
+          },
+          "stage": "concept"
+        },
+        {
+          "id": "flowspec-02",
+          "format": "選択",
+          "theme": "必要な通信を残す遮断条件",
+          "scaffold": 5,
+          "type": "quiz",
+          "title": "宛先IPだけのRTBHでは何が起きるか。",
+          "choices": [
+            {
+              "text": "HTTPSもUDPも捨てる",
+              "explain": "両方が同じ宛先IPに一致するためです。",
+              "ok": true
+            },
+            {
+              "text": "UDPだけを自動識別して捨てる",
+              "explain": "宛先IPだけではプロトコルの違いを条件にできません。",
+              "ok": false
+            },
+            {
+              "text": "HTTPSの証明書だけを無効にする",
+              "explain": "RTBHは経路による廃棄で、証明書の失効処理ではありません。",
+              "ok": false
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "flowspec-03",
+          "format": "選択",
+          "theme": "必要な通信を残す遮断条件",
+          "scaffold": 4,
+          "type": "quiz",
+          "title": "UDP攻撃だけを選ぶ追加条件はどれか。",
+          "choices": [
+            {
+              "text": "ゲームファイルの日本語の名前",
+              "explain": "この例のフロー条件にアプリケーション内のファイル名はありません。",
+              "ok": false
+            },
+            {
+              "text": "LBの接続数の少なさ",
+              "explain": "サーバの振分け指標であり、攻撃パケットの識別条件ではありません。",
+              "ok": false
+            },
+            {
+              "text": "IPプロトコルと宛先ポート番号",
+              "explain": "UDPかつ9999番という条件を追加できます。",
+              "ok": true
+            }
+          ],
+          "stage": "check"
+        },
+        {
+          "id": "flowspec-04",
+          "format": "穴埋め",
+          "theme": "必要な通信を残す遮断条件",
+          "scaffold": 4,
+          "type": "blank",
+          "title": "FlowSpecの利点を原因から完成する",
+          "template": "宛先IPに{a}などの条件を組み合わせ、{b}選別して破棄できる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "追加条件",
+              "choices": [
+                {
+                  "text": "サーバの購入年月",
+                  "explain": "パケットを選別するヘッダー条件ではありません。",
+                  "ok": false
+                },
+                {
+                  "text": "送信元IPや宛先ポート番号",
+                  "explain": "原問のFlowSpecではこれらの条件を広告できます。",
+                  "ok": true
+                }
+              ],
+              "why": "原問のFlowSpecではこれらの条件を広告できます。"
+            },
+            {
+              "key": "b",
+              "label": "選別の精度",
+              "choices": [
+                {
+                  "text": "より細かく",
+                  "explain": "宛先だけのRTBHより対象を絞れます。",
+                  "ok": true
+                },
+                {
+                  "text": "宛先に関係なく全て",
+                  "explain": "条件を増やす目的は、廃棄対象を限定することです。",
+                  "ok": false
+                }
+              ],
+              "why": "宛先だけのRTBHより対象を絞れます。"
+            }
+          ],
+          "stage": "assemble",
+          "originalExcerpt": {
+            "page": 7,
+            "top": 0.18,
+            "bottom": 0.34,
+            "label": "BGP Flowspecの組合せ条件（IPA原文）"
+          }
+        },
+        {
+          "id": "flowspec-05",
+          "format": "並べ替え",
+          "theme": "必要な通信を残す遮断条件",
+          "scaffold": 3,
+          "type": "parsons",
+          "title": "正常通信を残す説明を組み立てる",
+          "lead": "宛先が同じ場合の比較です。",
+          "lines": [
+            {
+              "code": "RTBHは同じ宛先IPの正常通信も廃棄する"
+            },
+            {
+              "code": "FlowSpecで攻撃の送信元やポートなどを条件に加える"
+            },
+            {
+              "code": "攻撃の特徴に一致する通信へ廃棄を限定する"
+            },
+            {
+              "code": "より細かい条件で通信を選別できる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            3,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2,
+              3
+            ]
+          ],
+          "okExplain": "条件で区別できる正常通信を残せるのが利点です。",
+          "ngExplain": "宛先だけでは分けられないという条件を先に置きます。",
+          "stage": "reason"
+        },
+        {
+          "id": "flowspec-06",
+          "format": "選択",
+          "theme": "必要な通信を残す遮断条件",
+          "scaffold": 3,
+          "type": "quiz",
+          "title": "条件変更：攻撃も正常通信も同じIP・ポート・プロトコルで届く。どう評価するか。",
+          "choices": [
+            {
+              "text": "FlowSpecなら必ず攻撃だけ消せる",
+              "explain": "同じ特徴に一致する正常通信も影響を受けます。",
+              "ok": false
+            },
+            {
+              "text": "RTBHなら正常通信だけ残る",
+              "explain": "宛先単位なのでRTBHの方がさらに粗い遮断です。",
+              "ok": false
+            },
+            {
+              "text": "その条件だけでは両者を区別できない",
+              "explain": "FlowSpecにも識別条件が必要です。自動的に悪意だけを判定する方式ではありません。",
+              "ok": true
+            }
+          ],
+          "stage": "transfer"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1769 @@
+{
+  "examKey": "2021r03h/pm1/3",
+  "title": "音声と動画を同じLANで安定して運ぶ",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_qs.pdf",
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/gmcbt8000000d5ru-att/2021r03h_nw_pm1_ans.pdf"
+  ],
+  "sections": [
+    {
+      "id": "voice-path",
+      "title": "音声をIPへ変える場所を読む",
+      "targets": [
+        "s1",
+        "s2-1"
+      ],
+      "steps": [
+        {
+          "id": "voice-path-1",
+          "format": "読む",
+          "theme": "音声をIPへ変える場所を読む",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "電話の種類で通る経路が違う",
+          "body": "旧構成では、外線は公衆電話網を利用します。拠点間の内線通話はIP-GWで音声をIPパケット化します。VoIPはVoice over Internet Protocolです。原問では旧構成と導入後の経路を区別します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "旧構成の通話",
+              "経路"
+            ],
+            "rows": [
+              [
+                "外線",
+                "PBX→公衆電話網"
+              ],
+              [
+                "拠点間内線",
+                "PBX→IP-GW→広域イーサ網"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "voice-path-2",
+          "format": "選択",
+          "theme": "音声をIPへ変える場所を読む",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "旧構成で営業所から本社の内線番号へ電話する。IP化する装置はどれか。",
+          "choices": [
+            {
+              "text": "DNSサーバ",
+              "ok": false,
+              "explain": "名前解決を行い、音声の変換は行いません。"
+            },
+            {
+              "text": "IP-GW",
+              "ok": true,
+              "explain": "拠点間の内線音声をIPパケットに変換します。"
+            },
+            {
+              "text": "プロキシサーバ",
+              "ok": false,
+              "explain": "Web通信を中継する機器で、音声変換装置ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "voice-path-3",
+          "format": "選択",
+          "theme": "音声をIPへ変える場所を読む",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "本問のG.729による符号化ビットレートと、音声の運搬に使う組はどれか。",
+          "choices": [
+            {
+              "text": "8kビット/秒、UDP",
+              "ok": true,
+              "explain": "符号化した音声をUDPとRTPで運びます。"
+            },
+            {
+              "text": "34.4kビット/秒、TCP",
+              "ok": false,
+              "explain": "34.4はヘッダなどを含めた回線当たりの値です。"
+            },
+            {
+              "text": "8kビット/秒、ARP",
+              "ok": false,
+              "explain": "ARPはLAN上のIPとMACの対応を調べます。"
+            }
+          ]
+        },
+        {
+          "id": "voice-path-4",
+          "format": "穴埋め",
+          "theme": "音声をIPへ変える場所を読む",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "通話の範囲とヘッダを補え。",
+          "template": "旧構成でIP化されるのは{a}である。導入後はIP、{b}、RTPのヘッダを音声データに付ける。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "全ての外線通話",
+                  "ok": false,
+                  "explain": "旧構成の外線は公衆電話網へ接続します。"
+                },
+                {
+                  "text": "本社内の全内線通話",
+                  "ok": false,
+                  "explain": "同一拠点内でIP-GWを通るとは書かれていません。"
+                },
+                {
+                  "text": "拠点間の内線通話",
+                  "ok": true,
+                  "explain": "IP-GWと広域イーサ網を通る通話です。"
+                }
+              ],
+              "why": "IP-GWと広域イーサ網を通る通話です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "TCP",
+                  "ok": false,
+                  "explain": "今回のRTP音声の運搬に指定されたプロトコルではありません。"
+                },
+                {
+                  "text": "SNMP",
+                  "ok": false,
+                  "explain": "機器の監視情報を取得するプロトコルです。"
+                },
+                {
+                  "text": "UDP",
+                  "ok": true,
+                  "explain": "遅延を避けたい音声の運搬に使います。"
+                }
+              ],
+              "why": "遅延を避けたい音声の運搬に使います。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 14,
+            "top": 0.46,
+            "bottom": 0.87,
+            "label": "旧構成の図1と回線の用途（IPA原典）"
+          }
+        },
+        {
+          "id": "voice-path-5",
+          "format": "並べ替え",
+          "theme": "音声をIPへ変える場所を読む",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "音声がネットワークを流れる順に並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "G.729で音声を8kビット/秒のデータに符号化する"
+            },
+            {
+              "code": "RTP、UDP、IPなどのヘッダを付ける"
+            },
+            {
+              "code": "フレームとしてLANへ送り出す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "8kビット/秒は音声部分です。ヘッダ分を含む回線使用量とは区別します。",
+          "ngExplain": "8kビット/秒は音声部分です。ヘッダ分を含む回線使用量とは区別します。"
+        },
+        {
+          "id": "voice-path-6",
+          "format": "選択",
+          "theme": "音声をIPへ変える場所を読む",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "同じ符号化方式で、1パケットに入れる音声時間を短くした。ヘッダ量はどうなるか。",
+          "choices": [
+            {
+              "text": "1秒当たりのパケット数が増え、ヘッダ総量も増える",
+              "ok": true,
+              "explain": "各パケットにヘッダが付くためです。"
+            },
+            {
+              "text": "音声ビットレートが必ず0になる",
+              "ok": false,
+              "explain": "パケット化間隔と符号化レートは別です。"
+            },
+            {
+              "text": "ヘッダが不要になる",
+              "ok": false,
+              "explain": "パケットごとの宛先や制御情報は必要です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "jitter",
+      "title": "途切れと会話遅延の原因を分ける",
+      "targets": [
+        "s1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "jitter-1",
+          "format": "読む",
+          "theme": "途切れと会話遅延の原因を分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "早く届くことと間隔がそろうこと",
+          "body": "音声パケットの到着間隔には揺らぎが生じます。これをジッタと呼びます。受信側のバッファで時間を調整しますが、待ち時間が長いと会話の遅延が増えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "受信処理",
+              "効果"
+            ],
+            "rows": [
+              [
+                "少し待って順に再生",
+                "到着時刻の揺らぎを吸収"
+              ],
+              [
+                "長時間ためて再生",
+                "音声化までの遅延が増加"
+              ],
+              [
+                "キューが満杯",
+                "パケットが廃棄される"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "jitter-2",
+          "format": "選択",
+          "theme": "途切れと会話遅延の原因を分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "受信済みの音声パケットを長くためてから再生する。困ることはどれか。",
+          "choices": [
+            {
+              "text": "送信元IPが消える",
+              "ok": false,
+              "explain": "バッファの待ち時間はIPの書換えではありません。"
+            },
+            {
+              "text": "G.729のレートが自動で上がる",
+              "ok": false,
+              "explain": "符号化方式のレートと再生待ち時間は別です。"
+            },
+            {
+              "text": "パケットを音声化するまでの遅延が増える",
+              "ok": true,
+              "explain": "滑らかでも、相手の返事が遅れて会話しにくくなります。"
+            }
+          ]
+        },
+        {
+          "id": "jitter-3",
+          "format": "選択",
+          "theme": "途切れと会話遅延の原因を分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "動画パケットが大量に流れ、スイッチのキューがあふれた。音声に起こり得るのはどれか。",
+          "choices": [
+            {
+              "text": "DNSのTTLが増加する",
+              "ok": false,
+              "explain": "待ち行列の混雑と名前解決のTTLは別です。"
+            },
+            {
+              "text": "パケットの廃棄",
+              "ok": true,
+              "explain": "格納できないパケットを捨てると、音声が欠けます。"
+            },
+            {
+              "text": "必ず全音声が再送で復元される",
+              "ok": false,
+              "explain": "本問の音声UDPはTCPのような再送を行いません。"
+            }
+          ]
+        },
+        {
+          "id": "jitter-4",
+          "format": "穴埋め",
+          "theme": "途切れと会話遅延の原因を分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "原因と結果を短い答案にせよ。",
+          "template": "受信バッファを大きくし過ぎると、{a}の{b}が大きくなる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "パケット",
+                  "ok": true,
+                  "explain": "設問で使用するよう指定された対象です。"
+                },
+                {
+                  "text": "MACアドレス",
+                  "ok": false,
+                  "explain": "アドレス自体を再生するわけではありません。"
+                },
+                {
+                  "text": "PoE電圧",
+                  "ok": false,
+                  "explain": "受信待ち時間とは別です。"
+                }
+              ],
+              "why": "設問で使用するよう指定された対象です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "音声化遅延",
+                  "ok": true,
+                  "explain": "再生するまでの待ちが増えます。"
+                },
+                {
+                  "text": "符号化ビットレート",
+                  "ok": false,
+                  "explain": "バッファ容量だけでは符号化方式は変わりません。"
+                },
+                {
+                  "text": "IPアドレス数",
+                  "ok": false,
+                  "explain": "バッファ容量でアドレス数は変わりません。"
+                }
+              ],
+              "why": "再生するまでの待ちが増えます。"
+            }
+          ]
+        },
+        {
+          "id": "jitter-5",
+          "format": "並べ替え",
+          "theme": "途切れと会話遅延の原因を分ける",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "音声化遅延の説明を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "到着間隔の揺らぎを吸収するためパケットをためる"
+            },
+            {
+              "code": "バッファを大きくすると再生まで長く待つ"
+            },
+            {
+              "code": "パケットの音声化遅延が増え、会話しにくくなる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "ジッタを小さくすることと遅延を短くすることには調整が必要です。",
+          "ngExplain": "ジッタを小さくすることと遅延を短くすることには調整が必要です。"
+        },
+        {
+          "id": "jitter-6",
+          "format": "選択",
+          "theme": "途切れと会話遅延の原因を分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "受信バッファを小さくした。どの変化を確認すべきか。",
+          "choices": [
+            {
+              "text": "スイッチの給電能力が上がる",
+              "ok": false,
+              "explain": "受信バッファと給電は無関係です。"
+            },
+            {
+              "text": "遅延の減少と、遅着パケットによる音切れの増加",
+              "ok": true,
+              "explain": "待ちを減らすと、揺らぎを吸収できない場合があります。"
+            },
+            {
+              "text": "必ず全ての問題が解決する",
+              "ok": false,
+              "explain": "遅延と揺らぎの両方を確認する必要があります。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bandwidth",
+      "title": "出口を通る回線だけ数える",
+      "targets": [
+        "s3-1"
+      ],
+      "steps": [
+        {
+          "id": "bandwidth-1",
+          "format": "読む",
+          "theme": "出口を通る回線だけ数える",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "LANの全通話数を足さない",
+          "body": "電話サービスの出口はL3SW0のポートaです。本社の外線は80回線、営業所5か所は各10回線です。1回線の帯域はヘッダ込み34.4kビット/秒です。原問はポートaから出力する方向だけを数えます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "用途",
+              "同時回線数"
+            ],
+            "rows": [
+              [
+                "本社外線",
+                "80"
+              ],
+              [
+                "営業所外線",
+                "5×10＝50"
+              ],
+              [
+                "拠点間内線",
+                "電話サービス向け外線とは別"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "bandwidth-2",
+          "format": "選択",
+          "theme": "出口を通る回線だけ数える",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "電話サービスへ出る外線の最大同時回線数はどれか。",
+          "choices": [
+            {
+              "text": "230回線",
+              "ok": false,
+              "explain": "本社IP-GWへの内線100回線を混ぜています。"
+            },
+            {
+              "text": "500回線",
+              "ok": false,
+              "explain": "社員数ではなく維持する外線回線数を使います。"
+            },
+            {
+              "text": "130回線",
+              "ok": true,
+              "explain": "80＋5×10＝130です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 14,
+            "top": 0.755,
+            "bottom": 0.86,
+            "label": "図1注記の外線と内線の回線数（IPA原典）"
+          }
+        },
+        {
+          "id": "bandwidth-3",
+          "format": "選択",
+          "theme": "出口を通る回線だけ数える",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "ポートaの出力帯域を求める式はどれか。",
+          "choices": [
+            {
+              "text": "130×34.4×2",
+              "ok": false,
+              "explain": "送受信両方向の合計ではなく出力方向を問います。"
+            },
+            {
+              "text": "130×34.4",
+              "ok": true,
+              "explain": "出口を通る外線数に、ヘッダ込みの回線帯域を掛けます。"
+            },
+            {
+              "text": "130×8",
+              "ok": false,
+              "explain": "8は音声部分だけで、ヘッダ分が不足します。"
+            }
+          ]
+        },
+        {
+          "id": "bandwidth-4",
+          "format": "穴埋め",
+          "theme": "出口を通る回線だけ数える",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "計算の条件と結果を補え。",
+          "template": "原問のポートaは{a}向けの出口であり、最大出力は{b}kビット/秒になる。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "電話サービス",
+                  "ok": true,
+                  "explain": "IPsecルータへつながるポートです。"
+                },
+                {
+                  "text": "eLNサーバ",
+                  "ok": false,
+                  "explain": "eLNサーバはポートe側です。"
+                },
+                {
+                  "text": "営業所の広域イーサ網",
+                  "ok": false,
+                  "explain": "広域網はポートh側です。"
+                }
+              ],
+              "why": "IPsecルータへつながるポートです。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "4,472",
+                  "ok": true,
+                  "explain": "130×34.4＝4,472です。"
+                },
+                {
+                  "text": "1,040",
+                  "ok": false,
+                  "explain": "130×8であり、ヘッダ分を落としています。"
+                },
+                {
+                  "text": "8,944",
+                  "ok": false,
+                  "explain": "出力方向を二重に数えています。"
+                }
+              ],
+              "why": "130×34.4＝4,472です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.34,
+            "bottom": 0.665,
+            "label": "図2のポートaとIPsecルータ（IPA原典）"
+          }
+        },
+        {
+          "id": "bandwidth-5",
+          "format": "並べ替え",
+          "theme": "出口を通る回線だけ数える",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "帯域計算の答案を組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "本社80回線と営業所50回線を足して130回線とする"
+            },
+            {
+              "code": "1回線当たり34.4kビット/秒を掛ける"
+            },
+            {
+              "code": "ポートaの最大出力を4,472kビット/秒とする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "内線回線数、社員数、逆方向の通信量を混ぜないことが要点です。",
+          "ngExplain": "内線回線数、社員数、逆方向の通信量を混ぜないことが要点です。"
+        },
+        {
+          "id": "bandwidth-6",
+          "format": "選択",
+          "theme": "出口を通る回線だけ数える",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "営業所を1か所追加し、外線10回線を増やす。同じ条件の最大出力はどれか。",
+          "choices": [
+            {
+              "text": "9,632kビット/秒",
+              "ok": false,
+              "explain": "出力だけなので2倍しません。"
+            },
+            {
+              "text": "4,816kビット/秒",
+              "ok": true,
+              "explain": "140×34.4＝4,816です。"
+            },
+            {
+              "text": "4,552kビット/秒",
+              "ok": false,
+              "explain": "増分10×8ではヘッダ分が抜けます。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "poe",
+      "title": "給電対象を判定する",
+      "targets": [
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "poe-1",
+          "format": "読む",
+          "theme": "給電対象を判定する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "LANケーブルで電力も供給する",
+          "body": "PoEはPower over Ethernetです。給電側は接続先が受電対応か確認してから電力を供給します。IP電話機は受電機能を持ちます。通常のPoE未対応機器への誤接続も考えます。",
+          "fig": {
+            "kind": "flow",
+            "steps": [
+              {
+                "t": "PoEスイッチに機器を接続"
+              },
+              {
+                "t": "受電対応を検出"
+              },
+              {
+                "t": "対応なら給電、未対応なら給電しない"
+              }
+            ],
+            "caption": "説明用の流れ（練習条件）"
+          }
+        },
+        {
+          "id": "poe-2",
+          "format": "選択",
+          "theme": "給電対象を判定する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "PoE未対応のPCをPoE対応スイッチに直接つないだ。給電動作はどれか。",
+          "choices": [
+            {
+              "text": "全ポートから無条件に給電する",
+              "ok": false,
+              "explain": "PoEは受電機器の検出を行います。"
+            },
+            {
+              "text": "PCがスイッチへ給電する",
+              "ok": false,
+              "explain": "PCを給電側とする条件ではありません。"
+            },
+            {
+              "text": "スイッチから給電しない",
+              "ok": true,
+              "explain": "受電対応が確認できない機器には給電しません。"
+            }
+          ]
+        },
+        {
+          "id": "poe-3",
+          "format": "選択",
+          "theme": "給電対象を判定する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "給電しない場合、データ通信も必ず不可能か。",
+          "choices": [
+            {
+              "text": "IPアドレスが全て削除される",
+              "ok": false,
+              "explain": "給電検出はIP設定を消す機能ではありません。"
+            },
+            {
+              "text": "必ずしも不可能ではない",
+              "ok": true,
+              "explain": "PC自身に電源がありリンクなどが正常なら通信できます。"
+            },
+            {
+              "text": "PoE未対応ならEthernetも未対応",
+              "ok": false,
+              "explain": "給電機能とデータ通信機能は別です。"
+            }
+          ]
+        },
+        {
+          "id": "poe-4",
+          "format": "穴埋め",
+          "theme": "給電対象を判定する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "対象を明示した答案を作れ。",
+          "template": "PoE未対応の機器へは、{a}からの{b}は行われない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "L2SW",
+                  "ok": true,
+                  "explain": "原問でPoEの給電機能を持つ側です。"
+                },
+                {
+                  "text": "IP電話機のPCポート",
+                  "ok": false,
+                  "explain": "誤接続先として問われているのはL2SWです。"
+                },
+                {
+                  "text": "DNSサーバ",
+                  "ok": false,
+                  "explain": "給電を担当する機器ではありません。"
+                }
+              ],
+              "why": "原問でPoEの給電機能を持つ側です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "給電",
+                  "ok": true,
+                  "explain": "受電対応を検出できないためです。"
+                },
+                {
+                  "text": "全データ転送",
+                  "ok": false,
+                  "explain": "データ転送まで否定する条件ではありません。"
+                },
+                {
+                  "text": "名前解決",
+                  "ok": false,
+                  "explain": "DNSとPoEは独立しています。"
+                }
+              ],
+              "why": "受電対応を検出できないためです。"
+            }
+          ]
+        },
+        {
+          "id": "poe-5",
+          "format": "並べ替え",
+          "theme": "給電対象を判定する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "給電の判断順を並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "L2SWが接続機器の受電対応を確認する"
+            },
+            {
+              "code": "接続先がPoE未対応と判定する"
+            },
+            {
+              "code": "その機器へL2SWから給電しない"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "規格に基づくPoEの検出動作を問います。機器の破損を前提にしません。",
+          "ngExplain": "規格に基づくPoEの検出動作を問います。機器の破損を前提にしません。"
+        },
+        {
+          "id": "poe-6",
+          "format": "選択",
+          "theme": "給電対象を判定する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "PoE対応電話機を接続したが、スイッチの給電予算が不足した。確認事項はどれか。",
+          "choices": [
+            {
+              "text": "電話番号の桁数",
+              "ok": false,
+              "explain": "給電容量と電話番号は無関係です。"
+            },
+            {
+              "text": "ポートと装置全体の供給可能電力",
+              "ok": true,
+              "explain": "対応機器でも必要電力を確保できなければ給電できない場合があります。"
+            },
+            {
+              "text": "DNSレコードの文字数",
+              "ok": false,
+              "explain": "電力の不足は名前解決情報では改善しません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cos-vlan",
+      "title": "タグ内の優先度とVLAN追加を理解する",
+      "targets": [
+        "s4-1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "cos-vlan-1",
+          "format": "読む",
+          "theme": "タグ内の優先度とVLAN追加を理解する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "同じケーブルで音声とPCを分ける",
+          "body": "電話機の先にはPCも接続します。VLANタグは所属VLANに加えて優先ビットを持ちます。CoSはClass of Serviceです。原問ではこのビットを使うため電話機の上りをタグVLANにします。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "接続先",
+              "既存VLAN",
+              "追加VLAN"
+            ],
+            "rows": [
+              [
+                "L2SW01",
+                "100",
+                "105"
+              ],
+              [
+                "L2SW02",
+                "150",
+                "155"
+              ],
+              [
+                "営業所L2SW1",
+                "210",
+                "215"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "cos-vlan-2",
+          "format": "選択",
+          "theme": "タグ内の優先度とVLAN追加を理解する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "CoSによる優先制御でタグVLANが必要な理由はどれか。",
+          "choices": [
+            {
+              "text": "タグ情報内の優先ビットを使うから",
+              "ok": true,
+              "explain": "TCIの上位3ビットにCoSを示します。"
+            },
+            {
+              "text": "IPアドレスがタグに入っているから",
+              "ok": false,
+              "explain": "タグの主な情報はVLAN IDと優先度などです。"
+            },
+            {
+              "text": "タグが全パケットを暗号化するから",
+              "ok": false,
+              "explain": "VLANタグは暗号化機能ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "cos-vlan-3",
+          "format": "選択",
+          "theme": "タグ内の優先度とVLAN追加を理解する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "L3SW0で新たに必要なVLANインタフェースは何個か。",
+          "choices": [
+            {
+              "text": "3個",
+              "ok": false,
+              "explain": "215は営業所のL3SW1側です。"
+            },
+            {
+              "text": "5個",
+              "ok": false,
+              "explain": "既存の100、150を追加分に数えてはいけません。"
+            },
+            {
+              "text": "2個",
+              "ok": true,
+              "explain": "本社側で追加される105と155です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 17,
+            "top": 0.095,
+            "bottom": 0.16,
+            "label": "本社と営業所に追加するVLAN（IPA原典）"
+          }
+        },
+        {
+          "id": "cos-vlan-4",
+          "format": "穴埋め",
+          "theme": "タグ内の優先度とVLAN追加を理解する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "理由と追加分を対応させよ。",
+          "template": "優先度はフレームの{a}内にある。本社L3SW0に追加するVLANは{b}である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "FCS",
+                  "ok": false,
+                  "explain": "FCSは誤り検出に使います。"
+                },
+                {
+                  "text": "タグ情報",
+                  "ok": true,
+                  "explain": "レイヤ2のCoS値を格納する場所です。"
+                },
+                {
+                  "text": "TCPヘッダ",
+                  "ok": false,
+                  "explain": "TCPのヘッダにCoSを入れるのではありません。"
+                }
+              ],
+              "why": "レイヤ2のCoS値を格納する場所です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "105と155と215",
+                  "ok": false,
+                  "explain": "215は営業所の機器で扱います。"
+                },
+                {
+                  "text": "105と155",
+                  "ok": true,
+                  "explain": "本社にある2系統の端末接続で増えるVLANです。"
+                },
+                {
+                  "text": "100と150",
+                  "ok": false,
+                  "explain": "既に使っているVLANです。"
+                }
+              ],
+              "why": "本社にある2系統の端末接続で増えるVLANです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.68,
+            "bottom": 0.855,
+            "label": "図2の既存VLANと電話機の接続（IPA原典）"
+          }
+        },
+        {
+          "id": "cos-vlan-5",
+          "format": "並べ替え",
+          "theme": "タグ内の優先度とVLAN追加を理解する",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "タグが必要な理由を組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "電話機で音声とPCデータのCoS値を付け分ける"
+            },
+            {
+              "code": "そのCoS値をタグ情報内の優先ビットに格納する"
+            },
+            {
+              "code": "優先ビットを運ぶため上りポートをタグVLANにする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "音声とデータの分離だけでなく、優先ビットの格納先まで説明します。",
+          "ngExplain": "音声とデータの分離だけでなく、優先ビットの格納先まで説明します。"
+        },
+        {
+          "id": "cos-vlan-6",
+          "format": "選択",
+          "theme": "タグ内の優先度とVLAN追加を理解する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "練習で営業所にだけVLANをもう一つ追加した。本社L3SW0の追加数も必ず増えるか。",
+          "choices": [
+            {
+              "text": "全社の全L3SWで1個ずつ増える",
+              "ok": false,
+              "explain": "VLANインタフェースは必要な機器に設定します。"
+            },
+            {
+              "text": "VLAN番号の最大値だけ増やす",
+              "ok": false,
+              "explain": "必要数は番号の大きさでは決まりません。"
+            },
+            {
+              "text": "必ずは増えない",
+              "ok": true,
+              "explain": "そのVLANのルーティングを担当する機器を確認します。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pq",
+      "title": "最優先でも待つ場面を考える",
+      "targets": [
+        "s4-3"
+      ],
+      "steps": [
+        {
+          "id": "pq-1",
+          "format": "読む",
+          "theme": "最優先でも待つ場面を考える",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "優先されるのは次に出すフレーム",
+          "body": "PQはPriority Queuingです。キュー1を最優先にし、空のときだけキュー2を使います。通常のフレーム送信は途中で中断しません。原問では出力中のデータフレームに着目します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "時点",
+              "出力状態",
+              "キュー1"
+            ],
+            "rows": [
+              [
+                "t0",
+                "データを送信開始",
+                "空"
+              ],
+              [
+                "t1",
+                "データを送信中",
+                "音声が到着"
+              ],
+              [
+                "t2",
+                "データ送信完了",
+                "音声を出力"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "pq-2",
+          "format": "選択",
+          "theme": "最優先でも待つ場面を考える",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "データフレームの送信中に音声がキュー1へ入った。いつ送れるか。",
+          "choices": [
+            {
+              "text": "出力中のデータフレームを送り終えた後",
+              "ok": true,
+              "explain": "本問の通常のPQは送信中フレームを中断しません。"
+            },
+            {
+              "text": "データの途中で直ちに割り込む",
+              "ok": false,
+              "explain": "キュー選択と送信中フレームの中断は別の機能です。"
+            },
+            {
+              "text": "キュー2が完全に空になった後",
+              "ok": false,
+              "explain": "送信中の1枚が終われば、キュー1が優先されます。"
+            }
+          ]
+        },
+        {
+          "id": "pq-3",
+          "format": "選択",
+          "theme": "最優先でも待つ場面を考える",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "データは待ち行列にあるだけで、出力中ではない。音声が来るとどうなるか。",
+          "choices": [
+            {
+              "text": "先に待っている全データを送る",
+              "ok": false,
+              "explain": "それでは厳密な優先キューの動作になりません。"
+            },
+            {
+              "text": "両方とも必ず捨てる",
+              "ok": false,
+              "explain": "出力可能なキューがあるので転送できます。"
+            },
+            {
+              "text": "音声を優先して選ぶ",
+              "ok": true,
+              "explain": "フレーム境界でキュー1を先に選べます。"
+            }
+          ]
+        },
+        {
+          "id": "pq-4",
+          "format": "穴埋め",
+          "theme": "最優先でも待つ場面を考える",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "待たされる条件を短く表せ。",
+          "template": "音声が最優先キューに入っても、{a}が{b}の場合は出力を待つ。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "空のキュー",
+                  "ok": false,
+                  "explain": "空のキューは待ちの原因ではありません。"
+                },
+                {
+                  "text": "データフレーム",
+                  "ok": true,
+                  "explain": "低優先でも送信開始済みなら完了を待ちます。"
+                },
+                {
+                  "text": "DNSレコード",
+                  "ok": false,
+                  "explain": "出力ポートで送信中のフレームが対象です。"
+                }
+              ],
+              "why": "低優先でも送信開始済みなら完了を待ちます。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "別ポートへ出力中",
+                  "ok": false,
+                  "explain": "今回の出力ポートをふさいでいる条件が必要です。"
+                },
+                {
+                  "text": "出力中",
+                  "ok": true,
+                  "explain": "待ち行列にあるだけの場合と区別します。"
+                },
+                {
+                  "text": "キュー2で待機中なだけ",
+                  "ok": false,
+                  "explain": "未送信ならキュー1を先に選びます。"
+                }
+              ],
+              "why": "待ち行列にあるだけの場合と区別します。"
+            }
+          ]
+        },
+        {
+          "id": "pq-5",
+          "format": "並べ替え",
+          "theme": "最優先でも待つ場面を考える",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "最優先でも待つ理由を組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "低優先のデータフレームが既に出力を始めている"
+            },
+            {
+              "code": "出力途中のフレームは中断しない"
+            },
+            {
+              "code": "音声はその送信完了後に優先して出力する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "キュー1に以前から音声がなくても、送信回線が使用中なら待ちが発生します。",
+          "ngExplain": "キュー1に以前から音声がなくても、送信回線が使用中なら待ちが発生します。"
+        },
+        {
+          "id": "pq-6",
+          "format": "選択",
+          "theme": "最優先でも待つ場面を考える",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "同じ長さのデータフレームで回線速度を2倍にした。最大の送信待ちへの影響はどれか。",
+          "choices": [
+            {
+              "text": "必ず待ち時間が2倍になる",
+              "ok": false,
+              "explain": "速度が増すと同じ長さの送信は短くなります。"
+            },
+            {
+              "text": "優先順位が自動で逆転する",
+              "ok": false,
+              "explain": "回線速度はキューの優先順位を変更しません。"
+            },
+            {
+              "text": "残りの送信時間が短くなる",
+              "ok": true,
+              "explain": "フレーム送信時間は長さを速度で割った値です。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dscp",
+      "title": "入力場所からマーキング方法を選ぶ",
+      "targets": [
+        "s1",
+        "s4-4"
+      ],
+      "steps": [
+        {
+          "id": "dscp-1",
+          "format": "読む",
+          "theme": "入力場所からマーキング方法を選ぶ",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "既にある印を使うか、自分で分類するか",
+          "body": "DSCPはDifferentiated Services Code Pointです。IPヘッダの旧ToSフィールドを再定義した6ビットを使います。電話機側からはCoSを受け取り、それ以外は通信の種類を調べて分類します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "入力ポート",
+              "接続元",
+              "処理"
+            ],
+            "rows": [
+              [
+                "f、g、j",
+                "CoS付きの電話機側",
+                "CoS→DSCP"
+              ],
+              [
+                "a、b、c、d、e",
+                "出口や各サーバ側",
+                "通信の種類→DSCP"
+              ],
+              [
+                "h、i",
+                "拠点間のL3接続側",
+                "設定済みDSCPを利用"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "dscp-2",
+          "format": "選択",
+          "theme": "入力場所からマーキング方法を選ぶ",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ポートfは電話機配下のL2SWにつながる。DSCPを付ける手掛かりはどれか。",
+          "choices": [
+            {
+              "text": "宛先MACの大小",
+              "ok": false,
+              "explain": "MACの数値の大小は優先度ではありません。"
+            },
+            {
+              "text": "受信フレームのCoS値",
+              "ok": true,
+              "explain": "電話機側ですでに付いた優先度を対応付けます。"
+            },
+            {
+              "text": "FCSの値",
+              "ok": false,
+              "explain": "FCSは通信種別の優先度を表しません。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.405,
+            "bottom": 0.68,
+            "label": "図2のポートa〜jの接続先（IPA原典）"
+          }
+        },
+        {
+          "id": "dscp-3",
+          "format": "選択",
+          "theme": "入力場所からマーキング方法を選ぶ",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "eLNサーバからポートeへ来るパケットでは何をするか。",
+          "choices": [
+            {
+              "text": "通信種別を識別して対応するDSCPを付ける",
+              "ok": true,
+              "explain": "電話機がCoSを付けたフレームが来るポートではありません。"
+            },
+            {
+              "text": "常に音声としてキュー1へ入れる",
+              "ok": false,
+              "explain": "動画を音声と同じ扱いにすると保護の目的が失われます。"
+            },
+            {
+              "text": "全パケットを暗号化する",
+              "ok": false,
+              "explain": "マーキングは暗号化とは別です。"
+            }
+          ]
+        },
+        {
+          "id": "dscp-4",
+          "format": "穴埋め",
+          "theme": "入力場所からマーキング方法を選ぶ",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "原文の空欄d、ア、イを埋める判断をせよ。",
+          "template": "旧{d}フィールドを利用する。CoSから変換するアは{a}、通信種別から分類するイは{b}である。",
+          "blanks": [
+            {
+              "key": "d",
+              "label": "d",
+              "choices": [
+                {
+                  "text": "TTL",
+                  "ok": false,
+                  "explain": "経由可能なホップ数を制限するフィールドです。"
+                },
+                {
+                  "text": "FCS",
+                  "ok": false,
+                  "explain": "Ethernetの誤り検出情報です。"
+                },
+                {
+                  "text": "ToS",
+                  "ok": true,
+                  "explain": "Type of Serviceを再定義した部分です。"
+                }
+              ],
+              "why": "Type of Serviceを再定義した部分です。"
+            },
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "f、gだけ",
+                  "ok": false,
+                  "explain": "営業所のjもCoS付きの入力です。"
+                },
+                {
+                  "text": "h、i",
+                  "ok": false,
+                  "explain": "広域網側のL3接続であり電話機側入力ではありません。"
+                },
+                {
+                  "text": "f、g、j",
+                  "ok": true,
+                  "explain": "本社・営業所の電話機側入力を全て含めます。"
+                }
+              ],
+              "why": "本社・営業所の電話機側入力を全て含めます。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "c、d、eだけ",
+                  "ok": false,
+                  "explain": "出口からの音声などを受けるa、bも含めます。"
+                },
+                {
+                  "text": "f、g、h、i、j",
+                  "ok": false,
+                  "explain": "これら全部を新規分類対象とはしていません。"
+                },
+                {
+                  "text": "a、b、c、d、e",
+                  "ok": true,
+                  "explain": "IPsecルータ、FW、各サーバ側を全て含めます。"
+                }
+              ],
+              "why": "IPsecルータ、FW、各サーバ側を全て含めます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 17,
+            "top": 0.61,
+            "bottom": 0.865,
+            "label": "CoS変換と通信種別分類の本文（IPA原典）"
+          }
+        },
+        {
+          "id": "dscp-5",
+          "format": "並べ替え",
+          "theme": "入力場所からマーキング方法を選ぶ",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "入力から出力キューまでを並べよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "入力ポートからCoS利用か通信種別分類かを判断する"
+            },
+            {
+              "code": "対応するDSCP値をIPヘッダにマーキングする"
+            },
+            {
+              "code": "経路表で出力ポートを決め、DSCPに応じたキューへ入れる"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "行き先の選択と優先度に応じたキュー選択は別の処理です。",
+          "ngExplain": "行き先の選択と優先度に応じたキュー選択は別の処理です。"
+        },
+        {
+          "id": "dscp-6",
+          "format": "選択",
+          "theme": "入力場所からマーキング方法を選ぶ",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "練習で新サーバを未マーキング入力へ接続した。まず必要なのはどれか。",
+          "choices": [
+            {
+              "text": "新サーバの通信を分類する規則を決める",
+              "ok": true,
+              "explain": "CoSを受け取れない入力なら通信の種類から判断します。"
+            },
+            {
+              "text": "存在しないCoSを信頼して変換する",
+              "ok": false,
+              "explain": "受信していない情報は使えません。"
+            },
+            {
+              "text": "全ポートを音声最優先にする",
+              "ok": false,
+              "explain": "区別がなくなり音声を保護できません。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wrr",
+      "title": "音声以外にも帯域を分ける",
+      "targets": [
+        "s4-5"
+      ],
+      "steps": [
+        {
+          "id": "wrr-1",
+          "format": "読む",
+          "theme": "音声以外にも帯域を分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "音声の次に動画とその他を分ける",
+          "body": "音声はPQのキュー1へ入れます。eLNの動画はキュー2、その他のDパケットはキュー3です。WRRはWeighted Round Robinです。原問ではキュー2と3を75対25の重みで扱います。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "キュー",
+              "対象",
+              "方式"
+            ],
+            "rows": [
+              [
+                "1",
+                "音声",
+                "最優先PQ"
+              ],
+              [
+                "2",
+                "eLN",
+                "WRR 75%"
+              ],
+              [
+                "3",
+                "Dパケット",
+                "WRR 25%"
+              ]
+            ],
+            "caption": "説明用の図表（練習条件）"
+          }
+        },
+        {
+          "id": "wrr-2",
+          "format": "選択",
+          "theme": "音声以外にも帯域を分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "eLNとDを同じキューに混在させると何が起こり得るか。",
+          "choices": [
+            {
+              "text": "必ず暗号化される",
+              "ok": false,
+              "explain": "キューの混在は暗号化ではありません。"
+            },
+            {
+              "text": "Dが全て音声になる",
+              "ok": false,
+              "explain": "キューを共有しても通信の内容は変わりません。"
+            },
+            {
+              "text": "大量のDパケットがeLNの転送を待たせる",
+              "ok": true,
+              "explain": "同じ待ち行列を占有すると動画に影響します。"
+            }
+          ]
+        },
+        {
+          "id": "wrr-3",
+          "format": "選択",
+          "theme": "音声以外にも帯域を分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "キュー2を独立させる目的として最も適切なのはどれか。",
+          "choices": [
+            {
+              "text": "Dを常に全廃棄する",
+              "ok": false,
+              "explain": "Dにも重み25%のキューが用意されています。"
+            },
+            {
+              "text": "DパケットによるeLN転送への影響を減らす",
+              "ok": true,
+              "explain": "両者を分離し、eLNに重みを割り当てます。"
+            },
+            {
+              "text": "eLNを音声より優先する",
+              "ok": false,
+              "explain": "音声のキュー1は引き続き最優先です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 17,
+            "top": 0.38,
+            "bottom": 0.87,
+            "label": "PQとWRRの併用条件（IPA原典）"
+          }
+        },
+        {
+          "id": "wrr-4",
+          "format": "穴埋め",
+          "theme": "音声以外にも帯域を分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "主語と保護対象を選べ。",
+          "template": "{a}が大量に発生しても、{b}の転送に与える影響を小さくするため、異なるキューに分ける。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "Dパケット",
+                  "ok": true,
+                  "explain": "eLNへ影響を与える側の通信です。"
+                },
+                {
+                  "text": "ARP表",
+                  "ok": false,
+                  "explain": "待ち行列に大量流入するデータの種類ではありません。"
+                },
+                {
+                  "text": "VLAN番号",
+                  "ok": false,
+                  "explain": "番号自体がキューへ流れるのではありません。"
+                }
+              ],
+              "why": "eLNへ影響を与える側の通信です。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "eLNパケット",
+                  "ok": true,
+                  "explain": "キュー2で分けて保護する対象です。"
+                },
+                {
+                  "text": "DNSのレコード作成",
+                  "ok": false,
+                  "explain": "今回問う対象は動画パケットの転送です。"
+                },
+                {
+                  "text": "PoEの電力供給",
+                  "ok": false,
+                  "explain": "通信キューと給電は別です。"
+                }
+              ],
+              "why": "キュー2で分けて保護する対象です。"
+            }
+          ]
+        },
+        {
+          "id": "wrr-5",
+          "format": "並べ替え",
+          "theme": "音声以外にも帯域を分ける",
+          "scaffold": 1,
+          "stage": "assemble",
+          "type": "parsons",
+          "title": "分離と重みの効果を組み立てよ。",
+          "lead": "条件、動作、結果のつながりを確認して並べ替えてください。",
+          "lines": [
+            {
+              "code": "音声を最優先キュー1で扱う"
+            },
+            {
+              "code": "eLNをキュー2、Dをキュー3へ分ける"
+            },
+            {
+              "code": "WRRで両者を配分し、DによるeLN転送への影響を減らす"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "音声の低遅延と、音声以外の転送機会の配分を組み合わせます。",
+          "ngExplain": "音声の低遅延と、音声以外の転送機会の配分を組み合わせます。"
+        },
+        {
+          "id": "wrr-6",
+          "format": "選択",
+          "theme": "音声以外にも帯域を分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "quiz",
+          "title": "音声を処理した後の帯域が40Mビット/秒で両キューが常時混雑する。理想的な75対25配分はどれか。",
+          "choices": [
+            {
+              "text": "eLN 40、D 0Mビット/秒",
+              "ok": false,
+              "explain": "DにもWRRの重みがあります。"
+            },
+            {
+              "text": "eLN 30、D 10Mビット/秒",
+              "ok": true,
+              "explain": "残った40を3対1に分けます。"
+            },
+            {
+              "text": "eLN 75、D 25Mビット/秒",
+              "ok": false,
+              "explain": "比率をそのまま速度にしてはいけません。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

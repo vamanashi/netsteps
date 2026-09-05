@@ -1,0 +1,2265 @@
+{
+  "examKey": "2023r05h/pm2/2",
+  "title": "EC増強を名前・転送・セッション・認証から組み立てる",
+  "verifiedSources": [
+    "https://www.ipa.go.jp/shiken/mondai-kaiotu/ps6vr70000010d6y-att/2023r05h_nw_pm2_qs.pdf"
+  ],
+  "sections": [
+    {
+      "id": "dns-zones",
+      "title": "公開名と社内名を同じ実体へ対応させる",
+      "targets": [
+        "s1"
+      ],
+      "steps": [
+        {
+          "id": "dns-zones-1",
+          "format": "読む",
+          "theme": "公開名と社内名を同じ実体へ対応させる",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "DNSサーバは公開ドメインexample.jpと社内ドメインy-sha.example.lanを管理します。NSはゾーンの権威サーバ、MXはメール配送先を示します。公開側は静的NAT前のグローバルIP、社内側はDMZのプライベートIPを登録します。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "ホスト",
+              "公開側",
+              "社内側"
+            ],
+            "rows": [
+              [
+                "ns",
+                "100.α.β.1",
+                "192.168.1.1"
+              ],
+              [
+                "ecsv",
+                "100.α.β.2",
+                "192.168.1.2"
+              ],
+              [
+                "mail",
+                "100.α.β.3",
+                "192.168.1.3"
+              ]
+            ],
+            "caption": "説明用：図2と静的NAT表の対応"
+          }
+        },
+        {
+          "id": "dns-zones-2",
+          "format": "選択",
+          "theme": "公開名と社内名を同じ実体へ対応させる",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ゾーンの権威DNSサーバを指定するレコードはどれか。",
+          "choices": [
+            {
+              "text": "MX",
+              "explain": "メール配送先を指定します。"
+            },
+            {
+              "text": "Aだけ",
+              "explain": "ホストのアドレスを示しますが、権威サーバの指定ではありません。"
+            },
+            {
+              "text": "NS",
+              "explain": "Name Serverを指定します。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "dns-zones-3",
+          "format": "選択",
+          "theme": "公開名と社内名を同じ実体へ対応させる",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "mail.example.jpの公開Aレコードはどれか。",
+          "choices": [
+            {
+              "text": "100.α.β.1",
+              "explain": "DNSサーバ用のグローバルIPです。"
+            },
+            {
+              "text": "100.α.β.3",
+              "explain": "静的NATで192.168.1.3のメールサーバへ変換されます。",
+              "ok": true
+            },
+            {
+              "text": "192.168.1.3",
+              "explain": "社内側ゾーンで用いるプライベートIPです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 13,
+            "top": 0.28,
+            "bottom": 0.75,
+            "label": "表1：FWzの静的NAT（IPA原表）"
+          }
+        },
+        {
+          "id": "dns-zones-4",
+          "format": "穴埋め",
+          "theme": "公開名と社内名を同じ実体へ対応させる",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "図2の六つの空欄を埋める。",
+          "template": "レコードはNS={a}、MX={b}。公開側ns={c}、mail={d}。社内側ns={e}、mail={f}。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "a",
+              "choices": [
+                {
+                  "text": "NS",
+                  "explain": "ゾーンのネームサーバを指定します。",
+                  "ok": true
+                },
+                {
+                  "text": "MX",
+                  "explain": "メール配送先です。"
+                },
+                {
+                  "text": "PTR",
+                  "explain": "逆引き用です。"
+                }
+              ],
+              "why": "同じaが二つのゾーンに使われます。"
+            },
+            {
+              "key": "b",
+              "label": "b",
+              "choices": [
+                {
+                  "text": "NS",
+                  "explain": "優先度付きメール配送先の形式ではありません。"
+                },
+                {
+                  "text": "SOA",
+                  "explain": "ゾーン管理情報です。"
+                },
+                {
+                  "text": "MX",
+                  "explain": "優先度10とメールサーバ名を記述しています。",
+                  "ok": true
+                }
+              ],
+              "why": "同じbが両ゾーンにあります。"
+            },
+            {
+              "key": "c",
+              "label": "公開ns",
+              "choices": [
+                {
+                  "text": "192.168.1.1",
+                  "explain": "社内側の値です。"
+                },
+                {
+                  "text": "100.α.β.1",
+                  "explain": "DNS用静的NATの変換前IPです。",
+                  "ok": true
+                },
+                {
+                  "text": "100.α.β.3",
+                  "explain": "メール用です。"
+                }
+              ],
+              "why": "外部から到達するグローバルIPを使います。"
+            },
+            {
+              "key": "d",
+              "label": "公開mail",
+              "choices": [
+                {
+                  "text": "100.α.β.3",
+                  "explain": "TCP/25用静的NATです。",
+                  "ok": true
+                },
+                {
+                  "text": "100.α.β.2",
+                  "explain": "ECサーバのHTTPS用です。"
+                },
+                {
+                  "text": "192.168.1.3",
+                  "explain": "社内側の値です。"
+                }
+              ],
+              "why": "プロトコル/ポートも手掛かりになります。"
+            },
+            {
+              "key": "e",
+              "label": "社内ns",
+              "choices": [
+                {
+                  "text": "100.α.β.1",
+                  "explain": "公開側の値です。"
+                },
+                {
+                  "text": "192.168.1.3",
+                  "explain": "メールサーバです。"
+                },
+                {
+                  "text": "192.168.1.1",
+                  "explain": "DNSサーバのDMZアドレスです。",
+                  "ok": true
+                }
+              ],
+              "why": "広域イーサ網からは内部アドレスへ到達します。"
+            },
+            {
+              "key": "f",
+              "label": "社内mail",
+              "choices": [
+                {
+                  "text": "100.α.β.3",
+                  "explain": "公開側の値です。"
+                },
+                {
+                  "text": "192.168.1.3",
+                  "explain": "メールサーバのDMZアドレスです。",
+                  "ok": true
+                },
+                {
+                  "text": "192.168.1.1",
+                  "explain": "DNSサーバです。"
+                }
+              ],
+              "why": "名前の役割とIP末尾を対応させます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.46,
+            "bottom": 0.94,
+            "label": "図2：二つのゾーン情報（IPA原図）"
+          }
+        },
+        {
+          "id": "dns-zones-5",
+          "format": "並べ替え",
+          "theme": "公開名と社内名を同じ実体へ対応させる",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "公開DNS回答から内部サーバへ届くまでを並べる。",
+          "lead": "外部のメール送信者がmail.example.jpへ接続します。",
+          "lines": [
+            {
+              "code": "MXでメール配送先mail.example.jpを得る"
+            },
+            {
+              "code": "Aレコードで100.α.β.3を得る"
+            },
+            {
+              "code": "FWzが192.168.1.3へ静的NATしてメールサーバへ届ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "名前の役割、公開IP、内部IPの順に対応させます。",
+          "ngExplain": "原因から動作、結果へつなげます。名前の役割、公開IP、内部IPの順に対応させます。"
+        }
+      ]
+    },
+    {
+      "id": "tls-path",
+      "title": "証明書名とパケット経路を確認する",
+      "targets": [
+        "s2-1",
+        "s2-2"
+      ],
+      "steps": [
+        {
+          "id": "tls-path-1",
+          "format": "読む",
+          "theme": "証明書名とパケット経路を確認する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "ECサーバの証明書は一つで、マルチドメイン非対応です。公開URLと社内URLは別ドメインです。証明書のコモン名が公開URL用なら、社内URLでは名前が一致しません。運用PCから社内経路でECサーバへ行く機器も原図から追います。"
+        },
+        {
+          "id": "tls-path-2",
+          "format": "選択",
+          "theme": "証明書名とパケット経路を確認する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "社内URLでTLSエラーになる理由はどれか。",
+          "choices": [
+            {
+              "text": "ping応答時間が公開URLと同じ",
+              "explain": "ICMP応答時間は証明書名の一致を保証しません。"
+            },
+            {
+              "text": "ECサーバのCPU使用率が高い",
+              "explain": "遅延要因にはなりますが、名前不一致エラーの理由ではありません。"
+            },
+            {
+              "text": "証明書のコモン名とURLのドメインが異なる",
+              "explain": "接続先名の検証に失敗します。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "tls-path-3",
+          "format": "選択",
+          "theme": "証明書名とパケット経路を確認する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "運用PCからECサーバまでに経由する機器の順はどれか。",
+          "choices": [
+            {
+              "text": "L2SW、FWz、L3SW",
+              "explain": "送信側から見た順序が逆です。"
+            },
+            {
+              "text": "L3SW、FWz、L2SW",
+              "explain": "広域イーサ網経由でDMZへ入ります。",
+              "ok": true
+            },
+            {
+              "text": "FWy、インターネット、FWz",
+              "explain": "原問の社内向けURLは広域イーサ網経由です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 12,
+            "top": 0.12,
+            "bottom": 0.49,
+            "label": "図1：運用PCからECサイトまでの構成（IPA原図）"
+          }
+        },
+        {
+          "id": "tls-path-4",
+          "format": "穴埋め",
+          "theme": "証明書名とパケット経路を確認する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "原因と経路を組み立てる。",
+          "template": "TLSエラーは{a}の不一致。パケットは{b}、{c}、{d}を経由する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "証明書検証",
+              "choices": [
+                {
+                  "text": "コモン名とURLドメイン",
+                  "explain": "接続先名が証明対象かを確認します。",
+                  "ok": true
+                },
+                {
+                  "text": "送信元MACとURL",
+                  "explain": "証明書の名前検証では使いません。"
+                },
+                {
+                  "text": "CPU使用率とTTL",
+                  "explain": "証明書名とは無関係です。"
+                }
+              ],
+              "why": "どちらが異なるかを具体的に書きます。"
+            },
+            {
+              "key": "b",
+              "label": "最初",
+              "choices": [
+                {
+                  "text": "L2SW",
+                  "explain": "DMZ内で最後に通ります。"
+                },
+                {
+                  "text": "FWz",
+                  "explain": "L3SWの後です。"
+                },
+                {
+                  "text": "L3SW",
+                  "explain": "運用PC側ネットワークの出口です。",
+                  "ok": true
+                }
+              ],
+              "why": "図1を送信元からたどります。"
+            },
+            {
+              "key": "c",
+              "label": "次",
+              "choices": [
+                {
+                  "text": "LB",
+                  "explain": "増強前の原因調査時点では未導入です。"
+                },
+                {
+                  "text": "FWz",
+                  "explain": "広域網側からDMZへ入ります。",
+                  "ok": true
+                },
+                {
+                  "text": "FWy",
+                  "explain": "原問の到達経路には挙げません。"
+                }
+              ],
+              "why": "時点も確認します。"
+            },
+            {
+              "key": "d",
+              "label": "最後",
+              "choices": [
+                {
+                  "text": "L2SW",
+                  "explain": "DMZ内でECサーバへフレームを転送します。",
+                  "ok": true
+                },
+                {
+                  "text": "L3SW",
+                  "explain": "既に通過しています。"
+                },
+                {
+                  "text": "インターネット",
+                  "explain": "社内経路では使いません。"
+                }
+              ],
+              "why": "経由機器を全て答えます。"
+            }
+          ]
+        },
+        {
+          "id": "tls-path-5",
+          "format": "並べ替え",
+          "theme": "証明書名とパケット経路を確認する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "証明書名エラーを切り分ける。",
+          "lead": "社内URLへアクセスした場合です。",
+          "lines": [
+            {
+              "code": "DNSで社内向けIPを得てECサーバへ到達する"
+            },
+            {
+              "code": "TLSでサーバ証明書を受信する"
+            },
+            {
+              "code": "URLのドメインと証明書のコモン名を比較し、不一致を検出する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "到達できることと、接続先名を認証できることは別です。",
+          "ngExplain": "原因から動作、結果へつなげます。到達できることと、接続先名を認証できることは別です。"
+        }
+      ]
+    },
+    {
+      "id": "scale-out",
+      "title": "停止せずに処理能力と冗長性を増やす",
+      "targets": [
+        "s3-1",
+        "s3-2"
+      ],
+      "steps": [
+        {
+          "id": "scale-out-1",
+          "format": "読む",
+          "theme": "停止せずに処理能力と冗長性を増やす",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "既設ECサーバのCPUが不足しています。一台を高性能化するスケールアップと、台数を増やすスケールアウトを比較します。二台で処理能力は足りますが、三台構成にします。一台故障時にも残り二台で必要能力を保つためです。"
+        },
+        {
+          "id": "scale-out-2",
+          "format": "選択",
+          "theme": "停止せずに処理能力と冗長性を増やす",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "原問で採用する方式はどれか。",
+          "choices": [
+            {
+              "text": "スケールアップ",
+              "explain": "一台の性能を高める方式です。原問の採用案ではありません。"
+            },
+            {
+              "text": "DNSキャッシュだけを増やす",
+              "explain": "EC処理能力の増強になりません。"
+            },
+            {
+              "text": "スケールアウト",
+              "explain": "サーバを追加し、LBで振り分けます。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "scale-out-3",
+          "format": "選択",
+          "theme": "停止せずに処理能力と冗長性を増やす",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "必要能力が二台分なのに三台にする目的はどれか。",
+          "choices": [
+            {
+              "text": "将来のアクセス増加だけに備える",
+              "explain": "設問では将来増加を考慮しない条件です。"
+            },
+            {
+              "text": "一台故障しても応答速度を低下させない",
+              "explain": "残る二台で設計上必要な処理能力を保ちます。",
+              "ok": true
+            },
+            {
+              "text": "全台故障時も処理を続ける",
+              "explain": "三台全てが故障すればEC処理はできません。"
+            }
+          ]
+        },
+        {
+          "id": "scale-out-4",
+          "format": "穴埋め",
+          "theme": "停止せずに処理能力と冗長性を増やす",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "方式名とN+1の理由を組み立てる。",
+          "template": "一台強化はスケール{g}、台数追加はスケール{h}。三台にするのは{a}ためである。",
+          "blanks": [
+            {
+              "key": "g",
+              "label": "一台強化",
+              "choices": [
+                {
+                  "text": "アップ",
+                  "explain": "個々のサーバ性能を上げます。",
+                  "ok": true
+                },
+                {
+                  "text": "アウト",
+                  "explain": "台数を増やします。"
+                },
+                {
+                  "text": "イン",
+                  "explain": "一般的な対比の方式名ではありません。"
+                }
+              ],
+              "why": "空欄gです。"
+            },
+            {
+              "key": "h",
+              "label": "台数追加",
+              "choices": [
+                {
+                  "text": "アップ",
+                  "explain": "一台の性能変更です。"
+                },
+                {
+                  "text": "ダウン",
+                  "explain": "増強方式ではありません。"
+                },
+                {
+                  "text": "アウト",
+                  "explain": "LB配下へサーバを追加します。",
+                  "ok": true
+                }
+              ],
+              "why": "空欄hです。"
+            },
+            {
+              "key": "a",
+              "label": "三台の目的",
+              "choices": [
+                {
+                  "text": "証明書名を三つに増やす",
+                  "explain": "処理能力の冗長性とは別です。"
+                },
+                {
+                  "text": "一台故障時も応答速度低下を防ぐ",
+                  "explain": "必要な二台を残せます。",
+                  "ok": true
+                },
+                {
+                  "text": "三台を常に停止する",
+                  "explain": "サービス提供できません。"
+                }
+              ],
+              "why": "故障時・応答速度の二点を入れます。"
+            }
+          ]
+        },
+        {
+          "id": "scale-out-5",
+          "format": "並べ替え",
+          "theme": "停止せずに処理能力と冗長性を増やす",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "三台構成の根拠を並べる。",
+          "lead": "一台当たり同等性能とします。",
+          "lines": [
+            {
+              "code": "負荷試験から通常時は二台で必要能力を満たす"
+            },
+            {
+              "code": "一台故障する可能性を考える"
+            },
+            {
+              "code": "故障後も二台残るよう三台構成にする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "通常時の必要台数と予備分を分けます。",
+          "ngExplain": "原因から動作、結果へつなげます。通常時の必要台数と予備分を分けます。"
+        }
+      ]
+    },
+    {
+      "id": "nat-addresses",
+      "title": "往路と復路でNATされるアドレスを追う",
+      "targets": [
+        "s3-3"
+      ],
+      "steps": [
+        {
+          "id": "nat-addresses-1",
+          "format": "読む",
+          "theme": "往路と復路でNATされるアドレスを追う",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "外部PCのIPは200.a.b.cです。FWzは公開VIP 100.α.β.2をLBのVIP 192.168.1.2へ静的NATします。LBがソースNATする場合、ECサーバから見える送信元はLBの物理IP 192.168.1.4になります。復路では逆変換されます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "記号",
+              "値",
+              "役割"
+            ],
+            "rows": [
+              [
+                "i",
+                "100.α.β.2",
+                "公開EC宛先"
+              ],
+              [
+                "j",
+                "192.168.1.2",
+                "LB仮想IP"
+              ],
+              [
+                "k",
+                "192.168.1.4",
+                "LB物理IP・ソースNAT後"
+              ]
+            ],
+            "caption": "説明用：表2の三つの空欄"
+          }
+        },
+        {
+          "id": "nat-addresses-2",
+          "format": "選択",
+          "theme": "往路と復路でNATされるアドレスを追う",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "FWz通過後、LBが受ける宛先IPはどれか。",
+          "choices": [
+            {
+              "text": "192.168.1.4",
+              "explain": "LBの物理IPであり、負荷分散用VIPとは別です。"
+            },
+            {
+              "text": "192.168.1.5",
+              "explain": "振分け先の既設ECサーバIPです。"
+            },
+            {
+              "text": "192.168.1.2",
+              "explain": "公開IPからLBの仮想IPへ静的NATされます。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "nat-addresses-3",
+          "format": "選択",
+          "theme": "往路と復路でNATされるアドレスを追う",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "LBがソースNATした後、ECサーバから見える送信元はどれか。",
+          "choices": [
+            {
+              "text": "100.α.β.2",
+              "explain": "公開サービスの宛先IPです。"
+            },
+            {
+              "text": "192.168.1.4",
+              "explain": "LB自身の物理IPへ変換されます。",
+              "ok": true
+            },
+            {
+              "text": "200.a.b.c",
+              "explain": "ソースNATしない場合に見えるPCのIPです。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 15,
+            "top": 0.07,
+            "bottom": 0.94,
+            "label": "図5・表2：パケット転送経路とIPアドレス（IPA原図・原表）"
+          }
+        },
+        {
+          "id": "nat-addresses-4",
+          "format": "穴埋め",
+          "theme": "往路と復路でNATされるアドレスを追う",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "i、j、kを役割から埋める。",
+          "template": "公開VIP i={i}、内部VIP j={j}、LB物理IP k={k}。",
+          "blanks": [
+            {
+              "key": "i",
+              "label": "i",
+              "choices": [
+                {
+                  "text": "100.α.β.2",
+                  "explain": "FWz外側のEC公開IPです。",
+                  "ok": true
+                },
+                {
+                  "text": "192.168.1.2",
+                  "explain": "NAT後の内部VIPです。"
+                },
+                {
+                  "text": "192.168.1.4",
+                  "explain": "LB物理IPです。"
+                }
+              ],
+              "why": "図1の静的NAT表と結びます。"
+            },
+            {
+              "key": "j",
+              "label": "j",
+              "choices": [
+                {
+                  "text": "100.α.β.2",
+                  "explain": "FWz外側の値です。"
+                },
+                {
+                  "text": "192.168.1.5",
+                  "explain": "既設ECサーバの実IPです。"
+                },
+                {
+                  "text": "192.168.1.2",
+                  "explain": "LBの仮想IPとして受けます。",
+                  "ok": true
+                }
+              ],
+              "why": "往路と復路で同じ内部VIPを使います。"
+            },
+            {
+              "key": "k",
+              "label": "k",
+              "choices": [
+                {
+                  "text": "200.a.b.c",
+                  "explain": "元の外部PCです。"
+                },
+                {
+                  "text": "192.168.1.4",
+                  "explain": "ソースNATに使うLBの物理IPです。",
+                  "ok": true
+                },
+                {
+                  "text": "192.168.1.2",
+                  "explain": "負荷分散用VIPです。"
+                }
+              ],
+              "why": "LB自身のIPという条件を使います。"
+            }
+          ]
+        },
+        {
+          "id": "nat-addresses-5",
+          "format": "並べ替え",
+          "theme": "往路と復路でNATされるアドレスを追う",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "ソースNATありの往路を並べる。",
+          "lead": "外部PCから既設ECサーバへ振り分けます。",
+          "lines": [
+            {
+              "code": "FWzが宛先100.α.β.2を192.168.1.2へ変換する"
+            },
+            {
+              "code": "LBが宛先を192.168.1.5、送信元を192.168.1.4へ変換する"
+            },
+            {
+              "code": "ECサーバがLBの物理IPへ応答する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "宛先NATとソースNATを別々に追います。",
+          "ngExplain": "原因から動作、結果へつなげます。宛先NATとソースNATを別々に追います。"
+        }
+      ]
+    },
+    {
+      "id": "vip-host-settings",
+      "title": "既存名をLBへ向け、個別サーバ名を追加する",
+      "targets": [
+        "s4-1",
+        "s4-2"
+      ],
+      "steps": [
+        {
+          "id": "vip-host-settings-1",
+          "format": "読む",
+          "theme": "既存名をLBへ向け、個別サーバ名を追加する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "利用者が使うecsvのAレコードは増強後も同じ値です。ただし、その値はECサーバではなくLBの仮想IPを指します。既設ECサーバには個別アクセス用のecsv1という名前と192.168.1.5を設定します。LBのlbsは192.168.1.4です。"
+        },
+        {
+          "id": "vip-host-settings-2",
+          "format": "選択",
+          "theme": "既存名をLBへ向け、個別サーバ名を追加する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "増強後、ecsvのAレコードが示す機器はどれか。",
+          "choices": [
+            {
+              "text": "既設ECサーバだけ",
+              "explain": "増強前の解釈です。"
+            },
+            {
+              "text": "FWy",
+              "explain": "Y社側のファイアウォールです。"
+            },
+            {
+              "text": "LB",
+              "explain": "利用者の要求を最初に受けて振り分けます。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "vip-host-settings-3",
+          "format": "選択",
+          "theme": "既存名をLBへ向け、個別サーバ名を追加する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "ecsvのAレコードに入るIPアドレスの呼称はどれか。",
+          "choices": [
+            {
+              "text": "ループバックアドレス",
+              "explain": "機器自身のローカル処理用です。"
+            },
+            {
+              "text": "仮想IPアドレス",
+              "explain": "LBが負荷分散用に受けるアドレスです。",
+              "ok": true
+            },
+            {
+              "text": "ブロードキャストアドレス",
+              "explain": "同一ネットワーク全体向けのアドレスです。"
+            }
+          ]
+        },
+        {
+          "id": "vip-host-settings-4",
+          "format": "穴埋め",
+          "theme": "既存名をLBへ向け、個別サーバ名を追加する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "LBと既設サーバの設定を分ける。",
+          "template": "ecsvは{a}の{b}を示す。既設ECサーバはホスト名に加え{c}を変更する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "機器",
+              "choices": [
+                {
+                  "text": "LB",
+                  "explain": "入口をLBへ移します。",
+                  "ok": true
+                },
+                {
+                  "text": "DNSサーバ",
+                  "explain": "Aレコードの管理機器と宛先機器を混同しています。"
+                },
+                {
+                  "text": "運用PC",
+                  "explain": "サービス提供先ではありません。"
+                }
+              ],
+              "why": "設問4(1)の機器です。"
+            },
+            {
+              "key": "b",
+              "label": "アドレス種別",
+              "choices": [
+                {
+                  "text": "物理IPアドレス",
+                  "explain": "lbsの管理用IPとは区別します。"
+                },
+                {
+                  "text": "送信元グローバルIP",
+                  "explain": "外部PCのアドレスではありません。"
+                },
+                {
+                  "text": "仮想IPアドレス",
+                  "explain": "負荷分散用の特別なIPです。",
+                  "ok": true
+                }
+              ],
+              "why": "本文の字句で答えます。"
+            },
+            {
+              "key": "c",
+              "label": "既設サーバの変更",
+              "choices": [
+                {
+                  "text": "FWzの機器名",
+                  "explain": "既設ECサーバに設定する情報ではありません。"
+                },
+                {
+                  "text": "自身のIPアドレス",
+                  "explain": "ecsv1用の192.168.1.5へ変更します。",
+                  "ok": true
+                },
+                {
+                  "text": "URLの公開ドメイン",
+                  "explain": "利用者のURLは変更不要です。"
+                }
+              ],
+              "why": "図4の個別サーバレコードへ合わせます。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 14,
+            "top": 0.53,
+            "bottom": 0.95,
+            "label": "図3：三台のECサーバとLB（IPA原図）"
+          }
+        },
+        {
+          "id": "vip-host-settings-5",
+          "format": "並べ替え",
+          "theme": "既存名をLBへ向け、個別サーバ名を追加する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "利用者URLを変えずにLBへ移す。",
+          "lead": "公開ecsvレコードの値はNATの外側では同じです。",
+          "lines": [
+            {
+              "code": "FWzの静的NAT先をLBの仮想IPへ対応させる"
+            },
+            {
+              "code": "ecsv宛て通信をLBが受ける"
+            },
+            {
+              "code": "LBがecsv1〜ecsv3へ振り分ける"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "名前を維持しながら、その内部で受ける機器を変えます。",
+          "ngExplain": "原因から動作、結果へつなげます。名前を維持しながら、その内部で受ける機器を変えます。"
+        }
+      ]
+    },
+    {
+      "id": "source-nat-gateway",
+      "title": "戻り経路とアクセス元ログを両立する",
+      "targets": [
+        "s4-3",
+        "s4-4"
+      ],
+      "steps": [
+        {
+          "id": "source-nat-gateway-1",
+          "format": "読む",
+          "theme": "戻り経路とアクセス元ログを両立する",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "ソースNATなしではECサーバが外部PCへ直接応答するため、デフォルトゲートウェイをLBへ変える案でした。しかしLBはルータとして動かず、運用PCから個別サーバへ届きません。ソースNATありなら応答先LBは同一DMZです。デフォルトゲートウェイはFWzのままにできます。"
+        },
+        {
+          "id": "source-nat-gateway-2",
+          "format": "選択",
+          "theme": "戻り経路とアクセス元ログを両立する",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ソースNATなし案で変更予定だったデフォルトゲートウェイはどれか。",
+          "choices": [
+            {
+              "text": "LBからFWzへ変更",
+              "explain": "既設構成ではLBはまだゲートウェイではありません。"
+            },
+            {
+              "text": "L2SWからDNSへ変更",
+              "explain": "L2SWやDNSはこのサーバのデフォルトゲートウェイではありません。"
+            },
+            {
+              "text": "FWzからLBへ変更",
+              "explain": "外部PCへの応答をLBへ戻すための案です。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "source-nat-gateway-3",
+          "format": "選択",
+          "theme": "戻り経路とアクセス元ログを両立する",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "ソースNATで失われる元PCのIPをHTTPで伝えるフィールドはどれか。",
+          "choices": [
+            {
+              "text": "Set-Cookieだけ",
+              "explain": "セッション情報を設定します。元IP通知の標準的用途ではありません。"
+            },
+            {
+              "text": "X-Forwarded-For",
+              "explain": "LBがアクセス元PCのIPをECサーバへ通知します。",
+              "ok": true
+            },
+            {
+              "text": "Host",
+              "explain": "要求先ホスト名を表します。アクセス元IPの通知用ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "source-nat-gateway-4",
+          "format": "穴埋め",
+          "theme": "戻り経路とアクセス元ログを両立する",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "変更前後と補完情報を組み立てる。",
+          "template": "当初はデフォルトゲートウェイを{a}から{b}へ変更する案だった。ソースNAT後は{c}で元PCのIPを通知する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "変更元",
+              "choices": [
+                {
+                  "text": "FWz",
+                  "explain": "既設構成の出口です。",
+                  "ok": true
+                },
+                {
+                  "text": "LB",
+                  "explain": "当初の変更先です。"
+                },
+                {
+                  "text": "L2SW",
+                  "explain": "L3ゲートウェイではありません。"
+                }
+              ],
+              "why": "fromを落とさないようにします。"
+            },
+            {
+              "key": "b",
+              "label": "変更先",
+              "choices": [
+                {
+                  "text": "FWz",
+                  "explain": "変更前と同じです。"
+                },
+                {
+                  "text": "DNSサーバ",
+                  "explain": "IP転送の出口ではありません。"
+                },
+                {
+                  "text": "LB",
+                  "explain": "応答をLBへ戻す案でした。",
+                  "ok": true
+                }
+              ],
+              "why": "toも機器名で書きます。"
+            },
+            {
+              "key": "c",
+              "label": "HTTP情報",
+              "choices": [
+                {
+                  "text": "BGP UPDATE",
+                  "explain": "経路情報です。"
+                },
+                {
+                  "text": "X-Forwarded-For",
+                  "explain": "元のアクセス元IPを伝えます。",
+                  "ok": true
+                },
+                {
+                  "text": "NSレコード",
+                  "explain": "DNSの権威サーバ指定です。"
+                }
+              ],
+              "why": "目的はログでアクセス元を管理し続けることです。"
+            }
+          ]
+        },
+        {
+          "id": "source-nat-gateway-5",
+          "format": "並べ替え",
+          "theme": "戻り経路とアクセス元ログを両立する",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "運用PC通信とログ情報を両立する。",
+          "lead": "LBでソースNATする最終案です。",
+          "lines": [
+            {
+              "code": "ECサーバのデフォルトゲートウェイをFWzのままにする"
+            },
+            {
+              "code": "LBが外部要求の送信元を自身のIPへ変換する"
+            },
+            {
+              "code": "X-Forwarded-Forで元PCのIPをECサーバへ通知する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "IPの戻り経路とHTTP上の元IP情報を別々に扱います。",
+          "ngExplain": "原因から動作、結果へつなげます。IPの戻り経路とHTTP上の元IP情報を別々に扱います。",
+          "originalExcerpt": {
+            "page": 16,
+            "top": 0.28,
+            "bottom": 0.88,
+            "label": "LBのソースNAT・ゲートウェイ・X-Forwarded-For（IPA原文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tls-termination",
+      "title": "TLSを終端する場所へ鍵を移す",
+      "targets": [
+        "s4-5"
+      ],
+      "steps": [
+        {
+          "id": "tls-termination-1",
+          "format": "読む",
+          "theme": "TLSを終端する場所へ鍵を移す",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "増強後は外部のHTTPSをLBが受けます。LBでTLSを終端するなら、公開名に対応する証明書と秘密鍵が必要です。既設ECサーバの証明書だけを複製しても、秘密鍵がなければサーバとして署名処理を行えません。"
+        },
+        {
+          "id": "tls-termination-2",
+          "format": "選択",
+          "theme": "TLSを終端する場所へ鍵を移す",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "LBへ移す必要がある組合せはどれか。",
+          "choices": [
+            {
+              "text": "公開鍵だけとDNSキャッシュ",
+              "explain": "サーバ証明書の秘密鍵が欠けています。"
+            },
+            {
+              "text": "利用者全員のパスワード",
+              "explain": "TLSサーバ鍵とは別の認証情報です。"
+            },
+            {
+              "text": "サーバ証明書と対応する秘密鍵",
+              "explain": "TLS終端には証明書とその鍵のペアが必要です。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "tls-termination-3",
+          "format": "選択",
+          "theme": "TLSを終端する場所へ鍵を移す",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "秘密鍵を移す理由はどれか。",
+          "choices": [
+            {
+              "text": "ECサーバのCPUを三倍にするため",
+              "explain": "鍵移設はスケールアップではありません。"
+            },
+            {
+              "text": "LBが証明書に対応する鍵を用いてTLSを終端するため",
+              "explain": "証明書だけでは秘密鍵を必要とする処理ができません。",
+              "ok": true
+            },
+            {
+              "text": "DNSのMXレコードへ記載するため",
+              "explain": "MXに秘密鍵は記載しません。"
+            }
+          ]
+        },
+        {
+          "id": "tls-termination-4",
+          "format": "穴埋め",
+          "theme": "TLSを終端する場所へ鍵を移す",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "作業対象と移動先を組み立てる。",
+          "template": "既設ECサーバの{a}と{b}のペアを{c}へ移す。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "公開情報",
+              "choices": [
+                {
+                  "text": "サーバ証明書",
+                  "explain": "公開名と公開鍵を証明します。",
+                  "ok": true
+                },
+                {
+                  "text": "セッションCookie",
+                  "explain": "サーバ身元証明の鍵ペアではありません。"
+                },
+                {
+                  "text": "DNSゾーンだけ",
+                  "explain": "TLS終端の資格情報ではありません。"
+                }
+              ],
+              "why": "証明書だけでは答案が不足します。"
+            },
+            {
+              "key": "b",
+              "label": "秘密情報",
+              "choices": [
+                {
+                  "text": "IPアドレス",
+                  "explain": "鍵ペアの要素ではありません。"
+                },
+                {
+                  "text": "HTTPポート番号",
+                  "explain": "秘密情報ではありません。"
+                },
+                {
+                  "text": "秘密鍵",
+                  "explain": "証明書の公開鍵に対応します。",
+                  "ok": true
+                }
+              ],
+              "why": "ペアで移す点が重要です。"
+            },
+            {
+              "key": "c",
+              "label": "移動先",
+              "choices": [
+                {
+                  "text": "DNSサーバ",
+                  "explain": "TLS終端機器ではありません。"
+                },
+                {
+                  "text": "LB",
+                  "explain": "外部TLSを受ける機器です。",
+                  "ok": true
+                },
+                {
+                  "text": "全ての運用PC",
+                  "explain": "サーバ秘密鍵を配布してはいけません。"
+                }
+              ],
+              "why": "増設ECサーバ全部へ個別導入しない構成です。"
+            }
+          ]
+        },
+        {
+          "id": "tls-termination-5",
+          "format": "並べ替え",
+          "theme": "TLSを終端する場所へ鍵を移す",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "TLS終端をLBへ移す。",
+          "lead": "利用者URLは同じです。",
+          "lines": [
+            {
+              "code": "既設ECサーバから証明書と秘密鍵のペアを安全に移す"
+            },
+            {
+              "code": "LBへ公開名の証明書として設定する"
+            },
+            {
+              "code": "LBがHTTPSを終端し、選んだECサーバへ転送する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "秘密鍵の取扱いにはアクセス制御と安全な移送が必要です。",
+          "ngExplain": "原因から動作、結果へつなげます。秘密鍵の取扱いにはアクセス制御と安全な移送が必要です。"
+        }
+      ]
+    },
+    {
+      "id": "session-persistence",
+      "title": "変わる接続情報と変わらないセッションIDを見分ける",
+      "targets": [
+        "s5-1",
+        "s5-2"
+      ],
+      "steps": [
+        {
+          "id": "session-persistence-1",
+          "format": "読む",
+          "theme": "変わる接続情報と変わらないセッションIDを見分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "同じ利用者でもTCPを再接続すると送信元ポート番号が変わることがあります。そのためIPとポートの組では同じWebセッションを安定して識別できません。原問ではCookieのセッションIDをLBの管理表と対応させます。",
+          "fig": {
+            "kind": "table",
+            "head": [
+              "識別候補",
+              "再接続時"
+            ],
+            "rows": [
+              [
+                "IPアドレス",
+                "企業のNAPTで複数利用者が同じになる"
+              ],
+              [
+                "IP＋ポート",
+                "ポートが変わり得る"
+              ],
+              [
+                "CookieのセッションID",
+                "Webセッション中の識別に使う"
+              ]
+            ],
+            "caption": "説明用：セッション維持の比較"
+          }
+        },
+        {
+          "id": "session-persistence-2",
+          "format": "選択",
+          "theme": "変わる接続情報と変わらないセッションIDを見分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "IPとポートで維持できなくなる理由はどれか。",
+          "choices": [
+            {
+              "text": "IPヘッダにポート番号がないからだけ",
+              "explain": "ポートはTCPヘッダにあり、LBは組合せとして利用できます。問題は値の変化です。"
+            },
+            {
+              "text": "Cookieが常に暗号化されるから",
+              "explain": "IP＋ポート方式の不安定さの理由ではありません。"
+            },
+            {
+              "text": "TCP再接続のたびにポート番号が変わる可能性",
+              "explain": "同じ利用者を別の組として認識し得ます。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "session-persistence-3",
+          "format": "選択",
+          "theme": "変わる接続情報と変わらないセッションIDを見分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "LBが新しい対応レコードを登録する条件はどれか。",
+          "choices": [
+            {
+              "text": "DNSのTTLが切れるたび",
+              "explain": "Webセッション管理表とは別です。"
+            },
+            {
+              "text": "応答CookieのセッションIDが管理表にない場合",
+              "explain": "新しいセッションIDと振分け先を対応付けます。",
+              "ok": true
+            },
+            {
+              "text": "全HTTPパケットを受けるたび",
+              "explain": "同じセッションの重複レコードを毎回作る必要はありません。"
+            }
+          ]
+        },
+        {
+          "id": "session-persistence-4",
+          "format": "穴埋め",
+          "theme": "変わる接続情報と変わらないセッションIDを見分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "登録条件を主語と照合先で組み立てる。",
+          "template": "{a}からの応答Cookieにある{b}が、LBの{c}に存在しない場合に登録する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "応答元",
+              "choices": [
+                {
+                  "text": "サーバ",
+                  "explain": "振分け先ECサーバがセッションIDを返します。",
+                  "ok": true
+                },
+                {
+                  "text": "DNSキャッシュ",
+                  "explain": "CookieをEC応答として返しません。"
+                },
+                {
+                  "text": "ルータ",
+                  "explain": "WebアプリのCookie生成主体ではありません。"
+                }
+              ],
+              "why": "応答に含まれるという条件です。"
+            },
+            {
+              "key": "b",
+              "label": "照合値",
+              "choices": [
+                {
+                  "text": "送信元ポートだけ",
+                  "explain": "採用しない方式です。"
+                },
+                {
+                  "text": "MX優先度",
+                  "explain": "メール配送の値です。"
+                },
+                {
+                  "text": "セッションID",
+                  "explain": "同一Webセッションを識別します。",
+                  "ok": true
+                }
+              ],
+              "why": "Cookie全体ではなくIDを照合します。"
+            },
+            {
+              "key": "c",
+              "label": "照合表",
+              "choices": [
+                {
+                  "text": "DNSゾーン",
+                  "explain": "名前と資源情報の表です。"
+                },
+                {
+                  "text": "セッション管理テーブル",
+                  "explain": "IDと振分け先を保持します。",
+                  "ok": true
+                },
+                {
+                  "text": "ルーティングテーブル",
+                  "explain": "IP転送経路です。"
+                }
+              ],
+              "why": "LBが保持する表を明示します。"
+            }
+          ]
+        },
+        {
+          "id": "session-persistence-5",
+          "format": "並べ替え",
+          "theme": "変わる接続情報と変わらないセッションIDを見分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "Cookie方式で同じサーバへ振り分ける。",
+          "lead": "最初の応答で新IDが発行されます。",
+          "lines": [
+            {
+              "code": "LBが応答Cookieの新しいセッションIDを検出する"
+            },
+            {
+              "code": "IDと振分け先ECサーバを管理表へ登録する"
+            },
+            {
+              "code": "次の要求のIDを照合して同じECサーバへ送る"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "TCP再接続後もCookieのIDで同じWebセッションを追います。",
+          "ngExplain": "原因から動作、結果へつなげます。TCP再接続後もCookieのIDで同じWebセッションを追います。"
+        }
+      ]
+    },
+    {
+      "id": "health-layer",
+      "title": "ポート到達性とサービス正常性を分ける",
+      "targets": [
+        "s5-3"
+      ],
+      "steps": [
+        {
+          "id": "health-layer-1",
+          "format": "読む",
+          "theme": "ポート到達性とサービス正常性を分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "レイヤー3監視はIP到達性、レイヤー4監視はTCP接続可否を主に確認します。プロセスが接続を受けても、ECの要求処理が失敗することがあります。レイヤー7監視は実際のアプリケーション要求と応答を確認します。"
+        },
+        {
+          "id": "health-layer-2",
+          "format": "選択",
+          "theme": "ポート到達性とサービス正常性を分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "L3・L4方式で見落とし得る状態はどれか。",
+          "choices": [
+            {
+              "text": "サーバへの全経路が断線した状態",
+              "explain": "L3監視でも到達失敗を検出できます。"
+            },
+            {
+              "text": "TCPポートが閉じている状態",
+              "explain": "L4監視で接続失敗を検出できます。"
+            },
+            {
+              "text": "IPとTCPは応答するがECサービス処理が失敗する",
+              "explain": "アプリケーションの正常性を検査していないためです。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "health-layer-3",
+          "format": "選択",
+          "theme": "ポート到達性とサービス正常性を分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "原問でL7方式を採用する理由はどれか。",
+          "choices": [
+            {
+              "text": "DNSのNSレコードを作成する",
+              "explain": "ヘルスチェックとは別の設定です。"
+            },
+            {
+              "text": "サービスが稼働して応答できるか確かめる",
+              "explain": "利用者に近い要求を送って確認します。",
+              "ok": true
+            },
+            {
+              "text": "MACアドレスだけを監視する",
+              "explain": "L7の目的ではありません。"
+            }
+          ]
+        },
+        {
+          "id": "health-layer-4",
+          "format": "穴埋め",
+          "theme": "ポート到達性とサービス正常性を分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "監視の不足を短く組み立てる。",
+          "template": "L3・L4方式では{a}が稼働しているか{b}ため、不十分である。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "確認対象",
+              "choices": [
+                {
+                  "text": "サービス",
+                  "explain": "ECアプリケーションの処理です。",
+                  "ok": true
+                },
+                {
+                  "text": "ケーブル",
+                  "explain": "L3到達性にも影響します。"
+                },
+                {
+                  "text": "IPアドレス",
+                  "explain": "L3で到達性を見ます。"
+                }
+              ],
+              "why": "単にサーバではなくサービス稼働と書きます。"
+            },
+            {
+              "key": "b",
+              "label": "不足",
+              "choices": [
+                {
+                  "text": "必ず保証する",
+                  "explain": "不足理由と逆です。"
+                },
+                {
+                  "text": "暗号化する",
+                  "explain": "監視レイヤーの不足説明ではありません。"
+                },
+                {
+                  "text": "検査しない",
+                  "explain": "上位処理の応答内容まで確認しません。",
+                  "ok": true
+                }
+              ],
+              "why": "25字以内の答案へつながります。"
+            }
+          ]
+        },
+        {
+          "id": "health-layer-5",
+          "format": "並べ替え",
+          "theme": "ポート到達性とサービス正常性を分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "L7ヘルスチェックで障害サーバを外す。",
+          "lead": "専用の確認URLを用意した例です。",
+          "lines": [
+            {
+              "code": "LBがECサービスの確認URLへ要求を送る"
+            },
+            {
+              "code": "応答コードや内容からサービス正常性を判定する"
+            },
+            {
+              "code": "異常なECサーバを負荷分散対象から外す"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "到達性だけでなく、サービスの応答を評価します。",
+          "ngExplain": "原因から動作、結果へつなげます。到達性だけでなく、サービスの応答を評価します。"
+        }
+      ]
+    },
+    {
+      "id": "idp-selection",
+      "title": "会員企業に合う認証先を選ぶ",
+      "targets": [
+        "s6-1"
+      ],
+      "steps": [
+        {
+          "id": "idp-selection-1",
+          "format": "読む",
+          "theme": "会員企業に合う認証先を選ぶ",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "ECサーバはSAMLのSPです。会員企業ごとに認証情報を提供するIdPが異なります。SAMLはSecurity Assertion Markup Language、SPはService Provider、IdPはIdentity Providerです。ログインした購買担当者の所属企業を特定して、対応するIdPへリダイレクトします。"
+        },
+        {
+          "id": "idp-selection-2",
+          "format": "選択",
+          "theme": "会員企業に合う認証先を選ぶ",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "リダイレクト先IdPを決めるため必要な情報はどれか。",
+          "choices": [
+            {
+              "text": "PCの一時的なTCPポートだけ",
+              "explain": "所属企業を一意に決める情報ではありません。"
+            },
+            {
+              "text": "FWzの静的NAT変換表だけ",
+              "explain": "会員企業とIdPの対応は分かりません。"
+            },
+            {
+              "text": "購買担当者が所属する会員企業の情報",
+              "explain": "企業ごとのIdP対応表を参照できます。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "idp-selection-3",
+          "format": "選択",
+          "theme": "会員企業に合う認証先を選ぶ",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "SAML認証要求を作成する機器はどれか。",
+          "choices": [
+            {
+              "text": "DNSサーバ",
+              "explain": "名前解決を行います。"
+            },
+            {
+              "text": "SPであるECサーバ",
+              "explain": "ログイン要求を受け、IdPへのリダイレクト応答を作ります。",
+              "ok": true
+            },
+            {
+              "text": "L2SW",
+              "explain": "フレーム転送機器でSAML要求を作りません。"
+            }
+          ]
+        },
+        {
+          "id": "idp-selection-4",
+          "format": "穴埋め",
+          "theme": "会員企業に合う認証先を選ぶ",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "選択に必要な主語と属性を組み立てる。",
+          "template": "ECサーバは、アクセス元の{a}が所属する{b}の情報からIdPを選ぶ。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "利用者",
+              "choices": [
+                {
+                  "text": "購買担当者",
+                  "explain": "ECへログインする人です。",
+                  "ok": true
+                },
+                {
+                  "text": "FWz",
+                  "explain": "会員企業に所属する利用者ではありません。"
+                },
+                {
+                  "text": "LBの仮想IP",
+                  "explain": "人の所属情報を持ちません。"
+                }
+              ],
+              "why": "誰の属性かを明示します。"
+            },
+            {
+              "key": "b",
+              "label": "所属先",
+              "choices": [
+                {
+                  "text": "DNSゾーン",
+                  "explain": "利用者の組織ではありません。"
+                },
+                {
+                  "text": "TCPコネクション",
+                  "explain": "所属先ではありません。"
+                },
+                {
+                  "text": "会員企業",
+                  "explain": "企業ごとにIdPが異なります。",
+                  "ok": true
+                }
+              ],
+              "why": "答案はアクセス元の担当者が所属する企業情報です。"
+            }
+          ]
+        },
+        {
+          "id": "idp-selection-5",
+          "format": "並べ替え",
+          "theme": "会員企業に合う認証先を選ぶ",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "企業に応じたIdPへ送る。",
+          "lead": "e社の購買担当者がログインします。",
+          "lines": [
+            {
+              "code": "ECサーバが購買担当者の所属企業をe社と特定する"
+            },
+            {
+              "code": "e社に対応するIdPを選ぶ"
+            },
+            {
+              "code": "選んだIdP向けSAML Requestを作成してリダイレクトする"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "全利用者を同じIdPへ送る構成ではありません。",
+          "ngExplain": "原因から動作、結果へつなげます。全利用者を同じIdPへ送る構成ではありません。"
+        }
+      ]
+    },
+    {
+      "id": "ticket-protection",
+      "title": "PCが読める部分と変更できないSTを分ける",
+      "targets": [
+        "s6-3"
+      ],
+      "steps": [
+        {
+          "id": "ticket-protection-1",
+          "format": "読む",
+          "theme": "PCが読める部分と変更できないSTを分ける",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "KDCはIdP向けSTを作り、IdPの鍵で暗号化します。さらにPCが受け取れる外側情報をPCの鍵で保護します。PCは外側を処理してSTを取り出せますが、IdPの鍵を持たないためST本体を改ざんできません。STはService Ticketです。"
+        },
+        {
+          "id": "ticket-protection-2",
+          "format": "選択",
+          "theme": "PCが読める部分と変更できないSTを分ける",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ST本体を暗号化する鍵はどれか。",
+          "choices": [
+            {
+              "text": "PCの鍵だけ",
+              "explain": "外側全体の保護とST本体の保護を混同しています。"
+            },
+            {
+              "text": "LBのTLS秘密鍵",
+              "explain": "ケルベロスのST保護に使う鍵ではありません。"
+            },
+            {
+              "text": "IdPの鍵",
+              "explain": "提示先IdPだけが正しく処理できるようにします。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "ticket-protection-3",
+          "format": "選択",
+          "theme": "PCが読める部分と変更できないSTを分ける",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "PCがSTを改ざんできない理由はどれか。",
+          "choices": [
+            {
+              "text": "STにIPアドレスがない",
+              "explain": "内容の種類ではなく鍵の不所持が理由です。"
+            },
+            {
+              "text": "IdPの鍵を所有していない",
+              "explain": "STを正しく作り直せません。",
+              "ok": true
+            },
+            {
+              "text": "PCはSTを受信しない",
+              "explain": "PCは受信情報からSTを取り出して提示します。"
+            }
+          ]
+        },
+        {
+          "id": "ticket-protection-4",
+          "format": "穴埋め",
+          "theme": "PCが読める部分と変更できないSTを分ける",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "保護する対象と鍵の所有者を組み立てる。",
+          "template": "KDCは{a}を{b}の鍵で暗号化する。PCはその鍵を{c}ため改ざんできない。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "対象",
+              "choices": [
+                {
+                  "text": "ST",
+                  "explain": "IdPへ提示するサービスチケットです。",
+                  "ok": true
+                },
+                {
+                  "text": "DNSゾーン",
+                  "explain": "ケルベロスチケットではありません。"
+                },
+                {
+                  "text": "LBのセッション表",
+                  "explain": "KDCが発行するものではありません。"
+                }
+              ],
+              "why": "外側の情報とST本体を区別します。"
+            },
+            {
+              "key": "b",
+              "label": "復号する主体",
+              "choices": [
+                {
+                  "text": "PC",
+                  "explain": "外側はPC向けですが、ST本体はIdP向けです。"
+                },
+                {
+                  "text": "FWz",
+                  "explain": "認証連携の主体ではありません。"
+                },
+                {
+                  "text": "IdP",
+                  "explain": "STの提示先です。",
+                  "ok": true
+                }
+              ],
+              "why": "IdPの鍵で保護します。"
+            },
+            {
+              "key": "c",
+              "label": "PCの状態",
+              "choices": [
+                {
+                  "text": "毎回生成する",
+                  "explain": "IdPの鍵をPCが生成しません。"
+                },
+                {
+                  "text": "所有していない",
+                  "explain": "鍵がないので正しい暗号文へ変更できません。",
+                  "ok": true
+                },
+                {
+                  "text": "公開している",
+                  "explain": "PCがIdPの秘密鍵を公開する関係ではありません。"
+                }
+              ],
+              "why": "公式答案の直接の理由です。"
+            }
+          ]
+        },
+        {
+          "id": "ticket-protection-5",
+          "format": "並べ替え",
+          "theme": "PCが読める部分と変更できないSTを分ける",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "PCがSTを提示するまでを並べる。",
+          "lead": "PCは既にTGTを持っています。",
+          "lines": [
+            {
+              "code": "PCがKDCへTGTを提示してIdP用STを要求する"
+            },
+            {
+              "code": "KDCがIdPの鍵で保護したSTを発行する"
+            },
+            {
+              "code": "PCがSTを取り出し、内容を変えずIdPへ提示する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "取り出せることと、中身を変更できることは別です。",
+          "ngExplain": "原因から動作、結果へつなげます。取り出せることと、中身を変更できることは別です。",
+          "originalExcerpt": {
+            "page": 20,
+            "top": 0.05,
+            "bottom": 0.92,
+            "label": "図7とST発行・提示の手順（IPA原図・原文）"
+          }
+        }
+      ]
+    },
+    {
+      "id": "saml-signature",
+      "title": "信頼するIdPの署名で発行元と完全性を確かめる",
+      "targets": [
+        "s6-2",
+        "s6-4"
+      ],
+      "steps": [
+        {
+          "id": "saml-signature-1",
+          "format": "読む",
+          "theme": "信頼するIdPの署名で発行元と完全性を確かめる",
+          "scaffold": 5,
+          "stage": "concept",
+          "type": "info",
+          "title": "状況と今回の着眼点",
+          "body": "ECサーバはIdPの公開鍵証明書を登録します。IdPはSAMLアサーションへデジタル署名します。SPは対応する公開鍵で署名を検証し、信頼関係のあるIdPが生成したことと、署名後に改ざんされていないことを確認します。"
+        },
+        {
+          "id": "saml-signature-2",
+          "format": "選択",
+          "theme": "信頼するIdPの署名で発行元と完全性を確かめる",
+          "scaffold": 4,
+          "stage": "check",
+          "type": "quiz",
+          "title": "ECサーバへ登録すべき情報はどれか。",
+          "choices": [
+            {
+              "text": "IdPの秘密鍵",
+              "explain": "署名者だけが保持すべきで、SPへ配布しません。"
+            },
+            {
+              "text": "全購買担当者のPC鍵",
+              "explain": "SAML署名検証に用いるIdPの鍵ではありません。"
+            },
+            {
+              "text": "IdPの公開鍵証明書",
+              "explain": "IdP署名の検証に使います。",
+              "ok": true
+            }
+          ]
+        },
+        {
+          "id": "saml-signature-3",
+          "format": "選択",
+          "theme": "信頼するIdPの署名で発行元と完全性を確かめる",
+          "scaffold": 3,
+          "stage": "reason",
+          "type": "quiz",
+          "title": "署名検証で確認できる二点はどれか。",
+          "choices": [
+            {
+              "text": "通信経路に障害がないこととCPU使用率",
+              "explain": "ネットワーク監視の機能ではありません。"
+            },
+            {
+              "text": "信頼するIdPが生成したことと、改ざんされていないこと",
+              "explain": "発行元の認証と完全性を確認します。",
+              "ok": true
+            },
+            {
+              "text": "利用者が商品を購入する意思と在庫数",
+              "explain": "署名は業務上の意思や在庫の正しさを保証しません。"
+            }
+          ]
+        },
+        {
+          "id": "saml-signature-4",
+          "format": "穴埋め",
+          "theme": "信頼するIdPの署名で発行元と完全性を確かめる",
+          "scaffold": 2,
+          "stage": "assemble",
+          "type": "blank",
+          "title": "登録情報と検証内容を組み立てる。",
+          "template": "SPは{a}を登録し、アサーションが{b}生成であり、{c}ことを検証する。",
+          "blanks": [
+            {
+              "key": "a",
+              "label": "検証鍵",
+              "choices": [
+                {
+                  "text": "IdPの公開鍵証明書",
+                  "explain": "信頼する公開鍵を取得します。",
+                  "ok": true
+                },
+                {
+                  "text": "IdPの秘密鍵",
+                  "explain": "SPへ渡してはいけません。"
+                },
+                {
+                  "text": "ECサーバのCookie",
+                  "explain": "署名検証鍵ではありません。"
+                }
+              ],
+              "why": "設問6(2)の答案です。"
+            },
+            {
+              "key": "b",
+              "label": "発行元",
+              "choices": [
+                {
+                  "text": "任意のPCによる",
+                  "explain": "PCはIdP署名を作れません。"
+                },
+                {
+                  "text": "DNSサーバによる",
+                  "explain": "SAMLアサーションの発行者ではありません。"
+                },
+                {
+                  "text": "信頼関係のあるIdPによる",
+                  "explain": "登録済み鍵と署名の対応から確認します。",
+                  "ok": true
+                }
+              ],
+              "why": "誰が生成したかを確認します。"
+            },
+            {
+              "key": "c",
+              "label": "完全性",
+              "choices": [
+                {
+                  "text": "暗号化されて読めない",
+                  "explain": "デジタル署名と暗号化は別の目的です。"
+                },
+                {
+                  "text": "改ざんされていない",
+                  "explain": "署名後の内容変更を検出します。",
+                  "ok": true
+                },
+                {
+                  "text": "必ず正しい権限を含む",
+                  "explain": "署名は発行内容の業務判断が正しいことまで保証しません。"
+                }
+              ],
+              "why": "原問で挙げる二つ目の内容です。"
+            }
+          ],
+          "originalExcerpt": {
+            "page": 21,
+            "top": 0.07,
+            "bottom": 0.52,
+            "label": "SAML Responseの署名検証（IPA原文）"
+          }
+        },
+        {
+          "id": "saml-signature-5",
+          "format": "並べ替え",
+          "theme": "信頼するIdPの署名で発行元と完全性を確かめる",
+          "scaffold": 1,
+          "stage": "transfer",
+          "type": "parsons",
+          "title": "SAML応答を受け入れるまでを並べる。",
+          "lead": "SPはIdPの証明書を事前登録済みです。",
+          "lines": [
+            {
+              "code": "PCがSAML ResponseをSPへ転送する"
+            },
+            {
+              "code": "SPが登録済みIdP公開鍵で署名を検証する"
+            },
+            {
+              "code": "発行元と改ざん有無に問題がなければアサーションを利用する"
+            }
+          ],
+          "shuffled": [
+            1,
+            2,
+            0
+          ],
+          "okOrders": [
+            [
+              0,
+              1,
+              2
+            ]
+          ],
+          "okExplain": "署名検証後に認証・認可情報を利用します。",
+          "ngExplain": "原因から動作、結果へつなげます。署名検証後に認証・認可情報を利用します。"
+        }
+      ]
+    }
+  ]
+}
